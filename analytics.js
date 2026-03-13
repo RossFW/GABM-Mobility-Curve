@@ -392,10 +392,14 @@ function renderFig5Heatmap(microRows, cfg) {
   transitionPoints.sort((a, b) => a.tp - b.tp);
   const sortedIds = transitionPoints.map(t => t.id);
 
-  const cellW = 3, cellH = 4;
   const nLevels = LEVELS.length, nAgents = sortedIds.length;
   const ox = 50, oy = 20;
-  const hmW = nLevels * cellW + 100, hmH = nAgents * cellH + 60;
+  const legendW = 130;
+  const containerW = (el.parentElement?.offsetWidth || el.offsetWidth || 1100);
+  const availW = Math.max(120, containerW - ox - legendW - 20);
+  const cellW = Math.max(4, Math.floor(availW / nLevels));
+  const cellH = Math.max(2, Math.round(cellW * 0.17));
+  const hmW = nLevels * cellW + ox + legendW, hmH = nAgents * cellH + 60;
 
   function cellColor(votes) {
     if (!votes) return '#1a1a2e';
@@ -442,7 +446,7 @@ function renderFig5Heatmap(microRows, cfg) {
     `<rect x="${x}" y="${y}" width="8" height="8" fill="${c}"/><text x="${x+12}" y="${y+6}" fill="#7a9ab8" font-size="4" font-family="'Press Start 2P',monospace">${t}</text>`
   ).join('');
 
-  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${hmW}" height="${hmH}" style="display:block;background:#080c14">
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${hmW}" height="${hmH}" style="display:block;background:#080c14;width:100%;max-width:${hmW}px">
     ${cells}${xLabels}${yLabel}${xLabel}${legendSvg}
   </svg>`;
 }
