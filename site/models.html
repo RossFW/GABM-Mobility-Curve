@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Probe Model Browser</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; padding: 24px; }
+  h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 20px; }
+  .params { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; gap: 32px; flex-wrap: wrap; }
+  .param { font-size: 0.82rem; }
+  .param label { color: #888; display: block; margin-bottom: 2px; }
+  .param value { color: #7dd3fc; font-weight: 600; font-size: 0.9rem; }
+  .controls { display: flex; gap: 12px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+  .controls input { background: #1a1d27; border: 1px solid #2a2d3a; color: #e0e0e0; padding: 7px 12px; border-radius: 6px; font-size: 0.85rem; width: 220px; }
+  .controls input:focus { outline: none; border-color: #3b82f6; }
+  .filter-btn { background: #1a1d27; border: 1px solid #2a2d3a; color: #aaa; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; transition: all 0.15s; }
+  .filter-btn.active { border-color: #3b82f6; color: #7dd3fc; background: #1e3a5f; }
+  .filter-btn:hover { border-color: #444; color: #e0e0e0; }
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #2a2d3a; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  thead th { background: #1a1d27; color: #888; font-weight: 600; padding: 10px 14px; text-align: left; cursor: pointer; user-select: none; border-bottom: 1px solid #2a2d3a; white-space: nowrap; }
+  thead th:hover { color: #e0e0e0; }
+  thead th.sort-asc::after { content: ' ↑'; color: #3b82f6; }
+  thead th.sort-desc::after { content: ' ↓'; color: #3b82f6; }
+  tbody tr { border-bottom: 1px solid #1e2030; transition: background 0.1s; }
+  tbody tr:hover { background: #1e2030; }
+  tbody tr.in-probe { background: #0f2017; }
+  tbody tr.in-probe:hover { background: #162a1e; }
+  tbody tr.tbd { opacity: 0.65; }
+  td { padding: 9px 14px; vertical-align: middle; }
+  .provider-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+  .badge-openai { background: #1a3a2a; color: #4ade80; }
+  .badge-anthropic { background: #2a1a2a; color: #c084fc; }
+  .badge-gemini { background: #1a2a3a; color: #60a5fa; }
+  .reasoning-badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+  .r-off { background: #2a2a2a; color: #888; }
+  .r-low { background: #1a2a1a; color: #86efac; }
+  .r-med { background: #1a2a1a; color: #4ade80; }
+  .r-high { background: #1a2a3a; color: #60a5fa; }
+  .r-req { background: #2a1a1a; color: #f87171; }
+  .cost-cell { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem; }
+  .cost-cheap { color: #4ade80; }
+  .cost-mid { color: #facc15; }
+  .cost-expensive { color: #f97316; }
+  .cost-very-expensive { color: #ef4444; }
+  .cost-tbd { color: #888; font-style: italic; }
+  .in-probe-check { color: #4ade80; font-size: 1.1rem; }
+  .not-probe { color: #333; }
+  .thinks-badge { font-size: 0.7rem; color: #60a5fa; background: #0a1a2a; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+  .new-badge { font-size: 0.7rem; color: #fbbf24; background: #1a1500; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+  .model-name { font-weight: 500; }
+  .release-date { color: #888; font-size: 0.78rem; white-space: nowrap; }
+  .release-approx { color: #666; font-style: italic; }
+  .summary { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px; padding: 16px 20px; margin-top: 16px; display: flex; gap: 32px; flex-wrap: wrap; }
+  .sum-stat { font-size: 0.82rem; }
+  .sum-stat label { color: #888; display: block; margin-bottom: 2px; }
+  .sum-stat value { color: #f0f0f0; font-weight: 700; font-size: 1rem; font-family: monospace; }
+  .note { color: #666; font-size: 0.75rem; margin-top: 10px; font-style: italic; }
+  hr.divider { border: none; border-top: 1px solid #2a2d3a; margin: 20px 0; }
+  .legend { display: flex; gap: 16px; font-size: 0.76rem; color: #666; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend span { display: flex; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+
+<h1>GABM Mobility Probe — Model Browser</h1>
+<p class="subtitle">Paper 3 · Cross-Provider LLM Comparison · Ross Williams PhD</p>
+
+<div class="params">
+  <div class="param"><label>Agents</label><value>100</value></div>
+  <div class="param"><label>Reps</label><value>5</value></div>
+  <div class="param"><label>Infection levels</label><value>40</value></div>
+  <div class="param"><label>Calls per config</label><value>20,000</value></div>
+  <div class="param"><label>Assumed input tokens/call</label><value>~300</value></div>
+  <div class="param"><label>Assumed output tokens/call</label><value>~80</value></div>
+  <div class="param"><label>Temperature</label><value>0</value></div>
+</div>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Search model name..." oninput="applyFilters()">
+  <button class="filter-btn active" id="btn-all" onclick="setFilter('all')">All</button>
+  <button class="filter-btn" id="btn-openai" onclick="setFilter('openai')">OpenAI</button>
+  <button class="filter-btn" id="btn-anthropic" onclick="setFilter('anthropic')">Anthropic</button>
+  <button class="filter-btn" id="btn-gemini" onclick="setFilter('gemini')">Gemini</button>
+  <button class="filter-btn" id="btn-probe" onclick="setFilter('probe')">In Probe Only</button>
+</div>
+
+<div class="legend">
+  <span><span class="in-probe-check">✓</span> Currently in USEFUL_CONFIGS</span>
+  <span><span class="thinks-badge">thinks</span> Always uses thinking tokens (adds cost)</span>
+  <span><span class="new-badge">new</span> Not yet in model_reference.csv</span>
+  <span style="color:#666;font-style:italic">~ dates = approximate (post Aug 2025 cutoff)</span>
+</div>
+
+<div class="table-wrap">
+<table id="model-table">
+<thead>
+  <tr>
+    <th onclick="sortBy('probe')">In Probe</th>
+    <th onclick="sortBy('provider')">Provider</th>
+    <th onclick="sortBy('model')">Model</th>
+    <th onclick="sortBy('release')">Released</th>
+    <th onclick="sortBy('reasoning')">Reasoning</th>
+    <th onclick="sortBy('input_price')">$/M Input</th>
+    <th onclick="sortBy('output_price')">$/M Output</th>
+    <th onclick="sortBy('cost_base')">Est. Base Cost</th>
+    <th onclick="sortBy('cost_base')">Notes</th>
+  </tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<div class="summary" id="summary"></div>
+<p class="note">
+  * Base cost = 20,000 calls × (300 input + 80 output tokens) at listed rates. Reasoning tokens not included — run cost_estimation_test.py for accurate per-model numbers.<br>
+  * OpenAI estimates are ~2.5× actual due to automatic prompt caching. Treat as upper bounds.<br>
+  * Gemini 2.5+ always generates thinking tokens even at reasoning=off — actual cost higher than base estimate.<br>
+  * ~ prefix on release dates = approximate (model released after assistant knowledge cutoff of Aug 2025).
+</p>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+// probe: true = currently in USEFUL_CONFIGS in probe_mobility.py
+// thinks: always generates thinking tokens (Gemini 2.5+)
+// new: not yet in model_reference.csv (needs to be added)
+// release: release date string — ~ prefix means approximate
+const MODELS = [
+  // ── OpenAI ──────────────────────────────────────────────────────────────────
+  // GPT-5.4 (newest, confirmed pricing from OpenAI dashboard)
+  { provider:'openai', model:'gpt-5.4',             release:'~Mar 2026', reasoning:'off',      input:2.50,  output:15.00, probe:false, thinks:false, isNew:true,  notes:'Newest GPT-5 — confirmed pricing' },
+  { provider:'openai', model:'gpt-5.4',             release:'~Mar 2026', reasoning:'low',      input:2.50,  output:15.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'openai', model:'gpt-5.4',             release:'~Mar 2026', reasoning:'medium',   input:2.50,  output:15.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'openai', model:'gpt-5.4',             release:'~Mar 2026', reasoning:'high',     input:2.50,  output:15.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  // GPT-5.3
+  { provider:'openai', model:'gpt-5.3-chat-latest', release:'~Feb 2026', reasoning:'off',      input:1.75,  output:14.00, probe:false, thinks:false, isNew:true,  notes:'Confirmed pricing' },
+  { provider:'openai', model:'gpt-5.3-chat-latest', release:'~Feb 2026', reasoning:'low',      input:1.75,  output:14.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'openai', model:'gpt-5.3-chat-latest', release:'~Feb 2026', reasoning:'medium',   input:1.75,  output:14.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'openai', model:'gpt-5.3-chat-latest', release:'~Feb 2026', reasoning:'high',     input:1.75,  output:14.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  // GPT-5.2 (in probe)
+  { provider:'openai', model:'gpt-5.2',             release:'~Jan 2026', reasoning:'off',      input:1.75,  output:14.00, probe:true,  thinks:false, isNew:false, notes:'' },
+  { provider:'openai', model:'gpt-5.2',             release:'~Jan 2026', reasoning:'low',      input:1.75,  output:14.00, probe:true,  thinks:false, isNew:false, notes:'+reasoning tokens' },
+  { provider:'openai', model:'gpt-5.2',             release:'~Jan 2026', reasoning:'medium',   input:1.75,  output:14.00, probe:true,  thinks:false, isNew:false, notes:'+reasoning tokens' },
+  { provider:'openai', model:'gpt-5.2',             release:'~Jan 2026', reasoning:'high',     input:1.75,  output:14.00, probe:true,  thinks:false, isNew:false, notes:'+reasoning tokens' },
+  // GPT-5.1 (in probe)
+  { provider:'openai', model:'gpt-5.1',             release:'~Nov 2025', reasoning:'off',      input:1.25,  output:10.00, probe:true,  thinks:false, isNew:false, notes:'' },
+  { provider:'openai', model:'gpt-5.1',             release:'~Nov 2025', reasoning:'low',      input:1.25,  output:10.00, probe:false, thinks:false, isNew:false, notes:'Pair B: off+high only' },
+  { provider:'openai', model:'gpt-5.1',             release:'~Nov 2025', reasoning:'medium',   input:1.25,  output:10.00, probe:false, thinks:false, isNew:false, notes:'Pair B: off+high only' },
+  { provider:'openai', model:'gpt-5.1',             release:'~Nov 2025', reasoning:'high',     input:1.25,  output:10.00, probe:true,  thinks:false, isNew:false, notes:'+reasoning tokens' },
+  // GPT-5 (new, same price as 5.1)
+  { provider:'openai', model:'gpt-5',               release:'~Sep 2025', reasoning:'off',      input:1.25,  output:10.00, probe:false, thinks:false, isNew:true,  notes:'Confirmed pricing' },
+  { provider:'openai', model:'gpt-5',               release:'~Sep 2025', reasoning:'low',      input:1.25,  output:10.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'openai', model:'gpt-5',               release:'~Sep 2025', reasoning:'medium',   input:1.25,  output:10.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'openai', model:'gpt-5',               release:'~Sep 2025', reasoning:'high',     input:1.25,  output:10.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  // GPT-5 mini (new, cheap)
+  { provider:'openai', model:'gpt-5-mini',          release:'~Sep 2025', reasoning:'off',      input:0.25,  output:2.00,  probe:false, thinks:false, isNew:true,  notes:'Cheap; good baseline candidate' },
+  { provider:'openai', model:'gpt-5-mini',          release:'~Sep 2025', reasoning:'low',      input:0.25,  output:2.00,  probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  // GPT-5 mini dated (excluded from probe — rejects temperature=0)
+  { provider:'openai', model:'gpt-5-mini-2025-08-07', release:'Aug 2025', reasoning:'off', input:0.25, output:2.00, probe:false, thinks:false, isNew:false, notes:'Rejects temperature=0 — excluded from probe' },
+  // GPT-5 nano (new, ultra-cheap)
+  { provider:'openai', model:'gpt-5-nano',          release:'~Sep 2025', reasoning:'off',      input:0.05,  output:0.40,  probe:false, thinks:false, isNew:true,  notes:'Ultra-cheap — good sanity check model' },
+  // Existing OpenAI
+  { provider:'openai', model:'gpt-4.1',             release:'Apr 2025',  reasoning:'off',      input:2.00,  output:8.00,  probe:true,  thinks:false, isNew:false, notes:'' },
+  { provider:'openai', model:'gpt-4o',              release:'May 2024',  reasoning:'off',      input:2.50,  output:10.00, probe:true,  thinks:false, isNew:false, notes:'' },
+  { provider:'openai', model:'gpt-3.5-turbo',       release:'Nov 2022',  reasoning:'off',      input:0.50,  output:1.50,  probe:true,  thinks:false, isNew:false, notes:'Legacy; Papers 1 & 2 baseline' },
+  { provider:'openai', model:'o3',                  release:'Apr 2025',  reasoning:'required', input:2.00,  output:8.00,  probe:true,  thinks:false, isNew:false, notes:'Mandatory reasoning — run cost test first!' },
+  { provider:'openai', model:'o1',                  release:'Sep 2024',  reasoning:'required', input:15.00, output:60.00, probe:false, thinks:false, isNew:false, notes:'Very expensive — excluded from probe' },
+  { provider:'openai', model:'gpt-4',               release:'Mar 2023',  reasoning:'off',      input:30.00, output:60.00, probe:false, thinks:false, isNew:false, notes:'Legacy — extremely expensive' },
+
+  // ── Anthropic ────────────────────────────────────────────────────────────────
+  // claude-4-6 series (newest, confirmed pricing)
+  { provider:'anthropic', model:'claude-opus-4-6',        release:'~Mar 2026', reasoning:'off',    input:5.00,  output:25.00, probe:false, thinks:false, isNew:true,  notes:'Newest Opus — same price as 4-5' },
+  { provider:'anthropic', model:'claude-opus-4-6',        release:'~Mar 2026', reasoning:'low',    input:5.00,  output:25.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'anthropic', model:'claude-opus-4-6',        release:'~Mar 2026', reasoning:'medium', input:5.00,  output:25.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'anthropic', model:'claude-opus-4-6',        release:'~Mar 2026', reasoning:'high',   input:5.00,  output:25.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'anthropic', model:'claude-sonnet-4-6',      release:'~Mar 2026', reasoning:'off',    input:3.00,  output:15.00, probe:false, thinks:false, isNew:true,  notes:'Newest Sonnet — same price as 4-5' },
+  { provider:'anthropic', model:'claude-sonnet-4-6',      release:'~Mar 2026', reasoning:'low',    input:3.00,  output:15.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'anthropic', model:'claude-sonnet-4-6',      release:'~Mar 2026', reasoning:'medium', input:3.00,  output:15.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  { provider:'anthropic', model:'claude-sonnet-4-6',      release:'~Mar 2026', reasoning:'high',   input:3.00,  output:15.00, probe:false, thinks:false, isNew:true,  notes:'+reasoning tokens' },
+  // claude-4-5 series (in probe)
+  { provider:'anthropic', model:'claude-opus-4-5',        release:'Nov 2025',  reasoning:'off',    input:5.00,  output:25.00, probe:true,  thinks:false, isNew:false, notes:'' },
+  { provider:'anthropic', model:'claude-sonnet-4-5',      release:'Sep 2025',  reasoning:'off',    input:3.00,  output:15.00, probe:true,  thinks:false, isNew:false, notes:'' },
+  { provider:'anthropic', model:'claude-haiku-4-5',       release:'Oct 2025',  reasoning:'off',    input:1.00,  output:5.00,  probe:true,  thinks:false, isNew:false, notes:'Best value Anthropic' },
+  // claude-4-0/4-1 series
+  { provider:'anthropic', model:'claude-sonnet-4-0',      release:'May 2025',  reasoning:'off',    input:3.00,  output:15.00, probe:true,  thinks:false, isNew:false, notes:'' },
+  { provider:'anthropic', model:'claude-opus-4-1',        release:'Aug 2025',  reasoning:'off',    input:15.00, output:75.00, probe:false, thinks:false, isNew:false, notes:'Very expensive — excluded' },
+  { provider:'anthropic', model:'claude-opus-4-0',        release:'May 2025',  reasoning:'off',    input:15.00, output:75.00, probe:false, thinks:false, isNew:false, notes:'Very expensive — excluded' },
+  { provider:'anthropic', model:'claude-3-haiku-20240307',release:'Mar 2024',  reasoning:'off',    input:0.25,  output:1.25,  probe:true,  thinks:false, isNew:false, notes:'Cheapest; Papers 1 & 2 era model' },
+
+  // ── Gemini ───────────────────────────────────────────────────────────────────
+  { provider:'gemini', model:'gemini-3-pro-preview',   release:'~Jan 2026', reasoning:'off',    input:2.00,  output:12.00, probe:false,  thinks:true,  isNew:false, notes:'DEAD — shutdown Mar 9 2026' },
+  { provider:'gemini', model:'gemini-3-pro-preview',   release:'~Jan 2026', reasoning:'low',    input:2.00,  output:12.00, probe:false,  thinks:true,  isNew:false, notes:'DEAD — shutdown Mar 9 2026' },
+  { provider:'gemini', model:'gemini-3-pro-preview',   release:'~Jan 2026', reasoning:'medium', input:2.00,  output:12.00, probe:false,  thinks:true,  isNew:false, notes:'DEAD — shutdown Mar 9 2026' },
+  { provider:'gemini', model:'gemini-3-pro-preview',   release:'~Jan 2026', reasoning:'high',   input:2.00,  output:12.00, probe:false,  thinks:true,  isNew:false, notes:'DEAD — shutdown Mar 9 2026' },
+  { provider:'gemini', model:'gemini-3-flash-preview', release:'~Jan 2026', reasoning:'off',    input:0.50,  output:3.00,  probe:true,  thinks:true,  isNew:false, notes:'Always thinks' },
+  { provider:'gemini', model:'gemini-3-flash-preview', release:'~Jan 2026', reasoning:'low',    input:0.50,  output:3.00,  probe:true,  thinks:true,  isNew:false, notes:'Always thinks' },
+  { provider:'gemini', model:'gemini-3-flash-preview', release:'~Jan 2026', reasoning:'medium', input:0.50,  output:3.00,  probe:true,  thinks:true,  isNew:false, notes:'Always thinks' },
+  { provider:'gemini', model:'gemini-3-flash-preview', release:'~Jan 2026', reasoning:'high',   input:0.50,  output:3.00,  probe:true,  thinks:true,  isNew:false, notes:'Always thinks' },
+  { provider:'gemini', model:'gemini-2.5-pro',         release:'May 2025',  reasoning:'off',    input:1.25,  output:10.00, probe:false,  thinks:true,  isNew:false, notes:'Cut — no pro tier in probe' },
+  { provider:'gemini', model:'gemini-2.5-pro',         release:'May 2025',  reasoning:'low',    input:1.25,  output:10.00, probe:false,  thinks:true,  isNew:false, notes:'Cut — no pro tier in probe' },
+  { provider:'gemini', model:'gemini-2.5-pro',         release:'May 2025',  reasoning:'medium', input:1.25,  output:10.00, probe:false,  thinks:true,  isNew:false, notes:'Cut — no pro tier in probe' },
+  { provider:'gemini', model:'gemini-2.5-pro',         release:'May 2025',  reasoning:'high',   input:1.25,  output:10.00, probe:false,  thinks:true,  isNew:false, notes:'Cut — no pro tier in probe' },
+  { provider:'gemini', model:'gemini-2.5-flash',       release:'May 2025',  reasoning:'off',    input:0.30,  output:2.50,  probe:true,  thinks:true,  isNew:false, notes:'Always thinks; has Google Search' },
+  { provider:'gemini', model:'gemini-2.5-flash',       release:'May 2025',  reasoning:'low',    input:0.30,  output:2.50,  probe:false,  thinks:true,  isNew:false, notes:'Off only in probe' },
+  { provider:'gemini', model:'gemini-2.5-flash',       release:'May 2025',  reasoning:'medium', input:0.30,  output:2.50,  probe:false,  thinks:true,  isNew:false, notes:'Off only in probe' },
+  { provider:'gemini', model:'gemini-2.5-flash',       release:'May 2025',  reasoning:'high',   input:0.30,  output:2.50,  probe:false,  thinks:true,  isNew:false, notes:'Off only in probe' },
+  { provider:'gemini', model:'gemini-2.5-flash-lite',  release:'Jun 2025',  reasoning:'off',    input:0.10,  output:0.40,  probe:true,   thinks:true,  isNew:false, notes:'Dim 4 size baseline vs gemini-3-flash' },
+  { provider:'gemini', model:'gemini-2.5-flash-lite',  release:'Jun 2025',  reasoning:'low',    input:0.10,  output:0.40,  probe:false,  thinks:true,  isNew:false, notes:'Always thinks' },
+  { provider:'gemini', model:'gemini-2.5-flash-lite',  release:'Jun 2025',  reasoning:'medium', input:0.10,  output:0.40,  probe:false,  thinks:true,  isNew:false, notes:'Always thinks' },
+  { provider:'gemini', model:'gemini-2.5-flash-lite',  release:'Jun 2025',  reasoning:'high',   input:0.10,  output:0.40,  probe:false,  thinks:true,  isNew:false, notes:'Always thinks' },
+  { provider:'gemini', model:'gemini-2.0-flash',       release:'Dec 2024',  reasoning:'off',    input:0.10,  output:0.40,  probe:true,  thinks:false, isNew:false, notes:'No thinking; good cheap baseline' },
+];
+
+// ── Cost calculation ─────────────────────────────────────────────────────────
+const CALLS = 20000;
+const IN_TOKENS = 300;
+const OUT_TOKENS = 80;
+
+function baseCost(row) {
+  if (row.input === null) return null;
+  return CALLS * (IN_TOKENS * row.input / 1e6 + OUT_TOKENS * row.output / 1e6);
+}
+
+function costClass(c) {
+  if (c === null) return 'cost-tbd';
+  if (c < 2.00) return 'cost-cheap';
+  if (c < 8.00) return 'cost-mid';
+  if (c < 25.0) return 'cost-expensive';
+  return 'cost-very-expensive';
+}
+
+function costStr(c) {
+  if (c === null) return 'TBD';
+  return '$' + c.toFixed(2);
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let sortCol = 'cost_base', sortDir = 1, provFilter = 'all';
+
+// Parse release date to sortable number (YYYYMM)
+function parseRelease(r) {
+  if (!r) return 0;
+  const s = r.replace('~','').trim();
+  const months = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+  const m = s.match(/(\w{3})\s+(\d{4})/);
+  if (m) return parseInt(m[2]) * 100 + (months[m[1]] || 0);
+  const y = s.match(/(\d{4})/);
+  if (y) return parseInt(y[1]) * 100;
+  return 0;
+}
+
+function getVal(row, col) {
+  if (col === 'probe') return row.probe ? 0 : 1;
+  if (col === 'provider') return row.provider;
+  if (col === 'model') return row.model;
+  if (col === 'release') return parseRelease(row.release);
+  if (col === 'reasoning') { const o = {off:0,low:1,medium:2,high:3,required:4}; return o[row.reasoning]??0; }
+  if (col === 'input_price') return row.input ?? 999;
+  if (col === 'output_price') return row.output ?? 999;
+  if (col === 'cost_base') return baseCost(row) ?? 999;
+  return 0;
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  document.querySelectorAll('thead th').forEach(th => th.className = '');
+  event.target.className = sortDir === 1 ? 'sort-asc' : 'sort-desc';
+  render();
+}
+
+function setFilter(f) {
+  provFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-'+f).classList.add('active');
+  render();
+}
+
+function applyFilters() { render(); }
+
+function reasoningBadge(r) {
+  const cls = {off:'r-off',low:'r-low',medium:'r-med',high:'r-high',required:'r-req'}[r]||'r-off';
+  return `<span class="reasoning-badge ${cls}">${r}</span>`;
+}
+
+function render() {
+  const search = document.getElementById('search').value.toLowerCase();
+  let rows = MODELS.filter(r => {
+    if (provFilter === 'probe' && !r.probe) return false;
+    if (provFilter !== 'all' && provFilter !== 'probe' && r.provider !== provFilter) return false;
+    if (search && !r.model.toLowerCase().includes(search) && !r.provider.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    const av = getVal(a, sortCol), bv = getVal(b, sortCol);
+    if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+    return sortDir * (av - bv);
+  });
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = rows.map(r => {
+    const cost = baseCost(r);
+    const provBadge = `<span class="provider-badge badge-${r.provider}">${r.provider}</span>`;
+    const thinksTag = r.thinks ? `<span class="thinks-badge">thinks</span>` : '';
+    const newTag = r.isNew ? `<span class="new-badge">new</span>` : '';
+    const modelStr = `<span class="model-name">${r.model}</span>${thinksTag}${newTag}`;
+    const inputStr = r.input !== null ? `$${r.input.toFixed(2)}` : '<span class="cost-tbd">TBD</span>';
+    const outputStr = r.output !== null ? `$${r.output.toFixed(2)}` : '<span class="cost-tbd">TBD</span>';
+    const costHtml = `<span class="cost-cell ${costClass(cost)}">${costStr(cost)}</span>`;
+    const probeHtml = r.probe ? `<span class="in-probe-check">✓</span>` : `<span class="not-probe">–</span>`;
+    const trClass = r.probe ? 'in-probe' : (r.isNew ? 'tbd' : '');
+    const isApprox = r.release && r.release.startsWith('~');
+    const dateHtml = `<span class="release-date ${isApprox ? 'release-approx' : ''}">${r.release || '—'}</span>`;
+    return `<tr class="${trClass}">
+      <td>${probeHtml}</td>
+      <td>${provBadge}</td>
+      <td>${modelStr}</td>
+      <td>${dateHtml}</td>
+      <td>${reasoningBadge(r.reasoning)}</td>
+      <td class="cost-cell">${inputStr}</td>
+      <td class="cost-cell">${outputStr}</td>
+      <td>${costHtml}</td>
+      <td style="color:#666;font-size:0.78rem">${r.notes}</td>
+    </tr>`;
+  }).join('');
+
+  // Summary
+  const probeRows = MODELS.filter(r => r.probe);
+  const totalBaseCost = probeRows.reduce((s, r) => s + (baseCost(r) ?? 0), 0);
+  const openaiProbe = probeRows.filter(r=>r.provider==='openai');
+  const openaiBase = openaiProbe.reduce((s,r)=>s+(baseCost(r)??0),0);
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-stat"><label>Configs currently in probe</label><value>${probeRows.length}</value></div>
+    <div class="sum-stat"><label>Showing (after filter)</label><value>${rows.length} configs</value></div>
+    <div class="sum-stat"><label>Total base cost (probe configs)</label><value>$${totalBaseCost.toFixed(2)}</value></div>
+    <div class="sum-stat"><label>OpenAI actual ≈</label><value>~$${(openaiBase/2.5).toFixed(2)} (÷2.5× caching)</value></div>
+    <div class="sum-stat"><label>Total calls (probe)</label><value>${(probeRows.length * CALLS).toLocaleString()}</value></div>
+  `;
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Install into the GABM-Epidemic venv, or a fresh venv:
+#   pip install -r requirements.txt
+#
+# Note: probe scripts import providers/ from sibling GABM-Epidemic repo.
+# Both repos must be cloned at the same directory level (see docs/SETUP.md).
+
+anthropic>=0.49.0
+openai>=1.68.0
+google-generativeai>=0.8.0
+python-dotenv>=1.0.0

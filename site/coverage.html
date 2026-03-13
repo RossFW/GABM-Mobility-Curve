@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Probe Coverage Analysis</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; padding: 24px; max-width: 1400px; }
+  h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 24px; }
+  h2 { font-size: 1rem; font-weight: 600; color: #aaa; margin-bottom: 12px; margin-top: 28px; border-bottom: 1px solid #2a2d3a; padding-bottom: 6px; }
+  .nav { display: flex; gap: 12px; margin-bottom: 24px; }
+  .nav a { color: #60a5fa; font-size: 0.82rem; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+
+  .summary { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; display: flex; gap: 28px; flex-wrap: wrap; }
+  .sum-stat { font-size: 0.82rem; }
+  .sum-stat label { color: #888; display: block; margin-bottom: 2px; }
+  .sum-stat value { color: #f0f0f0; font-weight: 700; font-size: 1.1rem; font-family: monospace; }
+
+  /* ── Matrix ── */
+  .matrix-wrap { overflow-x: auto; margin-bottom: 32px; }
+  .matrix { border-collapse: collapse; font-size: 0.80rem; width: 100%; }
+  .matrix th { padding: 8px 12px; text-align: center; color: #666; font-weight: 600; border-bottom: 1px solid #2a2d3a; white-space: nowrap; }
+  .matrix th.left { text-align: left; }
+  .matrix td { padding: 7px 10px; border-bottom: 1px solid #141620; text-align: center; }
+  .matrix td.model-name { text-align: left; font-size: 0.79rem; white-space: nowrap; padding-right: 16px; font-weight: 500; }
+  .matrix td.meta { text-align: left; font-size: 0.72rem; color: #555; white-space: nowrap; padding: 7px 8px; }
+  .matrix td.price-meta { text-align: left; font-size: 0.72rem; color: #555; white-space: nowrap; padding: 7px 8px; font-family: monospace; }
+  .matrix tr.group-row td { background: #12151f; padding: 6px 12px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; text-align: left; }
+  .matrix tr:hover:not(.group-row) td { background: #1a1d27; }
+  .matrix tr.cut td { opacity: 0.28; }
+  .matrix tr.cut td.model-name { text-decoration: line-through; }
+
+  .cell-yes  { background: #0d2a1a; color: #4ade80; font-size: 1.05rem; font-weight: 700; border-radius: 3px; }
+  .cell-open { background: #131620; color: #252830; font-size: 0.74rem; }
+  .cell-na   { background: #0a0b10; color: #141620; font-size: 0.65rem; }
+  .cell-dead { background: #1a0808; color: #5a1010; font-size: 0.7rem; font-style: italic; }
+
+  .prov { display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: 0.72rem; font-weight: 700; margin-right: 6px; }
+  .prov-openai    { background: #1a3a2a; color: #4ade80; }
+  .prov-anthropic { background: #2a1a2a; color: #c084fc; }
+  .prov-gemini    { background: #1a2a3a; color: #60a5fa; }
+
+  .role-tag { display: inline-block; font-size: 0.68rem; padding: 1px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
+  .role-pair-a { background: #0d1f2a; color: #7dd3fc; }
+  .role-pair-b { background: #1f1a0d; color: #fde68a; }
+  .role-anchor { background: #1a0d1f; color: #d8b4fe; }
+  .role-baseline { background: #131620; color: #555; }
+  .role-dead { background: #1a0808; color: #f87171; }
+
+  /* ── Comparison key ── */
+  .comp-key { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 32px; }
+  .comp-card { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px; padding: 14px 16px; }
+  .comp-card-hdr { font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .comp-card-body { font-size: 0.76rem; color: #888; line-height: 1.5; }
+  .comp-models { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .comp-chip { font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+  .chip-openai { background: #0d1f0d; color: #4ade80; border: 1px solid #1a3a2a; }
+  .chip-gemini { background: #0a1020; color: #60a5fa; border: 1px solid #1a2a3a; }
+  .chip-anthropic { background: #150d1f; color: #c084fc; border: 1px solid #2a1a2a; }
+
+  /* ── Notes ── */
+  .notes { display: flex; flex-direction: column; gap: 8px; }
+  .note { background: #1a1d27; border-left: 3px solid #555; border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 0.79rem; }
+  .note.red    { border-left-color: #ef4444; }
+  .note.orange { border-left-color: #f97316; }
+  .note.yellow { border-left-color: #facc15; }
+  .note.green  { border-left-color: #4ade80; }
+  .note strong { display: block; margin-bottom: 3px; }
+  .note p { color: #888; font-size: 0.74rem; }
+
+  .legend { display: flex; gap: 18px; font-size: 0.74rem; color: #666; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .leg-cell { display: inline-block; width: 22px; height: 18px; border-radius: 3px; text-align: center; font-size: 0.8rem; line-height: 18px; }
+</style>
+</head>
+<body>
+
+<h1>Probe Coverage — Final Design</h1>
+<p class="subtitle">22 configs · Mar 11 2026 · generation-matched strategy</p>
+<div class="nav"><a href="models.html">← Model Browser</a></div>
+
+<div class="summary" id="summary"></div>
+
+<!-- ── COMPARISON KEY ─────────────────────────────────────────────────────── -->
+<h2>What We're Comparing — 4 Research Dimensions</h2>
+<div class="comp-key">
+
+  <!-- DIM 1 -->
+  <div class="comp-card">
+    <div class="comp-card-hdr"><span class="role-tag role-pair-a">DIM 1</span> Cross-provider reasoning sweep · Jan 2026</div>
+    <div class="comp-card-body">
+      <strong>Does reasoning level change behavior, and does the effect differ across providers?</strong><br>
+      Both are the default API model from their provider in Jan 2026, tested at all 4 reasoning levels.
+      Primary cross-provider reasoning comparison. Note: tier gap (gpt-5.2 costs ~3.5× more) — matched by generation, not price.
+    </div>
+    <div class="comp-models">
+      <span class="comp-chip chip-openai">gpt-5.2 off</span>
+      <span class="comp-chip chip-openai">gpt-5.2 low</span>
+      <span class="comp-chip chip-openai">gpt-5.2 med</span>
+      <span class="comp-chip chip-openai">gpt-5.2 high</span>
+      <span style="color:#444;font-size:0.8rem;align-self:center">vs</span>
+      <span class="comp-chip chip-gemini">3-flash off</span>
+      <span class="comp-chip chip-gemini">3-flash low</span>
+      <span class="comp-chip chip-gemini">3-flash med</span>
+      <span class="comp-chip chip-gemini">3-flash high</span>
+    </div>
+  </div>
+
+  <!-- DIM 2 -->
+  <div class="comp-card">
+    <div class="comp-card-hdr"><span class="role-tag role-pair-b">DIM 2</span> Reasoning intensity progression · OpenAI</div>
+    <div class="comp-card-body">
+      <strong>Does more reasoning = more cautious? Is there a dose-response to thinking?</strong><br>
+      Full reasoning ladder within OpenAI: gpt-5.2 at off → low → medium → high, then o3 at required (reasoning-specialist, different architecture).
+      gpt-5.1 at off + high adds a generational check: does reasoning have the same effect in the previous model?
+    </div>
+    <div class="comp-models">
+      <span class="comp-chip chip-openai">gpt-5.1 off</span>
+      <span class="comp-chip chip-openai">gpt-5.1 high</span>
+      <span style="color:#444;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-openai">gpt-5.2 off → high</span>
+      <span style="color:#444;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-openai">o3 required</span>
+    </div>
+  </div>
+
+  <!-- DIM 3 -->
+  <div class="comp-card" style="grid-column: 1 / -1;">
+    <div class="comp-card-hdr"><span class="role-tag role-baseline">DIM 3</span> Generational change over time · off only · all providers</div>
+    <div class="comp-card-body">
+      <strong>Did behavior change as models improved year-over-year within each provider?</strong><br>
+      All at reasoning=off to isolate model generation as the variable.
+    </div>
+    <div class="comp-models" style="margin-top:8px;">
+      <span style="font-size:0.72rem;color:#555;align-self:center;min-width:70px">OpenAI →</span>
+      <span class="comp-chip chip-openai">gpt-3.5 (2022)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-openai">gpt-4o (2024)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-openai">gpt-4.1 (Apr 25)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-openai">gpt-5.1 (Nov 25)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-openai">gpt-5.2 (Jan 26)</span>
+    </div>
+    <div class="comp-models" style="margin-top:6px;">
+      <span style="font-size:0.72rem;color:#555;align-self:center;min-width:70px">Anthropic →</span>
+      <span class="comp-chip chip-anthropic">haiku-3 (2024)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-anthropic">sonnet-4-0 (May 25)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-anthropic">haiku-4-5 (Oct 25)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">/</span>
+      <span class="comp-chip chip-anthropic">sonnet-4-5 (Sep 25)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-anthropic">opus-4-5 (Nov 25)</span>
+    </div>
+    <div class="comp-models" style="margin-top:6px;">
+      <span style="font-size:0.72rem;color:#555;align-self:center;min-width:70px">Gemini →</span>
+      <span class="comp-chip chip-gemini">2.0-flash (Dec 24)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-gemini">2.5-flash (May 25)</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-gemini">3-flash (Jan 26)</span>
+    </div>
+  </div>
+
+  <!-- DIM 4 -->
+  <div class="comp-card" style="grid-column: 1 / -1;">
+    <div class="comp-card-hdr"><span class="role-tag role-anchor">DIM 4</span> Model size within same generation · off only</div>
+    <div class="comp-card-body">
+      <strong>Do smaller/cheaper models behave differently than larger/flagship models from the same provider and era?</strong><br>
+      Anthropic has 3 sizes (haiku/sonnet/opus). Gemini has 2 (flash-lite + 3-flash). OpenAI mini-tier (gpt-5-mini, gpt-5-nano) rejects temperature=0 and was excluded — gpt-4o-mini works but mixes generation with size. No "pro" tier — gpt-5.2-pro at $21/$168 is too expensive.
+    </div>
+    <div class="comp-models" style="margin-top:8px;">
+      <span style="font-size:0.72rem;color:#555;align-self:center;min-width:70px">Anthropic ✓</span>
+      <span class="comp-chip chip-anthropic">haiku-4-5 · lite</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-anthropic">sonnet-4-5 · mid</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-anthropic">opus-4-5 · flagship</span>
+      <span style="font-size:0.72rem;color:#4ade80;margin-left:4px">3 sizes ✓</span>
+    </div>
+    <div class="comp-models" style="margin-top:6px;">
+      <span style="font-size:0.72rem;color:#f87171;align-self:center;min-width:70px">OpenAI ✗</span>
+      <span class="comp-chip chip-openai" style="opacity:0.4;text-decoration:line-through">gpt-5-mini · mini</span>
+      <span style="font-size:0.72rem;color:#f87171;font-style:italic;margin-left:4px">rejects temp=0 — excluded</span>
+    </div>
+    <div class="comp-models" style="margin-top:6px;">
+      <span style="font-size:0.72rem;color:#555;align-self:center;min-width:70px">Gemini ✓</span>
+      <span class="comp-chip chip-gemini">2.5-flash-lite (Jun 25) · lite</span>
+      <span style="color:#333;font-size:0.8rem;align-self:center">→</span>
+      <span class="comp-chip chip-gemini">3-flash (Jan 26) · standard</span>
+      <span style="font-size:0.72rem;color:#666;font-style:italic;margin-left:4px">[2.5-pro cut]</span>
+      <span style="font-size:0.72rem;color:#4ade80;margin-left:4px">2 sizes ✓</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── MATRIX ─────────────────────────────────────────────────────────────── -->
+<h2>Coverage Matrix</h2>
+<div class="legend">
+  <span><span class="leg-cell cell-yes">✓</span> In probe</span>
+  <span><span class="leg-cell cell-open">–</span> Could add</span>
+  <span><span class="leg-cell cell-na">·</span> Not supported</span>
+  <span><span class="leg-cell cell-dead">✗</span> Dead / removed</span>
+  <span style="color:#444;font-style:italic">Strikethrough = cut from probe</span>
+</div>
+<div class="matrix-wrap">
+<table class="matrix" id="matrix-table"></table>
+</div>
+
+<!-- ── NOTES ──────────────────────────────────────────────────────────────── -->
+<h2>Notes & Risks</h2>
+<div class="notes" id="notes"></div>
+
+<script>
+const LEVELS = ['off','low','medium','high','required'];
+
+// status per level: 'yes' | 'open' | 'na' | 'dead'
+// role: 'pair-a' | 'pair-b' | 'anchor' | 'baseline' | 'cut' | 'dead'
+const MODELS = [
+  // ── ANTHROPIC ──────────────────────────────────────────────────────────────
+  { p:'anthropic', m:'claude-opus-4-5',         tier:'flagship', date:'Nov 2025', price:'$5/$25',   role:'baseline',
+    lv:{ off:'yes',  low:'open', medium:'open', high:'open',  required:'na' } },
+  { p:'anthropic', m:'claude-sonnet-4-5',        tier:'mid',      date:'Sep 2025', price:'$3/$15',   role:'baseline',
+    lv:{ off:'yes',  low:'open', medium:'open', high:'open',  required:'na' } },
+  { p:'anthropic', m:'claude-haiku-4-5',         tier:'lite',     date:'Oct 2025', price:'$1/$5',    role:'baseline',
+    lv:{ off:'yes',  low:'open', medium:'open', high:'open',  required:'na' } },
+  { p:'anthropic', m:'claude-sonnet-4-0',        tier:'mid',      date:'May 2025', price:'$3/$15',   role:'baseline',
+    lv:{ off:'yes',  low:'open', medium:'open', high:'open',  required:'na' } },
+  { p:'anthropic', m:'claude-3-haiku-20240307',  tier:'legacy',   date:'Mar 2024', price:'$0.25/$1.25', role:'baseline',
+    lv:{ off:'yes',  low:'na',   medium:'na',   high:'na',    required:'na' } },
+  { p:'anthropic', m:'claude-opus-4-6',          tier:'flagship', date:'~Mar 2026',price:'$5/$25',   role:'cut',
+    lv:{ off:'dead', low:'dead', medium:'dead', high:'dead',  required:'na' } },
+  { p:'anthropic', m:'claude-sonnet-4-6',        tier:'mid',      date:'~Mar 2026',price:'$3/$15',   role:'cut',
+    lv:{ off:'dead', low:'dead', medium:'dead', high:'dead',  required:'na' } },
+
+  // ── OPENAI ─────────────────────────────────────────────────────────────────
+  { p:'openai', m:'gpt-5.2',            tier:'std-frontier', date:'~Jan 2026', price:'$1.75/$14', role:'pair-a',
+    lv:{ off:'yes',  low:'yes',  medium:'yes',  high:'yes',   required:'na' } },
+  { p:'openai', m:'gpt-5.1',            tier:'standard',     date:'~Nov 2025', price:'$1.25/$10', role:'pair-b',
+    lv:{ off:'yes',  low:'open', medium:'open', high:'yes',   required:'na' } },
+  { p:'openai', m:'gpt-5-mini-2025-08-07', tier:'mini',      date:'Aug 2025',  price:'$0.25/$2',  role:'cut',
+    lv:{ off:'dead', low:'na',   medium:'na',   high:'na',    required:'na' } },
+  { p:'openai', m:'gpt-4.1',            tier:'standard',     date:'Apr 2025',  price:'$2/$8',     role:'baseline',
+    lv:{ off:'yes',  low:'na',   medium:'na',   high:'na',    required:'na' } },
+  { p:'openai', m:'gpt-4o',             tier:'standard',     date:'May 2024',  price:'$2.50/$10', role:'baseline',
+    lv:{ off:'yes',  low:'na',   medium:'na',   high:'na',    required:'na' } },
+  { p:'openai', m:'gpt-3.5-turbo',      tier:'legacy',       date:'Nov 2022',  price:'$0.50/$1.50',role:'baseline',
+    lv:{ off:'yes',  low:'na',   medium:'na',   high:'na',    required:'na' } },
+  { p:'openai', m:'o3',                 tier:'reasoning',    date:'Apr 2025',  price:'$2/$8',     role:'anchor',
+    lv:{ off:'na',   low:'na',   medium:'na',   high:'na',    required:'yes' } },
+  { p:'openai', m:'gpt-5.4',            tier:'frontier',     date:'~Mar 2026', price:'$2.50/$15', role:'cut',
+    lv:{ off:'dead', low:'dead', medium:'dead', high:'dead',  required:'na' } },
+  { p:'openai', m:'gpt-5.3-chat-latest',tier:'std-frontier', date:'~Feb 2026', price:'$1.75/$14', role:'cut',
+    lv:{ off:'dead', low:'dead', medium:'dead', high:'dead',  required:'na' } },
+
+  // ── GEMINI ─────────────────────────────────────────────────────────────────
+  { p:'gemini', m:'gemini-3-flash-preview',  tier:'standard', date:'~Jan 2026', price:'$0.50/$3',  role:'pair-a',
+    lv:{ off:'yes',  low:'yes',  medium:'yes',  high:'yes',   required:'na' } },
+  { p:'gemini', m:'gemini-2.5-flash',         tier:'standard', date:'May 2025',  price:'$0.30/$2.50',role:'baseline',
+    lv:{ off:'yes',  low:'open', medium:'open', high:'open',  required:'na' } },
+  { p:'gemini', m:'gemini-2.0-flash',         tier:'legacy',   date:'Dec 2024',  price:'$0.10/$0.40',role:'baseline',
+    lv:{ off:'yes',  low:'na',   medium:'na',   high:'na',    required:'na' } },
+  { p:'gemini', m:'gemini-3-pro-preview',     tier:'flagship', date:'~Jan 2026', price:'$2/$12',    role:'dead',
+    lv:{ off:'dead', low:'dead', medium:'dead', high:'dead',  required:'na' } },
+  { p:'gemini', m:'gemini-2.5-pro',           tier:'flagship', date:'May 2025',  price:'$1.25/$10', role:'cut',
+    lv:{ off:'dead', low:'dead', medium:'dead', high:'dead',  required:'na' } },
+  { p:'gemini', m:'gemini-2.5-flash-lite',    tier:'lite',     date:'Jun 2025',  price:'$0.10/$0.40',role:'baseline',
+    lv:{ off:'yes',  low:'open', medium:'open', high:'open',  required:'na' } },
+];
+
+const PROVIDERS = ['anthropic','openai','gemini'];
+const roleLabel = { 'pair-a':'PAIR A', 'pair-b':'PAIR B', 'anchor':'ANCHOR', 'baseline':'baseline', 'cut':'CUT', 'dead':'DEAD' };
+const roleClass = { 'pair-a':'role-pair-a', 'pair-b':'role-pair-b', 'anchor':'role-anchor', 'baseline':'role-baseline', 'cut':'role-dead', 'dead':'role-dead' };
+const cellSym = { yes:'✓', open:'–', na:'·', dead:'✗' };
+const cellCls = { yes:'cell-yes', open:'cell-open', na:'cell-na', dead:'cell-dead' };
+
+// ── Summary ───────────────────────────────────────────────────────────────────
+const probeRows = MODELS.flatMap(m => LEVELS.filter(lv => m.lv[lv]==='yes').map(lv=>({...m,lv:lv})));
+const total = probeRows.length;
+const byProv = {};
+PROVIDERS.forEach(p => byProv[p] = probeRows.filter(r=>r.p===p).length);
+
+document.getElementById('summary').innerHTML = `
+  <div class="sum-stat"><label>Total probe configs</label><value>${total}</value></div>
+  <div class="sum-stat"><label>API calls</label><value>${(total*20000).toLocaleString()}</value></div>
+  <div class="sum-stat"><label>Anthropic</label><value style="color:#c084fc">${byProv.anthropic} · off only</value></div>
+  <div class="sum-stat"><label>OpenAI</label><value style="color:#4ade80">${byProv.openai} configs</value></div>
+  <div class="sum-stat"><label>Gemini</label><value style="color:#60a5fa">${byProv.gemini} configs</value></div>
+  <div class="sum-stat"><label>With multi-level reasoning</label><value>${MODELS.filter(m=>LEVELS.filter(lv=>m.lv[lv]==='yes').length>1).length} models</value></div>
+`;
+
+// ── Matrix ────────────────────────────────────────────────────────────────────
+(function() {
+  const t = document.getElementById('matrix-table');
+  let h = `<thead><tr>
+    <th class="left" style="min-width:210px">Model</th>
+    <th class="left" style="min-width:80px;font-size:0.7rem;color:#444">Tier</th>
+    <th class="left" style="min-width:70px;font-size:0.7rem;color:#444">Released</th>
+    <th class="left" style="min-width:90px;font-size:0.7rem;color:#444">$/M in/out</th>
+    <th class="left" style="min-width:80px;font-size:0.7rem;color:#444">Role</th>
+    ${LEVELS.map(l=>`<th>${l}</th>`).join('')}
+  </tr></thead><tbody>`;
+
+  PROVIDERS.forEach(prov => {
+    const models = MODELS.filter(m=>m.p===prov);
+    const n = models.filter(m=>['pair-a','pair-b','anchor','baseline'].includes(m.role)).length;
+    h += `<tr class="group-row"><td colspan="${5+LEVELS.length}">
+      <span class="prov prov-${prov}">${prov.toUpperCase()}</span>${n} models in probe
+    </td></tr>`;
+    models.forEach(m => {
+      const isCut = ['cut','dead'].includes(m.role);
+      const trClass = isCut ? 'cut' : '';
+      const dateStr = m.date.startsWith('~') ? `<i>${m.date}</i>` : m.date;
+      const cells = LEVELS.map(lv => `<td class="${cellCls[m.lv[lv]]}">${cellSym[m.lv[lv]]}</td>`).join('');
+      h += `<tr class="${trClass}">
+        <td class="model-name">${m.m}</td>
+        <td class="meta">${m.tier}</td>
+        <td class="meta">${dateStr}</td>
+        <td class="price-meta">${m.price}</td>
+        <td><span class="role-tag ${roleClass[m.role]}">${roleLabel[m.role]}</span></td>
+        ${cells}
+      </tr>`;
+    });
+  });
+
+  t.innerHTML = h + '</tbody>';
+})();
+
+// ── Notes ─────────────────────────────────────────────────────────────────────
+const NOTES = [
+  { cls:'green',  title:'✓ gemini-3-flash-preview confirmed live (Mar 11 2026)',
+    body:'All 4 reasoning levels (off/low/medium/high) pinged successfully on March 11 2026. gemini-3-pro-preview shut down March 9 but flash-preview is unaffected. No fallback needed.' },
+  { cls:'yellow', title:'Tier gap in Pair A (noted, not a problem)',
+    body:'gpt-5.2 ($1.75/$14) vs gemini-3-flash-preview ($0.50/$3): different capability tiers, same generation (Jan 2026). Methods framing: "We compared the default consumer API model from each provider at the same release date." Reviewers may ask — prepare one sentence.' },
+  { cls:'yellow', title:'No flagship-tier cross-provider comparison (gemini-pros cut)',
+    body:'claude-opus-4-5, gpt-5.2, and gemini-2.5-pro would form the 3-way flagship comparison. Gemini-pro is out. If a reviewer asks about flagship parity, you could add gemini-2.5-flash off+high (2 configs, cheap) as the closest you can get without pro models.' },
+  { cls:'green',  title:'Longitudinal coverage is clean',
+    body:'OpenAI: gpt-3.5 (2022) → gpt-4o (2024) → gpt-4.1 (2025) → gpt-5.1 (Nov 2025) → gpt-5.2 (Jan 2026). Anthropic: haiku-3 (2024) → sonnet-4-0 (May 2025) → haiku-4-5/sonnet-4-5 (late 2025) → opus-4-5 (Nov 2025). Gemini: 2.0-flash (Dec 2024) → 2.5-flash (May 2025) → 3-flash (Jan 2026). All three providers span roughly 3 years.' },
+  { cls:'green',  title:'Cost is very manageable',
+    body:'22 configs × 20,000 calls = 440,000 total API calls. Base cost (no reasoning): ~$8. With reasoning tokens for Pair A and o3: estimated $15–30 total. Gemini thinking tokens add variability — run a 1-model cost test first.' },
+];
+
+document.getElementById('notes').innerHTML = NOTES.map(n => `
+  <div class="note ${n.cls}"><strong>${n.title}</strong><p>${n.body}</p></div>
+`).join('');
+</script>
+</body>
+</html>

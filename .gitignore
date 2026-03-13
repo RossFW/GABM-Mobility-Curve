@@ -1,0 +1,18 @@
+# Probe output data (large — sync separately with rsync/scp)
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+
+# Secrets — copy manually to each machine, never commit
+.env
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
