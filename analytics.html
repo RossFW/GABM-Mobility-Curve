@@ -13,7 +13,7 @@
     body {
       background: #0a0a0f;
       color: #e2e8f0;
-      font-family: 'Press Start 2P', monospace;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       padding: 24px 16px 60px;
       min-height: 100vh;
     }
@@ -22,61 +22,77 @@
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 32px;
     }
     h1 {
+      font-family: 'Press Start 2P', monospace;
       font-size: 11px;
       letter-spacing: 3px;
       color: #e2e8f0;
       padding-bottom: 10px;
       border-bottom: 1px solid #1e2d40;
     }
-    h1 span { font-size: 6px; color: #4a6580; display: block; margin-top: 6px; letter-spacing: 1px; }
-    .figure-section {
+    h1 span { font-size: 6px; color: #4a6580; display: block; margin-top: 6px; letter-spacing: 1px; font-family: 'Press Start 2P', monospace; }
+
+    /* Section styling */
+    .section {
       background: #0d1117;
       border: 1px solid #1e2d40;
-      padding: 20px;
+      border-radius: 4px;
+      padding: 24px;
     }
-    .fig-title {
-      font-size: 8px;
-      color: #7a9ab8;
+    .section-q {
+      font-size: 16px;
+      font-weight: 600;
+      color: #c8d8e8;
+      margin-bottom: 4px;
+    }
+    .section-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
       letter-spacing: 2px;
-      margin-bottom: 14px;
-    }
-    .fig-subtitle {
-      font-size: 5px;
       color: #4a6580;
-      margin-top: -8px;
-      margin-bottom: 14px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
     }
+    .section-desc {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    /* Headline summary card */
+    .summary-card {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .summary-stat {
+      background: #111827;
+      border: 1px solid #1e2d40;
+      border-radius: 4px;
+      padding: 16px;
+    }
+    .summary-stat .val {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .summary-stat .lbl {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    /* Charts */
     .chart-container {
       position: relative;
       width: 100%;
       overflow-x: auto;
     }
     .chart-container svg { display: block; }
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-      font-size: 5px;
-      color: #7a9ab8;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      opacity: 0.9;
-      transition: opacity 0.15s;
-    }
-    .legend-item:hover { opacity: 1; }
-    .legend-swatch {
-      width: 12px;
-      height: 3px;
-      border-radius: 1px;
-    }
     .facet-row {
       display: flex;
       gap: 16px;
@@ -87,98 +103,180 @@
       min-width: 300px;
     }
     .facet-label {
+      font-family: 'Press Start 2P', monospace;
       font-size: 6px;
       color: #7a9ab8;
       letter-spacing: 1px;
       margin-bottom: 8px;
       text-align: center;
     }
+
+    /* Legends */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+      font-size: 11px;
+      color: #7a9ab8;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      opacity: 0.9;
+      transition: opacity 0.15s;
+    }
+    .legend-item:hover { opacity: 1; }
+    .legend-swatch {
+      width: 18px;
+      height: 3px;
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+
+    /* Tooltips */
     .svg-tooltip {
       position: absolute;
       pointer-events: none;
       background: #0d1520ee;
       border: 1px solid #1e2d40;
-      padding: 4px 8px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 5px;
+      border-radius: 3px;
+      padding: 6px 10px;
+      font-size: 11px;
       color: #c8d8e8;
-      line-height: 1.8;
+      line-height: 1.6;
       white-space: nowrap;
       z-index: 100;
       display: none;
     }
+
+    /* Outlier cards */
+    .outlier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .outlier-card {
+      background: #111827;
+      border: 1px solid #1e2d40;
+      border-radius: 4px;
+      padding: 16px;
+    }
+    .outlier-card .oc-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c8d8e8;
+      margin-bottom: 4px;
+    }
+    .outlier-card .oc-desc {
+      font-size: 11px;
+      color: #64748b;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    /* Model picker */
+    .model-picker {
+      background: #0a0f18;
+      color: #7a9ab8;
+      border: 1px solid #1e2d40;
+      border-radius: 3px;
+      font-size: 12px;
+      padding: 5px 10px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .heatmap-wrapper { overflow-x: auto; }
+
     #loading {
       text-align: center;
+      font-family: 'Press Start 2P', monospace;
       font-size: 8px;
       color: #4a6580;
       padding: 60px 20px;
       animation: blink 1.1s step-end infinite;
     }
     @keyframes blink { 50% { opacity: 0; } }
-    .heatmap-wrapper { overflow-x: auto; }
-    .model-picker {
-      background: #0a0f18;
-      color: #7a9ab8;
-      border: 1px solid #1e2d40;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 6px;
-      padding: 4px 8px;
-    }
   </style>
 </head>
 <body>
 <div id="app">
   <h1>
     PAPER 3: CROSS-PROVIDER LLM COMPARISON
-    <span>22 model configurations &middot; 40 infection levels &middot; 100 agents &middot; 5 reps</span>
+    <span>21 model configurations &middot; 40 infection levels &middot; 100 agents &middot; 5 reps</span>
   </h1>
 
   <div id="loading">LOADING DATA...</div>
 
-  <div class="figure-section" id="fig1-section" style="display:none">
-    <div class="fig-title">FIG 1: ALL MOBILITY CURVES</div>
-    <div class="fig-subtitle">% stay home by infection level — all 22 model configurations</div>
-    <div class="chart-container" id="fig1-chart"></div>
-    <div class="legend" id="fig1-legend"></div>
+  <!-- S0: Headline Summary -->
+  <div class="section" id="s0-section" style="display:none">
+    <div class="section-label">HEADLINE FINDINGS</div>
+    <div class="summary-card" id="s0-card"></div>
   </div>
 
-  <div class="figure-section" id="scatter-section" style="display:none">
-    <div class="fig-title">MACRO SCATTER — ALL MODELS</div>
-    <div class="fig-subtitle">Individual model data points + provider average lines + min/max range bands &middot; click providers to toggle</div>
-    <div class="chart-container" id="scatter-chart"></div>
-    <div class="legend" id="scatter-legend"></div>
+  <!-- S1: Provider Envelopes -->
+  <div class="section" id="s1-section" style="display:none">
+    <div class="section-label">S1 &mdash; THE BIG PICTURE</div>
+    <div class="section-q">Do providers produce meaningfully different behavioral ranges?</div>
+    <div class="section-desc">Shaded envelopes show the min-max range of all models within each provider. Bold line = provider mean. Click a provider to toggle.</div>
+    <div class="chart-container" id="s1-chart"></div>
+    <div class="legend" id="s1-legend"></div>
   </div>
 
-  <div class="figure-section" id="fig2-section" style="display:none">
-    <div class="fig-title">FIG 2: REASONING EFFECT</div>
-    <div class="fig-subtitle">How reasoning level affects mobility curves — GPT-5.2 vs Gemini 3 Flash</div>
-    <div class="facet-row" id="fig2-facets"></div>
+  <!-- S2: Paper 1 Legacy -->
+  <div class="section" id="s2-section" style="display:none">
+    <div class="section-label">S2 &mdash; PAPER 1 LEGACY</div>
+    <div class="section-q">How does GPT-3.5 (Paper 1) compare to modern models?</div>
+    <div class="section-desc">GPT-3.5 Turbo in bold amber. One representative per modern provider highlighted; all others in faded gray. Hover any gray line to promote it.</div>
+    <div class="chart-container" id="s2-chart"></div>
+    <div class="legend" id="s2-legend"></div>
   </div>
 
-  <div class="figure-section" id="fig3-section" style="display:none">
-    <div class="fig-title">FIG 3: GENERATIONAL PROGRESSION</div>
-    <div class="fig-subtitle">Model evolution within each provider (reasoning=off)</div>
-    <div class="facet-row" id="fig3-facets"></div>
+  <!-- S3: Small Multiples by Provider -->
+  <div class="section" id="s3-section" style="display:none">
+    <div class="section-label">S3 &mdash; DOES MODEL CHOICE MATTER?</div>
+    <div class="section-q">Within each provider, how different are the models?</div>
+    <div class="section-desc">Three panels, one per provider. All configs overlaid. Hover to highlight, click to pin.</div>
+    <div class="facet-row" id="s3-facets"></div>
   </div>
 
-  <div class="figure-section" id="fig4-section" style="display:none">
-    <div class="fig-title">FIG 4: MODEL TIER COMPARISON</div>
-    <div class="fig-subtitle">Lite vs mid vs flagship within the same generation</div>
-    <div class="facet-row" id="fig4-facets"></div>
+  <!-- S4: Reasoning Dose-Response -->
+  <div class="section" id="s4-section" style="display:none">
+    <div class="section-label">S4 &mdash; DOES REASONING HELP?</div>
+    <div class="section-q">Does more reasoning effort produce more cautious agents?</div>
+    <div class="section-desc">Two models tested at multiple reasoning levels: GPT-5.2 (off/low/med/high) and Gemini 3 Flash (off/low/med/high). Dash pattern encodes reasoning intensity.</div>
+    <div class="facet-row" id="s4-facets"></div>
   </div>
 
-  <div class="figure-section" id="fig5-section" style="display:none">
-    <div class="fig-title">FIG 5: AGENT-LEVEL ANALYSIS</div>
-    <div class="fig-subtitle">Decision heatmap — 100 agents x 40 infection levels, sorted by transition point</div>
-    <div id="fig5-model-select" style="margin-bottom:10px"></div>
-    <div class="heatmap-wrapper" id="fig5-chart"></div>
+  <!-- S5: Generational Progression -->
+  <div class="section" id="s5-section" style="display:none">
+    <div class="section-label">S5 &mdash; GENERATIONAL PROGRESSION</div>
+    <div class="section-q">Have models changed over time within each provider?</div>
+    <div class="section-desc">All reasoning=off configs per provider, ordered oldest to newest. Dashed lines = older generations.</div>
+    <div class="facet-row" id="s5-facets"></div>
   </div>
 
-  <div class="figure-section" id="agreement-section" style="display:none">
-    <div class="fig-title">VOTE AGREEMENT (CONCORDANCE)</div>
-    <div class="fig-subtitle">% of agents with unanimous votes (5/5) and strong agreement (&#8805;4/5) by infection level</div>
-    <div id="agreement-model-select" style="margin-bottom:10px"></div>
-    <div class="chart-container" id="agreement-chart"></div>
+  <!-- S6: Outlier Spotlights -->
+  <div class="section" id="s6-section" style="display:none">
+    <div class="section-label">S6 &mdash; OUTLIER SPOTLIGHTS</div>
+    <div class="section-q">What's surprising?</div>
+    <div class="section-desc">Notable anomalies and extreme behaviors discovered in the data.</div>
+    <div class="outlier-grid" id="s6-cards"></div>
+  </div>
+
+  <!-- S7: Agent-Level Analysis -->
+  <div class="section" id="s7-section" style="display:none">
+    <div class="section-label">S7 &mdash; AGENT-LEVEL ANALYSIS</div>
+    <div class="section-q">How consistent are individual agents across reps?</div>
+    <div class="section-desc">Decision heatmap (100 agents x 40 levels, sorted by transition point) and concordance chart showing vote agreement. Use the picker to switch models.</div>
+    <div id="s7-model-select" style="margin-bottom:12px"></div>
+    <div class="heatmap-wrapper" id="s7-heatmap"></div>
+    <div style="margin-top:20px">
+      <div style="font-size:13px;font-weight:600;color:#c8d8e8;margin-bottom:8px">Vote Agreement (Concordance)</div>
+      <div class="chart-container" id="s7-concordance"></div>
+    </div>
   </div>
 
 </div>

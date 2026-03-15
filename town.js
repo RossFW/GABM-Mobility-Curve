@@ -359,7 +359,7 @@ function loadAllData() {
   loadingEl.textContent = 'LOADING AGENTS...';
 
   // Load agents.json
-  fetch('../agents/agents.json')
+  fetch('agents/agents.json')
     .then(r => r.json())
     .then(agents => {
       agents.forEach(a => {
@@ -545,6 +545,14 @@ function initViz() {
 // ===============================================================
 
 function switchModel(modelIdx) {
+  // Fully stop playback and reset UI state
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  killAgentTweens();
+  document.getElementById('btn-play-pause').textContent = '\u25b6 PLAY';
+  lockedAgentId = -1;
+  lastHoveredId = -1;
+
   currentModelIndex = modelIdx;
 
   // Sync dropdown
@@ -557,10 +565,19 @@ function switchModel(modelIdx) {
 
   loadModelMicroData(modelIdx).then(() => {
     loadingEl.style.display = 'none';
+
+    // Reset to beginning: all agents at home, step 0
+    currentStep = 0;
+    currentSubStep = 0;
+    document.getElementById('scrubber').value = 0;
     placeAgentsAtHome();
-    goToStep(currentStep, 0, false);
+    moveAgents(false);
     updateInfoDisplay();
     updateChartPlayheads();
+
+    // Clear bio panel
+    const bioPanel = document.getElementById('bio-panel');
+    if (bioPanel) bioPanel.innerHTML = '<div style="color:#4a6580;font-size:5px;font-family:\'Press Start 2P\',monospace;text-align:center;padding:40px 10px;line-height:2.4">CLICK OR HOVER<br>AN AGENT<br>TO VIEW BIO<br>&amp; REASONING</div>';
   });
 }
 
