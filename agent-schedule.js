@@ -6,6 +6,9 @@
 
 'use strict';
 
+// ── Persistent toggle state for bio panel reasoning sections ──
+const expandedToggles = new Set();
+
 // ── Deterministic location assignment ────────────────────────
 function deterministicLoc(id, step, salt) {
   return ((id * 31 + step * 7 + salt * 53) >>> 0) % LOC_KEYS.length;
@@ -181,11 +184,14 @@ function buildBioHtml(id, agentInfo, decision, reasoningText) {
 
     if (total > 1) {
       const toggleId = `reasoning-toggle-${id}-${levelIdx}`;
+      const isExpanded = expandedToggles.has(toggleId);
+      const initDisplay = isExpanded ? 'block' : 'none';
+      const initLabel = isExpanded ? `Hide reps 2-${total}` : `Show reps 2-${total}`;
       reasoningHtml += `<div style="margin-top:4px">
-        <span class="bio-reasoning-toggle" onclick="document.getElementById('${toggleId}').style.display = document.getElementById('${toggleId}').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? 'Hide reps 2-${total}' : 'Show reps 2-${total}'"
-          style="color:#4a6580;font-size:5px;font-family:'Press Start 2P',monospace;cursor:pointer;text-decoration:underline">Show reps 2-${total}</span>
+        <span class="bio-reasoning-toggle" onclick="var el=document.getElementById('${toggleId}');var show=el.style.display==='none';el.style.display=show?'block':'none';this.textContent=show?'Hide reps 2-${total}':'Show reps 2-${total}';if(show){expandedToggles.add('${toggleId}')}else{expandedToggles.delete('${toggleId}')}"
+          style="color:#4a6580;font-size:5px;font-family:'Press Start 2P',monospace;cursor:pointer;text-decoration:underline">${initLabel}</span>
       </div>`;
-      reasoningHtml += `<div id="${toggleId}" style="display:none">`;
+      reasoningHtml += `<div id="${toggleId}" style="display:${initDisplay}">`;
 
       // Group remaining reps by response type
       for (let i = 1; i < allReps.length; i++) {

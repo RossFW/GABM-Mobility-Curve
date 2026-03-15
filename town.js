@@ -336,7 +336,12 @@ function update() {
       cam.scrollX + (c.x - VIEW_W / 2 - cam.scrollX) * 0.12,
       cam.scrollY + (c.y - VIEW_H / 2 - cam.scrollY) * 0.12
     );
-    showBioPanel(lockedAgentId);
+    // Only re-render bio if step/agent changed (not every frame)
+    const bioPanelKey = `${lockedAgentId}-${currentStep}-${currentSubStep}`;
+    if (bioPanelKey !== lastBioPanelKey) {
+      lastBioPanelKey = bioPanelKey;
+      showBioPanel(lockedAgentId);
+    }
   }
 
   // Arrow-key pan
@@ -481,6 +486,13 @@ function placeAgentsAtHome() {
     agentContainers[id].setVisible(false);
     setHomeLit(id, true);
 
+    // Update decision visuals for current step
+    const decision = (typeof agentDecisions !== 'undefined' && agentDecisions[currentStep])
+      ? agentDecisions[currentStep][id] : 'no';
+    updateDecisionBadge(id, decision);
+    updateDecisionGlow(id, decision);
+    updateNameLabelColor(id, decision);
+
     // Set name labels from agents.json
     const info = agentsInfo[id];
     if (info && agentNameLabels[id]) {
@@ -496,7 +508,7 @@ function initViz() {
   scrubber.max = maxStep;
   scrubber.addEventListener('input', () => {
     pausePlay();
-    goToStep(parseInt(scrubber.value, 10), 0, false);
+    goToStep(parseInt(scrubber.value, 10), 0, 'home');
   });
 
   // Show controls
@@ -571,7 +583,6 @@ function switchModel(modelIdx) {
     currentSubStep = 0;
     document.getElementById('scrubber').value = 0;
     placeAgentsAtHome();
-    moveAgents(false);
     updateInfoDisplay();
     updateChartPlayheads();
 
@@ -612,7 +623,13 @@ function goToStep(step, subStep, animate) {
   currentSubStep = Math.max(0, Math.min(subStep || 0, 1));
   document.getElementById('scrubber').value = currentStep;
   updateInfoDisplay();
-  moveAgents(animate !== false);
+  if (animate === 'home') {
+    // Reset to start-of-day: all agents at home
+    killAgentTweens();
+    placeAgentsAtHome();
+  } else {
+    moveAgents(animate !== false);
+  }
   updateChartPlayheads();
 }
 

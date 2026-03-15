@@ -185,7 +185,12 @@ function updateGlow(id, condition)  { updateDecisionGlow(id, 'no'); }
 // AGENT MOVEMENT (adapted for mobility curve)
 // ═══════════════════════════════════════════════════════════════
 
+let pendingAgentTimeouts = [];
+
 function killAgentTweens() {
+  // Clear any pending staggered movement timeouts
+  for (const tid of pendingAgentTimeouts) clearTimeout(tid);
+  pendingAgentTimeouts = [];
   agentContainers.forEach(c => scene.tweens.killTweensOf(c));
 }
 
@@ -315,7 +320,7 @@ function moveAgents(animate) {
       const fromKey = agentLocKey[id];
       const waypoints = computeWalkPath(id, fromKey, fromPos, toKey, toPos);
       const staggerMs = Math.round(((id * 97 + levelIdx * 37) % 3000) / playSpeed);
-      setTimeout(() => {
+      const tid = setTimeout(() => {
         if (!scene) return;
         agentContainers[id].setVisible(true);
         agentLocKey[id]  = toKey;
@@ -327,6 +332,7 @@ function moveAgents(animate) {
         const budget = Math.max(200, subStepMs - staggerMs);
         chainWalkTimed(id, agentContainers[id], agentSprites[id], agentCharNames[id], waypoints, budget, toKey);
       }, staggerMs);
+      pendingAgentTimeouts.push(tid);
     }
   }
 }
