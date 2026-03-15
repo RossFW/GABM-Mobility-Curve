@@ -10,6 +10,7 @@
 // ─── Hover / selection state ─────────────────────────────────
 let lastHoveredId = -1;
 let lockedAgentId = -1;
+let lastBioPanelKey = '';
 
 // ─── Chart state ─────────────────────────────────────────────
 let hoverRing = null;
