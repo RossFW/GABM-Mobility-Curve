@@ -77,7 +77,7 @@
 <body>
 
 <h1>Probe Coverage — Final Design</h1>
-<p class="subtitle">22 configs · Mar 11 2026 · generation-matched strategy</p>
+<p class="subtitle">21 configs · Mar 11 2026 · generation-matched strategy</p>
 <div class="nav"><a href="models.html">← Model Browser</a></div>
 
 <div class="summary" id="summary"></div>
@@ -113,11 +113,10 @@
     <div class="comp-card-body">
       <strong>Does more reasoning = more cautious? Is there a dose-response to thinking?</strong><br>
       Full reasoning ladder within OpenAI: gpt-5.2 at off → low → medium → high, then o3 at required (reasoning-specialist, different architecture).
-      gpt-5.1 at off + high adds a generational check: does reasoning have the same effect in the previous model?
+      gpt-5.1 off provides a generational baseline (high was CUT — too expensive at ~$400).
     </div>
     <div class="comp-models">
       <span class="comp-chip chip-openai">gpt-5.1 off</span>
-      <span class="comp-chip chip-openai">gpt-5.1 high</span>
       <span style="color:#444;font-size:0.8rem;align-self:center">→</span>
       <span class="comp-chip chip-openai">gpt-5.2 off → high</span>
       <span style="color:#444;font-size:0.8rem;align-self:center">→</span>
@@ -240,8 +239,8 @@ const MODELS = [
   // ── OPENAI ─────────────────────────────────────────────────────────────────
   { p:'openai', m:'gpt-5.2',            tier:'std-frontier', date:'~Jan 2026', price:'$1.75/$14', role:'pair-a',
     lv:{ off:'yes',  low:'yes',  medium:'yes',  high:'yes',   required:'na' } },
-  { p:'openai', m:'gpt-5.1',            tier:'standard',     date:'~Nov 2025', price:'$1.25/$10', role:'pair-b',
-    lv:{ off:'yes',  low:'na',   medium:'na',   high:'yes',   required:'na' } },
+  { p:'openai', m:'gpt-5.1',            tier:'standard',     date:'~Nov 2025', price:'$1.25/$10', role:'baseline',
+    lv:{ off:'yes',  low:'na',   medium:'na',   high:'cut',   required:'na' } },
   { p:'openai', m:'gpt-5-mini-2025-08-07', tier:'mini',      date:'Aug 2025',  price:'$0.25/$2',  role:'cut',
     lv:{ off:'dead', low:'na',   medium:'na',   high:'na',    required:'na' } },
   { p:'openai', m:'gpt-4.1',            tier:'standard',     date:'Apr 2025',  price:'$2/$8',     role:'baseline',
@@ -341,7 +340,9 @@ const NOTES = [
   { cls:'green',  title:'Longitudinal coverage is clean',
     body:'OpenAI: gpt-3.5 (2022) → gpt-4o (2024) → gpt-4.1 (2025) → gpt-5.1 (Nov 2025) → gpt-5.2 (Jan 2026). Anthropic: haiku-3 (2024) → sonnet-4-0 (May 2025) → haiku-4-5/sonnet-4-5 (late 2025) → opus-4-5 (Nov 2025). Gemini: 2.0-flash (Dec 2024) → 2.5-flash (May 2025) → 3-flash (Jan 2026). All three providers span roughly 3 years.' },
   { cls:'green',  title:'Cost is very manageable',
-    body:'22 configs × 20,000 calls = 440,000 total API calls. Base cost (no reasoning): ~$8. With reasoning tokens for Pair A and o3: estimated $15–30 total. Gemini thinking tokens add variability — run a 1-model cost test first.' },
+    body:'21 configs × 20,000 calls = 440,000 total API calls. Base cost (no reasoning): ~$8. With reasoning tokens for Pair A and o3: estimated $15–30 total. Gemini thinking tokens add variability — run a 1-model cost test first.' },
+  { cls:'orange', title:'gpt-5.1 high CUT — too expensive (~$400 for 20K calls)',
+    body:'gpt-5.1 with reasoning=high produces ~1,629 output tokens per call (vs ~86 for off) due to heavy reasoning. At $10/1M output, a full 20K-call run would cost ~$400. Partial run (4,000 calls) confirmed the token burn rate. DIM 2 still works: gpt-5.1 off provides the generational baseline, and the full reasoning ladder is captured by gpt-5.2 off→high + o3 required. Data from the partial run is archived in data/archive/openai_gpt-5_1_high/.' },
   { cls:'orange', title:'Temperature = 1 required for all reasoning-capable models',
     body:'Anthropic extended thinking API enforces temperature=1 (returns 400 error otherwise). OpenAI o-series (o3) does not accept a temperature parameter at all. Gemini 2.5+ / 3.x models produce degraded/looping output at temperature=0 when thinking is active — Google documentation recommends temperature=1 for all thinking-enabled models. Decision: we use temperature=1 for all reasoning-capable models regardless of reasoning level. For non-thinking models (gemini-2.0-flash, Anthropic off-only, OpenAI standard off-only) we use temperature=0. This is disclosed in the methods section.' },
   { cls:'yellow', title:'Gemini thinking situation — gemini-2.0-flash (off only)',

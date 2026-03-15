@@ -14,7 +14,7 @@ showing how LLM-driven agents respond to rising infection rates.
 
 ```
 probe_mobility.py          Main probe script (100 agents × 5 reps × 40 levels = 20K calls/config)
-ping_models.py             Connectivity test for all 22 configs (~$0.01 total)
+ping_models.py             Connectivity test for all 21 configs (~$0.01 total)
 agents/agents.json         100 frozen agent personas (age, traits) — do not modify without discussion
 docs/ROADMAP.md            Master "where we are and what we're pursuing" doc — read this first
 docs/STATUS.md             Phase tracker — update as configs complete
@@ -53,12 +53,12 @@ Must contain the key(s) for the provider you're running:
 - `OPENAI_API_KEY=sk-...`
 - `GOOGLE_API_KEY=...`
 
-## 22 Configs to Run
+## 21 Configs to Run
 
 | Provider | Models | Reasoning levels |
 |----------|--------|-----------------|
 | Anthropic (5) | opus-4-5, sonnet-4-5, haiku-4-5, sonnet-4-0, claude-3-haiku | off only |
-| OpenAI (11) | gpt-5.2 (×4), gpt-5.1 (×2), gpt-4.1, gpt-4o, gpt-3.5-turbo, o3 | off/low/med/high/required |
+| OpenAI (10) | gpt-5.2 (×4), gpt-5.1, gpt-4.1, gpt-4o, gpt-3.5-turbo, o3 | off/low/med/high/required |
 | Gemini (6) | gemini-3-flash-preview (×4), gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash | off/low/med/high |
 
 ## Rate Limits & Workers (March 2026)
@@ -149,4 +149,4 @@ Consolidate data afterward with rsync (see `docs/SETUP.md`).
 
 - Paper 1: Original GABM epidemic (GPT-3.5) — published arXiv 2307.04986
 - Paper 2: Prompt sensitivity analysis — complete
-- Paper 3 (this): Cross-provider LLM probe, 22 configs — data collection phase
+- Paper 3 (this): Cross-provider LLM probe, 21 configs — data collection phase

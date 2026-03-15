@@ -89,9 +89,8 @@ USEFUL_CONFIGS = [
     ("openai",    "gpt-5.2",       "low"),
     ("openai",    "gpt-5.2",       "medium"),
     ("openai",    "gpt-5.2",       "high"),
-    # Pair B: gpt-5.1 off + high only (longitudinal: Nov 2025 vs Jan 2026)
+    # gpt-5.1 off only (generational baseline; high CUT — too expensive at ~$400)
     ("openai",    "gpt-5.1",       "off"),
-    ("openai",    "gpt-5.1",       "high"),
     # Cross-sectional baselines
     ("openai",    "gpt-4.1",       "off"),
     ("openai",    "gpt-4o",        "off"),
@@ -224,7 +223,51 @@ def run_config(
     micro_path = micro_csv_path(provider_name, model, reasoning)
     macro_path = macro_csv_path(provider_name, model, reasoning)
 
+    # Check for existing partial data (level-resume)
+    completed_levels = set()
     macro_rows = []
+    if micro_path.exists():
+        try:
+            level_data = {}
+            with open(micro_path, "r") as f:
+                for row in csv.DictReader(f):
+                    lvl = float(row["infection_level"])
+                    if lvl not in level_data:
+                        level_data[lvl] = {"n_yes": 0, "n_no": 0, "n_total": 0,
+                                           "total_input": 0, "total_output": 0,
+                                           "total_reasoning": 0, "total_cost": 0.0}
+                    d = level_data[lvl]
+                    if row["response"] == "yes":
+                        d["n_yes"] += 1
+                    elif row["response"] == "no":
+                        d["n_no"] += 1
+                    d["n_total"] += 1
+                    d["total_input"] += int(row.get("input_tokens") or 0)
+                    d["total_output"] += int(row.get("output_tokens") or 0)
+                    d["total_reasoning"] += int(row.get("reasoning_tokens") or 0)
+                    d["total_cost"] += float(row.get("cost") or 0)
+            for lvl, d in sorted(level_data.items()):
+                completed_levels.add(lvl)
+                pct = (d["n_yes"] / d["n_total"] * 100) if d["n_total"] > 0 else 0
+                macro_rows.append({
+                    "provider": provider_name, "model": model, "reasoning": reasoning,
+                    "infection_level": lvl,
+                    "n_yes": d["n_yes"], "n_no": d["n_no"], "n_total": d["n_total"],
+                    "pct_stay_home": round(pct, 2),
+                    "total_input_tokens": d["total_input"],
+                    "total_output_tokens": d["total_output"],
+                    "total_reasoning_tokens": d["total_reasoning"],
+                    "total_cost": round(d["total_cost"], 6),
+                })
+            if completed_levels:
+                print(f"  Resuming: {len(completed_levels)} levels already done, "
+                      f"{len(levels) - len(completed_levels)} remaining")
+        except Exception as e:
+            print(f"  Warning: could not read existing data: {e}")
+            completed_levels = set()
+            macro_rows = []
+
+    levels_to_run = [l for l in levels if l not in completed_levels]
 
     try:
         provider = create_provider(provider_name, model, reasoning=reasoning)
@@ -232,10 +275,20 @@ def run_config(
         print(f"  ERROR creating provider: {e}")
         return
 
-    # Write micro CSV header immediately — rows appended after each level
-    # so data is preserved if run is interrupted mid-config.
-    with open(micro_path, "w", newline="") as f:
-        csv.DictWriter(f, fieldnames=MICRO_FIELDS).writeheader()
+    if not micro_path.exists() or micro_path.stat().st_size == 0:
+        # Fresh start — write header (only if file doesn't exist or is empty)
+        micro_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(micro_path, "w", newline="") as f:
+            csv.DictWriter(f, fieldnames=MICRO_FIELDS).writeheader()
+    elif not completed_levels:
+        # File exists with data but we couldn't parse it — back it up, don't overwrite
+        import shutil
+        backup = micro_path.with_suffix(".csv.bak")
+        shutil.copy2(micro_path, backup)
+        print(f"  ⚠️  Backed up unparseable data to {backup.name}")
+        with open(micro_path, "w", newline="") as f:
+            csv.DictWriter(f, fieldnames=MICRO_FIELDS).writeheader()
+    # If resuming, micro CSV already exists — we append to it below
 
     total_cost = 0.0
     n_calls = 0
@@ -286,7 +339,7 @@ def run_config(
             "format_valid": format_valid,
         }
 
-    for level in levels:
+    for level in levels_to_run:
         # Build all (agent, rep) tasks for this level
         tasks = [(agent, rep) for agent in agents for rep in range(reps)]
 

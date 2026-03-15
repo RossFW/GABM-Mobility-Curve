@@ -97,7 +97,7 @@ Overlay against Round #2 Full Feedback empirical mobility scatter for validation
 | DIM | Question | Models |
 |-----|----------|--------|
 | 1 | Cross-provider reasoning sweep | gpt-5.2 vs gemini-3-flash (off/low/med/high) |
-| 2 | Reasoning intensity within OpenAI | gpt-5.1+5.2 off→high, o3 required |
+| 2 | Reasoning intensity within OpenAI | gpt-5.1 off, gpt-5.2 off→high, o3 required |
 | 3 | Generational change (off only, all providers) | gpt-3.5→4o→4.1→5.1→5.2; haiku-3→sonnet-4-0→haiku/sonnet-4-5→opus-4-5; 2.0-flash→2.5-flash→3-flash |
 | 4 | Model size within generation (off only) | haiku/sonnet/opus-4-5; 2.5-flash-lite→3-flash |
 

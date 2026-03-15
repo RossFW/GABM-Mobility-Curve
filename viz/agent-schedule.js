@@ -162,39 +162,41 @@ function buildBioHtml(id, agentInfo, decision, reasoningText) {
     const outReps = allReps.filter(r => r.response === 'no');
     const total = allReps.length;
 
+    // Header with vote breakdown
     if (homeReps.length === total) {
-      // Unanimous home
       reasoningHtml = `<div class="bio-reasoning-label">REASONING (${total}/${total})</div>`;
-      reasoningHtml += `<div class="bio-reasoning" style="color:#F97316;margin-bottom:2px">🏠 HOME (${total}/${total}):</div>`;
-      homeReps.forEach((r, i) => {
-        const txt = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        reasoningHtml += `<div class="bio-reasoning"><span style="opacity:0.5">${i + 1}.</span> ${txt}</div>`;
-      });
     } else if (outReps.length === total) {
-      // Unanimous out
       reasoningHtml = `<div class="bio-reasoning-label">REASONING (${total}/${total})</div>`;
-      reasoningHtml += `<div class="bio-reasoning" style="color:#3B82F6;margin-bottom:2px">🚶 OUT (${total}/${total}):</div>`;
-      outReps.forEach((r, i) => {
-        const txt = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        reasoningHtml += `<div class="bio-reasoning"><span style="opacity:0.5">${i + 1}.</span> ${txt}</div>`;
-      });
     } else {
-      // Split vote — show both groups
       reasoningHtml = `<div class="bio-reasoning-label">REASONING (${homeReps.length}/${total} Home, ${outReps.length}/${total} Out)</div>`;
-      if (homeReps.length > 0) {
-        reasoningHtml += `<div class="bio-reasoning" style="color:#F97316;margin-bottom:2px">🏠 HOME (${homeReps.length}):</div>`;
-        homeReps.forEach((r, i) => {
-          const txt = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          reasoningHtml += `<div class="bio-reasoning"><span style="opacity:0.5">${i + 1}.</span> ${txt}</div>`;
-        });
+    }
+
+    // Show first rep inline, rest collapsed
+    const firstRep = allReps[0];
+    const firstTxt = (firstRep.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const firstColor = firstRep.response === 'yes' ? '#F97316' : '#3B82F6';
+    const firstIcon = firstRep.response === 'yes' ? '🏠' : '🚶';
+    reasoningHtml += `<div class="bio-reasoning" style="color:${firstColor};margin-bottom:2px">${firstIcon} Rep 1:</div>`;
+    reasoningHtml += `<div class="bio-reasoning">${firstTxt}</div>`;
+
+    if (total > 1) {
+      const toggleId = `reasoning-toggle-${id}-${levelIdx}`;
+      reasoningHtml += `<div style="margin-top:4px">
+        <span class="bio-reasoning-toggle" onclick="document.getElementById('${toggleId}').style.display = document.getElementById('${toggleId}').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? 'Hide reps 2-${total}' : 'Show reps 2-${total}'"
+          style="color:#4a6580;font-size:5px;font-family:'Press Start 2P',monospace;cursor:pointer;text-decoration:underline">Show reps 2-${total}</span>
+      </div>`;
+      reasoningHtml += `<div id="${toggleId}" style="display:none">`;
+
+      // Group remaining reps by response type
+      for (let i = 1; i < allReps.length; i++) {
+        const r = allReps[i];
+        const txt = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const color = r.response === 'yes' ? '#F97316' : '#3B82F6';
+        const icon = r.response === 'yes' ? '🏠' : '🚶';
+        reasoningHtml += `<div class="bio-reasoning" style="color:${color};margin-top:4px">${icon} Rep ${i + 1}:</div>`;
+        reasoningHtml += `<div class="bio-reasoning">${txt}</div>`;
       }
-      if (outReps.length > 0) {
-        reasoningHtml += `<div class="bio-reasoning" style="color:#3B82F6;margin-bottom:2px;margin-top:4px">🚶 OUT (${outReps.length}):</div>`;
-        outReps.forEach((r, i) => {
-          const txt = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          reasoningHtml += `<div class="bio-reasoning"><span style="opacity:0.5">${i + 1}.</span> ${txt}</div>`;
-        });
-      }
+      reasoningHtml += `</div>`;
     }
   } else {
     const reasoning = (reasoningText || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
