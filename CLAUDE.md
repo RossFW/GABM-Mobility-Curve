@@ -4,8 +4,11 @@
 
 **This is Paper 3.** Probe study for Ross Williams' PhD dissertation. Cross-sectional design:
 each of 100 frozen agents answers one yes/no question at each of 40 infection levels,
-across 22 LLM configurations (Anthropic, OpenAI, Gemini). Generates the "mobility curve"
+across 21 LLM configurations (Anthropic, OpenAI, Gemini). Generates the "mobility curve"
 showing how LLM-driven agents respond to rising infection rates.
+
+**Data collection is complete** (March 2026): 420,000 rows across all 21 configs, validated
+and backed up to GitHub. Next phase: OLS regression on macro data.
 
 **Sibling repo:** `../GABM-Epidemic/` — contains the provider abstraction layer
 (`providers/`) that this repo imports. Both must be cloned at the same directory level.
@@ -14,16 +17,19 @@ showing how LLM-driven agents respond to rising infection rates.
 
 ```
 probe_mobility.py          Main probe script (100 agents × 5 reps × 40 levels = 20K calls/config)
-ping_models.py             Connectivity test for all 21 configs (~$0.01 total)
+combine_data.py            Populates viz/data/real/ from data/ — run after collection
+validate_data.py           Checks all 21 configs for completeness
 agents/agents.json         100 frozen agent personas (age, traits) — do not modify without discussion
+data/metadata/models.csv   All 21 configs: alias, pinned version, release date, knowledge cutoff, pricing
 docs/ROADMAP.md            Master "where we are and what we're pursuing" doc — read this first
-docs/STATUS.md             Phase tracker — update as configs complete
+docs/STATUS.md             Phase tracker — update as phases complete
+docs/MODEL_CARD.md         All 21 model configs with version IDs, release dates, knowledge cutoffs
 docs/SETUP.md              Full setup & run instructions for a new machine
 docs/SAMPLING.md           Justification for 40-level design (0–3.5% + 4–7%)
 site/coverage.html         Model coverage matrix (open in browser)
 viz/town.html              Interactive Phaser 3 town view — agents respond to infection levels
-viz/analytics.html         Analytics dashboard — 5 research figures (mobility curves, etc.)
-viz/data/mock/             Synthetic data for viz development (21 model configs × 40 levels)
+viz/analytics.html         Academic analytics dashboard — 9 research figures (real data)
+viz/data/real/             Real probe data (populated by combine_data.py)
 ```
 
 ## Quick Start (new machine)
@@ -53,13 +59,15 @@ Must contain the key(s) for the provider you're running:
 - `OPENAI_API_KEY=sk-...`
 - `GOOGLE_API_KEY=...`
 
-## 21 Configs to Run
+## 21 Configs (all collected)
 
 | Provider | Models | Reasoning levels |
 |----------|--------|-----------------|
 | Anthropic (5) | opus-4-5, sonnet-4-5, haiku-4-5, sonnet-4-0, claude-3-haiku | off only |
 | OpenAI (10) | gpt-5.2 (×4), gpt-5.1, gpt-4.1, gpt-4o, gpt-3.5-turbo, o3 | off/low/med/high/required |
 | Gemini (6) | gemini-3-flash-preview (×4), gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash | off/low/med/high |
+
+Full details: `docs/MODEL_CARD.md` and `data/metadata/models.csv`
 
 ## Rate Limits & Workers (March 2026)
 
@@ -134,16 +142,15 @@ Consolidate data afterward with rsync (see `docs/SETUP.md`).
 1. **Never modify `agents/agents.json`** without discussing with Ross first — it's the
    fixed agent population for the study. Changes invalidate comparability across configs.
 2. **Confirm before any API calls** — they cost real money. Always dry-run first.
-3. **Don't commit `data/`** — gitignored. Sync with rsync after runs complete.
+3. **`data/` is committed to GitHub** (collection complete). Do NOT delete data files.
 4. **The .env file** lives in `../GABM-Epidemic/.env` — never commit it.
+5. **Never modify `cost_estimates.xlsx`** — read-only master workbook.
 
-## After Data Collection
+## Next Steps (Phase 3 — OLS Regression)
 
-1. Write `combine_results.py` — merges all config data dirs into
-   `data/combined/all_micro.csv` and `data/combined/all_macro.csv`
-2. Write `analyze_results.py` — generates 5 figures, saved to `figures/`
-3. Replace `viz/data/mock/` with real combined data
-4. Write the paper — see `docs/ROADMAP.md` for full pipeline
+1. Write `combine_results.py` — merges all 21 macro CSVs into `data/combined/all_macro.csv` (840 rows)
+2. Write `analyze_results.py` — OLS regression per model config, export LaTeX table
+3. See `docs/ROADMAP.md` for full statistical approach
 
 ## Dissertation Context
 
