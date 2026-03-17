@@ -5,8 +5,11 @@
 // ============================================================
 'use strict';
 
-let macroData = [];   // all_macro.csv rows
-let microCache = {};  // dirKey → micro CSV rows (loaded on demand)
+let macroData = [];      // all_macro.csv rows
+let microCache = {};     // dirKey → micro CSV rows (loaded on demand)
+let olsResults = [];     // [{key,provider,model,reasoning,label,color,alpha,beta,r2,alpha_logit,beta_logit}]
+let modelMetadata = [];  // rows from data/metadata/models.csv
+let tab2Rendered = false;
 
 // ── Chart geometry ───────────────────────────────────────────
 const CW = 860, CH = 360, PAD = { t: 28, r: 24, b: 48, l: 58 };
@@ -82,7 +85,7 @@ function svgBorder(w, h) {
 function makePolyline(rows, w, h, pad) {
   const sorted = [...rows].sort((a, b) => a.infection_level - b.infection_level);
   return sorted.map(r =>
-    `${levelToX(r.infection_level, w, h, pad).toFixed ? levelToX(r.infection_level, w, pad).toFixed(1) : levelToX(r.infection_level, w, pad)},${pctToY(r.pct_stay_home, h, pad).toFixed(1)}`
+    `${levelToX(r.infection_level, w, h, pad).toFixed ? levelToX(r.infection_level, w, pad).toFixed(1) : levelToX(r.infection_level, w, pad)},${pctToY(100 - r.pct_stay_home, h, pad).toFixed(1)}`
   ).join(' ');
 }
 
@@ -127,6 +130,82 @@ function makeSVG(w, h, inner) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// OLS HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function fitOLS(xs, ys) {
+  const n = xs.length;
+  if (n < 2) return { alpha: 0, beta: 0, r2: 0 };
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = ys.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  xs.forEach((x, i) => { num += (x - mx) * (ys[i] - my); den += (x - mx) ** 2; });
+  const beta = den ? num / den : 0;
+  const alpha = my - beta * mx;
+  const yhat = xs.map(x => alpha + beta * x);
+  const ss_res = ys.reduce((s, y, i) => s + (y - yhat[i]) ** 2, 0);
+  const ss_tot = ys.reduce((s, y) => s + (y - my) ** 2, 0);
+  const r2 = ss_tot > 0 ? 1 - ss_res / ss_tot : 0;
+  return { alpha, beta, r2 };
+}
+
+function fitLogisticOLS(xs, ys) {
+  // logit-transform ys (treating as 0–100 pct → divide by 100 first, clamp)
+  const clamp = p => Math.max(0.01, Math.min(0.99, p / 100));
+  const logit_ys = ys.map(y => { const p = clamp(y); return Math.log(p / (1 - p)); });
+  return fitOLS(xs, logit_ys);
+}
+
+// Compute OLS for all 21 configs from macroData, store in olsResults
+function computeAllOLS() {
+  olsResults = CONFIG.MODELS.map(m => {
+    const rows = macroData.filter(r =>
+      r.provider === m.provider && r.model === m.model && r.reasoning === m.reasoning
+    ).sort((a, b) => a.infection_level - b.infection_level);
+    const xs = rows.map(r => +r.infection_level);
+    const ys = rows.map(r => 100 - +r.pct_stay_home);
+    const lin = fitOLS(xs, ys);
+    const log = fitLogisticOLS(xs, ys);
+    return {
+      key: configDirKey(m),
+      provider: m.provider, model: m.model, reasoning: m.reasoning,
+      label: m.label, color: m.color, dash: m.dash,
+      alpha: lin.alpha, beta: lin.beta, r2: lin.r2,
+      alpha_logit: log.alpha, beta_logit: log.beta,
+    };
+  });
+}
+
+// Render a small OLS stat table into a <table> element
+function renderOLSTable(tableId, keys, baseline) {
+  const el = document.getElementById(tableId);
+  if (!el) return;
+  const subset = keys.map(k => olsResults.find(r => r.key === k)).filter(Boolean);
+  if (!subset.length) return;
+  const baseAlpha = baseline ? (olsResults.find(r => r.key === baseline)?.alpha ?? 0) : null;
+  const baseBeta  = baseline ? (olsResults.find(r => r.key === baseline)?.beta  ?? 0) : null;
+  const hasBaseline = baseline !== null && baseline !== undefined;
+  el.innerHTML = `
+    <thead><tr>
+      <th>Model</th>
+      <th>&alpha; (intercept, %)</th>
+      <th>&beta; (slope, pp/%)</th>
+      <th>R&sup2;</th>
+      ${hasBaseline ? '<th>&Delta;&alpha;</th><th>&Delta;&beta;</th>' : ''}
+    </tr></thead>
+    <tbody>
+      ${subset.map(r => `<tr>
+        <td>${esc(r.label)}</td>
+        <td>${r.alpha.toFixed(1)}%</td>
+        <td>${r.beta >= 0 ? '+' : ''}${r.beta.toFixed(2)}</td>
+        <td>${r.r2.toFixed(2)}</td>
+        ${hasBaseline ? `<td>${(r.alpha - baseAlpha) >= 0 ? '+' : ''}${(r.alpha - baseAlpha).toFixed(1)}%</td>
+                         <td>${(r.beta  - baseBeta)  >= 0 ? '+' : ''}${(r.beta  - baseBeta).toFixed(2)}</td>` : ''}
+      </tr>`).join('')}
+    </tbody>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // S0: Headline Summary Card
 // ═══════════════════════════════════════════════════════════════
 function renderS0() {
@@ -141,21 +220,21 @@ function renderS0() {
     const totalYes = rows.reduce((s, r) => s + (parseFloat(r.n_yes) || 0), 0);
     const totalN   = rows.reduce((s, r) => s + (parseFloat(r.n_total) || 0), 0);
     if (totalN === 0) return;
-    modelRates.push({ m, rate: totalYes / totalN * 100 });
+    modelRates.push({ m, rate: (1 - totalYes / totalN) * 100 });
   });
 
   if (modelRates.length === 0) { el.innerHTML = '<div style="color:#777">No data loaded</div>'; return; }
 
   modelRates.sort((a, b) => b.rate - a.rate);
-  const highest = modelRates[0];
-  const lowest  = modelRates[modelRates.length - 1];
+  const highest = modelRates[0];   // highest go-outside = most mobile
+  const lowest  = modelRates[modelRates.length - 1]; // lowest go-outside = most cautious
   const spread  = highest.rate - lowest.rate;
 
   const cards = [
-    { val: `${highest.rate.toFixed(1)}%`, lbl: `${highest.m.label} — highest overall stay-home rate`, color: highest.m.color },
-    { val: `${lowest.rate.toFixed(1)}%`,  lbl: `${lowest.m.label} — lowest overall stay-home rate`,  color: lowest.m.color  },
-    { val: `${spread.toFixed(0)} pp`,     lbl: `Spread between most and least cautious model`,        color: '#111'          },
-    { val: `${modelRates.length}`,        lbl: `Model configurations with complete data`,             color: '#111'          },
+    { val: `${highest.rate.toFixed(1)}%`, lbl: `${highest.m.label} — highest overall mobility`,   color: highest.m.color },
+    { val: `${lowest.rate.toFixed(1)}%`,  lbl: `${lowest.m.label} — lowest mobility (most cautious)`, color: lowest.m.color  },
+    { val: `${spread.toFixed(0)} pp`,     lbl: `Spread between most and least mobile model`,          color: '#111'          },
+    { val: `${modelRates.length}`,        lbl: `Model configurations with complete data`,              color: '#111'          },
   ];
 
   el.innerHTML = cards.map(c =>
@@ -197,7 +276,7 @@ function renderS1() {
 
   let providerSvg = '';
   // Draw axis grid first
-  providerSvg += yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) + axisLabels(w, h, pad, 'Infection level (% population)', '% agents staying home');
+  providerSvg += yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) + axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
 
   providers.forEach(p => {
     if (s1HiddenProviders.has(p)) return;
@@ -266,7 +345,7 @@ function renderFigA() {
     .sort((a, b) => reasoningOrder.indexOf(a.reasoning) - reasoningOrder.indexOf(b.reasoning));
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'Infection level (% population)', '% agents staying home');
+              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
   const legendItems = [];
 
   models.forEach((m, i) => {
@@ -309,7 +388,7 @@ function renderFigB() {
     .sort((a, b) => reasoningOrder.indexOf(a.reasoning) - reasoningOrder.indexOf(b.reasoning));
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'Infection level (% population)', '% agents staying home');
+              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
   const legendItems = [];
 
   models.forEach((m, i) => {
@@ -350,7 +429,7 @@ function renderFigC() {
   ];
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'Infection level (% population)', '% agents staying home');
+              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
   const legendItems = [];
 
   targets.forEach(t => {
@@ -387,7 +466,7 @@ function renderFigD() {
   ];
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'Infection level (% population)', '% agents staying home');
+              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
   const legendItems = [];
 
   targets.forEach(t => {
@@ -427,7 +506,7 @@ function renderS2() {
   modernReps.forEach(m => highlightKeys.add(modelKey(m)));
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'Infection level (% population)', '% agents staying home');
+              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
   let hitTargets = '';
   const legendItems = [];
 
@@ -486,7 +565,7 @@ function renderS3() {
   facets.innerHTML = groups.map(g => {
     const models = CONFIG.MODELS.filter(g.filter);
     let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-                axisLabels(w, h, pad, 'Infection level', '% stay home');
+                axisLabels(w, h, pad, 'New cases (%)', '% going outside');
     let hitTargets = '';
     const legendItems = [];
 
@@ -529,7 +608,7 @@ function renderS6() {
     const rate0    = rows.find(r => parseFloat(r.infection_level) === 0);
     modelStats[k]  = {
       m, overallRate: totalN > 0 ? totalYes / totalN * 100 : 0,
-      stayHomeAt0: rate0 ? parseFloat(rate0.pct_stay_home) : null, rows,
+      mobilityAt0: rate0 ? 100 - parseFloat(rate0.pct_stay_home) : null, rows,
     };
   });
 
@@ -537,9 +616,10 @@ function renderS6() {
 
   const gpt4o = Object.values(modelStats).find(s => s.m.model === 'gpt-4o');
   if (gpt4o) {
+    const mobilityRate = 100 - gpt4o.overallRate;
     outliers.push({
-      title: `GPT-4o: ${gpt4o.overallRate.toFixed(1)}% overall stay-home rate`,
-      desc:  'Nearly never stays home regardless of infection level — the most "go out" model in the study.',
+      title: `GPT-4o: ${mobilityRate.toFixed(1)}% overall mobility`,
+      desc:  'Nearly always goes outside regardless of infection level — the highest-mobility model in the study.',
       color: gpt4o.m.color, rows: gpt4o.rows,
     });
   }
@@ -548,20 +628,21 @@ function renderS6() {
   if (lite) {
     const low  = lite.rows.filter(r => parseFloat(r.infection_level) <= 1.0);
     const high = lite.rows.filter(r => parseFloat(r.infection_level) >= 3.0);
-    const avgLow  = low.length  > 0 ? low.reduce( (s,r) => s + parseFloat(r.pct_stay_home), 0) / low.length  : 0;
-    const avgHigh = high.length > 0 ? high.reduce((s,r) => s + parseFloat(r.pct_stay_home), 0) / high.length : 0;
+    // Inverted: go-outside = 100 - pct_stay_home
+    const avgLow  = low.length  > 0 ? low.reduce( (s,r) => s + (100 - parseFloat(r.pct_stay_home)), 0) / low.length  : 0;
+    const avgHigh = high.length > 0 ? high.reduce((s,r) => s + (100 - parseFloat(r.pct_stay_home)), 0) / high.length : 0;
     outliers.push({
-      title: 'Gemini 2.5 Flash Lite: Inverted response curve',
-      desc:  `Average stay-home at low infection: ${avgLow.toFixed(1)}% vs. high infection: ${avgHigh.toFixed(1)}%. The curve runs backwards — more cautious at low than high infection.`,
+      title: 'Gemini 2.5 Flash Lite: Anomalous response curve',
+      desc:  `Average mobility at low infection: ${avgLow.toFixed(1)}% vs. high infection: ${avgHigh.toFixed(1)}%. The curve runs backwards — more mobile at higher infection (anomalous).`,
       color: lite.m.color, rows: lite.rows,
     });
   }
 
   const gpt35 = Object.values(modelStats).find(s => s.m.model === 'gpt-3.5-turbo');
-  if (gpt35 && gpt35.stayHomeAt0 !== null) {
+  if (gpt35 && gpt35.mobilityAt0 !== null) {
     outliers.push({
-      title: `GPT-3.5 at 0% infection: ${gpt35.stayHomeAt0.toFixed(1)}% stay home`,
-      desc:  'Over half of agents stay home even with zero reported cases. The Paper 1 model is extremely cautious by default.',
+      title: `GPT-3.5 at 0% infection: ${gpt35.mobilityAt0.toFixed(1)}% mobility`,
+      desc:  'Under half of agents go outside even with zero reported cases. The Paper 1 model is extremely cautious by default.',
       color: '#E69F00', rows: gpt35.rows,
     });
   }
@@ -712,6 +793,7 @@ function renderS7Heatmap(microRows, cfg) {
 function renderS7Concordance(microRows, cfg) {
   const el = document.getElementById('s7-concordance');
 
+  // Build per-agent per-level vote tallies
   const agentLevelVotes = {};
   microRows.forEach(r => {
     if (!agentLevelVotes[r.agent_id]) agentLevelVotes[r.agent_id] = {};
@@ -723,44 +805,79 @@ function renderS7Concordance(microRows, cfg) {
   const agentIds = Object.keys(agentLevelVotes).map(Number);
   const nAgents  = agentIds.length;
 
-  const unanimousData = [], strongData = [], bareData = [];
+  // Concordance series (exact values, not cumulative) + majority direction per level
+  const unanimousData = [], exactFourData = [], exactThreeData = [];
+  const majorityHome = [];  // true = majority staying home at this level
   LEVELS.forEach(level => {
-    let unanimous = 0, strong = 0, bare = 0;
+    let unanimous = 0, exactFour = 0, exactThree = 0;
+    let totalYes = 0, totalVotes = 0;
     agentIds.forEach(id => {
       const v = agentLevelVotes[id]?.[level];
       if (!v) return;
       const mx = Math.max(v.yes, v.no);
       if (mx === 5) unanimous++;
-      if (mx >= 4)  strong++;
-      if (mx >= 3)  bare++;
+      if (mx === 4) exactFour++;
+      if (mx === 3) exactThree++;
+      totalYes   += v.yes;
+      totalVotes += v.yes + v.no;
     });
-    unanimousData.push({ level, pct: (unanimous / nAgents) * 100 });
-    strongData.push({    level, pct: (strong    / nAgents) * 100 });
-    bareData.push({      level, pct: (bare      / nAgents) * 100 });
+    unanimousData.push({ level, pct: (unanimous  / nAgents) * 100 });
+    exactFourData.push({ level, pct: (exactFour  / nAgents) * 100 });
+    exactThreeData.push({ level, pct: (exactThree / nAgents) * 100 });
+    majorityHome.push(totalVotes > 0 && totalYes / totalVotes > 0.5);
   });
 
-  const panels = [
-    { title: 'Unanimous (5/5)',        data: unanimousData, color: '#0072B2' },
-    { title: 'Strong majority (\u22654/5)', data: strongData,    color: '#56B4E9' },
-    { title: 'Bare majority (\u22653/5)',   data: bareData,      color: '#888888' },
+  const w = CW, h = CH, pad = PAD;
+
+  // ── Majority-direction strip — 8px band just inside the top of the chart ──
+  const stripH = 8;
+  const stripY = pad.t;  // sits at the 100% line
+  let stripSvg = '';
+  LEVELS.forEach((level, i) => {
+    const x1 = levelToX(level, w, pad);
+    const x2 = i + 1 < LEVELS.length ? levelToX(LEVELS[i + 1], w, pad) : x1 + 4;
+    const col = majorityHome[i] ? '#D55E00' : '#0072B2';  // amber=home, blue=out
+    stripSvg += `<rect x="${x1.toFixed(1)}" y="${stripY}" width="${(x2 - x1).toFixed(1)}" height="${stripH}" fill="${col}" opacity="0.45"/>`;
+  });
+
+  // ── Three concordance lines ──
+  const series = [
+    { label: 'Unanimous (5/5)', data: unanimousData,  color: '#111111', dash: null,  sw: 2.0 },
+    { label: 'Exact 4/5',       data: exactFourData,  color: '#0072B2', dash: null,  sw: 1.75 },
+    { label: 'Exact 3/5',       data: exactThreeData, color: '#888888', dash: '5,3', sw: 1.5  },
   ];
 
-  const w = SMALL_CW, h = SMALL_CH, pad = SMALL_PAD;
+  let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
+    axisLabels(w, h, pad, 'New cases (%)', '% agents') +
+    stripSvg;
 
-  el.innerHTML = `<div style="display:flex;gap:20px;flex-wrap:wrap">` +
-    panels.map(p => {
-      const pts = p.data.map(d =>
-        `${levelToX(d.level, w, pad).toFixed(1)},${pctToY(d.pct, h, pad).toFixed(1)}`
-      ).join(' ');
-      const inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-        axisLabels(w, h, pad, 'Infection level', '% agents') +
-        `<polyline points="${pts}" stroke="${p.color}" stroke-width="2" fill="none" opacity="0.9"/>`;
-      return `<div style="flex:1;min-width:220px">
-        <div style="font-size:12px;font-weight:bold;color:#333;text-align:center;margin-bottom:6px">${p.title}</div>
-        ${makeSVG(w, h, inner)}
-      </div>`;
-    }).join('') +
-  `</div>`;
+  series.forEach(s => {
+    const pts = s.data.map(d =>
+      `${levelToX(d.level, w, pad).toFixed(1)},${pctToY(d.pct, h, pad).toFixed(1)}`
+    ).join(' ');
+    const dashAttr = s.dash ? `stroke-dasharray="${s.dash}"` : '';
+    inner += `<polyline points="${pts}" stroke="${s.color}" stroke-width="${s.sw}" fill="none" opacity="0.9" ${dashAttr}/>`;
+  });
+
+  // ── Legend ──
+  const legendItems = series.map(s => {
+    const dashStyle = s.dash ? `border-top:2px dashed ${s.color}` : `border-top:2.5px solid ${s.color}`;
+    return `<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#333">
+      <span style="display:inline-block;width:22px;height:0;${dashStyle}"></span>${s.label}
+    </span>`;
+  }).join('');
+
+  const majLegend = `
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#333">
+      <span style="display:inline-block;width:14px;height:8px;background:#D55E00;opacity:0.6;border-radius:1px"></span>Majority staying home (low mobility)
+    </span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#333">
+      <span style="display:inline-block;width:14px;height:8px;background:#0072B2;opacity:0.6;border-radius:1px"></span>Majority going out
+    </span>`;
+
+  el.innerHTML = `
+    <div class="chart-container">${makeSVG(w, h, inner)}</div>
+    <div class="legend" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:16px">${legendItems}${majLegend}</div>`;
 }
 
 function renderS7(microRows, cfg) {
@@ -771,15 +888,43 @@ function renderS7(microRows, cfg) {
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
+// ── Tab switching ─────────────────────────────────────────────
+function initTabs() {
+  document.querySelectorAll('#tab-nav .tab-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const tab = link.dataset.tab;
+      document.querySelectorAll('#tab-nav .tab-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      const pane = document.getElementById('tab-' + tab);
+      if (pane) pane.classList.add('active');
+      // Lazy-render Tab 2 on first visit
+      if (tab === 'characteristics' && !tab2Rendered && olsResults.length) {
+        renderTab2();
+        tab2Rendered = true;
+      }
+    });
+  });
+  // Activate first tab
+  document.getElementById('tab-curves').classList.add('active');
+}
+
 function init() {
+  initTabs();
+
   Papa.parse(CONFIG.ALL_MACRO, {
     download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
     complete({ data }) {
       macroData = data;
       document.getElementById('loading').style.display = 'none';
 
+      // Compute OLS for all 21 configs
+      computeAllOLS();
+
+      // ── Tab 1: Mobility Curves ────────────────────────────────
       renderS0();
-      renderS1();
+      // s1 (provider envelopes) removed from main flow
       renderFigA();
       renderFigB();
       renderFigC();
@@ -788,6 +933,24 @@ function init() {
       renderS3();
       renderS6();
 
+      // Inline OLS tables
+      renderOLSTable('figA-ols',
+        ['openai_gpt-5_2_off','openai_gpt-5_2_low','openai_gpt-5_2_medium','openai_gpt-5_2_high']);
+      renderOLSTable('figB-ols',
+        ['gemini_gemini-3-flash-preview_off','gemini_gemini-3-flash-preview_low',
+         'gemini_gemini-3-flash-preview_medium','gemini_gemini-3-flash-preview_high']);
+      renderOLSTable('figC-ols',
+        ['openai_gpt-3_5-turbo_off','openai_gpt-4o_off','openai_gpt-5_1_off','openai_gpt-5_2_off']);
+      renderOLSTable('figD-ols',
+        ['gemini_gemini-2_0-flash_off','gemini_gemini-2_5-flash_off','gemini_gemini-3-flash-preview_off']);
+      renderOLSTable('s2-ols',
+        ['anthropic_claude-sonnet-4-5_off','openai_gpt-5_2_off','gemini_gemini-3-flash-preview_off',
+         'openai_gpt-3_5-turbo_off'],
+        'openai_gpt-3_5-turbo_off');
+
+      // s3 provider OLS range table
+      renderS3OLSTable();
+
       // S7: agent-level (needs micro data, lazy-loaded)
       document.getElementById('s7-section').style.display = 'block';
       buildModelPicker('s7-model-select', s7SelectedIdx, idx => {
@@ -795,12 +958,744 @@ function init() {
         loadMicro(idx, renderS7);
       });
       loadMicro(s7SelectedIdx, renderS7);
+
+      // Load metadata for Tab 2 (background load)
+      Papa.parse('data/metadata/models.csv', {
+        download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+        complete({ data }) {
+          modelMetadata = data;
+          // If user already clicked Tab 2 before metadata loaded, render now
+          if (document.getElementById('tab-characteristics').classList.contains('active') && !tab2Rendered) {
+            renderTab2();
+            tab2Rendered = true;
+          }
+        },
+      });
     },
     error() {
       document.getElementById('loading').innerHTML =
         '<span style="color:#c00">Failed to load macro data. Is the HTTP server running from the viz/ directory?</span>';
     },
   });
+}
+
+// ── S3 provider OLS range table ───────────────────────────────
+function renderS3OLSTable() {
+  const el = document.getElementById('s3-ols');
+  if (!el) return;
+  const providers = ['anthropic', 'openai', 'gemini'];
+  const rows = providers.map(p => {
+    const configs = olsResults.filter(r => r.provider === p);
+    if (!configs.length) return '';
+    const betas = configs.map(r => r.beta);
+    const minB = Math.min(...betas), maxB = Math.max(...betas);
+    const minM = configs[betas.indexOf(minB)].label;
+    const maxM = configs[betas.indexOf(maxB)].label;
+    return `<tr>
+      <td style="text-transform:capitalize">${p}</td>
+      <td>${minB.toFixed(2)} (${esc(minM)})</td>
+      <td>${maxB.toFixed(2)} (${esc(maxM)})</td>
+      <td>${(maxB - minB).toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `
+    <thead><tr>
+      <th>Provider</th>
+      <th>Min &beta;</th>
+      <th>Max &beta;</th>
+      <th>Range</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 2 — MODEL CHARACTERISTICS
+// ═══════════════════════════════════════════════════════════════
+
+// Parse "YYYY-MM" → numeric (e.g. "2025-08" → 2025.625)
+function parseYearMonth(s) {
+  if (!s) return null;
+  const [y, m] = String(s).split('-').map(Number);
+  return y + (m - 1) / 12;
+}
+
+// Parse "YYYY-MM-DD" → numeric
+function parseDate(s) {
+  if (!s) return null;
+  const [y, m, d] = String(s).split('-').map(Number);
+  return y + (m - 1) / 12 + (d - 1) / 365;
+}
+
+function renderTab2() {
+  renderFigE();
+  renderFigF();
+  renderFigG();
+  renderFigH();
+  renderFigI();
+  initFigJ();
+}
+
+// ── Provider colors (Okabe-Ito compatible) ────────────────────
+const PROV_COLORS = { anthropic: '#7C3AED', openai: '#22C55E', gemini: '#3B82F6' };
+const PROV_LABELS = { anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Gemini' };
+
+// ── Generic scatter SVG (for Figs E, G, H) ───────────────────
+function makeScatterSVG(points, opts) {
+  // points: [{x, y, color, label, dash}]
+  // opts: {w, h, xLabel, yLabel, xFmt, yFmt, fitLine}
+  const { w = CW, h = CH, xLabel = '', yLabel = '', xFmt = v => v.toFixed(1),
+          yFmt = v => v.toFixed(1), fitLine = null } = opts;
+  const pad = { t: 36, r: 40, b: 54, l: 70 };
+  const xs = points.map(p => p.x), ys = points.map(p => p.y);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const xPad = (xMax - xMin) * 0.08 || 0.5;
+  const yPad = (yMax - yMin) * 0.12 || 1;
+  const xLo = xMin - xPad, xHi = xMax + xPad;
+  const yLo = yMin - yPad, yHi = yMax + yPad;
+
+  const toSX = x => pad.l + (x - xLo) / (xHi - xLo) * (w - pad.l - pad.r);
+  const toSY = y => pad.t + (1 - (y - yLo) / (yHi - yLo)) * (h - pad.t - pad.b);
+
+  // Gridlines
+  const nTicksY = 5;
+  let svg = '';
+  for (let i = 0; i <= nTicksY; i++) {
+    const v = yLo + i * (yHi - yLo) / nTicksY;
+    const sy = toSY(v);
+    svg += `<line x1="${pad.l}" y1="${sy.toFixed(1)}" x2="${w - pad.r}" y2="${sy.toFixed(1)}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
+    svg += `<text x="${pad.l - 6}" y="${(sy + 4).toFixed(1)}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="end">${yFmt(v)}</text>`;
+  }
+
+  // X-axis ticks (auto 5 ticks)
+  const nTicksX = 5;
+  for (let i = 0; i <= nTicksX; i++) {
+    const v = xLo + i * (xHi - xLo) / nTicksX;
+    const sx = toSX(v);
+    svg += `<line x1="${sx.toFixed(1)}" y1="${pad.t}" x2="${sx.toFixed(1)}" y2="${h - pad.b}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
+    svg += `<text x="${sx.toFixed(1)}" y="${h - pad.b + 14}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="middle">${xFmt(v)}</text>`;
+  }
+
+  // Axis labels
+  svg += `<text x="${(pad.l + w - pad.r) / 2}" y="${h - 6}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}" text-anchor="middle" font-style="italic">${xLabel}</text>`;
+  svg += `<text x="${14}" y="${(pad.t + h - pad.b) / 2}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}" text-anchor="middle" font-style="italic" transform="rotate(-90,14,${(pad.t + h - pad.b) / 2})">${yLabel}</text>`;
+
+  // Fit line
+  if (fitLine) {
+    const { alpha, beta } = fitLine;
+    const x1 = xLo, x2 = xHi;
+    const y1 = alpha + beta * x1, y2 = alpha + beta * x2;
+    svg += `<line x1="${toSX(x1).toFixed(1)}" y1="${toSY(y1).toFixed(1)}" x2="${toSX(x2).toFixed(1)}" y2="${toSY(y2).toFixed(1)}" stroke="#999" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+  }
+
+  // Points (drawn last so they're on top)
+  const tooltip = document.createElement('div');
+  tooltip.className = 'svg-tooltip';
+  const ptsSVG = points.map((p, i) => {
+    const sx = toSX(p.x).toFixed(1), sy = toSY(p.y).toFixed(1);
+    return `<circle cx="${sx}" cy="${sy}" r="6" fill="${p.color}" stroke="#fff" stroke-width="1.5" opacity="0.9"
+      data-label="${esc(p.label)}" data-x="${xFmt(p.x)}" data-y="${yFmt(p.y)}" class="scatter-pt"/>`;
+  }).join('');
+  svg += ptsSVG;
+
+  return makeSVG(w, h, svg);
+}
+
+// Figure E — α vs β scatter
+function renderFigE() {
+  const el = document.getElementById('figE-chart');
+  if (!el || !olsResults.length) return;
+  const points = olsResults.map(r => ({
+    x: r.alpha, y: r.beta, color: PROV_COLORS[r.provider], label: r.label,
+  }));
+  const w = CW, h = CH;
+  el.innerHTML = makeScatterSVG(points, {
+    w, h,
+    xLabel: 'α — baseline mobility at 0% infection (%)',
+    yLabel: 'β — slope (pp per 1% infection)',
+    xFmt: v => v.toFixed(0) + '%',
+    yFmt: v => v.toFixed(1),
+  });
+
+  // Wire tooltips
+  el.querySelectorAll('.scatter-pt').forEach(circle => {
+    const tt = el.querySelector('.svg-tooltip') || (() => {
+      const d = document.createElement('div'); d.className = 'svg-tooltip'; el.appendChild(d); return d;
+    })();
+    circle.addEventListener('mouseenter', ev => {
+      tt.style.display = 'block';
+      tt.innerHTML = `<strong>${circle.dataset.label}</strong><br>α = ${circle.dataset.x}<br>β = ${circle.dataset.y} pp/%`;
+    });
+    circle.addEventListener('mousemove', ev => {
+      const r = el.getBoundingClientRect();
+      tt.style.left = (ev.clientX - r.left + 12) + 'px';
+      tt.style.top  = (ev.clientY - r.top  - 10) + 'px';
+    });
+    circle.addEventListener('mouseleave', () => { tt.style.display = 'none'; });
+  });
+
+  // Legend
+  const legEl = document.getElementById('figE-legend');
+  if (legEl) legEl.innerHTML = ['anthropic','openai','gemini'].map(p =>
+    `<div class="legend-item"><div class="legend-swatch" style="background:${PROV_COLORS[p]};height:10px;width:10px;border-radius:50%"></div><span>${PROV_LABELS[p]}</span></div>`
+  ).join('');
+}
+
+// Figure F — slope ranking horizontal bar chart
+function renderFigF() {
+  const el = document.getElementById('figF-chart');
+  if (!el || !olsResults.length) return;
+
+  const sorted = [...olsResults].sort((a, b) => b.beta - a.beta);
+  const maxBeta = Math.max(...sorted.map(r => r.beta));
+  const rowH = 22, padL = 170, padR = 60, padT = 16, padB = 20;
+  const w = CW, h = sorted.length * rowH + padT + padB;
+  const barW = w - padL - padR;
+
+  let svg = '';
+  // Gridlines at 0, 5, 10, ...
+  for (let v = 0; v <= Math.ceil(maxBeta + 2); v += 5) {
+    const x = padL + (v / (maxBeta + 2)) * barW;
+    svg += `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${h - padB}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
+    svg += `<text x="${x.toFixed(1)}" y="${h - padB + 12}" fill="${AX_COLOR}" font-size="9" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+  }
+  // Zero line
+  const x0 = padL + Math.max(0, 0 / (maxBeta + 2)) * barW;
+  svg += `<line x1="${x0}" y1="${padT}" x2="${x0}" y2="${h - padB}" stroke="#aaa" stroke-width="1"/>`;
+
+  sorted.forEach((r, i) => {
+    const y = padT + i * rowH;
+    const bw = (Math.max(0, r.beta) / (maxBeta + 2)) * barW;
+    svg += `<rect x="${padL}" y="${y + 3}" width="${bw.toFixed(1)}" height="${rowH - 6}" fill="${PROV_COLORS[r.provider]}" opacity="0.8"/>`;
+    svg += `<text x="${padL - 6}" y="${y + rowH / 2 + 4}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="end">${esc(r.label)}</text>`;
+    svg += `<text x="${(padL + bw + 4).toFixed(1)}" y="${y + rowH / 2 + 4}" fill="#555" font-size="9" font-family="${SERIF}">${r.beta.toFixed(2)}</text>`;
+  });
+
+  svg += `<text x="${padL + barW / 2}" y="${h - 4}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}" text-anchor="middle" font-style="italic">&beta; slope (pp per 1% infection)</text>`;
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" style="display:block;background:${SVG_BG}">${svgBorder(w, h)}${svg}</svg>`;
+}
+
+// Figure G — knowledge cutoff vs β
+function renderFigG() {
+  const el = document.getElementById('figG-chart');
+  if (!el || !olsResults.length || !modelMetadata.length) return;
+
+  const points = olsResults.map(r => {
+    const meta = modelMetadata.find(m =>
+      m.provider === r.provider && m.alias === r.model && m.reasoning === r.reasoning
+    );
+    if (!meta) return null;
+    const x = parseYearMonth(meta.knowledge_cutoff);
+    return x ? { x, y: r.beta, color: PROV_COLORS[r.provider], label: r.label } : null;
+  }).filter(Boolean);
+
+  if (!points.length) return;
+  const xs = points.map(p => p.x), ys = points.map(p => p.y);
+  const fitLine = fitOLS(xs, ys);
+  const beta_str = `β = ${fitLine.beta >= 0 ? '+' : ''}${fitLine.beta.toFixed(2)} per year, R² = ${fitLine.r2.toFixed(2)}`;
+
+  el.innerHTML = makeScatterSVG(points, {
+    xLabel: `Knowledge cutoff year   [OLS fit: ${beta_str}]`,
+    yLabel: 'β slope (pp per 1% infection)',
+    xFmt: v => v.toFixed(1),
+    yFmt: v => v.toFixed(1),
+    fitLine,
+  });
+  wireScatterTooltips(el, 'x', 'Knowledge cutoff', 'β');
+
+  const legEl = document.getElementById('figG-legend');
+  if (legEl) legEl.innerHTML = ['anthropic','openai','gemini'].map(p =>
+    `<div class="legend-item"><div class="legend-swatch" style="background:${PROV_COLORS[p]};height:10px;width:10px;border-radius:50%"></div><span>${PROV_LABELS[p]}</span></div>`
+  ).join('');
+}
+
+// Figure H — release date vs α
+function renderFigH() {
+  const el = document.getElementById('figH-chart');
+  if (!el || !olsResults.length || !modelMetadata.length) return;
+
+  const points = olsResults.map(r => {
+    const meta = modelMetadata.find(m =>
+      m.provider === r.provider && m.alias === r.model && m.reasoning === r.reasoning
+    );
+    if (!meta) return null;
+    const x = parseDate(meta.release_date);
+    return x ? { x, y: r.alpha, color: PROV_COLORS[r.provider], label: r.label } : null;
+  }).filter(Boolean);
+
+  if (!points.length) return;
+  const xs = points.map(p => p.x), ys = points.map(p => p.y);
+  const fitLine = fitOLS(xs, ys);
+  const beta_str = `β = ${fitLine.beta >= 0 ? '+' : ''}${fitLine.beta.toFixed(1)}%/year, R² = ${fitLine.r2.toFixed(2)}`;
+
+  el.innerHTML = makeScatterSVG(points, {
+    xLabel: `Model release year   [OLS fit: ${beta_str}]`,
+    yLabel: 'α — baseline mobility (%)',
+    xFmt: v => v.toFixed(1),
+    yFmt: v => v.toFixed(0) + '%',
+    fitLine,
+  });
+  wireScatterTooltips(el, 'x', 'Release year', 'α');
+
+  const legEl = document.getElementById('figH-legend');
+  if (legEl) legEl.innerHTML = ['anthropic','openai','gemini'].map(p =>
+    `<div class="legend-item"><div class="legend-swatch" style="background:${PROV_COLORS[p]};height:10px;width:10px;border-radius:50%"></div><span>${PROV_LABELS[p]}</span></div>`
+  ).join('');
+}
+
+// Wire tooltips for generic scatter (post-render)
+function wireScatterTooltips(el, xKey, xLbl, yLbl) {
+  const svg = el.querySelector('svg');
+  if (!svg) return;
+  let tt = el.querySelector('.svg-tooltip');
+  if (!tt) { tt = document.createElement('div'); tt.className = 'svg-tooltip'; el.appendChild(tt); }
+  el.querySelectorAll('.scatter-pt').forEach(c => {
+    c.addEventListener('mouseenter', () => {
+      tt.style.display = 'block';
+      tt.innerHTML = `<strong>${c.dataset.label}</strong><br>${xLbl}: ${c.dataset.x}<br>${yLbl}: ${c.dataset.y}`;
+    });
+    c.addEventListener('mousemove', ev => {
+      const r = el.getBoundingClientRect();
+      tt.style.left = (ev.clientX - r.left + 12) + 'px';
+      tt.style.top  = (ev.clientY - r.top  - 10) + 'px';
+    });
+    c.addEventListener('mouseleave', () => { tt.style.display = 'none'; });
+  });
+}
+
+// Figure I — model family grouped comparison (α and β per model, ordered by release date)
+function renderFigI() {
+  const el = document.getElementById('figI-chart');
+  if (!el || !olsResults.length || !modelMetadata.length) return;
+
+  // Merge OLS + metadata, deduplicate by (provider, model, reasoning)
+  // Sort by release_date
+  const merged = olsResults.map(r => {
+    const meta = modelMetadata.find(m =>
+      m.provider === r.provider && m.alias === r.model && m.reasoning === r.reasoning
+    );
+    if (!meta) return null;
+    return { ...r, release_date: parseDate(meta.release_date) };
+  }).filter(Boolean).sort((a, b) => (a.release_date || 0) - (b.release_date || 0));
+
+  if (!merged.length) return;
+
+  // Group by provider for labeling
+  const providers = ['anthropic', 'openai', 'gemini'];
+  const w = CW, padT = 36, padB = 90, padL = 55, padR = 20;
+  const rowH = 22, groupGap = 16;
+  const nBars = merged.length;
+  const barW = Math.floor((w - padL - padR - (providers.length - 1) * groupGap) / nBars) - 2;
+  const h = CH;
+
+  const maxAlpha = Math.max(...merged.map(r => r.alpha));
+  const maxBeta  = Math.max(...merged.map(r => r.beta));
+  const maxVal   = Math.max(maxAlpha, maxBeta * 5);  // scale beta so it's visible alongside alpha
+
+  const toBarH = v => ((v / maxVal) * (h - padT - padB));
+
+  let svg = '';
+  // Y axis ticks for α (0–100%)
+  [0, 25, 50, 75, 100].forEach(v => {
+    if (v > maxVal) return;
+    const y = h - padB - toBarH(v);
+    svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
+    svg += `<text x="${padL - 4}" y="${(y + 4).toFixed(1)}" fill="${AX_COLOR}" font-size="9" font-family="${SERIF}" text-anchor="end">${v}%</text>`;
+  });
+
+  let x = padL + 4;
+  let prevProvider = null;
+  merged.forEach((r, i) => {
+    if (prevProvider && r.provider !== prevProvider) x += groupGap;
+    prevProvider = r.provider;
+
+    const pcolor = PROV_COLORS[r.provider];
+    const alphaH = toBarH(r.alpha);
+    const betaH  = toBarH(r.beta * 5);  // scale beta for visibility
+    const baseline = h - padB;
+
+    // α bar — handle negative alpha (draw downward)
+    const alphaRect = alphaH >= 0
+      ? { y: baseline - alphaH, height: alphaH }
+      : { y: baseline, height: -alphaH };
+    svg += `<rect x="${x.toFixed(1)}" y="${alphaRect.y.toFixed(1)}" width="${barW}" height="${alphaRect.height.toFixed(1)}" fill="${pcolor}" opacity="${alphaH >= 0 ? 0.85 : 0.4}"/>`;
+
+    // β bar — handle negative beta (draw downward, red tint)
+    const betaRect = betaH >= 0
+      ? { y: baseline - betaH, height: betaH }
+      : { y: baseline, height: -betaH };
+    const betaFill = betaH >= 0 ? '#111' : '#DC2626';
+    svg += `<rect x="${(x + barW * 0.35).toFixed(1)}" y="${betaRect.y.toFixed(1)}" width="${(barW * 0.3).toFixed(1)}" height="${betaRect.height.toFixed(1)}" fill="${betaFill}" opacity="0.5"/>`;
+
+    // Label (rotated)
+    svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${h - padB + 10}" fill="${AX_COLOR}" font-size="8" font-family="${SERIF}" text-anchor="end" transform="rotate(-55,${(x + barW / 2).toFixed(1)},${h - padB + 10})">${esc(r.label)}</text>`;
+    x += barW + 2;
+  });
+
+  // Provider group labels
+  let gx = padL + 4;
+  let prevProv2 = null;
+  providers.forEach(prov => {
+    const group = merged.filter(r => r.provider === prov);
+    if (!group.length) return;
+    if (prevProv2) gx += groupGap;
+    const gw = group.length * (barW + 2) - 2;
+    svg += `<text x="${(gx + gw / 2).toFixed(1)}" y="${padT - 10}" fill="${PROV_COLORS[prov]}" font-size="10" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${PROV_LABELS[prov]}</text>`;
+    gx += gw + 2;
+    prevProv2 = prov;
+  });
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" style="display:block;background:${SVG_BG}">${svgBorder(w, h)}${svg}</svg>`;
+
+  const legEl = document.getElementById('figI-legend');
+  if (legEl) legEl.innerHTML = `
+    <div class="legend-item"><div class="legend-swatch" style="background:#7C3AED;height:10px;border-radius:2px"></div><span>Anthropic &alpha;</span></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#22C55E;height:10px;border-radius:2px"></div><span>OpenAI &alpha;</span></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#3B82F6;height:10px;border-radius:2px"></div><span>Gemini &alpha;</span></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#111;opacity:0.5;height:10px;border-radius:2px"></div><span>&beta; &times;5 (dark overlay)</span></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FIGURE 13 — Model Comparison (Dummy Variable OLS)
+// ═══════════════════════════════════════════════════════════════
+
+// ── Matrix math helpers (no external deps) ────────────────────
+
+// XᵀX — returns k×k matrix
+function matXtX(X) {
+  const n = X.length, k = X[0].length;
+  const out = Array.from({length: k}, () => new Array(k).fill(0));
+  for (let i = 0; i < k; i++)
+    for (let j = 0; j < k; j++)
+      for (let r = 0; r < n; r++) out[i][j] += X[r][i] * X[r][j];
+  return out;
+}
+
+// Xᵀy — returns k-vector
+function matXty(X, y) {
+  const n = X.length, k = X[0].length;
+  const out = new Array(k).fill(0);
+  for (let j = 0; j < k; j++)
+    for (let r = 0; r < n; r++) out[j] += X[r][j] * y[r];
+  return out;
+}
+
+// Invert a k×k matrix via Gauss-Jordan elimination on [A | I]
+function matInvert(A) {
+  const k = A.length;
+  const M = A.map((row, i) => {
+    const r = [...row, ...new Array(k).fill(0)];
+    r[k + i] = 1;
+    return r;
+  });
+  for (let col = 0; col < k; col++) {
+    // Partial pivot
+    let maxRow = col;
+    for (let row = col + 1; row < k; row++)
+      if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+    const pivot = M[col][col];
+    if (Math.abs(pivot) < 1e-12) return null; // singular
+    for (let c = 0; c < 2 * k; c++) M[col][c] /= pivot;
+    for (let row = 0; row < k; row++) {
+      if (row === col) continue;
+      const f = M[row][col];
+      for (let c = 0; c < 2 * k; c++) M[row][c] -= f * M[col][c];
+    }
+  }
+  return M.map(row => row.slice(k));
+}
+
+// 2-sided p-value from t-distribution using normal approximation (valid df ≥ 30)
+// Uses Abramowitz & Stegun polynomial approximation (error < 7.5e-8)
+function tPValue(t, df) {
+  const z = Math.abs(t);
+  const t2 = 1 / (1 + 0.2316419 * z);
+  const poly = t2 * (0.319381530 + t2 * (-0.356563782 + t2 * (1.781477937
+             + t2 * (-1.821255978 + t2 * 1.330274429))));
+  return 2 * poly * Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI);
+}
+
+function pStars(p) {
+  if (p < 0.001) return '***';
+  if (p < 0.01)  return '**';
+  if (p < 0.05)  return '*';
+  return 'ns';
+}
+
+// Full multiple OLS: X is n×k design matrix, y is n-vector
+// Returns { betas, ses, ts, ps, r2, df }
+function fitMultipleOLS(X, y) {
+  const n = X.length, k = X[0].length;
+  const XtX    = matXtX(X);
+  const Xty    = matXty(X, y);
+  const XtXinv = matInvert(XtX);
+  if (!XtXinv) return null;
+  const betas = XtXinv.map(row => row.reduce((s, v, j) => s + v * Xty[j], 0));
+  const yhat  = y.map((_, i) => betas.reduce((s, b, j) => s + b * X[i][j], 0));
+  const ym    = y.reduce((a, b) => a + b, 0) / n;
+  const SSres = y.reduce((s, yi, i) => s + (yi - yhat[i]) ** 2, 0);
+  const SStot = y.reduce((s, yi) => s + (yi - ym) ** 2, 0);
+  const s2    = SSres / (n - k);
+  const ses   = XtXinv.map((row, j) => Math.sqrt(Math.max(0, s2 * row[j])));
+  const df    = n - k;
+  const ts    = betas.map((b, j) => ses[j] > 0 ? b / ses[j] : 0);
+  const ps    = ts.map(t => tPValue(t, df));
+  return { betas, ses, ts, ps, r2: SStot > 0 ? 1 - SSres / SStot : 0, df };
+}
+
+// ── Figure 13 state ───────────────────────────────────────────
+let figJMicroA = null; // cached micro rows for currently selected config A
+let figJMicroB = null;
+let figJKeyA   = null;
+let figJKeyB   = null;
+
+function initFigJ() {
+  const selA = document.getElementById('figJ-configA');
+  const selB = document.getElementById('figJ-configB');
+  if (!selA || !selB) return;
+
+  // Populate dropdowns with all 21 models
+  CONFIG.MODELS.forEach((m, i) => {
+    [selA, selB].forEach(sel => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = m.label;
+      sel.appendChild(opt);
+    });
+  });
+  // Default: first two distinct configs
+  selB.selectedIndex = Math.min(1, CONFIG.MODELS.length - 1);
+
+  document.getElementById('figJ-run').addEventListener('click', runFigJ);
+  // Auto-run with defaults
+  runFigJ();
+}
+
+function runFigJ() {
+  const idxA = +document.getElementById('figJ-configA').value;
+  const idxB = +document.getElementById('figJ-configB').value;
+  if (idxA === idxB) {
+    document.getElementById('figJ-results').innerHTML =
+      '<p style="color:#c00;font-size:13px">Please select two different model configurations.</p>';
+    return;
+  }
+  const mA = CONFIG.MODELS[idxA], mB = CONFIG.MODELS[idxB];
+  const keyA = configDirKey(mA), keyB = configDirKey(mB);
+  const loading = document.getElementById('figJ-loading');
+  loading.style.display = 'block';
+  document.getElementById('figJ-results').innerHTML = '';
+  document.getElementById('figJ-scatter').innerHTML = '';
+
+  let microA = null, microB = null;
+  let loaded = 0;
+
+  function tryRender() {
+    if (++loaded < 2) return;
+    loading.style.display = 'none';
+    drawFigJ(microA, microB, mA, mB);
+  }
+
+  // Load micro CSVs (read-only from data/)
+  Papa.parse(`data/real/${keyA}/probe_results_micro.csv`, {
+    download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+    complete({ data }) { microA = data; tryRender(); },
+    error() {
+      // Fallback: try alternative path
+      Papa.parse(`../data/${keyA}/probe_results_micro.csv`, {
+        download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+        complete({ data }) { microA = data; tryRender(); },
+        error() { loading.innerHTML = '<span style="color:#c00">Failed to load micro data for Config A.</span>'; },
+      });
+    },
+  });
+  Papa.parse(`data/real/${keyB}/probe_results_micro.csv`, {
+    download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+    complete({ data }) { microB = data; tryRender(); },
+    error() {
+      Papa.parse(`../data/${keyB}/probe_results_micro.csv`, {
+        download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+        complete({ data }) { microB = data; tryRender(); },
+        error() { loading.innerHTML = '<span style="color:#c00">Failed to load micro data for Config B.</span>'; },
+      });
+    },
+  });
+}
+
+function aggregateMicroToReps(rows) {
+  // Group by (infection_level, rep) → proportion going outside
+  // micro CSV: response = "yes" means stay home, "no" means go outside
+  const map = {};
+  rows.forEach(r => {
+    const level = parseFloat(r.infection_level);
+    const rep   = parseInt(r.rep, 10);
+    const key   = `${level}|${rep}`;
+    if (!map[key]) map[key] = { level, rep, nGo: 0, nTotal: 0 };
+    map[key].nTotal++;
+    // "no" response = goes outside
+    const resp = String(r.response || '').toLowerCase().trim();
+    if (resp === 'no') map[key].nGo++;
+  });
+  return Object.values(map).map(g => ({
+    nc:  g.level / 100,
+    mob: g.nTotal > 0 ? g.nGo / g.nTotal : 0,
+    level: g.level, rep: g.rep,
+  }));
+}
+
+function drawFigJ(microA, microB, mA, mB) {
+  const repsA = aggregateMicroToReps(microA);
+  const repsB = aggregateMicroToReps(microB);
+  const all   = [...repsA.map(r => ({...r, d: 0})), ...repsB.map(r => ({...r, d: 1}))];
+
+  // ── Scatter SVG ─────────────────────────────────────────────
+  const W = CW, H = 320;
+  const pad = { t: 28, r: 20, b: 50, l: 55 };
+  const xMin = 0, xMax = 0.08; // NC range 0–0.07 (7% max)
+  const yMin = 0, yMax = 1.0;
+
+  const toX = nc  => pad.l + (nc  - xMin) / (xMax - xMin) * (W - pad.l - pad.r);
+  const toY = mob => H - pad.b - (mob - yMin) / (yMax - yMin) * (H - pad.t - pad.b);
+
+  let svg = '';
+
+  // Grid lines
+  [0, 0.25, 0.5, 0.75, 1.0].forEach(v => {
+    const y = toY(v);
+    svg += `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W - pad.r}" y2="${y.toFixed(1)}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
+    svg += `<text x="${(pad.l - 5).toFixed(1)}" y="${(y + 4).toFixed(1)}" fill="${AX_COLOR}" font-size="9" font-family="${SERIF}" text-anchor="end">${v.toFixed(2)}</text>`;
+  });
+  [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07].forEach(v => {
+    const x = toX(v);
+    svg += `<line x1="${x.toFixed(1)}" y1="${pad.t}" x2="${x.toFixed(1)}" y2="${H - pad.b}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
+    svg += `<text x="${x.toFixed(1)}" y="${(H - pad.b + 14).toFixed(1)}" fill="${AX_COLOR}" font-size="9" font-family="${SERIF}" text-anchor="middle">${(v * 100).toFixed(0)}%</text>`;
+  });
+
+  // Axis labels
+  svg += `<text x="${((pad.l + W - pad.r) / 2).toFixed(1)}" y="${(H - 6).toFixed(1)}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="middle">New Cases (% of Population)</text>`;
+  svg += `<text x="12" y="${((pad.t + H - pad.b) / 2).toFixed(1)}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${((pad.t + H - pad.b) / 2).toFixed(1)})">Mobility</text>`;
+
+  // Per-config quadratic OLS fit lines
+  function fitQuad(pts) {
+    const n = pts.length;
+    const X = pts.map(p => [1, p.nc, p.nc * p.nc]);
+    const y = pts.map(p => p.mob);
+    return fitMultipleOLS(X, y);
+  }
+
+  function drawFitLine(pts, color, dash) {
+    const fit = fitQuad(pts);
+    if (!fit) return '';
+    const [b0, b1, b2] = fit.betas;
+    const steps = 80;
+    const points = Array.from({length: steps + 1}, (_, i) => {
+      const nc = xMin + (xMax - xMin) * i / steps;
+      const mob = Math.min(1, Math.max(0, b0 + b1 * nc + b2 * nc * nc));
+      return `${toX(nc).toFixed(1)},${toY(mob).toFixed(1)}`;
+    }).join(' ');
+    return `<polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="${dash || ''}" opacity="0.8"/>`;
+  }
+
+  // Circles (draw A then B so B is on top)
+  repsA.forEach(r => {
+    svg += `<circle cx="${toX(r.nc).toFixed(1)}" cy="${toY(r.mob).toFixed(1)}" r="4" fill="none" stroke="${mA.color}" stroke-width="1.5" opacity="0.7"/>`;
+  });
+  repsB.forEach(r => {
+    svg += `<circle cx="${toX(r.nc).toFixed(1)}" cy="${toY(r.mob).toFixed(1)}" r="4" fill="none" stroke="${mB.color}" stroke-width="1.5" opacity="0.7"/>`;
+  });
+
+  // Fit lines
+  svg += drawFitLine(repsA, mA.color, '');
+  svg += drawFitLine(repsB, mB.color, '6,3');
+
+  // Legend
+  const legY = pad.t - 10;
+  svg += `<circle cx="${pad.l + 10}" cy="${legY}" r="4" fill="none" stroke="${mA.color}" stroke-width="1.5"/><text x="${pad.l + 18}" y="${legY + 4}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}">${esc(mA.label)} (D=0)</text>`;
+  svg += `<circle cx="${pad.l + 160}" cy="${legY}" r="4" fill="none" stroke="${mB.color}" stroke-width="1.5"/><text x="${pad.l + 168}" y="${legY + 4}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}">${esc(mB.label)} (D=1)</text>`;
+
+  document.getElementById('figJ-scatter').innerHTML =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" style="display:block;background:${SVG_BG}">${svgBorder(W, H)}${svg}</svg>`;
+
+  // ── Regression table ─────────────────────────────────────────
+  const nc  = all.map(r => r.nc);
+  const nc2 = all.map(r => r.nc * r.nc);
+  const d   = all.map(r => r.d);
+  const mob = all.map(r => r.mob);
+
+  const X1 = all.map((_, i) => [1, nc[i], nc2[i], d[i]]);
+  const X2 = all.map((_, i) => [1, nc[i], nc2[i], d[i], d[i] * nc[i]]);
+
+  const m1 = fitMultipleOLS(X1, mob);
+  const m2 = fitMultipleOLS(X2, mob);
+
+  if (!m1 || !m2) {
+    document.getElementById('figJ-results').innerHTML =
+      '<p style="color:#c00">OLS computation failed (singular matrix).</p>';
+    return;
+  }
+
+  const names1 = ['β₀ (intercept)', 'β₁ (NC)', 'β₂ (NC²)', '★ β₃ (D)'];
+  const names2 = ['β₀ (intercept)', 'β₁ (NC)', 'β₂ (NC²)', '★ β₃ (D)', '★ β₄ (D·NC)'];
+
+  function fmtB(v) { return (v >= 0 ? '+' : '') + v.toFixed(4); }
+  function fmtSE(v) { return v.toFixed(4); }
+  function fmtT(v) { return v.toFixed(2); }
+  function fmtP(p, stars) { return `${p < 0.001 ? '<0.001' : p.toFixed(3)} ${stars}`; }
+
+  const rows1 = m1.betas.map((b, j) => {
+    const stars = pStars(m1.ps[j]);
+    const star = names1[j].startsWith('★');
+    return `<tr${star ? ' class="ols-key-row"' : ''}>
+      <td>${names1[j]}</td>
+      <td>${fmtB(b)}</td><td>${fmtSE(m1.ses[j])}</td><td>${fmtT(m1.ts[j])}</td><td>${fmtP(m1.ps[j], stars)}</td>
+      <td>${fmtB(m2.betas[j])}</td><td>${fmtSE(m2.ses[j])}</td><td>${fmtT(m2.ts[j])}</td><td>${fmtP(m2.ps[j], pStars(m2.ps[j]))}</td>
+    </tr>`;
+  });
+  // β₄ row (Model 2 only)
+  const b4stars = pStars(m2.ps[4]);
+  rows1.push(`<tr class="ols-key-row">
+    <td>★ β₄ (D·NC)</td>
+    <td colspan="4" style="color:#999;text-align:center">—</td>
+    <td>${fmtB(m2.betas[4])}</td><td>${fmtSE(m2.ses[4])}</td><td>${fmtT(m2.ts[4])}</td><td>${fmtP(m2.ps[4], b4stars)}</td>
+  </tr>`);
+
+  // Interpretation
+  const beta3sig = m1.ps[3] < 0.05;
+  const beta4sig = m2.ps[4] < 0.05;
+  let interp = `N = ${all.length} (${repsA.length} obs per config × 2). `;
+  interp += beta3sig
+    ? `The two configurations differ significantly in baseline mobility (β₃ = ${m1.betas[3].toFixed(3)}, p ${m1.ps[3] < 0.001 ? '< 0.001' : '= ' + m1.ps[3].toFixed(3)}).`
+    : 'No significant difference in baseline mobility (β₃ ns).';
+  interp += ' ';
+  interp += beta4sig
+    ? `Their sensitivity to new cases also differs significantly (β₄ = ${m2.betas[4].toFixed(3)}, p ${m2.ps[4] < 0.001 ? '< 0.001' : '= ' + m2.ps[4].toFixed(3)}).`
+    : 'No significant difference in sensitivity slope (β₄ ns).';
+
+  document.getElementById('figJ-results').innerHTML = `
+    <div class="ols-table-wrap" style="overflow-x:auto">
+      <table class="ols-table" style="min-width:700px">
+        <thead>
+          <tr>
+            <th rowspan="2">Coefficient</th>
+            <th colspan="4" style="text-align:center;border-bottom:1px solid #ccc">Model 1 (no interaction)</th>
+            <th colspan="4" style="text-align:center;border-bottom:1px solid #ccc">Model 2 (with D·NC)</th>
+          </tr>
+          <tr>
+            <th>β</th><th>SE</th><th>t</th><th>p</th>
+            <th>β</th><th>SE</th><th>t</th><th>p</th>
+          </tr>
+        </thead>
+        <tbody>${rows1.join('')}</tbody>
+        <tfoot>
+          <tr><td colspan="9" style="padding-top:6px;font-size:11px;color:#555">
+            R² (M1) = ${m1.r2.toFixed(3)} &nbsp;|&nbsp; R² (M2) = ${m2.r2.toFixed(3)} &nbsp;|&nbsp;
+            df = ${m1.df} (M1), ${m2.df} (M2) &nbsp;|&nbsp;
+            ★ = key test rows &nbsp;|&nbsp; *** p&lt;0.001, ** p&lt;0.01, * p&lt;0.05
+          </td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="ols-table-label" style="margin-top:10px;font-style:normal;text-transform:none;font-weight:normal;font-size:12px;color:#333;letter-spacing:0">${interp}</div>`;
 }
 
 init();

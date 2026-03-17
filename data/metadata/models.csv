@@ -1,0 +1,22 @@
+provider,alias,pinned_version_id,reasoning,release_date,knowledge_cutoff,input_cost_per_1m_usd,output_cost_per_1m_usd,notes
+anthropic,claude-opus-4-5,claude-opus-4-5-20251101,off,2025-11-24,2025-08,5.00,25.00,
+anthropic,claude-sonnet-4-5,claude-sonnet-4-5-20250929,off,2025-09-29,2025-01,3.00,15.00,
+anthropic,claude-haiku-4-5,claude-haiku-4-5-20251001,off,2025-10-15,2025-02,1.00,5.00,
+anthropic,claude-sonnet-4-0,claude-sonnet-4-20250514,off,2025-05-22,2025-03,3.00,15.00,
+anthropic,claude-3-haiku-20240307,claude-3-haiku-20240307,off,2024-03-13,2023-08,0.25,1.25,already pinned — no alias
+openai,gpt-5.2,gpt-5.2-2025-12-11,off,2025-12-11,2025-08,1.75,14.00,
+openai,gpt-5.2,gpt-5.2-2025-12-11,low,2025-12-11,2025-08,1.75,14.00,
+openai,gpt-5.2,gpt-5.2-2025-12-11,medium,2025-12-11,2025-08,1.75,14.00,
+openai,gpt-5.2,gpt-5.2-2025-12-11,high,2025-12-11,2025-08,1.75,14.00,
+openai,gpt-5.1,gpt-5.1-2025-11-13,off,2025-11-12,2024-09,1.25,10.00,
+openai,gpt-4.1,gpt-4.1-2025-04-14,off,2025-04-14,2024-06,2.00,8.00,
+openai,gpt-4o,gpt-4o-2024-11-20,off,2024-11-20,2023-10,2.50,10.00,
+openai,gpt-3.5-turbo,gpt-3.5-turbo-0125,off,2024-01-25,2021-09,0.50,1.50,Paper 1 baseline (2022 study)
+openai,o3,o3-2025-04-16,required,2025-04-16,2024-06,2.00,8.00,reasoning always required
+gemini,gemini-3-flash-preview,gemini-3-flash-preview,off,2025-12-17,2025-01,0.50,3.00,no dated suffix — alias is canonical
+gemini,gemini-3-flash-preview,gemini-3-flash-preview,low,2025-12-17,2025-01,0.50,3.00,
+gemini,gemini-3-flash-preview,gemini-3-flash-preview,medium,2025-12-17,2025-01,0.50,3.00,
+gemini,gemini-3-flash-preview,gemini-3-flash-preview,high,2025-12-17,2025-01,0.50,3.00,
+gemini,gemini-2.5-flash-lite,gemini-2.5-flash-lite,off,2025-06-17,2025-01,0.10,0.40,outlier — inverted response curve
+gemini,gemini-2.5-flash,gemini-2.5-flash,off,2025-05-20,2025-01,0.30,2.50,
+gemini,gemini-2.0-flash,gemini-2.0-flash-001,off,2025-02-05,2024-06,0.10,0.40,

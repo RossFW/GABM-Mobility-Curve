@@ -30,6 +30,34 @@
     h1 { font-size: 18px; font-weight: bold; color: #111; margin-bottom: 4px; }
     .page-subtitle { font-size: 13px; color: #555; font-style: italic; }
 
+    /* ── Tab navigation ──────────────────────────── */
+    #tab-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 13px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: -24px;
+    }
+    #tab-nav a.tab-link {
+      color: #777;
+      text-decoration: none;
+      padding: 3px 6px;
+      transition: color 0.15s;
+    }
+    #tab-nav a.tab-link:hover { color: #111; }
+    #tab-nav a.tab-link.active { color: #111; font-weight: bold; border-bottom: 2px solid #111; }
+    #tab-nav .tab-sep { color: #ccc; }
+    #tab-nav a.tab-link.author-link { font-size: 11px; color: #bbb; }
+    #tab-nav a.tab-link.author-link:hover { color: #999; }
+    #tab-nav a.tab-link.author-link.active { color: #555; }
+
+    /* ── Tab panes ───────────────────────────────── */
+    .tab-pane { display: none; flex-direction: column; gap: 48px; }
+    .tab-pane.active { display: flex; }
+
     /* ── Sections ────────────────────────────────── */
     .section {
       display: flex;
@@ -66,6 +94,47 @@
     .facet-panel { flex: 1; min-width: 240px; }
     .facet-title { font-size: 12px; font-weight: bold; color: #333; margin-bottom: 6px; text-align: center; }
 
+    /* ── OLS inline stat tables ──────────────────── */
+    .ols-table-wrap {
+      margin-top: 4px;
+      border-top: 1px solid #e8e8e8;
+      padding-top: 10px;
+    }
+    .ols-table-label {
+      font-size: 10px; font-weight: bold; color: #888; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .ols-table {
+      font-size: 11px; border-collapse: collapse; font-family: 'Courier New', monospace;
+    }
+    .ols-table th {
+      color: #555; font-weight: normal; padding: 2px 14px 2px 0;
+      border-bottom: 1px solid #ddd; text-align: left;
+    }
+    .ols-table td {
+      padding: 3px 14px 3px 0; color: #111; border-bottom: 1px solid #f0f0f0;
+    }
+    .ols-table tr:last-child td { border-bottom: none; }
+    .ols-key-row td:first-child { font-weight: bold; color: #7C3AED; }
+    .ols-key-row td { background: #f9f7ff; }
+
+    /* ── Figure 13 controls ──────────────────────── */
+    .figJ-controls {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 10px 0;
+    }
+    .figJ-controls select {
+      font-family: Georgia, serif; font-size: 12px;
+      padding: 4px 8px; border: 1px solid #ccc; background: #fff;
+      cursor: pointer;
+    }
+    .figJ-controls button {
+      font-family: Georgia, serif; font-size: 12px;
+      padding: 4px 14px; border: 1px solid #555; background: #fff;
+      cursor: pointer; letter-spacing: 0.5px;
+    }
+    .figJ-controls button:hover { background: #111; color: #fff; }
+
     /* ── Legends ─────────────────────────────────── */
     .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 12px; color: #333; }
     .legend-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
@@ -82,11 +151,17 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.12);
     }
 
-    /* ── Outlier cards ───────────────────────────── */
+    /* ── Outlier cards (Author Notes) ────────────── */
     .outlier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; }
     .outlier-card { border: 1px solid #ddd; padding: 16px; }
     .outlier-card .oc-title { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
     .outlier-card .oc-desc  { font-size: 11px; color: #555; margin-bottom: 10px; line-height: 1.5; }
+
+    /* ── Author Notes tab notice ─────────────────── */
+    .author-note {
+      background: #fffdf0; border: 1px solid #e0d890; padding: 10px 14px;
+      font-size: 12px; color: #666; font-style: italic;
+    }
 
     /* ── Model picker ────────────────────────────── */
     .model-picker {
@@ -95,6 +170,12 @@
     }
 
     .heatmap-wrapper { overflow-x: auto; }
+
+    /* ── Agent Analysis placeholder ──────────────── */
+    .placeholder-box {
+      border: 1px dashed #ccc; padding: 40px; text-align: center;
+      color: #999; font-size: 13px; font-style: italic;
+    }
 
     #loading { text-align: center; font-size: 14px; color: #555; padding: 60px 20px; font-style: italic; }
   </style>
@@ -107,99 +188,231 @@
     <div class="page-subtitle">21 model configurations &middot; 40 infection levels &middot; 100 agents &middot; 5 repetitions &middot; Paper 3</div>
   </div>
 
+  <!-- Tab Navigation -->
+  <nav id="tab-nav">
+    <a href="#" class="tab-link active" data-tab="curves">Mobility Curves</a>
+    <span class="tab-sep">|</span>
+    <a href="#" class="tab-link" data-tab="characteristics">Model Characteristics</a>
+    <span class="tab-sep">|</span>
+    <a href="#" class="tab-link" data-tab="agents">Agent Analysis</a>
+    <span class="tab-sep">|</span>
+    <a href="#" class="tab-link author-link" data-tab="author">Author Notes</a>
+  </nav>
+
   <div id="loading">Loading data&hellip;</div>
 
-  <!-- Overview: Headline Summary -->
-  <div class="section" id="s0-section" style="display:none">
-    <div class="fig-num">Overview</div>
-    <div class="fig-title">Headline Findings</div>
-    <div class="summary-card" id="s0-card"></div>
-  </div>
+  <!-- ══════════════════════════════════════════════
+       TAB 1 — MOBILITY CURVES
+  ══════════════════════════════════════════════ -->
+  <div id="tab-curves" class="tab-pane">
 
-  <!-- Figure 1: Provider Envelopes -->
-  <div class="section" id="s1-section" style="display:none">
-    <div class="fig-num">Figure 1</div>
-    <div class="fig-title">Provider Behavioral Envelopes</div>
-    <div class="fig-caption">Shaded regions show the min&ndash;max range across all models within each provider. Bold line = provider mean. Click a provider to toggle.</div>
-    <div class="chart-container" id="s1-chart"></div>
-    <div class="legend" id="s1-legend"></div>
-  </div>
-
-  <!-- Figure 2: GPT-5.2 Reasoning -->
-  <div class="section" id="figA-section" style="display:none">
-    <div class="fig-num">Figure 2</div>
-    <div class="fig-title">GPT-5.2 &mdash; Effect of Reasoning Budget</div>
-    <div class="fig-caption">Stay-home rate across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high). N&thinsp;=&thinsp;100 agents &times; 5 repetitions &times; 40 infection levels per configuration.</div>
-    <div class="chart-container" id="figA-chart"></div>
-    <div class="legend" id="figA-legend"></div>
-  </div>
-
-  <!-- Figure 3: Gemini 3 Flash Reasoning -->
-  <div class="section" id="figB-section" style="display:none">
-    <div class="fig-num">Figure 3</div>
-    <div class="fig-title">Gemini 3 Flash Preview &mdash; Effect of Reasoning Budget</div>
-    <div class="fig-caption">Stay-home rate across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high).</div>
-    <div class="chart-container" id="figB-chart"></div>
-    <div class="legend" id="figB-legend"></div>
-  </div>
-
-  <!-- Figure 4: OpenAI Generational -->
-  <div class="section" id="figC-section" style="display:none">
-    <div class="fig-num">Figure 4</div>
-    <div class="fig-title">OpenAI &mdash; Generational Progression (reasoning = off)</div>
-    <div class="fig-caption">Mobility curves for GPT-3.5 Turbo through GPT-5.2, all at reasoning = off. Illustrates how behavioral responses have shifted across model generations.</div>
-    <div class="chart-container" id="figC-chart"></div>
-    <div class="legend" id="figC-legend"></div>
-  </div>
-
-  <!-- Figure 5: Gemini Generational -->
-  <div class="section" id="figD-section" style="display:none">
-    <div class="fig-num">Figure 5</div>
-    <div class="fig-title">Gemini &mdash; Generational Progression (reasoning = off)</div>
-    <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview at reasoning = off. Gemini 2.5 Flash Lite excluded due to anomalous inverted response curve (see Figure 8).</div>
-    <div class="chart-container" id="figD-chart"></div>
-    <div class="legend" id="figD-legend"></div>
-  </div>
-
-  <!-- Figure 6: Paper 1 Legacy -->
-  <div class="section" id="s2-section" style="display:none">
-    <div class="fig-num">Figure 6</div>
-    <div class="fig-title">Paper 1 Baseline: GPT-3.5 vs. Modern Models</div>
-    <div class="fig-caption">GPT-3.5 Turbo (Paper 1 baseline, 2022) shown in bold amber dashed. One representative per modern provider highlighted; all remaining configurations shown in gray. Hover a gray line to identify it.</div>
-    <div class="chart-container" id="s2-chart"></div>
-    <div class="legend" id="s2-legend"></div>
-  </div>
-
-  <!-- Figure 7: Small Multiples by Provider -->
-  <div class="section" id="s3-section" style="display:none">
-    <div class="fig-num">Figure 7</div>
-    <div class="fig-title">Within-Provider Model Variation</div>
-    <div class="fig-caption">All configurations overlaid within each provider. Hover to identify individual models.</div>
-    <div class="facet-row" id="s3-facets"></div>
-  </div>
-
-  <!-- Figure 8: Outlier Spotlights -->
-  <div class="section" id="s6-section" style="display:none">
-    <div class="fig-num">Figure 8</div>
-    <div class="fig-title">Outlier Analysis</div>
-    <div class="fig-caption">Notable anomalies identified in the probe data.</div>
-    <div class="outlier-grid" id="s6-cards"></div>
-  </div>
-
-  <!-- Figure 9: Agent-Level Analysis -->
-  <div class="section" id="s7-section" style="display:none">
-    <div class="fig-num">Figure 9</div>
-    <div class="fig-title">Agent-Level Decision Heatmap and Concordance</div>
-    <div class="fig-caption">Heatmap shows individual agent majority decisions across all 40 infection levels, sorted by transition point (first level where stay-home is majority vote). Concordance chart shows the fraction of agents with unanimous (5/5), strong (&ge;4/5), or bare-majority (&ge;3/5) agreement at each level.</div>
-    <div id="s7-model-select" style="margin-bottom:12px"></div>
-    <div class="heatmap-wrapper" id="s7-heatmap"></div>
-    <div style="margin-top:24px">
-      <div style="font-size:14px;font-weight:bold;color:#111;margin-bottom:8px">Vote Concordance</div>
-      <div class="chart-container" id="s7-concordance"></div>
+    <!-- Figure 1: GPT-5.2 Reasoning -->
+    <div class="section" id="figA-section" style="display:none">
+      <div class="fig-num">Figure 1</div>
+      <div class="fig-title">GPT-5.2 &mdash; Effect of Reasoning Budget</div>
+      <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high). N&thinsp;=&thinsp;100 agents &times; 5 repetitions &times; 40 infection levels per configuration.</div>
+      <div class="chart-container" id="figA-chart"></div>
+      <div class="legend" id="figA-legend"></div>
+      <div class="ols-table-wrap">
+        <div class="ols-table-label">OLS fit: mobility = &alpha; + &beta; &middot; new cases (% population)</div>
+        <table class="ols-table" id="figA-ols"></table>
+      </div>
     </div>
-  </div>
 
-</div>
+    <!-- Figure 2: Gemini 3 Flash Reasoning -->
+    <div class="section" id="figB-section" style="display:none">
+      <div class="fig-num">Figure 2</div>
+      <div class="fig-title">Gemini 3 Flash Preview &mdash; Effect of Reasoning Budget</div>
+      <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high).</div>
+      <div class="chart-container" id="figB-chart"></div>
+      <div class="legend" id="figB-legend"></div>
+      <div class="ols-table-wrap">
+        <div class="ols-table-label">OLS fit: mobility = &alpha; + &beta; &middot; new cases (% population)</div>
+        <table class="ols-table" id="figB-ols"></table>
+      </div>
+    </div>
+
+    <!-- Figure 3: OpenAI Generational -->
+    <div class="section" id="figC-section" style="display:none">
+      <div class="fig-num">Figure 3</div>
+      <div class="fig-title">OpenAI &mdash; Generational Progression (reasoning = off)</div>
+      <div class="fig-caption">Mobility curves for GPT-3.5 Turbo through GPT-5.2, all at reasoning = off. Illustrates how behavioral responses have shifted across model generations.</div>
+      <div class="chart-container" id="figC-chart"></div>
+      <div class="legend" id="figC-legend"></div>
+      <div class="ols-table-wrap">
+        <div class="ols-table-label">OLS fit per generation</div>
+        <table class="ols-table" id="figC-ols"></table>
+      </div>
+    </div>
+
+    <!-- Figure 4: Gemini Generational -->
+    <div class="section" id="figD-section" style="display:none">
+      <div class="fig-num">Figure 4</div>
+      <div class="fig-title">Gemini &mdash; Generational Progression (reasoning = off)</div>
+      <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview at reasoning = off. Gemini 2.5 Flash Lite excluded due to anomalous inverted response curve (see Author Notes).</div>
+      <div class="chart-container" id="figD-chart"></div>
+      <div class="legend" id="figD-legend"></div>
+      <div class="ols-table-wrap">
+        <div class="ols-table-label">OLS fit per generation</div>
+        <table class="ols-table" id="figD-ols"></table>
+      </div>
+    </div>
+
+    <!-- Figure 5: Paper 1 Legacy -->
+    <div class="section" id="s2-section" style="display:none">
+      <div class="fig-num">Figure 5</div>
+      <div class="fig-title">Paper 1 Baseline: GPT-3.5 vs. Modern Models</div>
+      <div class="fig-caption">GPT-3.5 Turbo (Paper 1 baseline, 2022) shown in bold amber dashed. One representative per modern provider highlighted; all remaining configurations shown in gray. Hover a gray line to identify it.</div>
+      <div class="chart-container" id="s2-chart"></div>
+      <div class="legend" id="s2-legend"></div>
+      <div class="ols-table-wrap">
+        <div class="ols-table-label">OLS shift from GPT-3.5 baseline (&Delta;&alpha;, &Delta;&beta;)</div>
+        <table class="ols-table" id="s2-ols"></table>
+      </div>
+    </div>
+
+    <!-- Figure 6: Small Multiples by Provider -->
+    <div class="section" id="s3-section" style="display:none">
+      <div class="fig-num">Figure 6</div>
+      <div class="fig-title">Within-Provider Model Variation</div>
+      <div class="fig-caption">All configurations overlaid within each provider. Hover to identify individual models.</div>
+      <div class="facet-row" id="s3-facets"></div>
+      <div class="ols-table-wrap">
+        <div class="ols-table-label">OLS range per provider (min / max &beta;)</div>
+        <table class="ols-table" id="s3-ols"></table>
+      </div>
+    </div>
+
+    <!-- Figure 7: Agent-Level Analysis -->
+    <div class="section" id="s7-section" style="display:none">
+      <div class="fig-num">Figure 7</div>
+      <div class="fig-title">Agent-Level Decision Heatmap and Concordance</div>
+      <div class="fig-caption">Heatmap shows individual agent majority decisions across all 40 infection levels, sorted by transition point (first level where stay-home is majority decision). Concordance shows the fraction of agents with unanimous (5/5), exactly 4/5, or exactly 3/5 agreement at each infection level. The colored strip at the top of the chart indicates whether the overall majority of agents are staying home (amber) or going out (blue).</div>
+      <div id="s7-model-select" style="margin-bottom:12px"></div>
+      <div class="heatmap-wrapper" id="s7-heatmap"></div>
+      <div style="margin-top:24px">
+        <div style="font-size:14px;font-weight:bold;color:#111;margin-bottom:8px">Concordance</div>
+        <div class="chart-container" id="s7-concordance"></div>
+      </div>
+    </div>
+
+  </div><!-- end tab-curves -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 2 — MODEL CHARACTERISTICS
+  ══════════════════════════════════════════════ -->
+  <div id="tab-characteristics" class="tab-pane">
+
+    <!-- Figure A: α vs β scatter -->
+    <div class="section" id="figE-section">
+      <div class="fig-num">Figure 8</div>
+      <div class="fig-title">OLS Summary: Baseline Caution vs. Behavioral Sensitivity</div>
+      <div class="fig-caption">Each point is one of the 21 LLM configurations. X-axis: &alpha; (intercept) — predicted mobility at 0% new cases, measuring default activity level. Y-axis: &beta; (slope) — change in mobility per 1 percentage point of new cases, measuring behavioral sensitivity. Hover a point to identify the model.</div>
+      <div class="chart-container" id="figE-chart"></div>
+      <div class="legend" id="figE-legend"></div>
+    </div>
+
+    <!-- Figure B: Slope ranking -->
+    <div class="section" id="figF-section">
+      <div class="fig-num">Figure 9</div>
+      <div class="fig-title">Behavioral Sensitivity Ranking (&beta; slope)</div>
+      <div class="fig-caption">All 21 configurations ranked by OLS slope (&beta;). More negative values indicate a stronger reduction in mobility per unit of new cases (stronger behavioral response).</div>
+      <div class="chart-container" id="figF-chart"></div>
+    </div>
+
+    <!-- Figure C: Knowledge cutoff vs β -->
+    <div class="section" id="figG-section">
+      <div class="fig-num">Figure 10</div>
+      <div class="fig-title">Knowledge Cutoff Date vs. Behavioral Sensitivity</div>
+      <div class="fig-caption">Does training data recency predict how strongly a model responds to rising infection? X-axis: knowledge cutoff (year). Y-axis: &beta; slope from OLS. Line shows OLS fit across all 21 configurations.</div>
+      <div class="chart-container" id="figG-chart"></div>
+      <div class="legend" id="figG-legend"></div>
+    </div>
+
+    <!-- Figure D: Release date vs α -->
+    <div class="section" id="figH-section">
+      <div class="fig-num">Figure 11</div>
+      <div class="fig-title">Release Date vs. Default Caution</div>
+      <div class="fig-caption">Are newer model releases more or less cautious at baseline (0% infection)? X-axis: model release date (year). Y-axis: &alpha; intercept from OLS. Line shows OLS fit.</div>
+      <div class="chart-container" id="figH-chart"></div>
+      <div class="legend" id="figH-legend"></div>
+    </div>
+
+    <!-- Figure E: Model family grouped bars -->
+    <div class="section" id="figI-section">
+      <div class="fig-num">Figure 12</div>
+      <div class="fig-title">Model Family Generational Comparison</div>
+      <div class="fig-caption">OLS &alpha; (default caution, light bar) and &beta; (sensitivity, dark bar) for each model, grouped by provider family and ordered chronologically. Shows generational drift within each provider.</div>
+      <div class="chart-container" id="figI-chart"></div>
+      <div class="legend" id="figI-legend"></div>
+    </div>
+
+    <!-- Figure 13: Model Comparison (Dummy Variable OLS) -->
+    <div class="section" id="figJ-section">
+      <div class="fig-num">Figure 13</div>
+      <div class="fig-title">Model Comparison &mdash; Dummy Variable OLS</div>
+      <div class="fig-caption">
+        Select two model configurations to compare. Each open circle = one repetition at one
+        infection level (5 reps &times; 40 levels = 200 observations per config, 400 total).
+        D&thinsp;=&thinsp;0 for Config A, D&thinsp;=&thinsp;1 for Config B.<br>
+        <strong>Model 1:</strong> Mobility = &beta;&#8320; + &beta;&#8321;&middot;NC + &beta;&#8322;&middot;NC&sup2; + &beta;&#8323;&middot;D &nbsp;|&nbsp;
+        <strong>Model 2:</strong> Mobility = &beta;&#8320; + &beta;&#8321;&middot;NC + &beta;&#8322;&middot;NC&sup2; + &beta;&#8323;&middot;D + <strong>&beta;&#8324;&middot;D&middot;NC</strong>
+      </div>
+      <div class="figJ-controls">
+        <select id="figJ-configA"></select>
+        <span style="font-size:13px;color:#555">vs.</span>
+        <select id="figJ-configB"></select>
+        <button id="figJ-run">Run Comparison</button>
+      </div>
+      <div id="figJ-loading" style="display:none;font-size:13px;color:#555;padding:8px 0">Loading micro data&hellip;</div>
+      <div id="figJ-scatter"></div>
+      <div id="figJ-results"></div>
+    </div>
+
+  </div><!-- end tab-characteristics -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 3 — AGENT ANALYSIS
+  ══════════════════════════════════════════════ -->
+  <div id="tab-agents" class="tab-pane">
+    <div class="section">
+      <div class="fig-num">Coming soon</div>
+      <div class="fig-title">Agent-Level Analysis</div>
+      <div class="fig-caption">Individual-level logistic regression using micro data (420,000 rows). Will include age effects, Big-5 trait coefficients, and cross-model agent consistency.</div>
+      <div class="placeholder-box">
+        Agent analysis requires loading per-config micro CSVs (~20,000 rows each).<br>
+        Implementation deferred to a subsequent session.
+      </div>
+    </div>
+  </div><!-- end tab-agents -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 4 — AUTHOR NOTES
+  ══════════════════════════════════════════════ -->
+  <div id="tab-author" class="tab-pane">
+
+    <div class="author-note">
+      This tab contains working notes for the author — anomalies, caveats, and diagnostic figures not intended for the final publication.
+    </div>
+
+    <!-- Headline Summary Stats -->
+    <div class="section" id="s0-section" style="display:none">
+      <div class="fig-num">Author Note — Summary Stats</div>
+      <div class="fig-title">Headline Findings</div>
+      <div class="summary-card" id="s0-card"></div>
+    </div>
+
+    <!-- Outlier Spotlights -->
+    <div class="section" id="s6-section">
+      <div class="fig-num">Author Note A</div>
+      <div class="fig-title">Outlier Spotlights</div>
+      <div class="fig-caption">Notable anomalies identified in the probe data. These inform discussion and caveats in the paper but are not primary research figures.</div>
+      <div class="outlier-grid" id="s6-cards"></div>
+    </div>
+
+  </div><!-- end tab-author -->
+
+</div><!-- end #app -->
 
 <script src="nav.js"></script>
 <script src="analytics.js"></script>
