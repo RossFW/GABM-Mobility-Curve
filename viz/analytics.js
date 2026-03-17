@@ -739,26 +739,28 @@ function renderS7Concordance(microRows, cfg) {
     bareData.push({      level, pct: (bare      / nAgents) * 100 });
   });
 
-  const w = CW, h = 300, pad = { t: 28, r: 24, b: 48, l: 58 };
-  const unanimousPts = unanimousData.map(d => `${levelToX(d.level, w, pad).toFixed(1)},${pctToY(d.pct, h, pad).toFixed(1)}`).join(' ');
-  const strongPts    = strongData.map(   d => `${levelToX(d.level, w, pad).toFixed(1)},${pctToY(d.pct, h, pad).toFixed(1)}`).join(' ');
-  const barePts      = bareData.map(     d => `${levelToX(d.level, w, pad).toFixed(1)},${pctToY(d.pct, h, pad).toFixed(1)}`).join(' ');
+  const panels = [
+    { title: 'Unanimous (5/5)',        data: unanimousData, color: '#0072B2' },
+    { title: 'Strong majority (\u22654/5)', data: strongData,    color: '#56B4E9' },
+    { title: 'Bare majority (\u22653/5)',   data: bareData,      color: '#888888' },
+  ];
 
-  const legendX = w - 220;
-  const inner =
-    yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-    axisLabels(w, h, pad, 'Infection level (% population)', '% agents') +
-    `<polyline points="${barePts}"      stroke="#888"    stroke-width="1.3" fill="none" stroke-dasharray="3,3"/>` +
-    `<polyline points="${strongPts}"    stroke="#56B4E9" stroke-width="1.5" fill="none" stroke-dasharray="6,3"/>` +
-    `<polyline points="${unanimousPts}" stroke="#0072B2" stroke-width="2.5" fill="none"/>` +
-    `<line x1="${legendX}" y1="${pad.t+4}"  x2="${legendX+22}" y2="${pad.t+4}"  stroke="#0072B2" stroke-width="2.5"/>
-     <text x="${legendX+27}" y="${pad.t+8}"  fill="${AX_COLOR}" font-size="11" font-family="${SERIF}">Unanimous (5/5)</text>` +
-    `<line x1="${legendX}" y1="${pad.t+20}" x2="${legendX+22}" y2="${pad.t+20}" stroke="#56B4E9" stroke-width="1.5" stroke-dasharray="6,3"/>
-     <text x="${legendX+27}" y="${pad.t+24}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}">Strong (\u22654/5)</text>` +
-    `<line x1="${legendX}" y1="${pad.t+36}" x2="${legendX+22}" y2="${pad.t+36}" stroke="#888" stroke-width="1.3" stroke-dasharray="3,3"/>
-     <text x="${legendX+27}" y="${pad.t+40}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}">Bare majority (\u22653/5)</text>`;
+  const w = SMALL_CW, h = SMALL_CH, pad = SMALL_PAD;
 
-  el.innerHTML = makeSVG(w, h, inner);
+  el.innerHTML = `<div style="display:flex;gap:20px;flex-wrap:wrap">` +
+    panels.map(p => {
+      const pts = p.data.map(d =>
+        `${levelToX(d.level, w, pad).toFixed(1)},${pctToY(d.pct, h, pad).toFixed(1)}`
+      ).join(' ');
+      const inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
+        axisLabels(w, h, pad, 'Infection level', '% agents') +
+        `<polyline points="${pts}" stroke="${p.color}" stroke-width="2" fill="none" opacity="0.9"/>`;
+      return `<div style="flex:1;min-width:220px">
+        <div style="font-size:12px;font-weight:bold;color:#333;text-align:center;margin-bottom:6px">${p.title}</div>
+        ${makeSVG(w, h, inner)}
+      </div>`;
+    }).join('') +
+  `</div>`;
 }
 
 function renderS7(microRows, cfg) {
