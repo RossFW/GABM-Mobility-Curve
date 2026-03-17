@@ -10,6 +10,12 @@ __pycache__/
 # Secrets — copy manually to each machine, never commit
 .env
 
+# Viz mock data — not needed for deployment
+viz/data/mock/
+
+# Screenshots — local only
+viz/screenshots/
+
 # macOS
 .DS_Store
 
