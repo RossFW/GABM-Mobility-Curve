@@ -1,0 +1,24 @@
+provider,model,reasoning,status,response,error_msg,routing_note,input_tokens,output_tokens,reasoning_tokens,cost_usd,latency_s,timestamp
+anthropic,claude-opus-4-5,off,ok,"Hi. I'm Claude, made by Anthropic. I don't know my exact version number, but I'm part of the Claude model family.",,,31,34,0,0.001005,2.56,2026-03-11T14:20:35
+anthropic,claude-sonnet-4-5,off,ok,"Hi! I'm Claude, an AI assistant made by Anthropic. I'm Claude 3.5 Sonnet (version 3-5-sonnet-20241022).",,mentions 'sonnet',31,43,0,0.000738,1.68,2026-03-11T14:20:39
+anthropic,claude-haiku-4-5,off,ok,"Hi.  I'm Claude, made by Anthropic. I'm Claude 3.5 Sonnet, the latest version in the Claude 3 family.",,mentions 'sonnet',31,39,0,0.000226,0.75,2026-03-11T14:20:40
+anthropic,claude-sonnet-4-0,off,ok,"Hi. I'm Claude, an AI assistant made by Anthropic. I'm part of the Claude 3 model family, though I don't have access to my specific version details.",,,31,42,0,0.000723,1.93,2026-03-11T14:20:41
+anthropic,claude-3-haiku-20240307,off,ok,"Hi. I am Claude, an AI assistant created by Anthropic.",,,31,18,0,3.025e-05,0.48,2026-03-11T14:20:43
+openai,gpt-5.2,off,ok,Hi. I’m an OpenAI ChatGPT model (exact model/version isn’t provided to me in this chat).,,,29,26,0,0.00041475,1.82,2026-03-11T14:20:43
+openai,gpt-5.2,low,ok,Hi. I’m an OpenAI GPT-4–class large language model (API chat model); I don’t have access to a more specific public version identifier in this interface.,,mentions 'gpt-4',29,39,0,0.00059675,1.4,2026-03-11T14:20:46
+openai,gpt-5.2,medium,ok,"Hi.  I’m ChatGPT, an OpenAI GPT-family language model. I don’t have the exact model/version identifier available in this chat.",,,29,90,0,0.00131075,3.32,2026-03-11T14:20:47
+openai,gpt-5.2,high,ok,Hi. I’m ChatGPT (an OpenAI GPT-family model); the exact model version isn’t provided in this interface.,,,29,93,0,0.00135275,3.1,2026-03-11T14:20:50
+openai,gpt-5.1,off,ok,Hi. I’m an OpenAI GPT-4.1–class assistant.,,mentions 'gpt-4',29,25,0,0.00028625,1.89,2026-03-11T14:20:53
+openai,gpt-5.1,high,ok,"Hi. I’m ChatGPT, a large language model from OpenAI based on the GPT‑4.1 architecture.",,,29,187,0,0.00190625,7.72,2026-03-11T14:20:55
+openai,gpt-5-mini-2025-08-07,off,error,,Failed after 2 retries,,0,0,0,0.0,1.33,2026-03-11T14:21:03
+openai,gpt-4.1,off,ok,"Hi. I am ChatGPT, based on OpenAI's GPT-4 model.",,mentions 'gpt-4',30,17,0,0.000196,0.69,2026-03-11T14:21:04
+openai,gpt-4o,off,ok,Hi. I am based on OpenAI's GPT-4 model.,,mentions 'gpt-4',30,14,0,0.000215,1.17,2026-03-11T14:21:05
+openai,gpt-3.5-turbo,off,ok,"Hi. I am GPT-3, the third version of the Generative Pre-trained Transformer model developed by OpenAI.",,,30,25,0,5.25e-05,0.65,2026-03-11T14:21:06
+openai,o3,required,ok,"Hi. I’m ChatGPT, a language model based on OpenAI’s GPT-4 architecture.",,mentions 'gpt-4',29,102,0,0.000874,3.48,2026-03-11T14:21:07
+gemini,gemini-3-flash-preview,off,ok,"Hi. I am a large language model, trained by Google.",,,25,13,146,0.0004895,1.68,2026-03-11T14:21:10
+gemini,gemini-3-flash-preview,low,ok,"Hi. I am a large language model, trained by Google.",,,25,13,61,0.0002345,1.31,2026-03-11T14:21:13
+gemini,gemini-3-flash-preview,medium,ok,"Hi. I am a large language model, trained by Google.",,,25,13,57,0.0002225,1.44,2026-03-11T14:21:15
+gemini,gemini-3-flash-preview,high,ok,"Hi. I am a large language model, trained by Google.",,,25,13,64,0.0002435,1.32,2026-03-11T14:21:16
+gemini,gemini-2.5-flash-lite,off,ok,"Hi. I am a large language model, trained by Google.",,,25,13,0,7.7e-06,0.73,2026-03-11T14:21:17
+gemini,gemini-2.5-flash,off,ok,"Hi. I'm a large language model, trained by Google.",,,25,14,34,0.0001275,1.02,2026-03-11T14:21:18
+gemini,gemini-2.0-flash,off,ok,"Hi. I am a large language model, trained by Google. ",,,24,14,0,8e-06,0.72,2026-03-11T14:21:19

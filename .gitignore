@@ -1,5 +1,5 @@
-# Probe output data (large — sync separately with rsync/scp)
-data/
+# Data collection complete — committed to GitHub for backup
+# data/
 
 # Python
 __pycache__/
