@@ -543,6 +543,77 @@ function renderFigFlagship() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Figures 11–13: Knowledge Cutoff Groupings
+// ═══════════════════════════════════════════════════════════════
+function renderFigCutPre24() {
+  renderModelCompFig('figCutPre24-chart', 'figCutPre24-legend', 'figCutPre24-section', [
+    { provider: 'openai',    model: 'gpt-3.5-turbo',          reasoning: 'off', label: 'GPT-3.5 Turbo (Sep 2021)',  color: '#000000' },
+    { provider: 'anthropic', model: 'claude-3-haiku-20240307', reasoning: 'off', label: 'Claude 3 Haiku (Aug 2023)', color: '#E69F00' },
+    { provider: 'openai',    model: 'gpt-4o',                  reasoning: 'off', label: 'GPT-4o (Oct 2023)',         color: '#0072B2' },
+  ]);
+}
+
+function renderFigCutMid24() {
+  renderModelCompFig('figCutMid24-chart', 'figCutMid24-legend', 'figCutMid24-section', [
+    { provider: 'openai', model: 'gpt-4.1',            reasoning: 'off',      label: 'GPT-4.1 (Jun 2024)',           color: '#000000' },
+    { provider: 'openai', model: 'o3',                  reasoning: 'required', label: 'o3 (Jun 2024)',                color: '#E69F00' },
+    { provider: 'gemini', model: 'gemini-2.0-flash',    reasoning: 'off',      label: 'Gemini 2.0 Flash (Jun 2024)', color: '#0072B2' },
+    { provider: 'openai', model: 'gpt-5.1',             reasoning: 'off',      label: 'GPT-5.1 (Sep 2024)',          color: '#009E73' },
+  ]);
+}
+
+function renderFigCutEarly25() {
+  renderModelCompFig('figCutEarly25-chart', 'figCutEarly25-legend', 'figCutEarly25-section', [
+    { provider: 'anthropic', model: 'claude-sonnet-4-5',       reasoning: 'off', label: 'Sonnet 4.5 (Jan 2025)',    color: '#000000' },
+    { provider: 'anthropic', model: 'claude-haiku-4-5',        reasoning: 'off', label: 'Haiku 4.5 (Feb 2025)',     color: '#E69F00' },
+    { provider: 'anthropic', model: 'claude-sonnet-4-0',       reasoning: 'off', label: 'Sonnet 4.0 (Mar 2025)',    color: '#56B4E9' },
+    { provider: 'gemini',    model: 'gemini-2.5-flash',        reasoning: 'off', label: 'Gemini 2.5 Flash (Jan 2025)',      color: '#009E73' },
+    { provider: 'gemini',    model: 'gemini-2.5-flash-lite',   reasoning: 'off', label: 'Gemini 2.5 Flash Lite (Jan 2025)', color: '#D55E00' },
+    { provider: 'gemini',    model: 'gemini-3-flash-preview',  reasoning: 'off', label: 'Gemini 3 Flash (Jan 2025)',        color: '#CC79A7' },
+  ]);
+}
+
+function renderFigCutLate25() {
+  renderModelCompFig('figCutLate25-chart', 'figCutLate25-legend', 'figCutLate25-section', [
+    { provider: 'anthropic', model: 'claude-opus-4-5', reasoning: 'off', label: 'Claude Opus 4.5 (Aug 2025)', color: '#000000' },
+    { provider: 'openai',    model: 'gpt-5.2',         reasoning: 'off', label: 'GPT-5.2 (Aug 2025)',         color: '#E69F00' },
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Figures 16–19: Release Date Groupings
+// ═══════════════════════════════════════════════════════════════
+function renderFigRelLegacy() {
+  renderModelCompFig('figRelLegacy-chart', 'figRelLegacy-legend', 'figRelLegacy-section', [
+    { provider: 'openai',    model: 'gpt-3.5-turbo',          reasoning: 'off', label: 'GPT-3.5 Turbo',  color: '#000000' },
+    { provider: 'anthropic', model: 'claude-3-haiku-20240307', reasoning: 'off', label: 'Claude 3 Haiku', color: '#E69F00' },
+    { provider: 'openai',    model: 'gpt-4o',                  reasoning: 'off', label: 'GPT-4o',         color: '#0072B2' },
+  ]);
+}
+
+function renderFigRelSpring() {
+  renderModelCompFig('figRelSpring-chart', 'figRelSpring-legend', 'figRelSpring-section', [
+    { provider: 'gemini',    model: 'gemini-2.0-flash',       reasoning: 'off',      label: 'Gemini 2.0 Flash',  color: '#000000' },
+    { provider: 'openai',    model: 'gpt-4.1',                reasoning: 'off',      label: 'GPT-4.1',           color: '#E69F00' },
+    { provider: 'openai',    model: 'o3',                     reasoning: 'required', label: 'o3',                 color: '#56B4E9' },
+    { provider: 'anthropic', model: 'claude-sonnet-4-0',      reasoning: 'off',      label: 'Claude Sonnet 4.0', color: '#009E73' },
+    { provider: 'gemini',    model: 'gemini-2.5-flash',       reasoning: 'off',      label: 'Gemini 2.5 Flash',  color: '#D55E00' },
+    { provider: 'gemini',    model: 'gemini-2.5-flash-lite',  reasoning: 'off',      label: 'Gemini 2.5 Flash Lite',  color: '#CC79A7' },
+  ]);
+}
+
+function renderFigRelLate() {
+  renderModelCompFig('figRelLate-chart', 'figRelLate-legend', 'figRelLate-section', [
+    { provider: 'anthropic', model: 'claude-sonnet-4-5',      reasoning: 'off', label: 'Claude Sonnet 4.5', color: '#000000' },
+    { provider: 'anthropic', model: 'claude-haiku-4-5',       reasoning: 'off', label: 'Claude Haiku 4.5',  color: '#E69F00' },
+    { provider: 'anthropic', model: 'claude-opus-4-5',        reasoning: 'off', label: 'Claude Opus 4.5',   color: '#56B4E9' },
+    { provider: 'openai',    model: 'gpt-5.1',                reasoning: 'off', label: 'GPT-5.1',           color: '#009E73' },
+    { provider: 'openai',    model: 'gpt-5.2',                reasoning: 'off', label: 'GPT-5.2',           color: '#D55E00' },
+    { provider: 'gemini',    model: 'gemini-3-flash-preview', reasoning: 'off', label: 'Gemini 3 Flash',    color: '#CC79A7' },
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════════════
 // S2: Paper 1 Legacy Comparison
 // ═══════════════════════════════════════════════════════════════
 function renderS2() {
@@ -1033,6 +1104,46 @@ const regToggleConfigs = {
     labels:   ['GPT-5.2', 'Gemini 3 Flash'],
     baseline: 'Claude Opus 4.5',
   },
+  // Knowledge Cutoff groupings
+  'reg-figCutPre24': {
+    configs:  ['openai_gpt-3_5-turbo_off', 'anthropic_claude-3-haiku-20240307_off', 'openai_gpt-4o_off'],
+    labels:   ['Claude 3 Haiku', 'GPT-4o'],
+    baseline: 'GPT-3.5 Turbo',
+  },
+  'reg-figCutMid24': {
+    configs:  ['openai_gpt-4_1_off', 'openai_o3_required', 'gemini_gemini-2_0-flash_off', 'openai_gpt-5_1_off'],
+    labels:   ['o3', 'Gemini 2.0 Flash', 'GPT-5.1'],
+    baseline: 'GPT-4.1',
+  },
+  'reg-figCutEarly25': {
+    configs:  ['anthropic_claude-sonnet-4-5_off', 'anthropic_claude-haiku-4-5_off', 'anthropic_claude-sonnet-4-0_off',
+               'gemini_gemini-2_5-flash_off', 'gemini_gemini-2_5-flash-lite_off', 'gemini_gemini-3-flash-preview_off'],
+    labels:   ['Haiku 4.5', 'Sonnet 4.0', 'Gemini 2.5 Flash', 'Gemini 2.5 Flash Lite', 'Gemini 3 Flash'],
+    baseline: 'Claude Sonnet 4.5',
+  },
+  'reg-figCutLate25': {
+    configs:  ['anthropic_claude-opus-4-5_off', 'openai_gpt-5_2_off'],
+    labels:   ['GPT-5.2'],
+    baseline: 'Claude Opus 4.5',
+  },
+  // Release Date groupings
+  'reg-figRelLegacy': {
+    configs:  ['openai_gpt-3_5-turbo_off', 'anthropic_claude-3-haiku-20240307_off', 'openai_gpt-4o_off'],
+    labels:   ['Claude 3 Haiku', 'GPT-4o'],
+    baseline: 'GPT-3.5 Turbo',
+  },
+  'reg-figRelSpring': {
+    configs:  ['gemini_gemini-2_0-flash_off', 'openai_gpt-4_1_off', 'openai_o3_required',
+               'anthropic_claude-sonnet-4-0_off', 'gemini_gemini-2_5-flash_off', 'gemini_gemini-2_5-flash-lite_off'],
+    labels:   ['GPT-4.1', 'o3', 'Sonnet 4.0', 'Gemini 2.5 Flash', 'Gemini 2.5 Flash Lite'],
+    baseline: 'Gemini 2.0 Flash',
+  },
+  'reg-figRelLate': {
+    configs:  ['anthropic_claude-sonnet-4-5_off', 'anthropic_claude-haiku-4-5_off', 'anthropic_claude-opus-4-5_off',
+               'openai_gpt-5_1_off', 'openai_gpt-5_2_off', 'gemini_gemini-3-flash-preview_off'],
+    labels:   ['Haiku 4.5', 'Opus 4.5', 'GPT-5.1', 'GPT-5.2', 'Gemini 3 Flash'],
+    baseline: 'Claude Sonnet 4.5',
+  },
 };
 
 function initRegToggles() {
@@ -1082,6 +1193,13 @@ function init() {
       renderFigAnthroGen();
       renderFigC();
       renderFigFlagship();
+      renderFigCutPre24();
+      renderFigCutMid24();
+      renderFigCutEarly25();
+      renderFigCutLate25();
+      renderFigRelLegacy();
+      renderFigRelSpring();
+      renderFigRelLate();
       renderS2();
       renderS3();
       renderS6();
@@ -2079,14 +2197,15 @@ function fmtMonthYear(s) {
   return `${TL_MONTHS[+parts[1] - 1]} ${parts[0]}`;
 }
 
-function renderDateTimeline(containerId, dateField, parseFunc) {
+function renderDateTimeline(containerId, dateField, parseFunc, brackets) {
   const el = document.getElementById(containerId);
   if (!el || !modelMetadata.length) return;
 
   const W = FIG_CW, rowH = 72;
   const providers = ['anthropic', 'openai', 'gemini'];
   const padL = 88, padR = 32, padT = 24, padB = 44;
-  const H = rowH * providers.length + padT + padB;
+  const bracketH = (brackets && brackets.length) ? 36 : 0;
+  const H = rowH * providers.length + padT + padB + bracketH;
 
   // Build point list (include raw date string for tooltip)
   const points = [];
@@ -2102,7 +2221,7 @@ function renderDateTimeline(containerId, dateField, parseFunc) {
     const provRow = providers.indexOf(meta.provider);
     if (provRow < 0) return;
     const rawDate = meta[dateField] ? String(meta[dateField]) : '';
-    points.push({ x, label: cfg.label, color: cfg.color, provRow, rawDate });
+    points.push({ x, label: cfg.label, color: cfg.color, provRow, rawDate, model: meta.alias });
   });
 
   if (!points.length) {
@@ -2126,16 +2245,35 @@ function renderDateTimeline(containerId, dateField, parseFunc) {
       font-size="11" font-family="${SERIF}" font-weight="bold">${PROV_LABELS[p]}</text>`;
   });
 
-  // Year grid lines + labels
+  // Year grid lines + labels (shifted down by bracketH)
   const minYr = Math.floor(minX), maxYr = Math.ceil(maxX);
+  const dotZoneBottom = padT + providers.length * rowH;
   for (let yr = minYr; yr <= maxYr; yr++) {
     const sx = toSvgX(yr);
-    inner += `<line x1="${sx}" y1="${padT}" x2="${sx}" y2="${H - padB}" stroke="#dddddd" stroke-width="1" stroke-dasharray="3,4"/>`;
+    inner += `<line x1="${sx}" y1="${padT}" x2="${sx}" y2="${dotZoneBottom}" stroke="#dddddd" stroke-width="1" stroke-dasharray="3,4"/>`;
     inner += `<text x="${sx}" y="${H - padB + 16}" text-anchor="middle" fill="#888888"
       font-size="10" font-family="${SERIF}">${yr}</text>`;
   }
 
-  // Bucket overlapping dots (tighter 6px bucket for more granular stagger)
+  // Bracket annotations (between dot zone and year labels)
+  if (brackets && brackets.length) {
+    const bY = dotZoneBottom + 10;
+    const tickH = 6;
+    brackets.forEach(b => {
+      let x1 = toSvgX(parseFunc(b.startDate));
+      let x2 = toSvgX(parseFunc(b.endDate));
+      // Ensure minimum bracket width (for single-point brackets)
+      if (x2 - x1 < 20) { const mid = (x1 + x2) / 2; x1 = mid - 10; x2 = mid + 10; }
+      const midX = (x1 + x2) / 2;
+      inner += `<line x1="${x1}" y1="${bY}" x2="${x1}" y2="${bY + tickH}" stroke="#888" stroke-width="1.2"/>`;
+      inner += `<line x1="${x2}" y1="${bY}" x2="${x2}" y2="${bY + tickH}" stroke="#888" stroke-width="1.2"/>`;
+      inner += `<line x1="${x1}" y1="${bY + tickH}" x2="${x2}" y2="${bY + tickH}" stroke="#888" stroke-width="1.2"/>`;
+      inner += `<text x="${midX}" y="${bY + tickH + 13}" text-anchor="middle" fill="#555"
+        font-size="10" font-family="${SERIF}" font-style="italic">${esc(b.label)}</text>`;
+    });
+  }
+
+  // Bucket overlapping dots (6px bucket for stagger)
   const buckets = {};
   points.forEach(p => {
     const sx = Math.round(toSvgX(p.x) / 6) * 6;
@@ -2144,22 +2282,71 @@ function renderDateTimeline(containerId, dateField, parseFunc) {
     buckets[key].push(p);
   });
 
+  // Pass 1: render dots, collect label candidates (deduplicate reasoning variants)
+  const labelCandidates = [];
+  const dotZones = [];  // dot collision zones — labels that cross a dot get leader lines
   Object.values(buckets).forEach(bucket => {
-    const showLabel = bucket.length <= 2; // hide text in crowded buckets — rely on tooltip
+    const modelSeen = {};
     bucket.forEach((p, i) => {
       const sx = toSvgX(p.x);
       const baseY = toSvgY(p.provRow);
       const sy = baseY + (i - (bucket.length - 1) / 2) * 16;
       const short = p.label.replace('Claude ', '').replace(' Preview', '');
       const tipText = `${p.label} — ${fmtMonthYear(p.rawDate)}`;
-      inner += `<g class="tl-dot" data-tip="${esc(tipText)}">`;
-      inner += `<circle cx="${sx}" cy="${sy}" r="7" fill="transparent"/>`;  // invisible hit area
-      inner += `<circle cx="${sx}" cy="${sy}" r="5" fill="${p.color}" opacity="0.85"/>`;
-      if (showLabel) {
-        inner += `<text x="${sx + 8}" y="${sy + 4}" fill="#333333" font-size="9" font-family="${SERIF}">${esc(short)}</text>`;
-      }
+      inner += `<g class="tl-dot" data-tip="${esc(tipText)}" style="cursor:pointer">`;
+      inner += `<circle cx="${sx}" cy="${sy}" r="7" fill="transparent" pointer-events="all"/>`;
+      inner += `<circle cx="${sx}" cy="${sy}" r="5" fill="${p.color}" opacity="0.85" pointer-events="all"/>`;
       inner += `</g>`;
+      dotZones.push({ sx: sx - 6, sy, width: 12 });
+      // Deduplicate: one label per unique model in bucket
+      if (!modelSeen[p.model]) {
+        const baseName = short.replace(/ \((off|low|med|medium|high|required)\)$/i, '');
+        modelSeen[p.model] = { baseName, sx, sy, row: p.provRow, dotX: sx, dotY: sy, count: 1 };
+      } else {
+        modelSeen[p.model].count++;
+      }
     });
+    // Emit one label per unique model
+    Object.values(modelSeen).forEach(entry => {
+      const text = entry.count > 1 ? `${entry.baseName} ×${entry.count}` : entry.baseName;
+      const w = text.length * 5.5 + 4;
+      labelCandidates.push({
+        sx: entry.sx + 8, sy: entry.sy + 4, text, row: entry.row, width: w,
+        dotX: entry.dotX, dotY: entry.dotY
+      });
+    });
+  });
+
+  // Pass 2: collision-detect labels — pre-seed with dot zones so labels near dots get leader lines
+  labelCandidates.sort((a, b) => a.row - b.row || a.sy - b.sy || a.sx - b.sx);
+  const visibleLabels = [...dotZones];
+  const collides = (pos) => visibleLabels.some(prev =>
+    Math.abs(prev.sy - pos.sy) < 12 &&
+    !(pos.sx + pos.width < prev.sx || pos.sx > prev.sx + prev.width)
+  );
+  labelCandidates.forEach(lbl => {
+    // Option 1: right of dot (default — no leader line)
+    const right = { sx: lbl.sx, sy: lbl.sy, width: lbl.width };
+    if (!collides(right)) {
+      inner += `<text x="${right.sx}" y="${right.sy}" fill="#333333" font-size="9" font-family="${SERIF}">${esc(lbl.text)}</text>`;
+      visibleLabels.push(right);
+      return;
+    }
+    // Option 2: leader-line callout — try shelf positions above/below dot
+    const shelfOffsets = [-22, 22, -36, 36];
+    for (const dy of shelfOffsets) {
+      const pos = { sx: lbl.sx, sy: lbl.dotY + dy, width: lbl.width };
+      if (!collides(pos)) {
+        // Leader line from dot edge to label anchor
+        const lineY1 = dy < 0 ? lbl.dotY - 6 : lbl.dotY + 6;
+        const lineY2 = dy < 0 ? pos.sy + 3 : pos.sy - 9;
+        inner += `<line x1="${lbl.dotX}" y1="${lineY1}" x2="${lbl.sx - 2}" y2="${lineY2}" stroke="#aaa" stroke-width="0.7"/>`;
+        inner += `<text x="${pos.sx}" y="${pos.sy}" fill="#333333" font-size="9" font-family="${SERIF}">${esc(lbl.text)}</text>`;
+        visibleLabels.push(pos);
+        return;
+      }
+    }
+    // All options collide — rely on tooltip
   });
 
   el.innerHTML = `<svg width="${W}" height="${H}" style="overflow:visible;display:block">${inner}</svg>`;
@@ -2186,11 +2373,22 @@ function renderDateTimeline(containerId, dateField, parseFunc) {
 }
 
 function renderReleaseTimeline() {
-  renderDateTimeline('release-timeline-chart', 'release_date', parseDate);
+  renderDateTimeline('release-timeline-chart', 'release_date', parseDate, [
+    { label: 'Legacy (pre-2025)',  startDate: '2024-01-25', endDate: '2024-11-20' },
+    { label: 'Early 2025',         startDate: '2025-02-05', endDate: '2025-06-17' },
+    { label: 'Late 2025',          startDate: '2025-09-29', endDate: '2025-12-17' },
+  ]);
+  document.getElementById('s-release-timeline').style.display = 'block';
 }
 
 function renderCutoffTimeline() {
-  renderDateTimeline('cutoff-timeline-chart', 'knowledge_cutoff', parseYearMonth);
+  renderDateTimeline('cutoff-timeline-chart', 'knowledge_cutoff', parseYearMonth, [
+    { label: 'Pre-2024',    startDate: '2021-09', endDate: '2023-10' },
+    { label: 'Mid-2024',    startDate: '2024-06', endDate: '2024-09' },
+    { label: 'Early 2025',  startDate: '2025-01', endDate: '2025-03' },
+    { label: 'Late 2025',   startDate: '2025-08', endDate: '2025-08' },
+  ]);
+  document.getElementById('s-cutoff-timeline').style.display = 'block';
 }
 
 init();

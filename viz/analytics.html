@@ -246,22 +246,24 @@
     <div id="curves-section-nav">
       <a class="section-link active" data-filter="all" href="#">All Figures</a>
       <span class="nav-sep">·</span>
-      <a class="section-link" data-filter="reasoning" href="#">Reasoning Budget</a>
+      <a class="section-link" data-filter="reasoning" href="#">Reasoning</a>
       <span class="nav-sep">·</span>
-      <a class="section-link" data-filter="within" href="#">Model Size</a>
+      <a class="section-link" data-filter="within" href="#">Size</a>
       <span class="nav-sep">·</span>
-      <a class="section-link" data-filter="generational" href="#">Generational</a>
+      <a class="section-link" data-filter="generational" href="#">Evolution</a>
       <span class="nav-sep">·</span>
-      <a class="section-link" data-filter="cross" href="#">Cross-Provider</a>
+      <a class="section-link" data-filter="cross" href="#">Provider</a>
       <span class="nav-sep">·</span>
       <a class="section-link" data-filter="cutoff" href="#">Knowledge Cutoff</a>
       <span class="nav-sep">·</span>
       <a class="section-link" data-filter="release" href="#">Release Date</a>
       <span class="nav-sep">·</span>
       <a class="section-link" data-filter="agent" href="#">Agent Analysis</a>
+      <span class="nav-sep">·</span>
+      <a class="section-link" data-filter="comparison" href="#">Comparison Tool</a>
     </div>
 
-    <div id="section-reasoning" class="curve-section-header">Reasoning Budget</div>
+    <div id="section-reasoning" class="curve-section-header">Reasoning</div>
 
     <!-- Figure 1: GPT-5.2 Reasoning -->
     <div class="section" id="figA-section" data-section="reasoning" style="display:none">
@@ -291,7 +293,7 @@
       </div>
     </div>
 
-    <div id="section-within" class="curve-section-header">Model Size Comparison</div>
+    <div id="section-within" class="curve-section-header">Size</div>
 
     <!-- Figure 3: Anthropic Model Comparison -->
     <div class="section" id="figAnthro-section" data-section="within" style="display:none">
@@ -321,7 +323,7 @@
       </div>
     </div>
 
-    <div id="section-generational" class="curve-section-header">Generational Progression</div>
+    <div id="section-generational" class="curve-section-header">Evolution</div>
 
     <!-- Figure 5: Gemini Generational -->
     <div class="section" id="figD-section" data-section="generational" style="display:none">
@@ -365,7 +367,7 @@
       </div>
     </div>
 
-    <div id="section-cross" class="curve-section-header">Cross-Provider Comparison</div>
+    <div id="section-cross" class="curve-section-header">Provider</div>
 
     <!-- Figure 8: Cross-Provider Flagship -->
     <div class="section" id="figFlagship-section" data-section="cross" style="display:none">
@@ -392,16 +394,120 @@
 
     <div id="section-cutoff" class="curve-section-header">Knowledge Cutoff</div>
 
-    <!-- Knowledge Cutoff placeholder -->
-    <div class="section" id="cutoff-placeholder" data-section="cutoff">
-      <p style="color:#999;font-style:italic;font-family:Georgia,serif;font-size:13px;padding:20px 0">Figures coming soon — see Author Notes for the knowledge cutoff timeline.</p>
+    <!-- Figure 11: Knowledge Cutoff Timeline -->
+    <div class="section" id="s-cutoff-timeline" data-section="cutoff" style="display:none">
+      <div class="fig-num">Figure 11</div>
+      <div class="fig-title">Model Knowledge Cutoff Dates</div>
+      <div class="fig-caption">All 21 configurations plotted by knowledge cutoff date, grouped by provider. Brackets indicate the groupings used in Figures 12&ndash;15.</div>
+      <div id="cutoff-timeline-chart"></div>
+    </div>
+
+    <!-- Figure 12: Knowledge Cutoff — Pre-2024 -->
+    <div class="section" id="figCutPre24-section" data-section="cutoff" style="display:none">
+      <div class="fig-num">Figure 12</div>
+      <div class="fig-title">Knowledge Cutoff &mdash; Pre-2024</div>
+      <div class="fig-caption">Models with the oldest training data: GPT-3.5 Turbo (cutoff Sep 2021), Claude 3 Haiku (Aug 2023), and GPT-4o (Oct 2023). Training data spans a 2-year range. All reasoning = off.</div>
+      <div class="chart-container" id="figCutPre24-chart"></div>
+      <div class="legend" id="figCutPre24-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figCutPre24">Show Regression &#x25BE;</button>
+        <div class="reg-table-panel" id="reg-figCutPre24" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Figure 12: Knowledge Cutoff — Mid-2024 -->
+    <div class="section" id="figCutMid24-section" data-section="cutoff" style="display:none">
+      <div class="fig-num">Figure 13</div>
+      <div class="fig-title">Knowledge Cutoff &mdash; Mid-2024 (Jun&ndash;Sep)</div>
+      <div class="fig-caption">Models with mid-2024 knowledge cutoffs: GPT-4.1 (Jun 2024), o3 (Jun 2024), Gemini 2.0 Flash (Jun 2024), and GPT-5.1 (Sep 2024). o3 uses reasoning = required (only available mode); all others reasoning = off.</div>
+      <div class="chart-container" id="figCutMid24-chart"></div>
+      <div class="legend" id="figCutMid24-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figCutMid24">Show Regression &#x25BE;</button>
+        <div class="reg-table-panel" id="reg-figCutMid24" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Figure 13: Knowledge Cutoff — Early 2025 -->
+    <div class="section" id="figCutEarly25-section" data-section="cutoff" style="display:none">
+      <div class="fig-num">Figure 14</div>
+      <div class="fig-title">Knowledge Cutoff &mdash; Early 2025 (Jan&ndash;Mar)</div>
+      <div class="fig-caption">Six models with Jan&ndash;Mar 2025 knowledge cutoffs across two providers: Sonnet 4.5, Haiku 4.5, Sonnet 4.0 (Anthropic) and Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemini 3 Flash (Gemini). All reasoning = off. Tests whether models trained on similar data converge behaviorally.</div>
+      <div class="chart-container" id="figCutEarly25-chart"></div>
+      <div class="legend" id="figCutEarly25-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figCutEarly25">Show Regression &#x25BE;</button>
+        <div class="reg-table-panel" id="reg-figCutEarly25" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Figure 15: Knowledge Cutoff — Late 2025 -->
+    <div class="section" id="figCutLate25-section" data-section="cutoff" style="display:none">
+      <div class="fig-num">Figure 15</div>
+      <div class="fig-title">Knowledge Cutoff &mdash; Late 2025 (Aug)</div>
+      <div class="fig-caption">The two flagship models with Aug 2025 knowledge cutoffs: Claude Opus 4.5 (Anthropic) and GPT-5.2 (OpenAI). All reasoning = off. Direct cross-provider comparison of models trained on the most recent data in the study.</div>
+      <div class="chart-container" id="figCutLate25-chart"></div>
+      <div class="legend" id="figCutLate25-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figCutLate25">Show Regression &#x25BE;</button>
+        <div class="reg-table-panel" id="reg-figCutLate25" style="display:none"></div>
+      </div>
     </div>
 
     <div id="section-release" class="curve-section-header">Release Date</div>
 
-    <!-- Release Date placeholder -->
-    <div class="section" id="release-placeholder" data-section="release">
-      <p style="color:#999;font-style:italic;font-family:Georgia,serif;font-size:13px;padding:20px 0">Figures coming soon — see Author Notes for the release date timeline.</p>
+    <!-- Figure 16: Release Date Timeline -->
+    <div class="section" id="s-release-timeline" data-section="release" style="display:none">
+      <div class="fig-num">Figure 16</div>
+      <div class="fig-title">Model Release Dates</div>
+      <div class="fig-caption">All 21 configurations plotted by release date, grouped by provider. Brackets indicate the groupings used in Figures 17&ndash;19.</div>
+      <div id="release-timeline-chart"></div>
+    </div>
+
+    <!-- Figure 17: Release Date — Legacy Era -->
+    <div class="section" id="figRelLegacy-section" data-section="release" style="display:none">
+      <div class="fig-num">Figure 17</div>
+      <div class="fig-title">Release Date &mdash; Legacy Era (pre-2025)</div>
+      <div class="fig-caption">The three oldest models in the study: GPT-3.5 Turbo (Jan 2024), Claude 3 Haiku (Mar 2024), and GPT-4o (Nov 2024). All reasoning = off. Cross-provider comparison of pre-2025 releases.</div>
+      <div class="chart-container" id="figRelLegacy-chart"></div>
+      <div class="legend" id="figRelLegacy-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figRelLegacy">Show Regression &#x25BE;</button>
+        <div class="reg-table-panel" id="reg-figRelLegacy" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Figure 18: Release Date — Early 2025 -->
+    <div class="section" id="figRelSpring-section" data-section="release" style="display:none">
+      <div class="fig-num">Figure 18</div>
+      <div class="fig-title">Release Date &mdash; Early 2025 (Feb&ndash;Jun)</div>
+      <div class="fig-caption">Six models released Feb&ndash;Jun 2025 across all three providers: Gemini 2.0 Flash, GPT-4.1, o3, Claude Sonnet 4.0, Gemini 2.5 Flash, and Gemini 2.5 Flash Lite. o3 uses reasoning = required (only available mode); all others reasoning = off.</div>
+      <div class="chart-container" id="figRelSpring-chart"></div>
+      <div class="legend" id="figRelSpring-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figRelSpring">Show Regression &#x25BE;</button>
+        <div class="reg-table-panel" id="reg-figRelSpring" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Figure 19: Release Date — Late 2025 -->
+    <div class="section" id="figRelLate-section" data-section="release" style="display:none">
+      <div class="fig-num">Figure 19</div>
+      <div class="fig-title">Release Date &mdash; Late 2025 (Sep&ndash;Dec)</div>
+      <div class="fig-caption">Six flagship-era models released Sep&ndash;Dec 2025: Claude Sonnet 4.5, Haiku 4.5, Opus 4.5 (Anthropic), GPT-5.1, GPT-5.2 (OpenAI), and Gemini 3 Flash (Gemini). All reasoning = off.</div>
+      <div class="chart-container" id="figRelLate-chart"></div>
+      <div class="legend" id="figRelLate-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figRelLate">Show Regression &#x25BE;</button>
+        <div class="reg-table-panel" id="reg-figRelLate" style="display:none"></div>
+      </div>
     </div>
 
     <div id="section-agent" class="curve-section-header">Agent-Level Analysis</div>
@@ -419,60 +525,11 @@
       </div>
     </div>
 
-  </div><!-- end tab-curves -->
+    <div id="section-comparison" class="curve-section-header">Comparison Tool</div>
 
-  <!-- ══════════════════════════════════════════════
-       TAB 2 — MODEL CHARACTERISTICS
-  ══════════════════════════════════════════════ -->
-  <div id="tab-characteristics" class="tab-pane">
-
-    <!-- Figure A: α vs β scatter -->
-    <div class="section" id="figE-section">
-      <div class="fig-num">Figure 8</div>
-      <div class="fig-title">OLS Summary: Baseline Caution vs. Behavioral Sensitivity</div>
-      <div class="fig-caption">Each point is one of the 21 LLM configurations. X-axis: &beta;&#x2080; (intercept) — predicted mobility at 0% new cases, measuring default activity level. Y-axis: &beta;&#x2081; (linear coefficient) — linear term from quadratic OLS (Y = &beta;&#x2080; + &beta;&#x2081;X + &beta;&#x2082;X&sup2;), measuring behavioral sensitivity. Hover a point to identify the model.</div>
-      <div class="chart-container" id="figE-chart"></div>
-      <div class="legend" id="figE-legend"></div>
-    </div>
-
-    <!-- Figure B: Slope ranking -->
-    <div class="section" id="figF-section">
-      <div class="fig-num">Figure 9</div>
-      <div class="fig-title">Behavioral Sensitivity Ranking (&beta; slope)</div>
-      <div class="fig-caption">All 21 configurations ranked by &beta;&#x2081; (linear coefficient from quadratic OLS). More negative values indicate a stronger reduction in mobility per unit of new cases (stronger behavioral response).</div>
-      <div class="chart-container" id="figF-chart"></div>
-    </div>
-
-    <!-- Figure C: Knowledge cutoff vs β -->
-    <div class="section" id="figG-section">
-      <div class="fig-num">Figure 10</div>
-      <div class="fig-title">Knowledge Cutoff Date vs. Behavioral Sensitivity</div>
-      <div class="fig-caption">Does training data recency predict how strongly a model responds to rising infection? X-axis: knowledge cutoff (year). Y-axis: &beta; slope from OLS. Line shows OLS fit across all 21 configurations.</div>
-      <div class="chart-container" id="figG-chart"></div>
-      <div class="legend" id="figG-legend"></div>
-    </div>
-
-    <!-- Figure D: Release date vs α -->
-    <div class="section" id="figH-section">
-      <div class="fig-num">Figure 11</div>
-      <div class="fig-title">Release Date vs. Default Caution</div>
-      <div class="fig-caption">Are newer model releases more or less cautious at baseline (0% infection)? X-axis: model release date (year). Y-axis: &alpha; intercept from OLS. Line shows OLS fit.</div>
-      <div class="chart-container" id="figH-chart"></div>
-      <div class="legend" id="figH-legend"></div>
-    </div>
-
-    <!-- Figure E: Model family grouped bars -->
-    <div class="section" id="figI-section">
-      <div class="fig-num">Figure 12</div>
-      <div class="fig-title">Model Family Generational Comparison</div>
-      <div class="fig-caption">OLS &beta;&#x2080; (default caution, light bar) and &beta;&#x2081; (sensitivity, dark bar) for each model, grouped by provider family and ordered chronologically. Shows generational drift within each provider.</div>
-      <div class="chart-container" id="figI-chart"></div>
-      <div class="legend" id="figI-legend"></div>
-    </div>
-
-    <!-- Figure 13: Model Comparison (Dummy Variable OLS) -->
-    <div class="section" id="figJ-section">
-      <div class="fig-num">Figure 13</div>
+    <!-- Figure 20: Model Comparison (Dummy Variable OLS) -->
+    <div class="section" id="figJ-section" data-section="comparison" style="display:none">
+      <div class="fig-num">Figure 20</div>
       <div class="fig-title">Model Comparison &mdash; Dummy Variable OLS</div>
       <div class="fig-caption">
         Select two model configurations to compare. Each open circle = one repetition at one
@@ -498,6 +555,15 @@
       <div id="figJ-results"></div>
     </div>
 
+  </div><!-- end tab-curves -->
+
+  <!-- ══════════════════════════════════════════════
+       TAB 2 — MODEL CHARACTERISTICS
+  ══════════════════════════════════════════════ -->
+  <div id="tab-characteristics" class="tab-pane">
+    <div class="author-note" style="color:#888;font-style:italic;padding:24px 0">
+      This tab is reserved for future use.
+    </div>
   </div><!-- end tab-characteristics -->
 
   <!-- ══════════════════════════════════════════════
@@ -552,20 +618,46 @@
       <div class="outlier-grid" id="s6-cards"></div>
     </div>
 
-    <!-- Release Date Timeline -->
-    <div class="section" id="s-release-timeline">
-      <div class="fig-num">Author Note — Release Date Timeline</div>
-      <div class="fig-title">Model Release Dates</div>
-      <div class="fig-caption">All 21 configurations plotted by release date, grouped by provider. Use this to identify which models cluster together temporally for comparison figures.</div>
-      <div id="release-timeline-chart"></div>
+    <!-- Timelines moved to Mobility Curves tab (Figs 11, 16) -->
+
+    <!-- OLS diagnostic figures (moved from Model Characteristics) -->
+    <div class="section" id="figE-section">
+      <div class="fig-num">Author Note — OLS Scatter</div>
+      <div class="fig-title">OLS Summary: Baseline Caution vs. Behavioral Sensitivity</div>
+      <div class="fig-caption">Each point is one of the 21 LLM configurations. X-axis: &beta;&#x2080; (intercept) — predicted mobility at 0% new cases, measuring default activity level. Y-axis: &beta;&#x2081; (linear coefficient) — linear term from quadratic OLS (Y = &beta;&#x2080; + &beta;&#x2081;X + &beta;&#x2082;X&sup2;), measuring behavioral sensitivity. Hover a point to identify the model.</div>
+      <div class="chart-container" id="figE-chart"></div>
+      <div class="legend" id="figE-legend"></div>
     </div>
 
-    <!-- Knowledge Cutoff Timeline -->
-    <div class="section" id="s-cutoff-timeline">
-      <div class="fig-num">Author Note — Knowledge Cutoff Timeline</div>
-      <div class="fig-title">Model Knowledge Cutoff Dates</div>
-      <div class="fig-caption">All 21 configurations plotted by knowledge cutoff date, grouped by provider. Compare with release dates above to spot gaps.</div>
-      <div id="cutoff-timeline-chart"></div>
+    <div class="section" id="figF-section">
+      <div class="fig-num">Author Note — Sensitivity Ranking</div>
+      <div class="fig-title">Behavioral Sensitivity Ranking (&beta; slope)</div>
+      <div class="fig-caption">All 21 configurations ranked by &beta;&#x2081; (linear coefficient from quadratic OLS). More negative values indicate a stronger reduction in mobility per unit of new cases (stronger behavioral response).</div>
+      <div class="chart-container" id="figF-chart"></div>
+    </div>
+
+    <div class="section" id="figG-section">
+      <div class="fig-num">Author Note — Cutoff vs &beta;</div>
+      <div class="fig-title">Knowledge Cutoff Date vs. Behavioral Sensitivity</div>
+      <div class="fig-caption">Does training data recency predict how strongly a model responds to rising infection? X-axis: knowledge cutoff (year). Y-axis: &beta; slope from OLS. Line shows OLS fit across all 21 configurations.</div>
+      <div class="chart-container" id="figG-chart"></div>
+      <div class="legend" id="figG-legend"></div>
+    </div>
+
+    <div class="section" id="figH-section">
+      <div class="fig-num">Author Note — Release vs &alpha;</div>
+      <div class="fig-title">Release Date vs. Default Caution</div>
+      <div class="fig-caption">Are newer model releases more or less cautious at baseline (0% infection)? X-axis: model release date (year). Y-axis: &alpha; intercept from OLS. Line shows OLS fit.</div>
+      <div class="chart-container" id="figH-chart"></div>
+      <div class="legend" id="figH-legend"></div>
+    </div>
+
+    <div class="section" id="figI-section">
+      <div class="fig-num">Author Note — Family Comparison</div>
+      <div class="fig-title">Model Family Generational Comparison</div>
+      <div class="fig-caption">OLS &beta;&#x2080; (default caution, light bar) and &beta;&#x2081; (sensitivity, dark bar) for each model, grouped by provider family and ordered chronologically. Shows generational drift within each provider.</div>
+      <div class="chart-container" id="figI-chart"></div>
+      <div class="legend" id="figI-legend"></div>
     </div>
 
   </div><!-- end tab-author -->
