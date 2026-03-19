@@ -2151,9 +2151,9 @@ function renderDateTimeline(containerId, dateField, parseFunc) {
       const baseY = toSvgY(p.provRow);
       const sy = baseY + (i - (bucket.length - 1) / 2) * 16;
       const short = p.label.replace('Claude ', '').replace(' Preview', '');
-      const tooltip = `${p.label} — ${fmtMonthYear(p.rawDate)}`;
-      inner += `<g>`;
-      inner += `<title>${esc(tooltip)}</title>`;
+      const tipText = `${p.label} — ${fmtMonthYear(p.rawDate)}`;
+      inner += `<g class="tl-dot" data-tip="${esc(tipText)}">`;
+      inner += `<circle cx="${sx}" cy="${sy}" r="7" fill="transparent"/>`;  // invisible hit area
       inner += `<circle cx="${sx}" cy="${sy}" r="5" fill="${p.color}" opacity="0.85"/>`;
       if (showLabel) {
         inner += `<text x="${sx + 8}" y="${sy + 4}" fill="#333333" font-size="9" font-family="${SERIF}">${esc(short)}</text>`;
@@ -2163,6 +2163,26 @@ function renderDateTimeline(containerId, dateField, parseFunc) {
   });
 
   el.innerHTML = `<svg width="${W}" height="${H}" style="overflow:visible;display:block">${inner}</svg>`;
+
+  // Wire custom mouseover tooltip (SVG <title> unreliable in Chrome)
+  let tipEl = document.getElementById('tl-tooltip');
+  if (!tipEl) {
+    tipEl = document.createElement('div');
+    tipEl.id = 'tl-tooltip';
+    tipEl.style.cssText = 'display:none;position:fixed;background:#222;color:#fff;padding:4px 10px;font-size:11px;font-family:Georgia,serif;border-radius:3px;pointer-events:none;z-index:200;white-space:nowrap';
+    document.body.appendChild(tipEl);
+  }
+  el.querySelectorAll('.tl-dot').forEach(g => {
+    g.addEventListener('mouseenter', () => {
+      tipEl.textContent = g.dataset.tip;
+      tipEl.style.display = 'block';
+    });
+    g.addEventListener('mousemove', e => {
+      tipEl.style.left = (e.clientX + 14) + 'px';
+      tipEl.style.top  = (e.clientY - 32) + 'px';
+    });
+    g.addEventListener('mouseleave', () => { tipEl.style.display = 'none'; });
+  });
 }
 
 function renderReleaseTimeline() {
