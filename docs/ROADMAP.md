@@ -19,7 +19,7 @@ Cross-sectional probe: 100 frozen agents × 40 infection levels × 21 LLM config
 - GitHub repo live: RossFW/GABM-Mobility-Curve
 - **Phase 2 data collection complete** (March 2026): all 21 configs, 420,000 rows, validated, backed up to GitHub
 - Model metadata documented: `data/metadata/models.csv` + `docs/MODEL_CARD.md`
-- Visualization live with real data: `viz/analytics.html` (9-figure academic dashboard) + `viz/town.html`
+- Visualization live with real data: `viz/analytics.html` (20-figure academic dashboard) + `viz/town.html` + `viz/methodology.html`
 
 ### 🔲 Immediate Next: OLS Regression on Macro Data
 
@@ -67,21 +67,20 @@ Output: `data/{provider}_{model}_{reasoning}/probe_results_macro.csv`
 
 ---
 
-## The Research Figures (analytics.html)
+## The Research Figures (analytics.html — 20 figures)
 
-| # | Figure | Key question |
-|---|--------|-------------|
-| 1 | Provider behavioral envelopes | Do different providers produce different curve families? |
-| 2 | GPT-5.2 reasoning ladder (off→high) | How does reasoning budget shift behavior within a model? |
-| 3 | Gemini 3 Flash reasoning ladder (off→high) | Same question for Gemini |
-| 4 | OpenAI generational progression (off only) | How has GPT behavior changed across generations? |
-| 5 | Gemini generational progression (off only) | Same for Gemini 2.0→2.5→3 Flash |
-| 6 | Paper 1 baseline: GPT-3.5 vs. modern models | How far have models moved since 2022? |
-| 7 | Within-provider model variation | Small multiples per provider |
-| 8 | Outlier spotlights | Notable anomalies (e.g. Flash Lite inverted curve) |
-| 9 | Agent-level heatmap + concordance | Do individual agents agree? Majority vs. unanimous |
+| Tab | Figures | Key question |
+|-----|---------|-------------|
+| Reasoning | 1–2 | GPT-5.2 + Gemini 3 Flash reasoning ladders (off→high) |
+| Size | 3–4 | Anthropic (Haiku/Sonnet/Opus) + Gemini (Lite/Flash) size tiers |
+| Evolution | 5–7 | Generational progression per provider (off only) |
+| Provider | 8–9 | Cross-provider flagship comparison + Paper 1 baseline |
+| Agent Analysis | 10 | Agent-level heatmap + concordance |
+| Knowledge Cutoff | 11–15 | Models grouped by training data recency (timelines + curves) |
+| Release Date | 16–19 | Models grouped by release era (timelines + curves) |
+| Comparison Tool | 20 | Pairwise dummy variable OLS (interactive) |
 
-OLS regression output will become an additional figure/table in the paper.
+Methodology page (`methodology.html`) provides research design context for all figures.
 
 ---
 
@@ -142,7 +141,8 @@ GABM mobility curve/          ← THIS REPO (Paper 3)
 │   └── metadata/models.csv   ← alias, pinned version, dates, pricing
 ├── viz/                      ← interactive visualizations
 │   ├── town.html             ← Phaser 3 town view
-│   ├── analytics.html        ← academic research dashboard (9 figures)
+│   ├── methodology.html      ← research design, prompt, configs, analysis approach
+│   ├── analytics.html        ← academic research dashboard (20 figures)
 │   └── data/real/            ← real probe data (populated by combine_data.py)
 ├── site/coverage.html        ← model coverage matrix
 └── docs/

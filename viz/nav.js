@@ -6,8 +6,10 @@
 (function() {
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const links = [
-    { href: 'town.html',      label: 'SIMULATION' },
-    { href: 'analytics.html', label: 'ANALYTICS' },
+    { href: 'index.html',       label: 'INTRODUCTION' },
+    { href: 'methodology.html', label: 'METHODOLOGY' },
+    { href: 'town.html',        label: 'SIMULATION' },
+    { href: 'analytics.html',   label: 'ANALYTICS' },
   ];
 
   const nav = document.createElement('nav');

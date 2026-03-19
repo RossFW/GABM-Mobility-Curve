@@ -1218,6 +1218,9 @@ function init() {
       });
       loadMicro(s7SelectedIdx, renderS7);
 
+      // Figure 20: Comparison Tool (needs micro data, lazy-loaded on run)
+      initFigJ();
+
       // Load metadata for Tab 2 (background load)
       Papa.parse('data/metadata/models.csv', {
         download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
@@ -1293,7 +1296,6 @@ function renderTab2() {
   renderFigG();
   renderFigH();
   renderFigI();
-  initFigJ();
 }
 
 // ── Provider colors (Okabe-Ito compatible) ────────────────────

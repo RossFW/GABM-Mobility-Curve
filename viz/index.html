@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GABM Mobility Curve</title>
+  <script src="nav.js" defer></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #ffffff;
+      color: #111111;
+      font-family: Georgia, 'Times New Roman', serif;
+      padding: 40px 0 100px;
+    }
+
+    #app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    /* ── Page header ─────────────────────────────── */
+    .page-header { border-bottom: 2px solid #111; padding-bottom: 16px; }
+    h1 { font-size: 18px; font-weight: bold; color: #111; margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: #555; font-style: italic; }
+
+    /* ── Sections ────────────────────────────────── */
+    .intro-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #ddd;
+    }
+    .section-title { font-size: 16px; font-weight: bold; color: #111; }
+
+    /* ── Prose ────────────────────────────────────── */
+    .prose {
+      font-size: 13px; color: #333; line-height: 1.7;
+    }
+    .prose p { margin-bottom: 12px; }
+    .prose p:last-child { margin-bottom: 0; }
+    .prose strong { color: #111; }
+
+    /* ── Abstract placeholder ─────────────────────── */
+    .abstract-box {
+      background: #faf9f7;
+      border: 1px solid #e0ddd8;
+      border-left: 3px solid #999;
+      padding: 20px 24px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #555;
+      font-style: italic;
+    }
+
+    /* ── Site guide cards ─────────────────────────── */
+    .guide-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .guide-card {
+      border: 1px solid #ddd;
+      padding: 20px 24px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .guide-card:hover { border-color: #aaa; }
+    .guide-card-num {
+      font-size: 24px; font-weight: bold; color: #ccc;
+      font-family: 'Courier New', monospace;
+      min-width: 32px; text-align: center;
+      line-height: 1;
+    }
+    .guide-card-body { flex: 1; }
+    .guide-card-title {
+      font-size: 14px; font-weight: bold; color: #111;
+      margin-bottom: 4px;
+    }
+    .guide-card-title a {
+      color: #111; text-decoration: none;
+      border-bottom: 1px solid #ccc;
+    }
+    .guide-card-title a:hover { border-color: #111; }
+    .guide-card-desc {
+      font-size: 12px; color: #555; line-height: 1.6;
+    }
+    .guide-card-tabs {
+      margin-top: 6px;
+      font-size: 11px; color: #888;
+    }
+    .guide-card-tabs span {
+      display: inline-block;
+      background: #f4f4f4;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 4px;
+      margin-top: 4px;
+    }
+
+    /* ── Placeholder ──────────────────────────────── */
+    .placeholder {
+      font-size: 12px; color: #bbb; font-style: italic;
+      padding: 12px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <div class="page-header">
+    <h1>GABM Mobility Curve</h1>
+    <div class="page-subtitle">How do different LLMs respond to a simulated epidemic? &middot; Paper 3 &middot; Ross Williams PhD Dissertation</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Abstract                                    -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="intro-section">
+    <div class="section-title">Abstract</div>
+
+    <div class="abstract-box">
+      [Abstract placeholder — to be written after results are finalized.]
+      <br><br>
+      This study probes 21 large language model configurations across three providers (Anthropic, OpenAI, Google) to measure how LLM-driven agents respond to rising infection rates in a simulated epidemic scenario. Using a cross-sectional design — 100 frozen agents &times; 40 infection levels &times; 5 repetitions — we generate "mobility curves" that reveal each model's behavioral sensitivity to epidemiological risk. Preliminary findings and full methodology are available through the pages linked below.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Site Guide                                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="intro-section">
+    <div class="section-title">Site Guide</div>
+
+    <div class="prose">
+      <p>
+        This site presents the data, methodology, and interactive visualizations for Paper 3 of this dissertation. Use the navigation bar above to move between pages.
+      </p>
+    </div>
+
+    <div class="guide-cards">
+
+      <div class="guide-card">
+        <div class="guide-card-num">1</div>
+        <div class="guide-card-body">
+          <div class="guide-card-title"><a href="methodology.html">Methodology</a></div>
+          <div class="guide-card-desc">
+            The research design behind this study: how 420,000 observations were collected, the prompt template shown to every agent, the 21 LLM configurations tested, and the six analytical dimensions explored.
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-card">
+        <div class="guide-card-num">2</div>
+        <div class="guide-card-body">
+          <div class="guide-card-title"><a href="town.html">Simulation</a></div>
+          <div class="guide-card-desc">
+            An interactive town view of Dewberry Hollow. Watch 100 agents move through their daily routines. Select any LLM configuration from the dropdown, scrub through infection levels, and click individual agents to see their reasoning and decision at each level.
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-card">
+        <div class="guide-card-num">3</div>
+        <div class="guide-card-body">
+          <div class="guide-card-title"><a href="analytics.html">Analytics</a></div>
+          <div class="guide-card-desc">
+            The research dashboard — 20 figures presenting mobility curves, regression analysis, and model comparisons. Figures are organized by analytical dimension.
+          </div>
+          <div class="guide-card-tabs">
+            <span>Reasoning</span>
+            <span>Size</span>
+            <span>Evolution</span>
+            <span>Provider</span>
+            <span>Knowledge Cutoff</span>
+            <span>Release Date</span>
+            <span>Agent Analysis</span>
+            <span>Comparison Tool</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Dissertation Context                        -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="intro-section">
+    <div class="section-title">Dissertation Context</div>
+
+    <div class="prose">
+      <p>
+        This is the third paper in a PhD dissertation exploring the use of large language models as generative agents in agent-based models (GABMs).
+      </p>
+      <p>
+        <strong>Paper 1</strong> introduced the GABM framework, using GPT-3.5 to drive agent behavior in a full epidemic simulation. Agents responded to infection rates by deciding whether to stay home, producing realistic epidemic curves without hand-coded behavioral rules.
+      </p>
+      <p>
+        <strong>Paper 2</strong> investigated prompt sensitivity — demonstrating that small changes in how agents are prompted can meaningfully shift their behavior, raising questions about the robustness of LLM-driven simulations.
+      </p>
+      <p>
+        <strong>Paper 3 (this study)</strong> holds the prompt constant and varies the LLM itself. By testing 21 model configurations across three providers, we ask: does it matter which model you use? The mobility curve — plotting the share of agents who stay home as a function of infection rate — is the primary tool for answering that question.
+      </p>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+</body>
+</html>

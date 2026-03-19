@@ -32,7 +32,7 @@
 
 ### Infrastructure
 - [x] GitHub repo: RossFW/GABM-Mobility-Curve (public)
-- [x] Visualization: `viz/town.html` (Phaser 3 town) + `viz/analytics.html` (9-figure academic dashboard)
+- [x] Visualization: `viz/methodology.html` + `viz/town.html` (Phaser 3 town) + `viz/analytics.html` (20-figure academic dashboard)
 - [x] Coverage matrix: `site/coverage.html` with notes on thinking situation per model
 - [x] Model metadata: `data/metadata/models.csv` (alias, pinned version, release date, knowledge cutoff, pricing)
 
@@ -92,7 +92,7 @@ Secondary: agent-level analysis
 ## Phase 4: Viz with Real Data ✅ COMPLETE
 
 - [x] `viz/data/real/` populated via `combine_data.py`
-- [x] `analytics.html` — 9 figures rendering with real data (academic LaTeX style)
+- [x] `analytics.html` — 20 figures rendering with real data (academic LaTeX style)
 - [x] `town.html` — real agent data loaded (Phaser 3 town view)
 
 ---

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GABM Mobility Curve — Methodology</title>
+  <script src="nav.js" defer></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #ffffff;
+      color: #111111;
+      font-family: Georgia, 'Times New Roman', serif;
+      padding: 40px 0 100px;
+    }
+
+    #app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    /* ── Page header ─────────────────────────────── */
+    .page-header { border-bottom: 2px solid #111; padding-bottom: 16px; }
+    h1 { font-size: 18px; font-weight: bold; color: #111; margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: #555; font-style: italic; }
+
+    /* ── Sections ────────────────────────────────── */
+    .method-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #ddd;
+    }
+
+    .section-num {
+      font-size: 11px; font-weight: bold; color: #777;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .section-title { font-size: 16px; font-weight: bold; color: #111; }
+
+    /* ── Prose ────────────────────────────────────── */
+    .prose {
+      font-size: 13px; color: #333; line-height: 1.7;
+    }
+    .prose p { margin-bottom: 12px; }
+    .prose p:last-child { margin-bottom: 0; }
+    .prose strong { color: #111; }
+
+    /* ── Prompt block ─────────────────────────────── */
+    .prompt-block {
+      background: #faf9f7;
+      border: 1px solid #e0ddd8;
+      border-left: 3px solid #999;
+      padding: 20px 24px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: #333;
+      white-space: pre-wrap;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    .prompt-var {
+      background: #eef0ff;
+      color: #4338CA;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-family: 'Courier New', monospace;
+      font-size: 11.5px;
+    }
+    .prompt-label {
+      font-size: 11px; font-weight: bold; color: #888;
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    /* ── Tables ───────────────────────────────────── */
+    .method-table {
+      font-size: 11px; border-collapse: collapse; width: 100%;
+      font-family: 'Courier New', monospace;
+    }
+    .method-table th {
+      color: #555; font-weight: normal; padding: 6px 14px 6px 0;
+      border-bottom: 2px solid #ddd; text-align: left;
+      font-family: Georgia, serif; font-size: 11px;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .method-table td {
+      padding: 5px 14px 5px 0; color: #111;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .method-table tr:last-child td { border-bottom: none; }
+    .method-table .provider-header td {
+      font-weight: bold; color: #555;
+      padding-top: 12px; border-bottom: 1px solid #ddd;
+      font-family: Georgia, serif; font-size: 12px;
+    }
+
+    /* ── Key figure card ──────────────────────────── */
+    .key-figure {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .key-stat { border: 1px solid #ddd; padding: 16px; }
+    .key-stat .val {
+      font-size: 28px; font-weight: bold; line-height: 1.2;
+      font-family: 'Courier New', monospace;
+    }
+    .key-stat .lbl { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.4; }
+
+    /* ── Dimension list ───────────────────────────── */
+    .dim-list { list-style: none; padding: 0; }
+    .dim-list li {
+      font-size: 13px; color: #333; line-height: 1.6;
+      padding: 8px 0; border-bottom: 1px solid #f0f0f0;
+    }
+    .dim-list li:last-child { border-bottom: none; }
+    .dim-num {
+      display: inline-block; width: 20px; height: 20px;
+      background: #111; color: #fff; border-radius: 50%;
+      text-align: center; line-height: 20px;
+      font-size: 10px; font-weight: bold;
+      margin-right: 8px; vertical-align: middle;
+    }
+    .dim-ref {
+      font-size: 11px; color: #888; font-style: italic;
+    }
+
+    /* ── Equations ────────────────────────────────── */
+    .equation {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      background: #f8f8f8;
+      border: 1px solid #eee;
+      padding: 10px 16px;
+      display: inline-block;
+      color: #333;
+    }
+
+    /* ── Levels visualization ─────────────────────── */
+    .levels-strip {
+      display: flex; flex-wrap: wrap; gap: 3px;
+      margin: 8px 0;
+    }
+    .levels-strip .lv {
+      width: 20px; height: 20px;
+      font-size: 8px; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 2px;
+    }
+
+    /* ── Note ─────────────────────────────────────── */
+    .method-note {
+      font-size: 11px; color: #999; font-style: italic; margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <div class="page-header">
+    <h1>GABM Mobility Curve &mdash; Methodology</h1>
+    <div class="page-subtitle">Cross-provider LLM probe study &middot; Paper 3 of 3 &middot; Ross Williams PhD Dissertation</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Section 1: Research Design                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="method-section">
+    <div class="section-num">Section 1</div>
+    <div class="section-title">Research Design</div>
+
+    <div class="key-figure">
+      <div class="key-stat"><div class="val">100</div><div class="lbl">Frozen agents<br>(fixed demographics &amp; personality)</div></div>
+      <div class="key-stat"><div class="val">40</div><div class="lbl">Infection levels<br>(0%&ndash;7% of population)</div></div>
+      <div class="key-stat"><div class="val">21</div><div class="lbl">LLM configurations<br>(3 providers)</div></div>
+      <div class="key-stat"><div class="val">420,000</div><div class="lbl">Total observations<br>(100 &times; 40 &times; 21 &times; 5 reps)</div></div>
+    </div>
+
+    <div class="prose">
+      <p>
+        This study employs a <strong>cross-sectional probe design</strong> to measure how different large language models (LLMs) respond to rising infection rates in a simulated epidemic scenario. Rather than running a full agent-based epidemic simulation &mdash; where agent decisions feed back into disease dynamics &mdash; we isolate the LLM variable by presenting each agent with the same static scenario at each infection level.
+      </p>
+      <p>
+        Each of 100 frozen agents is asked a single binary question at each of 40 infection levels: <em>"Should you stay at home for the entire day?"</em> The agent's persona (name, age, Big-5 personality traits) and the infection rate are injected into a fixed prompt template. The only variable that changes across configurations is the LLM itself.
+      </p>
+      <p>
+        This controlled design enables direct comparison of LLM behavior &mdash; holding agent identity, prompt structure, and scenario constant &mdash; across 21 model configurations spanning three providers (Anthropic, OpenAI, Google). Each agent&ndash;level combination is repeated 5 times to capture response stochasticity, yielding <strong>420,000 total observations</strong>.
+      </p>
+      <p>
+        The resulting "mobility curve" for each configuration plots the percentage of agents choosing to stay home as a function of the local infection rate, revealing how sensitive each LLM is to epidemiological risk information.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Section 2: The Prompt                       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="method-section">
+    <div class="section-num">Section 2</div>
+    <div class="section-title">The Prompt</div>
+
+    <div class="prose">
+      <p>
+        Every API call uses the same prompt template, derived from the original GABM epidemic study (Paper 1, arXiv 2307.04986). Three variables are injected per call: the agent's <strong>name</strong>, <strong>age</strong>, and <strong>personality traits</strong> (from the frozen agent pool), plus the current <strong>infection rate</strong>. The full template is shown below.
+      </p>
+    </div>
+
+    <div class="prompt-label">Prompt Template</div>
+    <div class="prompt-block">You are <span class="prompt-var">{name}</span>. You are <span class="prompt-var">{age}</span> years old.
+You are a person who is <span class="prompt-var">{traits_str}</span>.
+You live in the town of Dewberry Hollow. You have a job and go to the office for work every day.
+You feel healthy and well.
+You know about the Catasat virus spreading across the country. It is an airborne virus causing an infectious disease that spreads from human to human. The deadliness of the virus is unknown.
+You check the newspaper and find that <span class="prompt-var">{infection_pct}</span>% of Dewberry Hollow's population were diagnosed with new infections of the Catasat virus yesterday.
+Should you stay at home for the entire day? Please provide your reasoning.
+
+If the answer is "Yes", please state your reasoning as "Reasoning: [explanation]."
+If the answer is "No", please state your reasoning as "Reasoning: [explanation]."
+
+The format should be as follows:
+Reasoning:
+Response:
+
+Example:
+Reasoning: You are tired.
+Response: Yes
+
+You have to provide Response in a single word; it must be either "Yes" or "No".</div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Section 3: Agent Population                 -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="method-section">
+    <div class="section-num">Section 3</div>
+    <div class="section-title">Agent Population</div>
+
+    <div class="prose">
+      <p>
+        The study uses a pool of <strong>100 synthetic agents</strong> generated once with a fixed random seed (seed=42) and held constant across all 21 LLM configurations. Each agent has a unique name, age (uniformly sampled from 19&ndash;64), and a set of Big-5 personality traits.
+      </p>
+      <p>
+        Each of the five personality dimensions is independently assigned as one of two opposites:
+      </p>
+    </div>
+
+    <table class="method-table">
+      <thead>
+        <tr>
+          <th>Dimension</th>
+          <th colspan="2" style="text-align:center">Assigned as one of</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Extraversion</td><td>extroverted</td><td style="color:#888"><em>or</em>&ensp;introverted</td></tr>
+        <tr><td>Agreeableness</td><td>agreeable</td><td style="color:#888"><em>or</em>&ensp;antagonistic</td></tr>
+        <tr><td>Conscientiousness</td><td>conscientious</td><td style="color:#888"><em>or</em>&ensp;unconscientious</td></tr>
+        <tr><td>Neuroticism</td><td>neurotic</td><td style="color:#888"><em>or</em>&ensp;emotionally stable</td></tr>
+        <tr><td>Openness</td><td>open to experience</td><td style="color:#888"><em>or</em>&ensp;closed to experience</td></tr>
+      </tbody>
+    </table>
+
+    <div class="prose" style="margin-top: 12px">
+      <p>
+        Traits are injected into the prompt as a natural-language string (e.g., <em>"introverted, agreeable, conscientious, emotionally stable, and closed to experience"</em>). By holding the agent pool constant, any differences in mobility curves across configurations can be attributed to the LLM rather than to variation in the agent population.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Section 4: LLM Configurations               -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="method-section">
+    <div class="section-num">Section 4</div>
+    <div class="section-title">LLM Configurations</div>
+
+    <div class="prose">
+      <p>
+        Twenty-one model configurations span three major LLM providers, covering multiple model generations, size tiers, and reasoning budget levels. All models are accessed via their respective APIs with version-pinned model IDs to ensure reproducibility. Data was collected in March 2026.
+      </p>
+    </div>
+
+    <table class="method-table" id="config-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Reasoning</th>
+          <th>Release</th>
+          <th>Cutoff</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Anthropic -->
+        <tr class="provider-header"><td colspan="4">Anthropic (5 configurations)</td></tr>
+        <tr><td>Claude Opus 4.5</td><td>off</td><td>Nov 2025</td><td>Aug 2025</td></tr>
+        <tr><td>Claude Sonnet 4.5</td><td>off</td><td>Sep 2025</td><td>Jan 2025</td></tr>
+        <tr><td>Claude Haiku 4.5</td><td>off</td><td>Oct 2025</td><td>Feb 2025</td></tr>
+        <tr><td>Claude Sonnet 4.0</td><td>off</td><td>May 2025</td><td>Mar 2025</td></tr>
+        <tr><td>Claude 3 Haiku</td><td>off</td><td>Mar 2024</td><td>Aug 2023</td></tr>
+        <!-- OpenAI -->
+        <tr class="provider-header"><td colspan="4">OpenAI (10 configurations)</td></tr>
+        <tr><td>GPT-5.2</td><td>off</td><td>Dec 2025</td><td>Aug 2025</td></tr>
+        <tr><td>GPT-5.2</td><td>low</td><td>Dec 2025</td><td>Aug 2025</td></tr>
+        <tr><td>GPT-5.2</td><td>medium</td><td>Dec 2025</td><td>Aug 2025</td></tr>
+        <tr><td>GPT-5.2</td><td>high</td><td>Dec 2025</td><td>Aug 2025</td></tr>
+        <tr><td>GPT-5.1</td><td>off</td><td>Nov 2025</td><td>Sep 2024</td></tr>
+        <tr><td>GPT-4.1</td><td>off</td><td>Apr 2025</td><td>Jun 2024</td></tr>
+        <tr><td>GPT-4o</td><td>off</td><td>Nov 2024</td><td>Oct 2023</td></tr>
+        <tr><td>GPT-3.5 Turbo</td><td>off</td><td>Jan 2024</td><td>Sep 2021</td></tr>
+        <tr><td>o3</td><td>required</td><td>Apr 2025</td><td>Jun 2024</td></tr>
+        <!-- Gemini -->
+        <tr class="provider-header"><td colspan="4">Gemini (6 configurations)</td></tr>
+        <tr><td>Gemini 3 Flash Preview</td><td>off</td><td>Dec 2025</td><td>Jan 2025</td></tr>
+        <tr><td>Gemini 3 Flash Preview</td><td>low</td><td>Dec 2025</td><td>Jan 2025</td></tr>
+        <tr><td>Gemini 3 Flash Preview</td><td>medium</td><td>Dec 2025</td><td>Jan 2025</td></tr>
+        <tr><td>Gemini 3 Flash Preview</td><td>high</td><td>Dec 2025</td><td>Jan 2025</td></tr>
+        <tr><td>Gemini 2.5 Flash Lite</td><td>off</td><td>Jun 2025</td><td>Jan 2025</td></tr>
+        <tr><td>Gemini 2.5 Flash</td><td>off</td><td>May 2025</td><td>Jan 2025</td></tr>
+        <tr><td>Gemini 2.0 Flash</td><td>off</td><td>Feb 2025</td><td>Jun 2024</td></tr>
+      </tbody>
+    </table>
+
+    <div class="prose" style="margin-top: 12px">
+      <p>
+        <strong>Reasoning budget</strong> controls the amount of internal "thinking" a model performs before responding. Most configurations use reasoning = off (standard inference). GPT-5.2 and Gemini 3 Flash are tested across the full reasoning ladder (off, low, medium, high) to measure the effect of reasoning budget on behavioral sensitivity. The o3 model always uses reasoning (required by API).
+      </p>
+      <p>
+        <strong>Temperature</strong> is set to 0 for non-thinking models and 1 for reasoning-capable models (API-enforced for Anthropic; Google recommendation for Gemini). Five repetitions per agent&ndash;level capture the resulting stochasticity.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Section 5: Infection Levels                 -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="method-section">
+    <div class="section-num">Section 5</div>
+    <div class="section-title">Infection Levels</div>
+
+    <div class="prose">
+      <p>
+        Each agent is probed at <strong>40 distinct infection levels</strong>, representing the percentage of the local population diagnosed with new infections on the previous day. The levels are designed to provide fine-grained coverage in the epidemiologically realistic range, plus a handful of extreme values to test ceiling effects.
+      </p>
+    </div>
+
+    <div id="levels-viz"></div>
+
+    <div class="prose">
+      <p>
+        <strong>Fine-grained range (36 levels):</strong> 0.0%, 0.1%, 0.2%, &hellip; 3.5% in 0.1-percentage-point steps. This range was calibrated to the peak daily new-case rate observed in Paper 1's full epidemic simulation (~3.4% of population), ensuring the probe covers the entire behaviorally relevant range with high resolution.
+      </p>
+      <p>
+        <strong>Extreme values (4 levels):</strong> 4%, 5%, 6%, 7%. These exceed the epidemiologically calibrated range and test whether models exhibit ceiling effects or novel behaviors at unusually high infection rates.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Section 6: Analysis Dimensions              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="method-section">
+    <div class="section-num">Section 6</div>
+    <div class="section-title">Analysis Dimensions</div>
+
+    <div class="prose">
+      <p>
+        The 21 configurations are designed to support six primary analytical dimensions. Each dimension isolates a specific factor &mdash; reasoning budget, model size, generation, provider, or training data recency &mdash; while holding others as constant as possible.
+      </p>
+    </div>
+
+    <ol class="dim-list">
+      <li>
+        <span class="dim-num">1</span>
+        <strong>Reasoning Budget Effects</strong> &mdash;
+        Does increasing the reasoning budget (off &rarr; low &rarr; medium &rarr; high) shift behavioral sensitivity?
+        Tested on GPT-5.2 and Gemini 3 Flash, the only models offering the full reasoning ladder.
+        <br><span class="dim-ref">&rarr; Figures 1&ndash;2 (Reasoning tab)</span>
+      </li>
+      <li>
+        <span class="dim-num">2</span>
+        <strong>Model Size</strong> &mdash;
+        Within a single provider and generation, does a larger model produce different mobility curves?
+        Tested on Anthropic (Haiku &middot; Sonnet &middot; Opus 4.5) and Gemini (Flash Lite &middot; Flash 2.5).
+        <br><span class="dim-ref">&rarr; Figures 3&ndash;4 (Size tab)</span>
+      </li>
+      <li>
+        <span class="dim-num">3</span>
+        <strong>Generational Progression</strong> &mdash;
+        How has behavioral sensitivity evolved across model generations? Separate ladders for each provider:
+        OpenAI (3.5 Turbo &rarr; 4o &rarr; 4.1 &rarr; 5.1 &rarr; 5.2), Gemini (2.0 &rarr; 2.5 &rarr; 3 Flash), Anthropic (Sonnet 4.0 &rarr; 4.5).
+        <br><span class="dim-ref">&rarr; Figures 5&ndash;7 (Evolution tab)</span>
+      </li>
+      <li>
+        <span class="dim-num">4</span>
+        <strong>Cross-Provider Comparison</strong> &mdash;
+        Holding reasoning = off, do flagship models from different providers produce similar curves?
+        Direct comparison: Opus 4.5 vs. GPT-5.2 vs. Gemini 3 Flash.
+        <br><span class="dim-ref">&rarr; Figures 8&ndash;9 (Provider tab)</span>
+      </li>
+      <li>
+        <span class="dim-num">5</span>
+        <strong>Knowledge Cutoff</strong> &mdash;
+        Do models trained on similar data (i.e., with similar knowledge cutoff dates) behave similarly, regardless of provider?
+        Groups: pre-2024 cutoff, mid-2024 cutoff, early 2025 cutoff, late 2025 cutoff.
+        <br><span class="dim-ref">&rarr; Figures 11&ndash;15 (Knowledge Cutoff tab)</span>
+      </li>
+      <li>
+        <span class="dim-num">6</span>
+        <strong>Release Date</strong> &mdash;
+        Do models released in the same era behave similarly? This tests whether the state of the art at a given point in time produces convergent behavior, even across different providers.
+        Groups: Legacy (pre-2025), Early 2025 (Feb&ndash;Jun), Late 2025 (Sep&ndash;Dec).
+        <br><span class="dim-ref">&rarr; Figures 16&ndash;19 (Release Date tab)</span>
+      </li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Section 7: Statistical Approach             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="method-section">
+    <div class="section-num">Section 7</div>
+    <div class="section-title">Statistical Approach</div>
+
+    <div class="prose">
+      <p>
+        The primary analytical tool is <strong>pairwise model comparison</strong>. To test whether two LLM configurations produce meaningfully different mobility curves, we pool their observations and fit a regression with a dummy variable indicating which model generated each data point:
+      </p>
+    </div>
+
+    <div class="equation">
+      Mobility = &beta;&#8320; + &beta;&#8321;&middot;NC + &beta;&#8322;&middot;NC&sup2; + &beta;&#8323;&middot;D + &beta;&#8324;&middot;D&middot;NC
+    </div>
+
+    <div class="prose" style="margin-top: 12px">
+      <p>
+        Here, <strong>NC</strong> is the new-case infection rate, <strong>D</strong> is a dummy variable (0 for the baseline model, 1 for the comparison model), and the interaction term <strong>D&middot;NC</strong> captures whether the two models differ in their sensitivity to infection.
+      </p>
+      <p>
+        The key coefficients:
+      </p>
+      <p>
+        <strong>&beta;&#8323; (intercept shift)</strong> &mdash; how much more or less cautious the comparison model is at baseline (zero infection). A positive &beta;&#8323; means the comparison model keeps more agents home even when there is no outbreak.
+      </p>
+      <p>
+        <strong>&beta;&#8324; (slope difference)</strong> &mdash; whether the comparison model is more or less responsive to rising infection. A significant &beta;&#8324; means the two models don't just differ in overall caution &mdash; they differ in how strongly they react to risk information.
+      </p>
+      <p>
+        This approach is implemented as an interactive comparison tool in the Analytics dashboard (Figure 20), where any two of the 21 configurations can be selected and compared directly. Each comparison uses 400 observations (200 per model: 5 reps &times; 40 infection levels).
+      </p>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+<script>
+  // Render infection levels strip
+  (function() {
+    const el = document.getElementById('levels-viz');
+    if (!el) return;
+    const levels = [];
+    for (let i = 0; i <= 35; i++) levels.push(i / 10);
+    [4, 5, 6, 7].forEach(v => levels.push(v));
+
+    let html = '<div class="levels-strip">';
+    levels.forEach(lv => {
+      const t = Math.min(lv / 7, 1);
+      const r = Math.round(59 + t * (220 - 59));
+      const g = Math.round(130 + t * (38 - 130));
+      const b = Math.round(246 + t * (38 - 246));
+      html += `<div class="lv" style="background:rgb(${r},${g},${b})" title="${lv.toFixed(1)}%">${lv < 4 ? lv.toFixed(1) : lv}</div>`;
+    });
+    html += '</div>';
+    html += '<div style="font-size:11px;color:#999;font-style:italic;margin-top:4px">40 infection levels: 0.0%&ndash;3.5% (fine-grained, 0.1% steps) + 4%, 5%, 6%, 7% (extreme values). Color intensity indicates level magnitude.</div>';
+    el.innerHTML = html;
+  })();
+</script>
+
+</body>
+</html>
