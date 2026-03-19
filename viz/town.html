@@ -108,7 +108,7 @@
     }
 
     #bio-panel {
-      width: 200px;
+      width: 260px;
       min-height: 640px;
       background: #fff;
       border: 1px solid #ddd;
@@ -237,7 +237,23 @@
     .zoom-btn:hover { background: #111; color: #fff; }
 
     /* ─── Scrubber ───────────────────────────────────── */
-    #scrubber-row { display: none; padding: 4px 0; }
+    #scrubber-row {
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+      padding: 6px 0 12px;
+      border-bottom: 1px solid #eee;
+    }
+    #scrubber-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+      color: #777;
+      padding: 0 2px;
+      margin-bottom: 2px;
+    }
+    #scrubber-title { font-style: italic; }
     #scrubber {
       width: 100%;
       height: 4px;
@@ -246,12 +262,24 @@
       opacity: 0.7;
     }
     #scrubber:hover { opacity: 1; }
+    #scrubber-axis {
+      position: relative;
+      height: 18px;
+      margin: 2px 0 0;
+      font-size: 10px;
+      color: #bbb;
+      font-family: Georgia, serif;
+    }
+    #scrubber-axis span {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
 
     /* ─── Mobility curve chart ───────────────────────── */
     #chart-section { padding: 4px 0; }
 
     #mobility-curve-chart {
-      border: 1px solid #ddd;
       overflow: hidden;
       position: relative;
     }
@@ -373,8 +401,8 @@
   <!-- ─── Header ─────────────────────────────────────── -->
   <div id="header">
     <div id="header-top">
-      <span id="world-name">DEWBERRY HOLLOW</span>
-      <span id="subtitle">MOBILITY CURVE PROBE</span>
+      <span id="world-name">Dewberry Hollow: Risk Responsiveness</span>
+      <span id="subtitle">Explore how AI agents respond to epidemic risk — by model, agent, and infection level</span>
     </div>
 
     <div id="model-display">
@@ -389,6 +417,16 @@
   <div id="model-selector-row">
     <label for="model-select">MODEL</label>
     <select id="model-select"></select>
+  </div>
+
+  <!-- ─── Scrubber / Progress Bar ───────────────────── -->
+  <div id="scrubber-row">
+    <div id="scrubber-header">
+      <span id="scrubber-title">Infection Progress — New Cases (% population)</span>
+      <span id="scrubber-value">0.0% new cases</span>
+    </div>
+    <input type="range" id="scrubber" min="0" max="39" value="0">
+    <div id="scrubber-axis"></div>
   </div>
 
   <div id="loading">Loading town...</div>
@@ -427,10 +465,12 @@
     <span style="font-size:11px;color:#aaa;margin-left:8px;font-style:italic">drag/arrows to pan · scroll to zoom</span>
   </div>
 
-  <!-- ─── Scrubber ───────────────────────────────────── -->
-  <div id="scrubber-row">
-    <input type="range" id="scrubber" min="0" max="39" value="0">
+  <div id="hint">
+    [SPACE] play/pause &nbsp;&nbsp; [SHIFT+←→] step &nbsp;&nbsp; [←→↑↓] pan &nbsp;&nbsp; click agent to follow &nbsp;&nbsp; [ESC] unfollow
   </div>
+
+  <!-- ─── Agent Grid ─────────────────────────────────── -->
+  <div id="agent-grid"></div>
 
   <!-- ─── Mobility Curve Chart ───────────────────────── -->
   <div id="chart-section">
@@ -443,18 +483,6 @@
   <!-- ─── Concordance Chart (stacked area) ──────────── -->
   <div id="concordance-chart" style="width:1156px;margin-top:8px;position:relative"></div>
 
-  <!-- ─── Concordance 6-line (comparison) ──────────── -->
-  <div id="concordance-6line" style="width:1156px;margin-top:8px;position:relative"></div>
-
-  <!-- ─── Concordance 3-line (comparison) ──────────── -->
-  <div id="concordance-3line" style="width:1156px;margin-top:8px;position:relative"></div>
-
-  <!-- ─── Agent Grid ─────────────────────────────────── -->
-  <div id="agent-grid"></div>
-
-  <div id="hint">
-    [SPACE] play/pause &nbsp;&nbsp; [SHIFT+←→] step &nbsp;&nbsp; [←→↑↓] pan &nbsp;&nbsp; click agent to follow &nbsp;&nbsp; [ESC] unfollow
-  </div>
 
 </div><!-- #app -->
 <div id="agent-tooltip"></div>
@@ -483,6 +511,33 @@
       select.appendChild(group);
     });
   })();
+
+  // Build scrubber x-axis tick labels from CONFIG.INFECTION_LEVELS
+  function buildScrubberAxis() {
+    const axis = document.getElementById('scrubber-axis');
+    if (!axis || !CONFIG?.INFECTION_LEVELS) return;
+    const levels = CONFIG.INFECTION_LEVELS;
+    for (let pct = 0; pct <= 7; pct++) {
+      const stepIdx = levels.reduce((best, l, i) =>
+        Math.abs(l - pct) < Math.abs(levels[best] - pct) ? i : best, 0);
+      const leftPct = (stepIdx / (levels.length - 1)) * 100;
+      const span = document.createElement('span');
+      span.textContent = pct + '%';
+      span.style.left = leftPct + '%';
+      axis.appendChild(span);
+    }
+  }
+  buildScrubberAxis();
+
+  // Update scrubber value label on drag
+  const scrubberEl = document.getElementById('scrubber');
+  const scrubberValueEl = document.getElementById('scrubber-value');
+  if (scrubberEl && scrubberValueEl) {
+    scrubberEl.addEventListener('input', () => {
+      const lvl = CONFIG.INFECTION_LEVELS?.[parseInt(scrubberEl.value)] ?? 0;
+      scrubberValueEl.textContent = lvl.toFixed(1) + '% new cases';
+    });
+  }
 
   // Show zoom row after Phaser boots
   window.addEventListener('load', () => {

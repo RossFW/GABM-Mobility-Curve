@@ -10,6 +10,7 @@ let microCache = {};     // dirKey → micro CSV rows (loaded on demand)
 let olsResults = [];     // [{key,provider,model,reasoning,label,color,alpha,beta,r2,alpha_logit,beta_logit}]
 let modelMetadata = [];  // rows from data/metadata/models.csv
 let tab2Rendered = false;
+let tabRegRendered = false;
 
 // ── Chart geometry ───────────────────────────────────────────
 const CW = 860, CH = 360, PAD = { t: 28, r: 24, b: 48, l: 58 };
@@ -156,6 +157,35 @@ function fitLogisticOLS(xs, ys) {
   return fitOLS(xs, logit_ys);
 }
 
+function fitQuadraticOLS(xs, ys) {
+  const n = xs.length;
+  if (n < 3) return { b0: 0, b1: 0, b2: 0, r2: 0 };
+  let sx=0, sx2=0, sx3=0, sx4=0, sy=0, sxy=0, sx2y=0;
+  xs.forEach((x, i) => {
+    const y = ys[i], x2 = x * x;
+    sx += x; sx2 += x2; sx3 += x2 * x; sx4 += x2 * x2;
+    sy += y; sxy += x * y; sx2y += x2 * y;
+  });
+  const A = [[n, sx, sx2], [sx, sx2, sx3], [sx2, sx3, sx4]];
+  const b = [sy, sxy, sx2y];
+  const det = M =>
+    M[0][0] * (M[1][1]*M[2][2] - M[1][2]*M[2][1]) -
+    M[0][1] * (M[1][0]*M[2][2] - M[1][2]*M[2][0]) +
+    M[0][2] * (M[1][0]*M[2][1] - M[1][1]*M[2][0]);
+  const rep = (M, col, v) => M.map((row, i) => row.map((c, j) => j === col ? v[i] : c));
+  const D = det(A);
+  if (!D) return { b0: 0, b1: 0, b2: 0, r2: 0 };
+  const b0 = det(rep(A, 0, b)) / D;
+  const b1 = det(rep(A, 1, b)) / D;
+  const b2 = det(rep(A, 2, b)) / D;
+  const my = sy / n;
+  const yhat = xs.map(x => b0 + b1 * x + b2 * x * x);
+  const ss_res = ys.reduce((s, y, i) => s + (y - yhat[i]) ** 2, 0);
+  const ss_tot = ys.reduce((s, y) => s + (y - my) ** 2, 0);
+  const r2 = ss_tot > 0 ? 1 - ss_res / ss_tot : 0;
+  return { b0, b1, b2, r2 };
+}
+
 // Compute OLS for all 21 configs from macroData, store in olsResults
 function computeAllOLS() {
   olsResults = CONFIG.MODELS.map(m => {
@@ -165,12 +195,16 @@ function computeAllOLS() {
     const xs = rows.map(r => +r.infection_level);
     const ys = rows.map(r => 100 - +r.pct_stay_home);
     const lin = fitOLS(xs, ys);
+    const quad = fitQuadraticOLS(xs, ys);
     const log = fitLogisticOLS(xs, ys);
     return {
       key: configDirKey(m),
       provider: m.provider, model: m.model, reasoning: m.reasoning,
       label: m.label, color: m.color, dash: m.dash,
+      // Linear (kept for scatter/trend charts that use alpha/beta)
       alpha: lin.alpha, beta: lin.beta, r2: lin.r2,
+      // Quadratic (primary model: Y = b0 + b1*X + b2*X²)
+      b0: quad.b0, b1: quad.b1, b2: quad.b2, r2q: quad.r2,
       alpha_logit: log.alpha, beta_logit: log.beta,
     };
   });
@@ -182,25 +216,27 @@ function renderOLSTable(tableId, keys, baseline) {
   if (!el) return;
   const subset = keys.map(k => olsResults.find(r => r.key === k)).filter(Boolean);
   if (!subset.length) return;
-  const baseAlpha = baseline ? (olsResults.find(r => r.key === baseline)?.alpha ?? 0) : null;
-  const baseBeta  = baseline ? (olsResults.find(r => r.key === baseline)?.beta  ?? 0) : null;
+  const baseB0 = baseline ? (olsResults.find(r => r.key === baseline)?.b0 ?? 0) : null;
+  const baseB1 = baseline ? (olsResults.find(r => r.key === baseline)?.b1 ?? 0) : null;
   const hasBaseline = baseline !== null && baseline !== undefined;
   el.innerHTML = `
     <thead><tr>
       <th>Model</th>
-      <th>&alpha; (intercept, %)</th>
-      <th>&beta; (slope, pp/%)</th>
+      <th>&beta;&#x2080; (intercept, %)</th>
+      <th>&beta;&#x2081; (linear)</th>
+      <th>&beta;&#x2082; (quadratic)</th>
       <th>R&sup2;</th>
-      ${hasBaseline ? '<th>&Delta;&alpha;</th><th>&Delta;&beta;</th>' : ''}
+      ${hasBaseline ? '<th>&Delta;&beta;&#x2080;</th><th>&Delta;&beta;&#x2081;</th>' : ''}
     </tr></thead>
     <tbody>
       ${subset.map(r => `<tr>
         <td>${esc(r.label)}</td>
-        <td>${r.alpha.toFixed(1)}%</td>
-        <td>${r.beta >= 0 ? '+' : ''}${r.beta.toFixed(2)}</td>
-        <td>${r.r2.toFixed(2)}</td>
-        ${hasBaseline ? `<td>${(r.alpha - baseAlpha) >= 0 ? '+' : ''}${(r.alpha - baseAlpha).toFixed(1)}%</td>
-                         <td>${(r.beta  - baseBeta)  >= 0 ? '+' : ''}${(r.beta  - baseBeta).toFixed(2)}</td>` : ''}
+        <td>${r.b0.toFixed(1)}%</td>
+        <td>${r.b1 >= 0 ? '+' : ''}${r.b1.toFixed(2)}</td>
+        <td>${r.b2 >= 0 ? '+' : ''}${r.b2.toFixed(3)}</td>
+        <td>${r.r2q.toFixed(2)}</td>
+        ${hasBaseline ? `<td>${(r.b0 - baseB0) >= 0 ? '+' : ''}${(r.b0 - baseB0).toFixed(1)}%</td>
+                         <td>${(r.b1 - baseB1) >= 0 ? '+' : ''}${(r.b1 - baseB1).toFixed(2)}</td>` : ''}
       </tr>`).join('')}
     </tbody>`;
 }
@@ -276,7 +312,7 @@ function renderS1() {
 
   let providerSvg = '';
   // Draw axis grid first
-  providerSvg += yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) + axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
+  providerSvg += yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) + axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
 
   providers.forEach(p => {
     if (s1HiddenProviders.has(p)) return;
@@ -345,7 +381,7 @@ function renderFigA() {
     .sort((a, b) => reasoningOrder.indexOf(a.reasoning) - reasoningOrder.indexOf(b.reasoning));
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
+              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
   const legendItems = [];
 
   models.forEach((m, i) => {
@@ -388,7 +424,7 @@ function renderFigB() {
     .sort((a, b) => reasoningOrder.indexOf(a.reasoning) - reasoningOrder.indexOf(b.reasoning));
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
+              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
   const legendItems = [];
 
   models.forEach((m, i) => {
@@ -429,7 +465,7 @@ function renderFigC() {
   ];
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
+              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
   const legendItems = [];
 
   targets.forEach(t => {
@@ -466,7 +502,7 @@ function renderFigD() {
   ];
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
+              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
   const legendItems = [];
 
   targets.forEach(t => {
@@ -506,7 +542,7 @@ function renderS2() {
   modernReps.forEach(m => highlightKeys.add(modelKey(m)));
 
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', '% going outside');
+              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
   let hitTargets = '';
   const legendItems = [];
 
@@ -565,7 +601,7 @@ function renderS3() {
   facets.innerHTML = groups.map(g => {
     const models = CONFIG.MODELS.filter(g.filter);
     let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-                axisLabels(w, h, pad, 'New cases (%)', '% going outside');
+                axisLabels(w, h, pad, 'New cases (%)', 'Mobility');
     let hitTargets = '';
     const legendItems = [];
 
@@ -770,7 +806,7 @@ function renderS7Heatmap(microRows, cfg) {
     return `<text x="${ox + idx * cellW + cellW / 2}" y="${oy + nAgents * cellH + 14}" fill="${AX_COLOR}" font-size="9" text-anchor="middle" font-family="${SERIF}">${t}%</text>`;
   }).join('');
 
-  const yLabel = `<text x="10" y="${oy + nAgents * cellH / 2}" fill="${AX_COLOR}" font-size="10" text-anchor="middle" font-family="${SERIF}" font-style="italic" transform="rotate(-90,10,${oy + nAgents * cellH / 2})">Agents (sorted)</text>`;
+  const yLabel = `<text x="10" y="${oy + nAgents * cellH / 2}" fill="${AX_COLOR}" font-size="10" text-anchor="middle" font-family="${SERIF}" font-style="italic" transform="rotate(-90,10,${oy + nAgents * cellH / 2})">Agents</text>`;
   const xLabel = `<text x="${ox + nLevels * cellW / 2}" y="${oy + nAgents * cellH + 28}" fill="${AX_COLOR}" font-size="10" text-anchor="middle" font-family="${SERIF}" font-style="italic">Infection level</text>`;
 
   const lx = ox + nLevels * cellW + 10, ly = oy + 4;
@@ -910,8 +946,38 @@ function initTabs() {
   document.getElementById('tab-curves').classList.add('active');
 }
 
+const regToggleRendered = {};
+const regToggleConfigs = {
+  'reg-gpt52': [
+    'openai_gpt-5_2_off', 'openai_gpt-5_2_low',
+    'openai_gpt-5_2_medium', 'openai_gpt-5_2_high',
+  ],
+  'reg-gemini3flash': [
+    'gemini_gemini-3-flash-preview_off', 'gemini_gemini-3-flash-preview_low',
+    'gemini_gemini-3-flash-preview_medium', 'gemini_gemini-3-flash-preview_high',
+  ],
+};
+
+function initRegToggles() {
+  document.querySelectorAll('.reg-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.target;
+      const panel = document.getElementById(targetId);
+      if (!panel) return;
+      const open = panel.style.display !== 'none';
+      panel.style.display = open ? 'none' : 'block';
+      btn.textContent = open ? 'Show Regression \u25be' : 'Hide Regression \u25b4';
+      if (!open && !regToggleRendered[targetId]) {
+        renderReasoningRegTable(targetId, regToggleConfigs[targetId]);
+        regToggleRendered[targetId] = true;
+      }
+    });
+  });
+}
+
 function init() {
   initTabs();
+  initRegToggles();
 
   Papa.parse(CONFIG.ALL_MACRO, {
     download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
@@ -933,23 +999,11 @@ function init() {
       renderS3();
       renderS6();
 
-      // Inline OLS tables
-      renderOLSTable('figA-ols',
-        ['openai_gpt-5_2_off','openai_gpt-5_2_low','openai_gpt-5_2_medium','openai_gpt-5_2_high']);
-      renderOLSTable('figB-ols',
-        ['gemini_gemini-3-flash-preview_off','gemini_gemini-3-flash-preview_low',
-         'gemini_gemini-3-flash-preview_medium','gemini_gemini-3-flash-preview_high']);
-      renderOLSTable('figC-ols',
-        ['openai_gpt-3_5-turbo_off','openai_gpt-4o_off','openai_gpt-5_1_off','openai_gpt-5_2_off']);
-      renderOLSTable('figD-ols',
-        ['gemini_gemini-2_0-flash_off','gemini_gemini-2_5-flash_off','gemini_gemini-3-flash-preview_off']);
+      // OLS table for Author Note — Paper 1 Legacy
       renderOLSTable('s2-ols',
         ['anthropic_claude-sonnet-4-5_off','openai_gpt-5_2_off','gemini_gemini-3-flash-preview_off',
          'openai_gpt-3_5-turbo_off'],
         'openai_gpt-3_5-turbo_off');
-
-      // s3 provider OLS range table
-      renderS3OLSTable();
 
       // S7: agent-level (needs micro data, lazy-loaded)
       document.getElementById('s7-section').style.display = 'block';
@@ -1106,13 +1160,13 @@ function renderFigE() {
   const el = document.getElementById('figE-chart');
   if (!el || !olsResults.length) return;
   const points = olsResults.map(r => ({
-    x: r.alpha, y: r.beta, color: PROV_COLORS[r.provider], label: r.label,
+    x: r.b0, y: r.b1, color: PROV_COLORS[r.provider], label: r.label,
   }));
   const w = CW, h = CH;
   el.innerHTML = makeScatterSVG(points, {
     w, h,
-    xLabel: 'α — baseline mobility at 0% infection (%)',
-    yLabel: 'β — slope (pp per 1% infection)',
+    xLabel: 'β₀ — baseline mobility at 0% infection (%)',
+    yLabel: 'β₁ — linear coefficient',
     xFmt: v => v.toFixed(0) + '%',
     yFmt: v => v.toFixed(1),
   });
@@ -1124,7 +1178,7 @@ function renderFigE() {
     })();
     circle.addEventListener('mouseenter', ev => {
       tt.style.display = 'block';
-      tt.innerHTML = `<strong>${circle.dataset.label}</strong><br>α = ${circle.dataset.x}<br>β = ${circle.dataset.y} pp/%`;
+      tt.innerHTML = `<strong>${circle.dataset.label}</strong><br>β₀ = ${circle.dataset.x}<br>β₁ = ${circle.dataset.y}`;
     });
     circle.addEventListener('mousemove', ev => {
       const r = el.getBoundingClientRect();
@@ -1146,8 +1200,8 @@ function renderFigF() {
   const el = document.getElementById('figF-chart');
   if (!el || !olsResults.length) return;
 
-  const sorted = [...olsResults].sort((a, b) => b.beta - a.beta);
-  const maxBeta = Math.max(...sorted.map(r => r.beta));
+  const sorted = [...olsResults].sort((a, b) => b.b1 - a.b1);
+  const maxBeta = Math.max(...sorted.map(r => r.b1));
   const rowH = 22, padL = 170, padR = 60, padT = 16, padB = 20;
   const w = CW, h = sorted.length * rowH + padT + padB;
   const barW = w - padL - padR;
@@ -1165,13 +1219,13 @@ function renderFigF() {
 
   sorted.forEach((r, i) => {
     const y = padT + i * rowH;
-    const bw = (Math.max(0, r.beta) / (maxBeta + 2)) * barW;
+    const bw = (Math.max(0, r.b1) / (maxBeta + 2)) * barW;
     svg += `<rect x="${padL}" y="${y + 3}" width="${bw.toFixed(1)}" height="${rowH - 6}" fill="${PROV_COLORS[r.provider]}" opacity="0.8"/>`;
     svg += `<text x="${padL - 6}" y="${y + rowH / 2 + 4}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="end">${esc(r.label)}</text>`;
-    svg += `<text x="${(padL + bw + 4).toFixed(1)}" y="${y + rowH / 2 + 4}" fill="#555" font-size="9" font-family="${SERIF}">${r.beta.toFixed(2)}</text>`;
+    svg += `<text x="${(padL + bw + 4).toFixed(1)}" y="${y + rowH / 2 + 4}" fill="#555" font-size="9" font-family="${SERIF}">${r.b1.toFixed(2)}</text>`;
   });
 
-  svg += `<text x="${padL + barW / 2}" y="${h - 4}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}" text-anchor="middle" font-style="italic">&beta; slope (pp per 1% infection)</text>`;
+  svg += `<text x="${padL + barW / 2}" y="${h - 4}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}" text-anchor="middle" font-style="italic">&beta;&#x2081; linear coefficient</text>`;
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" style="display:block;background:${SVG_BG}">${svgBorder(w, h)}${svg}</svg>`;
 }
 
@@ -1186,7 +1240,7 @@ function renderFigG() {
     );
     if (!meta) return null;
     const x = parseYearMonth(meta.knowledge_cutoff);
-    return x ? { x, y: r.beta, color: PROV_COLORS[r.provider], label: r.label } : null;
+    return x ? { x, y: r.b1, color: PROV_COLORS[r.provider], label: r.label } : null;
   }).filter(Boolean);
 
   if (!points.length) return;
@@ -1196,7 +1250,7 @@ function renderFigG() {
 
   el.innerHTML = makeScatterSVG(points, {
     xLabel: `Knowledge cutoff year   [OLS fit: ${beta_str}]`,
-    yLabel: 'β slope (pp per 1% infection)',
+    yLabel: 'β₁ — linear coefficient',
     xFmt: v => v.toFixed(1),
     yFmt: v => v.toFixed(1),
     fitLine,
@@ -1220,7 +1274,7 @@ function renderFigH() {
     );
     if (!meta) return null;
     const x = parseDate(meta.release_date);
-    return x ? { x, y: r.alpha, color: PROV_COLORS[r.provider], label: r.label } : null;
+    return x ? { x, y: r.b0, color: PROV_COLORS[r.provider], label: r.label } : null;
   }).filter(Boolean);
 
   if (!points.length) return;
@@ -1230,7 +1284,7 @@ function renderFigH() {
 
   el.innerHTML = makeScatterSVG(points, {
     xLabel: `Model release year   [OLS fit: ${beta_str}]`,
-    yLabel: 'α — baseline mobility (%)',
+    yLabel: 'β₀ — baseline mobility (%)',
     xFmt: v => v.toFixed(1),
     yFmt: v => v.toFixed(0) + '%',
     fitLine,
@@ -1288,9 +1342,9 @@ function renderFigI() {
   const barW = Math.floor((w - padL - padR - (providers.length - 1) * groupGap) / nBars) - 2;
   const h = CH;
 
-  const maxAlpha = Math.max(...merged.map(r => r.alpha));
-  const maxBeta  = Math.max(...merged.map(r => r.beta));
-  const maxVal   = Math.max(maxAlpha, maxBeta * 5);  // scale beta so it's visible alongside alpha
+  const maxAlpha = Math.max(...merged.map(r => r.b0));
+  const maxBeta  = Math.max(...merged.map(r => r.b1));
+  const maxVal   = Math.max(maxAlpha, maxBeta * 5);  // scale b1 so it's visible alongside b0
 
   const toBarH = v => ((v / maxVal) * (h - padT - padB));
 
@@ -1310,8 +1364,8 @@ function renderFigI() {
     prevProvider = r.provider;
 
     const pcolor = PROV_COLORS[r.provider];
-    const alphaH = toBarH(r.alpha);
-    const betaH  = toBarH(r.beta * 5);  // scale beta for visibility
+    const alphaH = toBarH(r.b0);
+    const betaH  = toBarH(r.b1 * 5);  // scale b1 for visibility
     const baseline = h - padB;
 
     // α bar — handle negative alpha (draw downward)
@@ -1349,10 +1403,143 @@ function renderFigI() {
 
   const legEl = document.getElementById('figI-legend');
   if (legEl) legEl.innerHTML = `
-    <div class="legend-item"><div class="legend-swatch" style="background:#7C3AED;height:10px;border-radius:2px"></div><span>Anthropic &alpha;</span></div>
-    <div class="legend-item"><div class="legend-swatch" style="background:#22C55E;height:10px;border-radius:2px"></div><span>OpenAI &alpha;</span></div>
-    <div class="legend-item"><div class="legend-swatch" style="background:#3B82F6;height:10px;border-radius:2px"></div><span>Gemini &alpha;</span></div>
-    <div class="legend-item"><div class="legend-swatch" style="background:#111;opacity:0.5;height:10px;border-radius:2px"></div><span>&beta; &times;5 (dark overlay)</span></div>`;
+    <div class="legend-item"><div class="legend-swatch" style="background:#7C3AED;height:10px;border-radius:2px"></div><span>Anthropic &beta;&#x2080;</span></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#22C55E;height:10px;border-radius:2px"></div><span>OpenAI &beta;&#x2080;</span></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#3B82F6;height:10px;border-radius:2px"></div><span>Gemini &beta;&#x2080;</span></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#111;opacity:0.5;height:10px;border-radius:2px"></div><span>&beta;&#x2081; &times;5 (dark overlay)</span></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REGRESSION TAB — Dummy Variable OLS Tables
+// ═══════════════════════════════════════════════════════════════
+
+// configs = [off_key, low_key, med_key, high_key]
+function renderReasoningRegTable(containerId, configs) {
+  const el = document.getElementById(containerId);
+  if (!el || !macroData.length) return;
+
+  const [offKey, lowKey, medKey, highKey] = configs;
+  const reasoningMap = { [offKey]: 'off', [lowKey]: 'low', [medKey]: 'medium', [highKey]: 'high' };
+
+  // Build stacked dataset: 40 levels × 4 configs = 160 rows
+  const rows = [];
+  configs.forEach(key => {
+    const r = key.split('_');
+    // key format: provider_model_reasoning — find matching macro rows
+    const olsR = olsResults.find(o => o.key === key);
+    if (!olsR) return;
+    const reasoning = reasoningMap[key];
+    macroData.filter(d =>
+      d.provider === olsR.provider && d.model === olsR.model && d.reasoning === olsR.reasoning
+    ).forEach(d => {
+      const nc = +d.infection_level;
+      const y  = 100 - +d.pct_stay_home;
+      rows.push({
+        nc, y,
+        d_low:  reasoning === 'low'    ? 1 : 0,
+        d_med:  reasoning === 'medium' ? 1 : 0,
+        d_high: reasoning === 'high'   ? 1 : 0,
+      });
+    });
+  });
+
+  if (rows.length < 10) { el.innerHTML = '<p style="color:#999">Insufficient data.</p>'; return; }
+
+  const Y = rows.map(r => r.y);
+
+  // Model 1: no interaction — [1, NC, NC², D_low, D_med, D_high]
+  const X1 = rows.map(r => [1, r.nc, r.nc*r.nc, r.d_low, r.d_med, r.d_high]);
+  const fit1 = fitMultipleOLS(X1, Y);
+
+  // Model 2: with NC interactions — [1, NC, NC², D_low, NC×D_low, D_med, NC×D_med, D_high, NC×D_high]
+  const X2 = rows.map(r => [
+    1, r.nc, r.nc*r.nc,
+    r.d_low,  r.nc*r.d_low,
+    r.d_med,  r.nc*r.d_med,
+    r.d_high, r.nc*r.d_high,
+  ]);
+  const fit2 = fitMultipleOLS(X2, Y);
+
+  if (!fit1 || !fit2) { el.innerHTML = '<p style="color:#999">Regression failed (singular matrix).</p>'; return; }
+
+  const fmt = (v, digits=2) => (v >= 0 ? '+' : '') + v.toFixed(digits);
+  const cell = (fit, idx) => {
+    if (!fit || idx >= fit.betas.length) return '<td></td>';
+    const b = fit.betas[idx], p = fit.ps[idx];
+    const stars = pStars(p);
+    const cls = stars === 'ns' ? '' : ' class="ols-sig"';
+    return `<td${cls}>${fmt(b)}${stars !== 'ns' ? `<sup>${stars}</sup>` : ''}</td>`;
+  };
+
+  // Row definitions: [label, model1_idx, model2_idx, isKeyRow]
+  const rowDefs = [
+    ['Constant',         0, 0, false],
+    ['New Cases',        1, 1, false],
+    ['New Cases²',       2, 2, false],
+    ['Low',              3, 3, true],
+    ['New Cases × Low',  null, 4, true],
+    ['Medium',           4, 5, true],
+    ['New Cases × Med',  null, 6, true],
+    ['High',             5, 7, true],
+    ['New Cases × High', null, 8, true],
+  ];
+
+  const bodyRows = rowDefs.map(([label, i1, i2, key]) => {
+    const c1 = i1 !== null ? cell(fit1, i1) : '<td style="color:#ccc">—</td>';
+    const c2 = i2 !== null ? cell(fit2, i2) : '<td style="color:#ccc">—</td>';
+    const tr = key ? ' class="ols-key-row"' : '';
+    return `<tr${tr}><td>${label}</td>${c1}${c2}</tr>`;
+  }).join('');
+
+  const eq1 = 'Mobility = &beta;&#x2080; + &beta;&#x2081;&thinsp;NC + &beta;&#x2082;&thinsp;NC&sup2; + &beta;&#x2083;&thinsp;Low + &beta;&#x2084;&thinsp;Medium + &beta;&#x2085;&thinsp;High';
+  const eq2 = 'Mobility = &beta;&#x2080; + &beta;&#x2081;&thinsp;NC + &beta;&#x2082;&thinsp;NC&sup2; + &beta;&#x2083;&thinsp;Low + &beta;&#x2084;&thinsp;NC&thinsp;&times;&thinsp;Low + &beta;&#x2085;&thinsp;Medium + &beta;&#x2086;&thinsp;NC&thinsp;&times;&thinsp;Medium + &beta;&#x2087;&thinsp;High + &beta;&#x2088;&thinsp;NC&thinsp;&times;&thinsp;High';
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:#666;font-style:italic;margin-bottom:10px;line-height:1.7">
+      <strong style="font-style:normal">(1) Baseline shift:</strong> ${eq1}<br>
+      <strong style="font-style:normal">(2) Baseline + slope shift:</strong> ${eq2}
+    </div>
+    <div class="ols-table-wrap" style="overflow-x:auto">
+      <table class="ols-table" style="min-width:420px">
+        <thead>
+          <tr>
+            <th style="text-align:left">Variable</th>
+            <th>(1) Baseline shift</th>
+            <th>(2) Baseline + slope shift</th>
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+        <tfoot>
+          <tr>
+            <td>R²</td>
+            <td>${fit1.r2.toFixed(3)}</td>
+            <td>${fit2.r2.toFixed(3)}</td>
+          </tr>
+          <tr>
+            <td>N</td>
+            <td>${rows.length}</td>
+            <td>${rows.length}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="font-size:10px;color:#999;font-style:italic">
+              Baseline = reasoning off. Highlighted rows = reasoning level tests.
+              <sup>***</sup> p&lt;0.001 &nbsp; <sup>**</sup> p&lt;0.01 &nbsp; <sup>*</sup> p&lt;0.05
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+}
+
+function renderTabRegression() {
+  renderReasoningRegTable('reg-gpt52', [
+    'openai_gpt-5_2_off', 'openai_gpt-5_2_low',
+    'openai_gpt-5_2_medium', 'openai_gpt-5_2_high',
+  ]);
+  renderReasoningRegTable('reg-gemini3flash', [
+    'gemini_gemini-3-flash-preview_off', 'gemini_gemini-3-flash-preview_low',
+    'gemini_gemini-3-flash-preview_medium', 'gemini_gemini-3-flash-preview_high',
+  ]);
 }
 
 // ═══════════════════════════════════════════════════════════════

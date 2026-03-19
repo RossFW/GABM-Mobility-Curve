@@ -189,7 +189,7 @@ function buildBioHtml(id, agentInfo, decision, reasoningText) {
       const initLabel = isExpanded ? `Hide reps 2-${total}` : `Show reps 2-${total}`;
       reasoningHtml += `<div style="margin-top:4px">
         <span class="bio-reasoning-toggle" onclick="var el=document.getElementById('${toggleId}');var show=el.style.display==='none';el.style.display=show?'block':'none';this.textContent=show?'Hide reps 2-${total}':'Show reps 2-${total}';if(show){expandedToggles.add('${toggleId}')}else{expandedToggles.delete('${toggleId}')}"
-          style="color:#4a6580;font-size:5px;font-family:'Press Start 2P',monospace;cursor:pointer;text-decoration:underline">${initLabel}</span>
+          style="color:#4a6580;font-size:10px;font-family:Georgia,serif;cursor:pointer;text-decoration:underline">${initLabel}</span>
       </div>`;
       reasoningHtml += `<div id="${toggleId}" style="display:${initDisplay}">`;
 
@@ -212,36 +212,37 @@ function buildBioHtml(id, agentInfo, decision, reasoningText) {
   // Agent timeline — 40 dots showing decision at each infection level
   let timelineSvg = '';
   if (typeof agentDecisions !== 'undefined') {
-    const dotR = 2, dotSpacing = 4.2, padX = 4, svgW = 180, svgH = 24;
+    const dotR = 3.5, dotSpacing = 6, padX = 44, svgW = 240, rowH = 28, svgH = rowH * 2 + 4;
     let dots = '';
     for (let li = 0; li <= 39; li++) {
       const d = agentDecisions[li]?.[id] || 'no';
-      // Confidence-based color gradient
       const v = (typeof agentVoteCount !== 'undefined' && agentVoteCount[li])
         ? agentVoteCount[li][id] : null;
       let conf = 1.0;
-      if (v) {
-        const maj = Math.max(v.yes, v.no);
-        conf = maj / (v.yes + v.no);
-      }
+      if (v) { const maj = Math.max(v.yes, v.no); conf = maj / (v.yes + v.no); }
       const col = confidenceCssColor(d, conf);
-      const cx = padX + li * dotSpacing + dotR;
-      const cy = svgH / 2;
-      // Highlight current level
+      const row = li < 20 ? 0 : 1;
+      const cx = padX + (li % 20) * dotSpacing + dotR;
+      const cy = row * rowH + rowH / 2;
       if (li === levelIdx) {
-        dots += `<circle cx="${cx}" cy="${cy}" r="${dotR + 1.5}" fill="none" stroke="#fff" stroke-width="1"/>`;
+        dots += `<circle cx="${cx}" cy="${cy}" r="${dotR + 2}" fill="none" stroke="#666" stroke-width="1.5"/>`;
       }
       dots += `<circle cx="${cx}" cy="${cy}" r="${dotR}" fill="${col}"/>`;
     }
+    // Row range labels — computed from actual CONFIG.INFECTION_LEVELS
+    const lvls = (typeof CONFIG !== 'undefined' && CONFIG.INFECTION_LEVELS) ? CONFIG.INFECTION_LEVELS : [];
+    const r1end = lvls[19] != null ? lvls[19] + '%' : '~2%';
+    const r2start = lvls[20] != null ? lvls[20] + '%' : '~2%';
+    const r2end = lvls[39] != null ? lvls[39] + '%' : '7%';
+    const rowLabels =
+      `<text x="2" y="${rowH / 2 + 4}" fill="#888" font-size="9" font-family="Georgia,serif">0–${r1end}</text>` +
+      `<text x="2" y="${rowH + rowH / 2 + 4}" fill="#888" font-size="9" font-family="Georgia,serif">${r2start}–${r2end}</text>`;
     timelineSvg = `
-      <div class="bio-reasoning-label" style="margin-top:6px">RESPONSE OVER INFECTION RATE</div>
+      <div class="bio-reasoning-label" style="margin-top:6px">Response to New Cases (% population)</div>
       <svg width="${svgW}" height="${svgH}" style="display:block;margin:2px 0">
-        ${dots}
+        ${rowLabels}${dots}
       </svg>
-      <div style="display:flex;justify-content:space-between;font-size:5px;color:#4a6580;font-family:'Press Start 2P',monospace;padding:0 4px">
-        <span>0%</span><span>3.5%</span><span>7%</span>
-      </div>
-      <div style="display:flex;gap:8px;font-size:5px;color:#4a6580;font-family:'Press Start 2P',monospace;margin-top:2px;padding:0 4px">
+      <div style="display:flex;gap:8px;font-size:10px;color:#555;font-family:Georgia,serif;margin-top:4px;padding:0 4px;flex-wrap:wrap">
         <span><span style="color:#F97316">●</span> Home</span>
         <span><span style="color:#3B82F6">●</span> Out</span>
         <span><span style="color:#FBBF24">●</span>/<span style="color:#60A5FA">●</span> 4/5</span>

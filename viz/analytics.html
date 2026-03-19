@@ -72,6 +72,15 @@
       font-size: 12px; color: #555; font-style: italic;
       line-height: 1.55; margin-top: -2px;
     }
+    .fig-note { font-size: 11px; color: #999; font-style: italic; margin-top: 6px; }
+    .reg-toggle-wrap { margin-top: 14px; }
+    .reg-toggle-btn {
+      font-family: Georgia, serif; font-size: 12px; color: #555;
+      background: none; border: 1px solid #ccc; padding: 4px 12px;
+      cursor: pointer; border-radius: 3px;
+    }
+    .reg-toggle-btn:hover { border-color: #888; color: #111; }
+    .reg-table-panel { margin-top: 10px; }
 
     /* ── Summary stats (S0) ──────────────────────── */
     .summary-card {
@@ -117,6 +126,8 @@
     .ols-table tr:last-child td { border-bottom: none; }
     .ols-key-row td:first-child { font-weight: bold; color: #7C3AED; }
     .ols-key-row td { background: #f9f7ff; }
+    .ols-sig { font-weight: bold; }
+    .ols-table sup { font-size: 9px; color: #7C3AED; }
 
     /* ── Figure 13 controls ──────────────────────── */
     .figJ-controls {
@@ -213,9 +224,10 @@
       <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high). N&thinsp;=&thinsp;100 agents &times; 5 repetitions &times; 40 infection levels per configuration.</div>
       <div class="chart-container" id="figA-chart"></div>
       <div class="legend" id="figA-legend"></div>
-      <div class="ols-table-wrap">
-        <div class="ols-table-label">OLS fit: mobility = &alpha; + &beta; &middot; new cases (% population)</div>
-        <table class="ols-table" id="figA-ols"></table>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-gpt52">Show Regression ▾</button>
+        <div class="reg-table-panel" id="reg-gpt52" style="display:none"></div>
       </div>
     </div>
 
@@ -226,9 +238,10 @@
       <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high).</div>
       <div class="chart-container" id="figB-chart"></div>
       <div class="legend" id="figB-legend"></div>
-      <div class="ols-table-wrap">
-        <div class="ols-table-label">OLS fit: mobility = &alpha; + &beta; &middot; new cases (% population)</div>
-        <table class="ols-table" id="figB-ols"></table>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-gemini3flash">Show Regression ▾</button>
+        <div class="reg-table-panel" id="reg-gemini3flash" style="display:none"></div>
       </div>
     </div>
 
@@ -239,10 +252,7 @@
       <div class="fig-caption">Mobility curves for GPT-3.5 Turbo through GPT-5.2, all at reasoning = off. Illustrates how behavioral responses have shifted across model generations.</div>
       <div class="chart-container" id="figC-chart"></div>
       <div class="legend" id="figC-legend"></div>
-      <div class="ols-table-wrap">
-        <div class="ols-table-label">OLS fit per generation</div>
-        <table class="ols-table" id="figC-ols"></table>
-      </div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
     </div>
 
     <!-- Figure 4: Gemini Generational -->
@@ -252,40 +262,21 @@
       <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview at reasoning = off. Gemini 2.5 Flash Lite excluded due to anomalous inverted response curve (see Author Notes).</div>
       <div class="chart-container" id="figD-chart"></div>
       <div class="legend" id="figD-legend"></div>
-      <div class="ols-table-wrap">
-        <div class="ols-table-label">OLS fit per generation</div>
-        <table class="ols-table" id="figD-ols"></table>
-      </div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
     </div>
 
-    <!-- Figure 5: Paper 1 Legacy -->
-    <div class="section" id="s2-section" style="display:none">
-      <div class="fig-num">Figure 5</div>
-      <div class="fig-title">Paper 1 Baseline: GPT-3.5 vs. Modern Models</div>
-      <div class="fig-caption">GPT-3.5 Turbo (Paper 1 baseline, 2022) shown in bold amber dashed. One representative per modern provider highlighted; all remaining configurations shown in gray. Hover a gray line to identify it.</div>
-      <div class="chart-container" id="s2-chart"></div>
-      <div class="legend" id="s2-legend"></div>
-      <div class="ols-table-wrap">
-        <div class="ols-table-label">OLS shift from GPT-3.5 baseline (&Delta;&alpha;, &Delta;&beta;)</div>
-        <table class="ols-table" id="s2-ols"></table>
-      </div>
-    </div>
-
-    <!-- Figure 6: Small Multiples by Provider -->
+    <!-- Figure 5: Small Multiples by Provider -->
     <div class="section" id="s3-section" style="display:none">
-      <div class="fig-num">Figure 6</div>
+      <div class="fig-num">Figure 5</div>
       <div class="fig-title">Within-Provider Model Variation</div>
       <div class="fig-caption">All configurations overlaid within each provider. Hover to identify individual models.</div>
       <div class="facet-row" id="s3-facets"></div>
-      <div class="ols-table-wrap">
-        <div class="ols-table-label">OLS range per provider (min / max &beta;)</div>
-        <table class="ols-table" id="s3-ols"></table>
-      </div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
     </div>
 
-    <!-- Figure 7: Agent-Level Analysis -->
+    <!-- Figure 6: Agent-Level Analysis -->
     <div class="section" id="s7-section" style="display:none">
-      <div class="fig-num">Figure 7</div>
+      <div class="fig-num">Figure 6</div>
       <div class="fig-title">Agent-Level Decision Heatmap and Concordance</div>
       <div class="fig-caption">Heatmap shows individual agent majority decisions across all 40 infection levels, sorted by transition point (first level where stay-home is majority decision). Concordance shows the fraction of agents with unanimous (5/5), exactly 4/5, or exactly 3/5 agreement at each infection level. The colored strip at the top of the chart indicates whether the overall majority of agents are staying home (amber) or going out (blue).</div>
       <div id="s7-model-select" style="margin-bottom:12px"></div>
@@ -307,7 +298,7 @@
     <div class="section" id="figE-section">
       <div class="fig-num">Figure 8</div>
       <div class="fig-title">OLS Summary: Baseline Caution vs. Behavioral Sensitivity</div>
-      <div class="fig-caption">Each point is one of the 21 LLM configurations. X-axis: &alpha; (intercept) — predicted mobility at 0% new cases, measuring default activity level. Y-axis: &beta; (slope) — change in mobility per 1 percentage point of new cases, measuring behavioral sensitivity. Hover a point to identify the model.</div>
+      <div class="fig-caption">Each point is one of the 21 LLM configurations. X-axis: &beta;&#x2080; (intercept) — predicted mobility at 0% new cases, measuring default activity level. Y-axis: &beta;&#x2081; (linear coefficient) — linear term from quadratic OLS (Y = &beta;&#x2080; + &beta;&#x2081;X + &beta;&#x2082;X&sup2;), measuring behavioral sensitivity. Hover a point to identify the model.</div>
       <div class="chart-container" id="figE-chart"></div>
       <div class="legend" id="figE-legend"></div>
     </div>
@@ -316,7 +307,7 @@
     <div class="section" id="figF-section">
       <div class="fig-num">Figure 9</div>
       <div class="fig-title">Behavioral Sensitivity Ranking (&beta; slope)</div>
-      <div class="fig-caption">All 21 configurations ranked by OLS slope (&beta;). More negative values indicate a stronger reduction in mobility per unit of new cases (stronger behavioral response).</div>
+      <div class="fig-caption">All 21 configurations ranked by &beta;&#x2081; (linear coefficient from quadratic OLS). More negative values indicate a stronger reduction in mobility per unit of new cases (stronger behavioral response).</div>
       <div class="chart-container" id="figF-chart"></div>
     </div>
 
@@ -342,7 +333,7 @@
     <div class="section" id="figI-section">
       <div class="fig-num">Figure 12</div>
       <div class="fig-title">Model Family Generational Comparison</div>
-      <div class="fig-caption">OLS &alpha; (default caution, light bar) and &beta; (sensitivity, dark bar) for each model, grouped by provider family and ordered chronologically. Shows generational drift within each provider.</div>
+      <div class="fig-caption">OLS &beta;&#x2080; (default caution, light bar) and &beta;&#x2081; (sensitivity, dark bar) for each model, grouped by provider family and ordered chronologically. Shows generational drift within each provider.</div>
       <div class="chart-container" id="figI-chart"></div>
       <div class="legend" id="figI-legend"></div>
     </div>
@@ -359,10 +350,16 @@
         <strong>Model 2:</strong> Mobility = &beta;&#8320; + &beta;&#8321;&middot;NC + &beta;&#8322;&middot;NC&sup2; + &beta;&#8323;&middot;D + <strong>&beta;&#8324;&middot;D&middot;NC</strong>
       </div>
       <div class="figJ-controls">
-        <select id="figJ-configA"></select>
-        <span style="font-size:13px;color:#555">vs.</span>
-        <select id="figJ-configB"></select>
-        <button id="figJ-run">Run Comparison</button>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:11px;color:#888;font-style:italic">Baseline (D = 0)</span>
+          <select id="figJ-configA"></select>
+        </div>
+        <span style="font-size:13px;color:#555;padding-top:18px">vs.</span>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:11px;color:#888;font-style:italic">Comparison (D = 1)</span>
+          <select id="figJ-configB"></select>
+        </div>
+        <button id="figJ-run" style="margin-top:18px">Run Comparison</button>
       </div>
       <div id="figJ-loading" style="display:none;font-size:13px;color:#555;padding:8px 0">Loading micro data&hellip;</div>
       <div id="figJ-scatter"></div>
@@ -400,6 +397,19 @@
       <div class="fig-num">Author Note — Summary Stats</div>
       <div class="fig-title">Headline Findings</div>
       <div class="summary-card" id="s0-card"></div>
+    </div>
+
+    <!-- Paper 1 Legacy (moved from main figures) -->
+    <div class="section" id="s2-section" style="display:none">
+      <div class="fig-num">Author Note — Paper 1 Legacy</div>
+      <div class="fig-title">Paper 1 Baseline: GPT-3.5 vs. Modern Models</div>
+      <div class="fig-caption">GPT-3.5 Turbo (Paper 1 baseline, 2022) shown in bold amber dashed. One representative per modern provider highlighted; all remaining configurations shown in gray. Hover a gray line to identify it.</div>
+      <div class="chart-container" id="s2-chart"></div>
+      <div class="legend" id="s2-legend"></div>
+      <div class="ols-table-wrap">
+        <div class="ols-table-label">OLS shift from GPT-3.5 baseline (&Delta;&beta;&#x2080;, &Delta;&beta;&#x2081;)</div>
+        <table class="ols-table" id="s2-ols"></table>
+      </div>
     </div>
 
     <!-- Outlier Spotlights -->

@@ -111,27 +111,27 @@ function buildMobilityCurveChart() {
   // Grid lines
   let gridSvg = '';
   for (const v of [25, 50, 75]) {
-    gridSvg += `<line x1="${padL}" y1="${toY(v)}" x2="${W - padR}" y2="${toY(v)}" stroke="#1a2035" stroke-width="0.5"/>`;
+    gridSvg += `<line x1="${padL}" y1="${toY(v)}" x2="${W - padR}" y2="${toY(v)}" stroke="#eeeeee" stroke-width="0.5"/>`;
   }
   for (const x of [1, 2, 3, 4, 5, 6, 7]) {
-    gridSvg += `<line x1="${toX(x)}" y1="${padT}" x2="${toX(x)}" y2="${H - padB}" stroke="#1a2035" stroke-width="0.5"/>`;
+    gridSvg += `<line x1="${toX(x)}" y1="${padT}" x2="${toX(x)}" y2="${H - padB}" stroke="#eeeeee" stroke-width="0.5"/>`;
   }
 
   // Y axis labels
   let yLabels = '';
   for (const v of [0, 25, 50, 75, 100]) {
-    yLabels += `<text x="${padL - 6}" y="${toY(v)}" dy="3" fill="#4a6580" font-size="8" font-family="'Press Start 2P', monospace" text-anchor="end">${v}%</text>`;
+    yLabels += `<text x="${padL - 6}" y="${toY(v)}" dy="3" fill="#777" font-size="11" font-family="Georgia, serif" text-anchor="end">${v}%</text>`;
   }
 
   // X axis labels
   let xLabels = '';
   for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) {
-    xLabels += `<text x="${toX(x)}" y="${H - padB + 16}" fill="#4a6580" font-size="8" font-family="'Press Start 2P', monospace" text-anchor="middle">${x}%</text>`;
+    xLabels += `<text x="${toX(x)}" y="${H - padB + 16}" fill="#777" font-size="11" font-family="Georgia, serif" text-anchor="middle">${x}%</text>`;
   }
 
   // Axis titles
-  const yTitle = `<text x="12" y="${padT + chartH / 2}" fill="#3a5068" font-size="7" font-family="'Press Start 2P', monospace" text-anchor="middle" transform="rotate(-90, 12, ${padT + chartH / 2})">% STAY HOME</text>`;
-  const xTitle = `<text x="${padL + chartW / 2}" y="${H - 4}" fill="#3a5068" font-size="7" font-family="'Press Start 2P', monospace" text-anchor="middle">INFECTION RATE</text>`;
+  const yTitle = `<text x="12" y="${padT + chartH / 2}" fill="#555" font-size="10" font-family="Georgia, serif" text-anchor="middle" transform="rotate(-90, 12, ${padT + chartH / 2})">Mobility</text>`;
+  const xTitle = `<text x="${padL + chartW / 2}" y="${H - 4}" fill="#555" font-size="10" font-family="Georgia, serif" text-anchor="middle">New Cases (% population)</text>`;
 
   // Draw all model lines (hit targets + visible)
   let hitTargets = '';
@@ -139,7 +139,6 @@ function buildMobilityCurveChart() {
   const currentModelIdx = typeof currentModelIndex !== 'undefined' ? currentModelIndex : 0;
 
   CONFIG.MODELS.forEach((m, idx) => {
-    if (hiddenProviders.has(m.provider)) return;
     const key = configDirKey(m);
     const macroData = allModelsMacro[key];
     if (!macroData) return;
@@ -148,7 +147,7 @@ function buildMobilityCurveChart() {
     const pts = levels.map(level => {
       const row = macroData[level];
       if (!row) return null;
-      return `${toX(level).toFixed(1)},${toY(row.pct_stay_home).toFixed(1)}`;
+      return `${toX(level).toFixed(1)},${toY(100 - row.pct_stay_home).toFixed(1)}`;
     }).filter(Boolean).join(' ');
 
     if (pts) {
@@ -168,40 +167,29 @@ function buildMobilityCurveChart() {
   let dotSvg = '';
   if (currentMacro && currentMacro[currentLevel]) {
     const cx = toX(currentLevel);
-    const cy = toY(currentMacro[currentLevel].pct_stay_home);
-    dotSvg = `<circle cx="${cx}" cy="${cy}" r="6" fill="${currentModel.color}" stroke="#fff" stroke-width="2"/>`;
+    const cy = toY(100 - currentMacro[currentLevel].pct_stay_home);
+    dotSvg = `<circle cx="${cx}" cy="${cy}" r="6" fill="${currentModel.color}" stroke="#ccc" stroke-width="2"/>`;
   }
 
   // Playhead line
   const phX = toX(currentLevel);
-  const playhead = `<line id="curve-playhead" x1="${phX}" y1="${padT}" x2="${phX}" y2="${H - padB}" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="4,4"/>`;
+  const playhead = `<line id="curve-playhead" x1="${phX}" y1="${padT}" x2="${phX}" y2="${H - padB}" stroke="rgba(0,0,0,0.25)" stroke-width="1" stroke-dasharray="4,4"/>`;
 
-  // Title
-  const title = `<text x="${padL + 4}" y="${padT - 10}" fill="#7a9ab8" font-size="9" font-family="'Press Start 2P', monospace" font-weight="bold">MOBILITY CURVES — ALL MODELS</text>`;
-
-  // Provider legend (SVG part — static labels; interactive toggle done in HTML below)
-  const lgdY = padT - 10;
-  const providerList = [
-    { key: 'anthropic', label: 'Anthropic', color: CONFIG.PROVIDER_COLORS.anthropic, x: W - 340 },
-    { key: 'openai', label: 'OpenAI', color: CONFIG.PROVIDER_COLORS.openai, x: W - 220 },
-    { key: 'gemini', label: 'Gemini', color: CONFIG.PROVIDER_COLORS.gemini, x: W - 110 },
-  ];
-  const legend = providerList.map(p => {
-    const hidden = hiddenProviders.has(p.key);
-    const op = hidden ? 0.25 : 1;
-    return `<rect x="${p.x}" y="${lgdY - 6}" width="8" height="8" fill="${p.color}" rx="1" opacity="${op}" data-provider="${p.key}" style="cursor:pointer"/>` +
-      `<text x="${p.x + 12}" y="${lgdY + 1}" fill="${p.color}" font-size="7" font-family="'Press Start 2P', monospace" opacity="${op}" data-provider="${p.key}" style="cursor:pointer">${p.label}</text>`;
-  }).join('');
+  // Title + active model label
+  const title = `<text x="${padL + 4}" y="${padT - 10}" fill="#111" font-size="13" font-family="Georgia, serif" font-weight="bold">Mobility Curves — All Models</text>`;
+  const activeLabel = currentModel
+    ? `<text x="${W - 16}" y="${padT - 10}" fill="${currentModel.color}" font-size="12" font-family="Georgia, serif" font-weight="bold" text-anchor="end">▶ ${currentModel.label}</text>`
+    : '';
 
   // Chart tooltip for model hover
   const tooltipId = 'chart-model-tooltip';
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" style="display:block">
-    <rect width="${W}" height="${H}" fill="#080c14" rx="4"/>
-    ${gridSvg}${yLabels}${xLabels}${yTitle}${xTitle}${title}${legend}
+    <rect width="${W}" height="${H}" fill="#ffffff" rx="4"/>
+    ${gridSvg}${yLabels}${xLabels}${yTitle}${xTitle}${title}${activeLabel}
     ${hitTargets}${polylines}${playhead}${dotSvg}
   </svg>
-  <div id="${tooltipId}" style="display:none;position:absolute;background:#1a2035;color:#fff;padding:4px 8px;border-radius:4px;font-size:7px;font-family:'Press Start 2P',monospace;pointer-events:none;white-space:nowrap;z-index:100"></div>`;
+  <div id="${tooltipId}" style="display:none;position:absolute;background:#fff;border:1px solid #ddd;color:#111;padding:4px 8px;border-radius:4px;font-size:11px;font-family:Georgia,serif;pointer-events:none;white-space:nowrap;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.1)"></div>`;
 
   // Click handler — switch model
   const svg = el.querySelector('svg');
@@ -214,14 +202,6 @@ function buildMobilityCurveChart() {
     }
   });
 
-  // Provider toggle — click legend to show/hide
-  svg.addEventListener('click', (e) => {
-    const prov = e.target.dataset?.provider;
-    if (!prov) return;
-    if (hiddenProviders.has(prov)) hiddenProviders.delete(prov);
-    else hiddenProviders.add(prov);
-    buildMobilityCurveChart();
-  });
 
   // Hover handler — highlight line + show tooltip
   svg.addEventListener('mousemove', (e) => {
@@ -271,7 +251,7 @@ function buildAgentGrid() {
     }
     const cellColor = confidenceCssColor(decision, conf);
     // Darker background derived from cell color
-    const bgCol = decision === 'yes' ? '#451a03' : '#172554';
+    const bgCol = decision === 'yes' ? '#FEF3C7' : '#EFF6FF';
     html += `<div class="agent-cell" data-agent="${id}" style="background:${bgCol};border-color:${cellColor}" title="${name}: ${decision === 'yes' ? 'Home' : 'Out'}${repLabel ? ' (' + repLabel + ' reps)' : ''}">
       <span class="agent-cell-emoji">${emoji}</span>
       <span class="agent-cell-name" style="color:${cellColor}">${name.slice(0, 5)}</span>
@@ -302,39 +282,13 @@ function buildModelBreakdownPanel() {
   const m = CONFIG.MODELS[currentModelIdx];
   if (!m) return;
 
-  const W = 1156, H = 295, midX = 340;
+  const W = 1156, H = 295;
   const levelIdx = currentStep;
-  const infLevel = CONFIG.INFECTION_LEVELS[levelIdx] || 0;
   const levels = CONFIG.INFECTION_LEVELS;
   const maxLvl = levels[levels.length - 1];
 
-  // ── Left: Vote agreement distribution at current level ──
-  const bins = { 5: 0, 4: 0, 3: 0 };
-  for (let id = 0; id < 100; id++) {
-    const v = agentVoteCount[levelIdx]?.[id];
-    if (v) {
-      const maj = Math.max(v.yes, v.no);
-      if (bins[maj] !== undefined) bins[maj]++;
-    }
-  }
-  const maxBin = Math.max(bins[5], bins[4], bins[3], 1);
-  const barW = 180, barH = 16, barX = 100, barStartY = 65;
-
-  let confBars = '';
-  const barColors = { 5: '#3B82F6', 4: '#60A5FA', 3: '#93C5FD' };
-  [5, 4, 3].forEach((k, i) => {
-    const y = barStartY + i * (barH + 8);
-    const w = (bins[k] / maxBin) * barW;
-    confBars += `<text x="${barX - 6}" y="${y + barH / 2 + 3}" fill="#7a9ab8" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="end">${k}/5</text>`;
-    confBars += `<rect x="${barX}" y="${y}" width="${Math.max(w, 2)}" height="${barH}" fill="${barColors[k]}" rx="2"/>`;
-    confBars += `<text x="${barX + w + 6}" y="${y + barH / 2 + 3}" fill="#4a6580" font-size="7" font-family="'Press Start 2P',monospace">${bins[k]}</text>`;
-  });
-
-  const confTitle = `<text x="10" y="48" fill="#7a9ab8" font-size="7" font-family="'Press Start 2P',monospace">VOTE AGREEMENT</text>`;
-  const confSubtitle = `<text x="10" y="58" fill="#4a6580" font-size="6" font-family="'Press Start 2P',monospace">@ ${infLevel.toFixed(1)}% INFECTION</text>`;
-
-  // ── Right: Heatmap (100 agents × 40 levels) ──
-  const hmL = midX + 20, hmR = W - 10, hmT = 36, hmB = H - 35;
+  // ── Heatmap (100 agents × 40 levels) — full width ──
+  const hmL = 50, hmR = W - 10, hmT = 36, hmB = H - 35;
   const hmW = hmR - hmL, hmH = hmB - hmT;
 
   // Map level index → X pixel using actual infection level values (nonlinear spacing)
@@ -372,32 +326,42 @@ function buildModelBreakdownPanel() {
 
   // Playhead on heatmap (positioned by actual level value)
   const phX = levelToHmX(levelIdx);
-  heatmapRects += `<line x1="${phX}" y1="${hmT}" x2="${phX}" y2="${hmB}" stroke="#fff" stroke-width="1.5" opacity="0.7"/>`;
+  heatmapRects += `<line x1="${phX}" y1="${hmT}" x2="${phX}" y2="${hmB}" stroke="#333" stroke-width="1.5" opacity="0.7"/>`;
 
   // Heatmap axis labels
   let hmLabels = '';
   for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) {
     const px = hmL + (x / maxLvl) * hmW;
-    hmLabels += `<text x="${px.toFixed(0)}" y="${hmB + 12}" fill="#4a6580" font-size="6" font-family="'Press Start 2P',monospace" text-anchor="middle">${x}%</text>`;
+    hmLabels += `<text x="${px.toFixed(0)}" y="${hmB + 14}" fill="#777" font-size="10" font-family="Georgia, serif" text-anchor="middle">${x}%</text>`;
   }
-  const hmTitle = `<text x="${hmL}" y="28" fill="#7a9ab8" font-size="7" font-family="'Press Start 2P',monospace">AGENT DECISIONS (sorted by transition point)</text>`;
-  const hmYLabel = `<text x="${hmL - 8}" y="${hmT + hmH / 2}" fill="#3a5068" font-size="6" font-family="'Press Start 2P',monospace" text-anchor="middle" transform="rotate(-90,${hmL - 8},${hmT + hmH / 2})">AGENTS</text>`;
-  const hmXLabel = `<text x="${hmL + hmW / 2}" y="${hmB + 28}" fill="#3a5068" font-size="6" font-family="'Press Start 2P',monospace" text-anchor="middle">INFECTION RATE</text>`;
+  const hmTitle = ``;
+  const hmYLabel = `<text x="${hmL - 10}" y="${hmT + hmH / 2}" fill="#555" font-size="10" font-family="Georgia, serif" text-anchor="middle" transform="rotate(-90,${hmL - 10},${hmT + hmH / 2})">Agents</text>`;
+  const hmXLabel = `<text x="${hmL + hmW / 2}" y="${hmB + 32}" fill="#555" font-size="10" font-family="Georgia, serif" text-anchor="middle">New Cases (% population)</text>`;
 
-  // Legend
-  const lgX = hmL;
+  // Legend — 6-item confidence spectrum: Out (high→low) · Home (low→high)
   const lgY = hmT - 4;
-  const legend = `<rect x="${lgX + 340}" y="${lgY - 6}" width="8" height="6" fill="#3B82F6" rx="1"/><text x="${lgX + 352}" y="${lgY}" fill="#3B82F6" font-size="5" font-family="'Press Start 2P',monospace">Out</text>` +
-    `<rect x="${lgX + 390}" y="${lgY - 6}" width="8" height="6" fill="#F97316" rx="1"/><text x="${lgX + 402}" y="${lgY}" fill="#F97316" font-size="5" font-family="'Press Start 2P',monospace">Home</text>` +
-    `<rect x="${lgX + 450}" y="${lgY - 6}" width="8" height="6" fill="#93C5FD" rx="1"/><text x="${lgX + 462}" y="${lgY}" fill="#93C5FD" font-size="5" font-family="'Press Start 2P',monospace">Low conf</text>`;
+  const lgItems = [
+    { color: '#3B82F6',  label: 'Out 5/5' },
+    { color: '#60A5FA',  label: 'Out 4/5' },
+    { color: '#93C5FD',  label: 'Out 3/5' },
+    { color: '#FDE68A',  label: 'Home 3/5' },
+    { color: '#FBBF24',  label: 'Home 4/5' },
+    { color: '#F97316',  label: 'Home 5/5' },
+  ];
+  const lgItemW = 100;
+  const lgStartX = W - lgItems.length * lgItemW;
+  const legend = lgItems.map((it, i) => {
+    const x = lgStartX + i * lgItemW;
+    return `<rect x="${x}" y="${lgY - 9}" width="11" height="11" fill="${it.color}" rx="1"/>` +
+      `<text x="${x + 15}" y="${lgY + 1}" fill="#444" font-size="11" font-family="Georgia, serif">${it.label}</text>`;
+  }).join('');
 
   // Panel title
-  const panelTitle = `<text x="10" y="18" fill="${m.color}" font-size="9" font-family="'Press Start 2P',monospace" font-weight="bold">MODEL: ${m.label}</text>`;
+  const panelTitle = `<text x="${hmL}" y="18" fill="#111" font-size="13" font-family="Georgia, serif" font-weight="bold">Agent Decisions — ${m.label}</text>`;
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" style="display:block">
-    <rect width="${W}" height="${H}" fill="#080c14" rx="4"/>
-    <line x1="${midX}" y1="24" x2="${midX}" y2="${H - 6}" stroke="#1a2035" stroke-width="1"/>
-    ${panelTitle}${confTitle}${confSubtitle}${confBars}
+    <rect width="${W}" height="${H}" fill="#ffffff" rx="4"/>
+    ${panelTitle}
     ${hmTitle}${hmYLabel}${hmXLabel}${legend}${heatmapRects}${hmLabels}
   </svg>`;
 }
@@ -471,40 +435,42 @@ function buildConcordanceChart() {
 
   // Grid
   let grid = '';
-  for (const v of [25, 50, 75]) grid += `<line x1="${padL}" y1="${toY(v)}" x2="${W - padR}" y2="${toY(v)}" stroke="#1a2035" stroke-width="0.5"/>`;
-  for (const x of [1, 2, 3, 4, 5, 6, 7]) grid += `<line x1="${toX(x)}" y1="${padT}" x2="${toX(x)}" y2="${H - padB}" stroke="#1a2035" stroke-width="0.5"/>`;
+  for (const v of [25, 50, 75]) grid += `<line x1="${padL}" y1="${toY(v)}" x2="${W - padR}" y2="${toY(v)}" stroke="#eeeeee" stroke-width="0.5"/>`;
+  for (const x of [1, 2, 3, 4, 5, 6, 7]) grid += `<line x1="${toX(x)}" y1="${padT}" x2="${toX(x)}" y2="${H - padB}" stroke="#eeeeee" stroke-width="0.5"/>`;
 
   // Axis labels
   let labels = '';
-  for (const v of [0, 25, 50, 75, 100]) labels += `<text x="${padL - 6}" y="${toY(v) + 3}" fill="#4a6580" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="end">${v}%</text>`;
-  for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) labels += `<text x="${toX(x)}" y="${H - padB + 14}" fill="#4a6580" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle">${x}%</text>`;
+  for (const v of [0, 25, 50, 75, 100]) labels += `<text x="${padL - 6}" y="${toY(v) + 3}" fill="#777" font-size="11" font-family="Georgia, serif" text-anchor="end">${v}%</text>`;
+  for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) labels += `<text x="${toX(x)}" y="${H - padB + 14}" fill="#777" font-size="11" font-family="Georgia, serif" text-anchor="middle">${x}%</text>`;
 
-  const yTitle = `<text x="12" y="${padT + chartH / 2}" fill="#3a5068" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle" transform="rotate(-90,12,${padT + chartH / 2})">% OF AGENTS</text>`;
-  const xTitle = `<text x="${padL + chartW / 2}" y="${H - 4}" fill="#3a5068" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle">INFECTION RATE</text>`;
-  const title = `<text x="${padL + 4}" y="${padT - 10}" fill="#7a9ab8" font-size="9" font-family="'Press Start 2P',monospace" font-weight="bold">VOTE CONCORDANCE</text>`;
+  const yTitle = `<text x="12" y="${padT + chartH / 2}" fill="#555" font-size="10" font-family="Georgia, serif" text-anchor="middle" transform="rotate(-90,12,${padT + chartH / 2})">% of Agents</text>`;
+  const xTitle = `<text x="${padL + chartW / 2}" y="${H - 4}" fill="#555" font-size="10" font-family="Georgia, serif" text-anchor="middle">New Cases (% population)</text>`;
+  const currentModelIdx = typeof currentModelIndex !== 'undefined' ? currentModelIndex : 0;
+  const concordModel = CONFIG.MODELS[currentModelIdx];
+  const title = `<text x="${padL + 4}" y="${padT - 10}" fill="#111" font-size="13" font-family="Georgia, serif" font-weight="bold">Concordance — ${concordModel ? concordModel.label : ''}</text>`;
 
   // Legend
   const lgdY = padT - 10;
   const lgd = [
-    { label: '5/5 unanimous', color: '#2563EB', x: W - 520 },
-    { label: '4/5 strong', color: '#60A5FA', x: W - 380 },
-    { label: '3/5 split', color: '#BAD6FC', x: W - 260 },
-    { label: 'maj home', color: '#F97316', x: W - 160, line: true },
-    { label: 'maj out', color: '#3B82F6', x: W - 70, line: true },
+    { label: '5/5 unanimous', color: '#2563EB', x: W - 560 },
+    { label: '4/5 strong', color: '#60A5FA', x: W - 410 },
+    { label: '3/5 split', color: '#BAD6FC', x: W - 280 },
+    { label: 'maj home', color: '#F97316', x: W - 180, line: true },
+    { label: 'maj out', color: '#3B82F6', x: W - 80, line: true },
   ];
   const legendSvg = lgd.map(p => {
     if (p.line) {
-      return `<line x1="${p.x}" y1="${lgdY - 2}" x2="${p.x + 10}" y2="${lgdY - 2}" stroke="${p.color}" stroke-width="2"/>` +
-        `<text x="${p.x + 14}" y="${lgdY + 1}" fill="${p.color}" font-size="5" font-family="'Press Start 2P',monospace">${p.label}</text>`;
+      return `<line x1="${p.x}" y1="${lgdY - 2}" x2="${p.x + 12}" y2="${lgdY - 2}" stroke="${p.color}" stroke-width="2"/>` +
+        `<text x="${p.x + 16}" y="${lgdY + 1}" fill="${p.color}" font-size="11" font-family="Georgia, serif">${p.label}</text>`;
     }
-    return `<rect x="${p.x}" y="${lgdY - 6}" width="8" height="8" fill="${p.color}" rx="1"/>` +
-      `<text x="${p.x + 12}" y="${lgdY + 1}" fill="${p.color}" font-size="5" font-family="'Press Start 2P',monospace">${p.label}</text>`;
+    return `<rect x="${p.x}" y="${lgdY - 8}" width="11" height="11" fill="${p.color}" rx="1"/>` +
+      `<text x="${p.x + 15}" y="${lgdY + 1}" fill="${p.color}" font-size="11" font-family="Georgia, serif">${p.label}</text>`;
   }).join('');
 
   // Playhead
   const currentLevel = levels[currentStep] || 0;
   const phX = toX(currentLevel);
-  const playhead = `<line x1="${phX}" y1="${padT}" x2="${phX}" y2="${H - padB}" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="4,4"/>`;
+  const playhead = `<line x1="${phX}" y1="${padT}" x2="${phX}" y2="${H - padB}" stroke="rgba(0,0,0,0.25)" stroke-width="1" stroke-dasharray="4,4"/>`;
 
   // Invisible hit targets for tooltip (one per level)
   let hitRects = '';
@@ -518,11 +484,11 @@ function buildConcordanceChart() {
   const tooltipId = 'concordance-tooltip';
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" style="display:block">
-    <rect width="${W}" height="${H}" fill="#080c14" rx="4"/>
+    <rect width="${W}" height="${H}" fill="#ffffff" rx="4"/>
     ${grid}${labels}${yTitle}${xTitle}${title}${legendSvg}
     ${areas}${majorityLine}${playhead}${hitRects}
   </svg>
-  <div id="${tooltipId}" style="display:none;position:absolute;background:#0d1520ee;border:1px solid #1e2d40;padding:4px 8px;border-radius:4px;font-size:6px;font-family:'Press Start 2P',monospace;color:#c8d8e8;line-height:1.8;pointer-events:none;white-space:nowrap;z-index:100"></div>`;
+  <div id="${tooltipId}" style="display:none;position:absolute;background:#fff;border:1px solid #ddd;padding:4px 8px;border-radius:4px;font-size:11px;font-family:Georgia,serif;color:#111;line-height:1.8;pointer-events:none;white-space:nowrap;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.1)"></div>`;
 
   // Tooltip handler
   const svg = el.querySelector('svg');
@@ -586,17 +552,17 @@ function buildConcordance6Line() {
 
   // Grid
   let grid = '';
-  for (const v of [25, 50, 75]) grid += `<line x1="${padL}" y1="${toY(v)}" x2="${W - padR}" y2="${toY(v)}" stroke="#1a2035" stroke-width="0.5"/>`;
-  for (const x of [1, 2, 3, 4, 5, 6, 7]) grid += `<line x1="${toX(x)}" y1="${padT}" x2="${toX(x)}" y2="${H - padB}" stroke="#1a2035" stroke-width="0.5"/>`;
+  for (const v of [25, 50, 75]) grid += `<line x1="${padL}" y1="${toY(v)}" x2="${W - padR}" y2="${toY(v)}" stroke="#eeeeee" stroke-width="0.5"/>`;
+  for (const x of [1, 2, 3, 4, 5, 6, 7]) grid += `<line x1="${toX(x)}" y1="${padT}" x2="${toX(x)}" y2="${H - padB}" stroke="#eeeeee" stroke-width="0.5"/>`;
 
   // Axis labels
   let labels = '';
-  for (const v of [0, 25, 50, 75, 100]) labels += `<text x="${padL - 6}" y="${toY(v) + 3}" fill="#4a6580" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="end">${v}%</text>`;
-  for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) labels += `<text x="${toX(x)}" y="${H - padB + 14}" fill="#4a6580" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle">${x}%</text>`;
+  for (const v of [0, 25, 50, 75, 100]) labels += `<text x="${padL - 6}" y="${toY(v) + 3}" fill="#777" font-size="7" font-family="Georgia, serif" text-anchor="end">${v}%</text>`;
+  for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) labels += `<text x="${toX(x)}" y="${H - padB + 14}" fill="#777" font-size="7" font-family="Georgia, serif" text-anchor="middle">${x}%</text>`;
 
-  const yTitle = `<text x="12" y="${padT + chartH / 2}" fill="#3a5068" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle" transform="rotate(-90,12,${padT + chartH / 2})">% OF AGENTS</text>`;
-  const xTitle = `<text x="${padL + chartW / 2}" y="${H - 4}" fill="#3a5068" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle">INFECTION RATE</text>`;
-  const title = `<text x="${padL + 4}" y="${padT - 10}" fill="#7a9ab8" font-size="9" font-family="'Press Start 2P',monospace" font-weight="bold">CONCORDANCE — 6 LINES (HOME/OUT × CONFIDENCE)</text>`;
+  const yTitle = `<text x="12" y="${padT + chartH / 2}" fill="#555" font-size="7" font-family="Georgia, serif" text-anchor="middle" transform="rotate(-90,12,${padT + chartH / 2})">% OF AGENTS</text>`;
+  const xTitle = `<text x="${padL + chartW / 2}" y="${H - 4}" fill="#555" font-size="7" font-family="Georgia, serif" text-anchor="middle">INFECTION RATE</text>`;
+  const title = `<text x="${padL + 4}" y="${padT - 10}" fill="#111" font-size="9" font-family="Georgia, serif" font-weight="bold">CONCORDANCE — 6 LINES (HOME/OUT × CONFIDENCE)</text>`;
 
   // Draw 6 lines
   const lineDefs = [
@@ -627,13 +593,13 @@ function buildConcordance6Line() {
   ];
   const legendSvg = lgdItems.map(p =>
     `<line x1="${p.x}" y1="${lgdY - 2}" x2="${p.x + 10}" y2="${lgdY - 2}" stroke="${p.color}" stroke-width="2"/>` +
-    `<text x="${p.x + 14}" y="${lgdY + 1}" fill="${p.color}" font-size="5" font-family="'Press Start 2P',monospace">${p.label}</text>`
+    `<text x="${p.x + 14}" y="${lgdY + 1}" fill="${p.color}" font-size="5" font-family="Georgia, serif">${p.label}</text>`
   ).join('');
 
   // Playhead
   const currentLevel = levels[currentStep] || 0;
   const phX = toX(currentLevel);
-  const playhead = `<line x1="${phX}" y1="${padT}" x2="${phX}" y2="${H - padB}" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="4,4"/>`;
+  const playhead = `<line x1="${phX}" y1="${padT}" x2="${phX}" y2="${H - padB}" stroke="rgba(0,0,0,0.25)" stroke-width="1" stroke-dasharray="4,4"/>`;
 
   // Hit targets for tooltip
   let hitRects = '';
@@ -649,17 +615,17 @@ function buildConcordance6Line() {
   let dots = '';
   if (cd) {
     for (const ld of lineDefs) {
-      dots += `<circle cx="${toX(cd.level).toFixed(1)}" cy="${toY(cd[ld.key]).toFixed(1)}" r="3" fill="${ld.color}" stroke="#080c14" stroke-width="1"/>`;
+      dots += `<circle cx="${toX(cd.level).toFixed(1)}" cy="${toY(cd[ld.key]).toFixed(1)}" r="3" fill="${ld.color}" stroke="#ffffff" stroke-width="1"/>`;
     }
   }
 
   const tooltipId = 'conc6-tooltip';
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" style="display:block">
-    <rect width="${W}" height="${H}" fill="#080c14" rx="4"/>
+    <rect width="${W}" height="${H}" fill="#ffffff" rx="4"/>
     ${grid}${labels}${yTitle}${xTitle}${title}${legendSvg}
     ${linesSvg}${dots}${playhead}${hitRects}
   </svg>
-  <div id="${tooltipId}" style="display:none;position:absolute;background:#0d1520ee;border:1px solid #1e2d40;padding:4px 8px;border-radius:4px;font-size:6px;font-family:'Press Start 2P',monospace;color:#c8d8e8;line-height:1.8;pointer-events:none;white-space:nowrap;z-index:100"></div>`;
+  <div id="${tooltipId}" style="display:none;position:absolute;background:#fff;border:1px solid #ddd;padding:4px 8px;border-radius:4px;font-size:11px;font-family:Georgia,serif;color:#111;line-height:1.8;pointer-events:none;white-space:nowrap;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.1)"></div>`;
 
   // Tooltip
   const svg = el.querySelector('svg');
@@ -715,17 +681,17 @@ function buildConcordance3Line() {
 
   // Grid
   let grid = '';
-  for (const v of [25, 50, 75]) grid += `<line x1="${padL}" y1="${toY(v)}" x2="${W - padR}" y2="${toY(v)}" stroke="#1a2035" stroke-width="0.5"/>`;
-  for (const x of [1, 2, 3, 4, 5, 6, 7]) grid += `<line x1="${toX(x)}" y1="${padT}" x2="${toX(x)}" y2="${H - padB}" stroke="#1a2035" stroke-width="0.5"/>`;
+  for (const v of [25, 50, 75]) grid += `<line x1="${padL}" y1="${toY(v)}" x2="${W - padR}" y2="${toY(v)}" stroke="#eeeeee" stroke-width="0.5"/>`;
+  for (const x of [1, 2, 3, 4, 5, 6, 7]) grid += `<line x1="${toX(x)}" y1="${padT}" x2="${toX(x)}" y2="${H - padB}" stroke="#eeeeee" stroke-width="0.5"/>`;
 
   // Axis labels
   let labels = '';
-  for (const v of [0, 25, 50, 75, 100]) labels += `<text x="${padL - 6}" y="${toY(v) + 3}" fill="#4a6580" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="end">${v}%</text>`;
-  for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) labels += `<text x="${toX(x)}" y="${H - padB + 14}" fill="#4a6580" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle">${x}%</text>`;
+  for (const v of [0, 25, 50, 75, 100]) labels += `<text x="${padL - 6}" y="${toY(v) + 3}" fill="#777" font-size="7" font-family="Georgia, serif" text-anchor="end">${v}%</text>`;
+  for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) labels += `<text x="${toX(x)}" y="${H - padB + 14}" fill="#777" font-size="7" font-family="Georgia, serif" text-anchor="middle">${x}%</text>`;
 
-  const yTitle = `<text x="12" y="${padT + chartH / 2}" fill="#3a5068" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle" transform="rotate(-90,12,${padT + chartH / 2})">% OF AGENTS</text>`;
-  const xTitle = `<text x="${padL + chartW / 2}" y="${H - 4}" fill="#3a5068" font-size="7" font-family="'Press Start 2P',monospace" text-anchor="middle">INFECTION RATE</text>`;
-  const title = `<text x="${padL + 4}" y="${padT - 10}" fill="#7a9ab8" font-size="9" font-family="'Press Start 2P',monospace" font-weight="bold">CONCORDANCE — 3 LINES (COLOR = MAJORITY)</text>`;
+  const yTitle = `<text x="12" y="${padT + chartH / 2}" fill="#555" font-size="7" font-family="Georgia, serif" text-anchor="middle" transform="rotate(-90,12,${padT + chartH / 2})">% OF AGENTS</text>`;
+  const xTitle = `<text x="${padL + chartW / 2}" y="${H - 4}" fill="#555" font-size="7" font-family="Georgia, serif" text-anchor="middle">INFECTION RATE</text>`;
+  const title = `<text x="${padL + 4}" y="${padT - 10}" fill="#111" font-size="9" font-family="Georgia, serif" font-weight="bold">CONCORDANCE — 3 LINES (COLOR = MAJORITY)</text>`;
 
   // Draw 3 lines with color-changing segments
   const lineKeys = [
@@ -748,20 +714,20 @@ function buildConcordance3Line() {
   const lgdY = padT - 10;
   const legendSvg =
     `<line x1="${W - 450}" y1="${lgdY - 2}" x2="${W - 440}" y2="${lgdY - 2}" stroke="#aaa" stroke-width="2.5"/>` +
-    `<text x="${W - 436}" y="${lgdY + 1}" fill="#7a9ab8" font-size="5" font-family="'Press Start 2P',monospace">5/5</text>` +
+    `<text x="${W - 436}" y="${lgdY + 1}" fill="#111" font-size="5" font-family="Georgia, serif">5/5</text>` +
     `<line x1="${W - 380}" y1="${lgdY - 2}" x2="${W - 370}" y2="${lgdY - 2}" stroke="#aaa" stroke-width="1.8" stroke-dasharray="8,4"/>` +
-    `<text x="${W - 366}" y="${lgdY + 1}" fill="#7a9ab8" font-size="5" font-family="'Press Start 2P',monospace">4/5</text>` +
+    `<text x="${W - 366}" y="${lgdY + 1}" fill="#111" font-size="5" font-family="Georgia, serif">4/5</text>` +
     `<line x1="${W - 310}" y1="${lgdY - 2}" x2="${W - 300}" y2="${lgdY - 2}" stroke="#aaa" stroke-width="1.2" stroke-dasharray="3,3"/>` +
-    `<text x="${W - 296}" y="${lgdY + 1}" fill="#7a9ab8" font-size="5" font-family="'Press Start 2P',monospace">3/5</text>` +
+    `<text x="${W - 296}" y="${lgdY + 1}" fill="#111" font-size="5" font-family="Georgia, serif">3/5</text>` +
     `<line x1="${W - 230}" y1="${lgdY - 2}" x2="${W - 220}" y2="${lgdY - 2}" stroke="#F97316" stroke-width="2"/>` +
-    `<text x="${W - 216}" y="${lgdY + 1}" fill="#F97316" font-size="5" font-family="'Press Start 2P',monospace">maj home</text>` +
+    `<text x="${W - 216}" y="${lgdY + 1}" fill="#F97316" font-size="5" font-family="Georgia, serif">maj home</text>` +
     `<line x1="${W - 120}" y1="${lgdY - 2}" x2="${W - 110}" y2="${lgdY - 2}" stroke="#3B82F6" stroke-width="2"/>` +
-    `<text x="${W - 106}" y="${lgdY + 1}" fill="#3B82F6" font-size="5" font-family="'Press Start 2P',monospace">maj out</text>`;
+    `<text x="${W - 106}" y="${lgdY + 1}" fill="#3B82F6" font-size="5" font-family="Georgia, serif">maj out</text>`;
 
   // Playhead
   const currentLevel = levels[currentStep] || 0;
   const phX = toX(currentLevel);
-  const playhead = `<line x1="${phX}" y1="${padT}" x2="${phX}" y2="${H - padB}" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="4,4"/>`;
+  const playhead = `<line x1="${phX}" y1="${padT}" x2="${phX}" y2="${H - padB}" stroke="rgba(0,0,0,0.25)" stroke-width="1" stroke-dasharray="4,4"/>`;
 
   // Dots at current level
   const cd = data[currentStep];
@@ -769,7 +735,7 @@ function buildConcordance3Line() {
   if (cd) {
     const dotColor = cd.majorityHome ? '#F97316' : '#3B82F6';
     for (const lk of lineKeys) {
-      dots += `<circle cx="${toX(cd.level).toFixed(1)}" cy="${toY(cd[lk.key]).toFixed(1)}" r="3" fill="${dotColor}" stroke="#080c14" stroke-width="1"/>`;
+      dots += `<circle cx="${toX(cd.level).toFixed(1)}" cy="${toY(cd[lk.key]).toFixed(1)}" r="3" fill="${dotColor}" stroke="#ffffff" stroke-width="1"/>`;
     }
   }
 
@@ -784,11 +750,11 @@ function buildConcordance3Line() {
 
   const tooltipId = 'conc3-tooltip';
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" style="display:block">
-    <rect width="${W}" height="${H}" fill="#080c14" rx="4"/>
+    <rect width="${W}" height="${H}" fill="#ffffff" rx="4"/>
     ${grid}${labels}${yTitle}${xTitle}${title}${legendSvg}
     ${linesSvg}${dots}${playhead}${hitRects}
   </svg>
-  <div id="${tooltipId}" style="display:none;position:absolute;background:#0d1520ee;border:1px solid #1e2d40;padding:4px 8px;border-radius:4px;font-size:6px;font-family:'Press Start 2P',monospace;color:#c8d8e8;line-height:1.8;pointer-events:none;white-space:nowrap;z-index:100"></div>`;
+  <div id="${tooltipId}" style="display:none;position:absolute;background:#fff;border:1px solid #ddd;padding:4px 8px;border-radius:4px;font-size:11px;font-family:Georgia,serif;color:#111;line-height:1.8;pointer-events:none;white-space:nowrap;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.1)"></div>`;
 
   // Tooltip
   const svg = el.querySelector('svg');
