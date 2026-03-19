@@ -189,6 +189,32 @@
     }
 
     #loading { text-align: center; font-size: 14px; color: #555; padding: 60px 20px; font-style: italic; }
+
+    /* ── Mobility Curves subsection nav ──────────── */
+    #curves-section-nav {
+      position: sticky; top: 0; z-index: 20;
+      background: #fff; padding: 10px 0 8px;
+      border-bottom: 1px solid #eee;
+      font-size: 12px; color: #555;
+      font-family: Georgia, serif;
+      margin-bottom: 24px;
+    }
+    #curves-section-nav a { color: #333; text-decoration: none; font-style: italic; }
+    #curves-section-nav a:hover { text-decoration: underline; }
+    #curves-section-nav .nav-sep { color: #bbb; margin: 0 4px; }
+    #curves-section-nav .section-link { cursor: pointer; }
+    #curves-section-nav .section-link.active { font-weight: bold; color: #111; }
+    .curve-section-header {
+      margin: 40px 0 18px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #111;
+      font-family: Georgia, serif;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #111;
+    }
   </style>
 </head>
 <body>
@@ -217,8 +243,28 @@
   ══════════════════════════════════════════════ -->
   <div id="tab-curves" class="tab-pane">
 
+    <div id="curves-section-nav">
+      <a class="section-link active" data-filter="all" href="#">All Figures</a>
+      <span class="nav-sep">·</span>
+      <a class="section-link" data-filter="reasoning" href="#">Reasoning Budget</a>
+      <span class="nav-sep">·</span>
+      <a class="section-link" data-filter="within" href="#">Model Size</a>
+      <span class="nav-sep">·</span>
+      <a class="section-link" data-filter="generational" href="#">Generational</a>
+      <span class="nav-sep">·</span>
+      <a class="section-link" data-filter="cross" href="#">Cross-Provider</a>
+      <span class="nav-sep">·</span>
+      <a class="section-link" data-filter="cutoff" href="#">Knowledge Cutoff</a>
+      <span class="nav-sep">·</span>
+      <a class="section-link" data-filter="release" href="#">Release Date</a>
+      <span class="nav-sep">·</span>
+      <a class="section-link" data-filter="agent" href="#">Agent Analysis</a>
+    </div>
+
+    <div id="section-reasoning" class="curve-section-header">Reasoning Budget</div>
+
     <!-- Figure 1: GPT-5.2 Reasoning -->
-    <div class="section" id="figA-section" style="display:none">
+    <div class="section" id="figA-section" data-section="reasoning" style="display:none">
       <div class="fig-num">Figure 1</div>
       <div class="fig-title">GPT-5.2 &mdash; Effect of Reasoning Budget</div>
       <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high). N&thinsp;=&thinsp;100 agents &times; 5 repetitions &times; 40 infection levels per configuration.</div>
@@ -232,7 +278,7 @@
     </div>
 
     <!-- Figure 2: Gemini 3 Flash Reasoning -->
-    <div class="section" id="figB-section" style="display:none">
+    <div class="section" id="figB-section" data-section="reasoning" style="display:none">
       <div class="fig-num">Figure 2</div>
       <div class="fig-title">Gemini 3 Flash Preview &mdash; Effect of Reasoning Budget</div>
       <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high).</div>
@@ -245,38 +291,124 @@
       </div>
     </div>
 
-    <!-- Figure 3: OpenAI Generational -->
-    <div class="section" id="figC-section" style="display:none">
+    <div id="section-within" class="curve-section-header">Model Size Comparison</div>
+
+    <!-- Figure 3: Anthropic Model Comparison -->
+    <div class="section" id="figAnthro-section" data-section="within" style="display:none">
       <div class="fig-num">Figure 3</div>
+      <div class="fig-title">Anthropic &mdash; Model Comparison (reasoning = off)</div>
+      <div class="fig-caption">Mobility curves for Claude Haiku 4.5, Sonnet 4.5, and Opus 4.5, all with reasoning off. Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="chart-container" id="figAnthro-chart"></div>
+      <div class="legend" id="figAnthro-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figAnthro">Show Regression ▾</button>
+        <div class="reg-table-panel" id="reg-figAnthro" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Figure 4: Gemini Model Comparison -->
+    <div class="section" id="figGeminiLite-section" data-section="within" style="display:none">
+      <div class="fig-num">Figure 4</div>
+      <div class="fig-title">Gemini &mdash; Model Comparison (reasoning = off)</div>
+      <div class="fig-caption">Mobility curves for Gemini 2.5 Flash Lite and Gemini 2.5 Flash, both with reasoning off. Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="chart-container" id="figGeminiLite-chart"></div>
+      <div class="legend" id="figGeminiLite-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figGeminiLite">Show Regression ▾</button>
+        <div class="reg-table-panel" id="reg-figGeminiLite" style="display:none"></div>
+      </div>
+    </div>
+
+    <div id="section-generational" class="curve-section-header">Generational Progression</div>
+
+    <!-- Figure 5: Gemini Generational -->
+    <div class="section" id="figD-section" data-section="generational" style="display:none">
+      <div class="fig-num">Figure 5</div>
+      <div class="fig-title">Gemini &mdash; Generational Progression (reasoning = off)</div>
+      <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview at reasoning = off. Gemini 2.5 Flash Lite excluded due to anomalous inverted response curve (see Figure 4).</div>
+      <div class="chart-container" id="figD-chart"></div>
+      <div class="legend" id="figD-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figD">Show Regression ▾</button>
+        <div class="reg-table-panel" id="reg-figD" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Figure 6: Anthropic Generational Progression -->
+    <div class="section" id="figAnthroGen-section" data-section="generational" style="display:none">
+      <div class="fig-num">Figure 6</div>
+      <div class="fig-title">Anthropic &mdash; Generational Progression (reasoning = off)</div>
+      <div class="fig-caption">Mobility curves for Claude Sonnet 4.0 and Claude Sonnet 4.5, both with reasoning off. Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="chart-container" id="figAnthroGen-chart"></div>
+      <div class="legend" id="figAnthroGen-legend"></div>
+      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figAnthroGen">Show Regression ▾</button>
+        <div class="reg-table-panel" id="reg-figAnthroGen" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Figure 7: OpenAI Generational -->
+    <div class="section" id="figC-section" data-section="generational" style="display:none">
+      <div class="fig-num">Figure 7</div>
       <div class="fig-title">OpenAI &mdash; Generational Progression (reasoning = off)</div>
       <div class="fig-caption">Mobility curves for GPT-3.5 Turbo through GPT-5.2, all at reasoning = off. Illustrates how behavioral responses have shifted across model generations.</div>
       <div class="chart-container" id="figC-chart"></div>
       <div class="legend" id="figC-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figC">Show Regression ▾</button>
+        <div class="reg-table-panel" id="reg-figC" style="display:none"></div>
+      </div>
     </div>
 
-    <!-- Figure 4: Gemini Generational -->
-    <div class="section" id="figD-section" style="display:none">
-      <div class="fig-num">Figure 4</div>
-      <div class="fig-title">Gemini &mdash; Generational Progression (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview at reasoning = off. Gemini 2.5 Flash Lite excluded due to anomalous inverted response curve (see Author Notes).</div>
-      <div class="chart-container" id="figD-chart"></div>
-      <div class="legend" id="figD-legend"></div>
+    <div id="section-cross" class="curve-section-header">Cross-Provider Comparison</div>
+
+    <!-- Figure 8: Cross-Provider Flagship -->
+    <div class="section" id="figFlagship-section" data-section="cross" style="display:none">
+      <div class="fig-num">Figure 8</div>
+      <div class="fig-title">Cross-Provider Flagship Comparison (reasoning = off)</div>
+      <div class="fig-caption">One flagship model per provider — Claude Opus 4.5, GPT-5.2, and Gemini 3 Flash Preview — all with reasoning off. Directly comparable apples-to-apples across providers.</div>
+      <div class="chart-container" id="figFlagship-chart"></div>
+      <div class="legend" id="figFlagship-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="reg-toggle-wrap">
+        <button class="reg-toggle-btn" data-target="reg-figFlagship">Show Regression ▾</button>
+        <div class="reg-table-panel" id="reg-figFlagship" style="display:none"></div>
+      </div>
     </div>
 
-    <!-- Figure 5: Small Multiples by Provider -->
-    <div class="section" id="s3-section" style="display:none">
-      <div class="fig-num">Figure 5</div>
+    <!-- Figure 9: Small Multiples by Provider -->
+    <div class="section" id="s3-section" data-section="cross" style="display:none">
+      <div class="fig-num">Figure 9</div>
       <div class="fig-title">Within-Provider Model Variation</div>
       <div class="fig-caption">All configurations overlaid within each provider. Hover to identify individual models.</div>
       <div class="facet-row" id="s3-facets"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
     </div>
 
-    <!-- Figure 6: Agent-Level Analysis -->
-    <div class="section" id="s7-section" style="display:none">
-      <div class="fig-num">Figure 6</div>
+    <div id="section-cutoff" class="curve-section-header">Knowledge Cutoff</div>
+
+    <!-- Knowledge Cutoff placeholder -->
+    <div class="section" id="cutoff-placeholder" data-section="cutoff">
+      <p style="color:#999;font-style:italic;font-family:Georgia,serif;font-size:13px;padding:20px 0">Figures coming soon — see Author Notes for the knowledge cutoff timeline.</p>
+    </div>
+
+    <div id="section-release" class="curve-section-header">Release Date</div>
+
+    <!-- Release Date placeholder -->
+    <div class="section" id="release-placeholder" data-section="release">
+      <p style="color:#999;font-style:italic;font-family:Georgia,serif;font-size:13px;padding:20px 0">Figures coming soon — see Author Notes for the release date timeline.</p>
+    </div>
+
+    <div id="section-agent" class="curve-section-header">Agent-Level Analysis</div>
+
+    <!-- Figure 10: Agent-Level Analysis -->
+    <div class="section" id="s7-section" data-section="agent" style="display:none">
+      <div class="fig-num">Figure 10</div>
       <div class="fig-title">Agent-Level Decision Heatmap and Concordance</div>
       <div class="fig-caption">Heatmap shows individual agent majority decisions across all 40 infection levels, sorted by transition point (first level where stay-home is majority decision). Concordance shows the fraction of agents with unanimous (5/5), exactly 4/5, or exactly 3/5 agreement at each infection level. The colored strip at the top of the chart indicates whether the overall majority of agents are staying home (amber) or going out (blue).</div>
       <div id="s7-model-select" style="margin-bottom:12px"></div>
@@ -418,6 +550,22 @@
       <div class="fig-title">Outlier Spotlights</div>
       <div class="fig-caption">Notable anomalies identified in the probe data. These inform discussion and caveats in the paper but are not primary research figures.</div>
       <div class="outlier-grid" id="s6-cards"></div>
+    </div>
+
+    <!-- Release Date Timeline -->
+    <div class="section" id="s-release-timeline">
+      <div class="fig-num">Author Note — Release Date Timeline</div>
+      <div class="fig-title">Model Release Dates</div>
+      <div class="fig-caption">All 21 configurations plotted by release date, grouped by provider. Use this to identify which models cluster together temporally for comparison figures.</div>
+      <div id="release-timeline-chart"></div>
+    </div>
+
+    <!-- Knowledge Cutoff Timeline -->
+    <div class="section" id="s-cutoff-timeline">
+      <div class="fig-num">Author Note — Knowledge Cutoff Timeline</div>
+      <div class="fig-title">Model Knowledge Cutoff Dates</div>
+      <div class="fig-caption">All 21 configurations plotted by knowledge cutoff date, grouped by provider. Compare with release dates above to spot gaps.</div>
+      <div id="cutoff-timeline-chart"></div>
     </div>
 
   </div><!-- end tab-author -->

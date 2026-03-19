@@ -450,26 +450,19 @@ function renderFigB() {
 // Figure C: OpenAI Generational Progression (reasoning = off)
 // 4 distinct Okabe-Ito colors
 // ═══════════════════════════════════════════════════════════════
-function renderFigC() {
-  const el       = document.getElementById('figC-chart');
-  const legendEl = document.getElementById('figC-legend');
+// ── Generic model comparison figure renderer ──────────────────
+// targets: [{ provider, model, reasoning, label, color }, ...]
+function renderModelCompFig(chartId, legendId, sectionId, targets) {
+  const el       = document.getElementById(chartId);
+  const legendEl = document.getElementById(legendId);
+  if (!el) return;
   const w = FIG_CW, h = FIG_CH, pad = FIG_PAD;
   const grouped  = groupByModel(macroData);
-
-  // Explicit ordered list: oldest → newest
-  const targets = [
-    { model: 'gpt-3.5-turbo', reasoning: 'off', label: 'GPT-3.5 Turbo',  color: '#000000' },
-    { model: 'gpt-4o',        reasoning: 'off', label: 'GPT-4o',          color: '#E69F00' },
-    { model: 'gpt-5.1',       reasoning: 'off', label: 'GPT-5.1',         color: '#0072B2' },
-    { model: 'gpt-5.2',       reasoning: 'off', label: 'GPT-5.2',         color: '#009E73' },
-  ];
-
   let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
               axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
   const legendItems = [];
-
   targets.forEach(t => {
-    const k    = `openai|${t.model}|${t.reasoning}`;
+    const k    = `${t.provider}|${t.model}|${t.reasoning}`;
     const rows = grouped[k];
     if (!rows || rows.length === 0) return;
     const pts = makePolyline(rows, w, h, pad);
@@ -477,11 +470,19 @@ function renderFigC() {
     inner += `<polyline points="${pts}" stroke="transparent" stroke-width="14" fill="none" class="hit-target" data-label="${t.label}" data-color="${t.color}"/>`;
     legendItems.push({ label: t.label, color: t.color });
   });
-
   el.innerHTML = makeSVG(w, h, inner);
   wireTooltips(el);
-  legendEl.innerHTML = legendHTML(legendItems);
-  document.getElementById('figC-section').style.display = 'block';
+  if (legendEl) legendEl.innerHTML = legendHTML(legendItems);
+  if (sectionId) document.getElementById(sectionId).style.display = 'block';
+}
+
+function renderFigC() {
+  renderModelCompFig('figC-chart', 'figC-legend', 'figC-section', [
+    { provider: 'openai', model: 'gpt-3.5-turbo', reasoning: 'off', label: 'GPT-3.5 Turbo', color: '#000000' },
+    { provider: 'openai', model: 'gpt-4o',        reasoning: 'off', label: 'GPT-4o',        color: '#E69F00' },
+    { provider: 'openai', model: 'gpt-5.1',       reasoning: 'off', label: 'GPT-5.1',       color: '#0072B2' },
+    { provider: 'openai', model: 'gpt-5.2',       reasoning: 'off', label: 'GPT-5.2',       color: '#009E73' },
+  ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -489,36 +490,56 @@ function renderFigC() {
 // 3 distinct Okabe-Ito colors
 // ═══════════════════════════════════════════════════════════════
 function renderFigD() {
-  const el       = document.getElementById('figD-chart');
-  const legendEl = document.getElementById('figD-legend');
-  const w = FIG_CW, h = FIG_CH, pad = FIG_PAD;
-  const grouped  = groupByModel(macroData);
+  renderModelCompFig('figD-chart', 'figD-legend', 'figD-section', [
+    { provider: 'gemini', model: 'gemini-2.0-flash',       reasoning: 'off', label: 'Gemini 2.0 Flash',      color: '#000000' },
+    { provider: 'gemini', model: 'gemini-2.5-flash',       reasoning: 'off', label: 'Gemini 2.5 Flash',      color: '#D55E00' },
+    { provider: 'gemini', model: 'gemini-3-flash-preview', reasoning: 'off', label: 'Gemini 3 Flash Preview', color: '#0072B2' },
+  ]);
+}
 
-  // Explicit ordered list: oldest → newest (no Flash Lite)
-  const targets = [
-    { model: 'gemini-2.0-flash',       reasoning: 'off', label: 'Gemini 2.0 Flash',         color: '#000000' },
-    { model: 'gemini-2.5-flash',       reasoning: 'off', label: 'Gemini 2.5 Flash',          color: '#D55E00' },
-    { model: 'gemini-3-flash-preview', reasoning: 'off', label: 'Gemini 3 Flash Preview',    color: '#0072B2' },
-  ];
+// ═══════════════════════════════════════════════════════════════
+// Figure 3: Anthropic Model Comparison (reasoning = off)
+// Haiku 4.5 → Sonnet 4.5 → Opus 4.5
+// ═══════════════════════════════════════════════════════════════
+function renderFigAnthro() {
+  renderModelCompFig('figAnthro-chart', 'figAnthro-legend', 'figAnthro-section', [
+    { provider: 'anthropic', model: 'claude-haiku-4-5',  reasoning: 'off', label: 'Claude Haiku 4.5',  color: '#EC4899' },
+    { provider: 'anthropic', model: 'claude-sonnet-4-5', reasoning: 'off', label: 'Claude Sonnet 4.5', color: '#A855F7' },
+    { provider: 'anthropic', model: 'claude-opus-4-5',   reasoning: 'off', label: 'Claude Opus 4.5',   color: '#7C3AED' },
+  ]);
+}
 
-  let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
-  const legendItems = [];
+// ═══════════════════════════════════════════════════════════════
+// Figure 5: Gemini Flash Lite vs Flash (reasoning = off)
+// ═══════════════════════════════════════════════════════════════
+function renderFigGeminiLite() {
+  renderModelCompFig('figGeminiLite-chart', 'figGeminiLite-legend', 'figGeminiLite-section', [
+    { provider: 'gemini', model: 'gemini-2.5-flash-lite', reasoning: 'off', label: 'Gemini 2.5 Flash Lite', color: '#F43F5E' },
+    { provider: 'gemini', model: 'gemini-2.5-flash',      reasoning: 'off', label: 'Gemini 2.5 Flash',      color: '#06B6D4' },
+  ]);
+}
 
-  targets.forEach(t => {
-    const k    = `gemini|${t.model}|${t.reasoning}`;
-    const rows = grouped[k];
-    if (!rows || rows.length === 0) return;
-    const pts = makePolyline(rows, w, h, pad);
-    inner += `<polyline points="${pts}" stroke="${t.color}" stroke-width="2" fill="none" opacity="0.92"/>`;
-    inner += `<polyline points="${pts}" stroke="transparent" stroke-width="14" fill="none" class="hit-target" data-label="${t.label}" data-color="${t.color}"/>`;
-    legendItems.push({ label: t.label, color: t.color });
-  });
+// ═══════════════════════════════════════════════════════════════
+// Figure 6: Anthropic Sonnet Generational Progression (reasoning = off)
+// Sonnet 4.0 → Sonnet 4.5
+// ═══════════════════════════════════════════════════════════════
+function renderFigAnthroGen() {
+  renderModelCompFig('figAnthroGen-chart', 'figAnthroGen-legend', 'figAnthroGen-section', [
+    { provider: 'anthropic', model: 'claude-sonnet-4-0', reasoning: 'off', label: 'Claude Sonnet 4.0', color: '#000000' },
+    { provider: 'anthropic', model: 'claude-sonnet-4-5', reasoning: 'off', label: 'Claude Sonnet 4.5', color: '#A855F7' },
+  ]);
+}
 
-  el.innerHTML = makeSVG(w, h, inner);
-  wireTooltips(el);
-  legendEl.innerHTML = legendHTML(legendItems);
-  document.getElementById('figD-section').style.display = 'block';
+// ═══════════════════════════════════════════════════════════════
+// Figure 8: Cross-Provider Flagship Comparison (reasoning = off)
+// One flagship per provider: Opus 4.5, GPT-5.2, Gemini 3 Flash
+// ═══════════════════════════════════════════════════════════════
+function renderFigFlagship() {
+  renderModelCompFig('figFlagship-chart', 'figFlagship-legend', 'figFlagship-section', [
+    { provider: 'anthropic', model: 'claude-opus-4-5',       reasoning: 'off', label: 'Claude Opus 4.5', color: '#7C3AED' },
+    { provider: 'openai',    model: 'gpt-5.2',               reasoning: 'off', label: 'GPT-5.2',         color: '#22C55E' },
+    { provider: 'gemini',    model: 'gemini-3-flash-preview', reasoning: 'off', label: 'Gemini 3 Flash',  color: '#3B82F6' },
+  ]);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -925,6 +946,30 @@ function renderS7(microRows, cfg) {
 // INIT
 // ═══════════════════════════════════════════════════════════════
 // ── Tab switching ─────────────────────────────────────────────
+// ── Section filter sub-nav ────────────────────────────────────
+function filterSectionTab(paneId, navId, filter) {
+  document.querySelectorAll(`#${navId} .section-link`).forEach(l =>
+    l.classList.toggle('active', l.dataset.filter === filter)
+  );
+  // Section headers only shown in 'all' view
+  document.querySelectorAll(`#${paneId} .curve-section-header`).forEach(el => {
+    el.style.display = (filter === 'all') ? '' : 'none';
+  });
+  // Show/hide figure sections by data-section attribute
+  document.querySelectorAll(`#${paneId} .section[data-section]`).forEach(el => {
+    el.style.display = (filter === 'all' || el.dataset.section === filter) ? 'block' : 'none';
+  });
+}
+
+function initSectionNavs() {
+  document.querySelectorAll('#curves-section-nav .section-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      filterSectionTab('tab-curves', 'curves-section-nav', link.dataset.filter);
+    });
+  });
+}
+
 function initTabs() {
   document.querySelectorAll('#tab-nav .tab-link').forEach(link => {
     link.addEventListener('click', e => {
@@ -948,6 +993,7 @@ function initTabs() {
 
 const regToggleRendered = {};
 const regToggleConfigs = {
+  // Reasoning comparisons (array form → renderReasoningRegTable)
   'reg-gpt52': [
     'openai_gpt-5_2_off', 'openai_gpt-5_2_low',
     'openai_gpt-5_2_medium', 'openai_gpt-5_2_high',
@@ -956,6 +1002,37 @@ const regToggleConfigs = {
     'gemini_gemini-3-flash-preview_off', 'gemini_gemini-3-flash-preview_low',
     'gemini_gemini-3-flash-preview_medium', 'gemini_gemini-3-flash-preview_high',
   ],
+  // Model comparisons (object form → renderModelDummyRegTable)
+  'reg-figAnthro': {
+    configs:  ['anthropic_claude-haiku-4-5_off', 'anthropic_claude-sonnet-4-5_off', 'anthropic_claude-opus-4-5_off'],
+    labels:   ['Sonnet 4.5', 'Opus 4.5'],
+    baseline: 'Claude Haiku 4.5',
+  },
+  'reg-figGeminiLite': {
+    configs:  ['gemini_gemini-2_5-flash-lite_off', 'gemini_gemini-2_5-flash_off'],
+    labels:   ['2.5 Flash'],
+    baseline: 'Gemini 2.5 Flash Lite',
+  },
+  'reg-figD': {
+    configs:  ['gemini_gemini-2_0-flash_off', 'gemini_gemini-2_5-flash_off', 'gemini_gemini-3-flash-preview_off'],
+    labels:   ['2.5 Flash', '3 Flash'],
+    baseline: 'Gemini 2.0 Flash',
+  },
+  'reg-figAnthroGen': {
+    configs:  ['anthropic_claude-sonnet-4-0_off', 'anthropic_claude-sonnet-4-5_off'],
+    labels:   ['Sonnet 4.5'],
+    baseline: 'Claude Sonnet 4.0',
+  },
+  'reg-figC': {
+    configs:  ['openai_gpt-3_5-turbo_off', 'openai_gpt-4o_off', 'openai_gpt-5_1_off', 'openai_gpt-5_2_off'],
+    labels:   ['GPT-4o', 'GPT-5.1', 'GPT-5.2'],
+    baseline: 'GPT-3.5 Turbo',
+  },
+  'reg-figFlagship': {
+    configs:  ['anthropic_claude-opus-4-5_off', 'openai_gpt-5_2_off', 'gemini_gemini-3-flash-preview_off'],
+    labels:   ['GPT-5.2', 'Gemini 3 Flash'],
+    baseline: 'Claude Opus 4.5',
+  },
 };
 
 function initRegToggles() {
@@ -968,7 +1045,12 @@ function initRegToggles() {
       panel.style.display = open ? 'none' : 'block';
       btn.textContent = open ? 'Show Regression \u25be' : 'Hide Regression \u25b4';
       if (!open && !regToggleRendered[targetId]) {
-        renderReasoningRegTable(targetId, regToggleConfigs[targetId]);
+        const cfg = regToggleConfigs[targetId];
+        if (Array.isArray(cfg)) {
+          renderReasoningRegTable(targetId, cfg);
+        } else {
+          renderModelDummyRegTable(targetId, cfg.configs, cfg.labels, cfg.baseline);
+        }
         regToggleRendered[targetId] = true;
       }
     });
@@ -978,6 +1060,7 @@ function initRegToggles() {
 function init() {
   initTabs();
   initRegToggles();
+  initSectionNavs();
 
   Papa.parse(CONFIG.ALL_MACRO, {
     download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
@@ -993,8 +1076,12 @@ function init() {
       // s1 (provider envelopes) removed from main flow
       renderFigA();
       renderFigB();
-      renderFigC();
+      renderFigAnthro();
+      renderFigGeminiLite();
       renderFigD();
+      renderFigAnthroGen();
+      renderFigC();
+      renderFigFlagship();
       renderS2();
       renderS3();
       renderS6();
@@ -1018,6 +1105,8 @@ function init() {
         download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
         complete({ data }) {
           modelMetadata = data;
+          renderReleaseTimeline();
+          renderCutoffTimeline();
           // If user already clicked Tab 2 before metadata loaded, render now
           if (document.getElementById('tab-characteristics').classList.contains('active') && !tab2Rendered) {
             renderTab2();
@@ -1531,6 +1620,101 @@ function renderReasoningRegTable(containerId, configs) {
     </div>`;
 }
 
+// General dummy-variable regression table for model comparisons
+// configs[0] = baseline, configs[1..n] = dummies; dummyLabels names each dummy
+function renderModelDummyRegTable(containerId, configs, dummyLabels, baselineLabel) {
+  const el = document.getElementById(containerId);
+  if (!el || !macroData.length) return;
+
+  const nDummies = configs.length - 1;
+  const subs = ['&#x2080;','&#x2081;','&#x2082;','&#x2083;','&#x2084;','&#x2085;','&#x2086;','&#x2087;','&#x2088;','&#x2089;'];
+
+  const rows = [];
+  configs.forEach((key, idx) => {
+    const olsR = olsResults.find(o => o.key === key);
+    if (!olsR) return;
+    macroData.filter(d =>
+      d.provider === olsR.provider && d.model === olsR.model && d.reasoning === olsR.reasoning
+    ).forEach(d => {
+      const nc = +d.infection_level;
+      const y  = 100 - +d.pct_stay_home;
+      const dummies = Array(nDummies).fill(0);
+      if (idx > 0) dummies[idx - 1] = 1;
+      rows.push({ nc, y, dummies });
+    });
+  });
+
+  if (rows.length < 10) { el.innerHTML = '<p style="color:#999">Insufficient data.</p>'; return; }
+
+  const Y  = rows.map(r => r.y);
+  const X1 = rows.map(r => [1, r.nc, r.nc*r.nc, ...r.dummies]);
+  const X2 = rows.map(r => {
+    const cols = [1, r.nc, r.nc*r.nc];
+    r.dummies.forEach(d => { cols.push(d); cols.push(r.nc * d); });
+    return cols;
+  });
+
+  const fit1 = fitMultipleOLS(X1, Y);
+  const fit2 = fitMultipleOLS(X2, Y);
+  if (!fit1 || !fit2) { el.innerHTML = '<p style="color:#999">Regression failed (singular matrix).</p>'; return; }
+
+  const fmt  = (v) => (v >= 0 ? '+' : '') + v.toFixed(2);
+  const cell = (fit, idx) => {
+    if (!fit || idx === null || idx >= fit.betas.length) return '<td></td>';
+    const b = fit.betas[idx], p = fit.ps[idx];
+    const stars = pStars(p);
+    const cls = stars === 'ns' ? '' : ' class="ols-sig"';
+    return `<td${cls}>${fmt(b)}${stars !== 'ns' ? `<sup>${stars}</sup>` : ''}</td>`;
+  };
+
+  const rowDefs = [
+    ['Constant',   0, 0, false],
+    ['New Cases',  1, 1, false],
+    ['New Cases²', 2, 2, false],
+  ];
+  dummyLabels.forEach((lbl, i) => {
+    rowDefs.push([lbl,                   3 + i,     3 + i*2,     true]);
+    rowDefs.push([`New Cases × ${lbl}`,  null,      4 + i*2,     true]);
+  });
+
+  const bodyRows = rowDefs.map(([label, i1, i2, isKey]) => {
+    const c1 = i1 !== null ? cell(fit1, i1) : '<td style="color:#ccc">—</td>';
+    const c2 = i2 !== null ? cell(fit2, i2) : '<td style="color:#ccc">—</td>';
+    return `<tr${isKey ? ' class="ols-key-row"' : ''}><td>${label}</td>${c1}${c2}</tr>`;
+  }).join('');
+
+  let eq1 = `Mobility = &beta;${subs[0]} + &beta;${subs[1]}&thinsp;NC + &beta;${subs[2]}&thinsp;NC&sup2;`;
+  let eq2 = eq1;
+  dummyLabels.forEach((lbl, i) => {
+    eq1 += ` + &beta;${subs[3+i]}&thinsp;${lbl}`;
+    eq2 += ` + &beta;${subs[3+i*2]}&thinsp;${lbl} + &beta;${subs[4+i*2]}&thinsp;NC&thinsp;&times;&thinsp;${lbl}`;
+  });
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:#666;font-style:italic;margin-bottom:10px;line-height:1.7">
+      <strong style="font-style:normal">(1) Baseline shift:</strong> ${eq1}<br>
+      <strong style="font-style:normal">(2) Baseline + slope shift:</strong> ${eq2}
+    </div>
+    <div class="ols-table-wrap" style="overflow-x:auto">
+      <table class="ols-table" style="min-width:420px">
+        <thead><tr>
+          <th style="text-align:left">Variable</th>
+          <th>(1) Baseline shift</th>
+          <th>(2) Baseline + slope shift</th>
+        </tr></thead>
+        <tbody>${bodyRows}</tbody>
+        <tfoot>
+          <tr><td>R²</td><td>${fit1.r2.toFixed(3)}</td><td>${fit2.r2.toFixed(3)}</td></tr>
+          <tr><td>N</td><td>${rows.length}</td><td>${rows.length}</td></tr>
+          <tr><td colspan="3" style="font-size:10px;color:#999;font-style:italic">
+            Baseline = ${baselineLabel}. Highlighted rows = model comparison tests.
+            <sup>***</sup> p&lt;0.001 &nbsp; <sup>**</sup> p&lt;0.01 &nbsp; <sup>*</sup> p&lt;0.05
+          </td></tr>
+        </tfoot>
+      </table>
+    </div>`;
+}
+
 function renderTabRegression() {
   renderReasoningRegTable('reg-gpt52', [
     'openai_gpt-5_2_off', 'openai_gpt-5_2_low',
@@ -1883,6 +2067,110 @@ function drawFigJ(microA, microB, mA, mB) {
       </table>
     </div>
     <div class="ols-table-label" style="margin-top:10px;font-style:normal;text-transform:none;font-weight:normal;font-size:12px;color:#333;letter-spacing:0">${interp}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTHOR NOTES — DATE TIMELINES
+// ═══════════════════════════════════════════════════════════════
+
+const TL_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtMonthYear(s) {
+  const parts = String(s).split('-');
+  return `${TL_MONTHS[+parts[1] - 1]} ${parts[0]}`;
+}
+
+function renderDateTimeline(containerId, dateField, parseFunc) {
+  const el = document.getElementById(containerId);
+  if (!el || !modelMetadata.length) return;
+
+  const W = FIG_CW, rowH = 72;
+  const providers = ['anthropic', 'openai', 'gemini'];
+  const padL = 88, padR = 32, padT = 24, padB = 44;
+  const H = rowH * providers.length + padT + padB;
+
+  // Build point list (include raw date string for tooltip)
+  const points = [];
+  modelMetadata.forEach(meta => {
+    const x = parseFunc(meta[dateField]);
+    if (x == null) return;
+    const cfg = CONFIG.MODELS.find(m =>
+      m.provider === meta.provider &&
+      m.model === meta.alias &&
+      m.reasoning === String(meta.reasoning)
+    );
+    if (!cfg) return;
+    const provRow = providers.indexOf(meta.provider);
+    if (provRow < 0) return;
+    const rawDate = meta[dateField] ? String(meta[dateField]) : '';
+    points.push({ x, label: cfg.label, color: cfg.color, provRow, rawDate });
+  });
+
+  if (!points.length) {
+    el.innerHTML = '<p style="color:#999;font-family:Georgia,serif;font-size:12px">No metadata loaded.</p>';
+    return;
+  }
+
+  const allX = points.map(p => p.x);
+  const minX = Math.min(...allX), maxX = Math.max(...allX);
+  const xRange = maxX - minX || 1;
+  const toSvgX = x => padL + (x - minX) / xRange * (W - padL - padR);
+  const toSvgY = row => padT + row * rowH + rowH / 2;
+
+  let inner = '';
+
+  // Provider row labels + guide lines
+  providers.forEach((p, i) => {
+    const cy = toSvgY(i);
+    inner += `<line x1="${padL}" y1="${cy}" x2="${W - padR}" y2="${cy}" stroke="#eeeeee" stroke-width="1"/>`;
+    inner += `<text x="${padL - 8}" y="${cy + 4}" text-anchor="end" fill="${PROV_COLORS[p]}"
+      font-size="11" font-family="${SERIF}" font-weight="bold">${PROV_LABELS[p]}</text>`;
+  });
+
+  // Year grid lines + labels
+  const minYr = Math.floor(minX), maxYr = Math.ceil(maxX);
+  for (let yr = minYr; yr <= maxYr; yr++) {
+    const sx = toSvgX(yr);
+    inner += `<line x1="${sx}" y1="${padT}" x2="${sx}" y2="${H - padB}" stroke="#dddddd" stroke-width="1" stroke-dasharray="3,4"/>`;
+    inner += `<text x="${sx}" y="${H - padB + 16}" text-anchor="middle" fill="#888888"
+      font-size="10" font-family="${SERIF}">${yr}</text>`;
+  }
+
+  // Bucket overlapping dots (tighter 6px bucket for more granular stagger)
+  const buckets = {};
+  points.forEach(p => {
+    const sx = Math.round(toSvgX(p.x) / 6) * 6;
+    const key = `${p.provRow}_${sx}`;
+    if (!buckets[key]) buckets[key] = [];
+    buckets[key].push(p);
+  });
+
+  Object.values(buckets).forEach(bucket => {
+    const showLabel = bucket.length <= 2; // hide text in crowded buckets — rely on tooltip
+    bucket.forEach((p, i) => {
+      const sx = toSvgX(p.x);
+      const baseY = toSvgY(p.provRow);
+      const sy = baseY + (i - (bucket.length - 1) / 2) * 16;
+      const short = p.label.replace('Claude ', '').replace(' Preview', '');
+      const tooltip = `${p.label} — ${fmtMonthYear(p.rawDate)}`;
+      inner += `<g>`;
+      inner += `<title>${esc(tooltip)}</title>`;
+      inner += `<circle cx="${sx}" cy="${sy}" r="5" fill="${p.color}" opacity="0.85"/>`;
+      if (showLabel) {
+        inner += `<text x="${sx + 8}" y="${sy + 4}" fill="#333333" font-size="9" font-family="${SERIF}">${esc(short)}</text>`;
+      }
+      inner += `</g>`;
+    });
+  });
+
+  el.innerHTML = `<svg width="${W}" height="${H}" style="overflow:visible;display:block">${inner}</svg>`;
+}
+
+function renderReleaseTimeline() {
+  renderDateTimeline('release-timeline-chart', 'release_date', parseDate);
+}
+
+function renderCutoffTimeline() {
+  renderDateTimeline('cutoff-timeline-chart', 'knowledge_cutoff', parseYearMonth);
 }
 
 init();
