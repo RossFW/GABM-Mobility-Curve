@@ -10,6 +10,8 @@ let microCache = {};     // dirKey → micro CSV rows (loaded on demand)
 let olsResults = [];     // [{key,provider,model,reasoning,label,color,alpha,beta,r2,alpha_logit,beta_logit}]
 let modelMetadata = [];  // rows from data/metadata/models.csv
 let tab2Rendered = false;
+let tab3Rendered = false;
+let agentsData = null; // cached agents.json
 let tabRegRendered = false;
 
 // ── Chart geometry ───────────────────────────────────────────
@@ -1039,6 +1041,12 @@ function initSectionNavs() {
       filterSectionTab('tab-curves', 'curves-section-nav', link.dataset.filter);
     });
   });
+  document.querySelectorAll('#agents-section-nav .section-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      filterSectionTab('tab-agents', 'agents-section-nav', link.dataset.filter);
+    });
+  });
 }
 
 function initTabs() {
@@ -1055,6 +1063,11 @@ function initTabs() {
       if (tab === 'characteristics' && !tab2Rendered && olsResults.length) {
         renderTab2();
         tab2Rendered = true;
+      }
+      // Lazy-render Agent Analysis on first visit
+      if (tab === 'agents' && !tab3Rendered) {
+        renderAgentAnalysis();
+        tab3Rendered = true;
       }
     });
   });
@@ -1209,14 +1222,6 @@ function init() {
         ['anthropic_claude-sonnet-4-5_off','openai_gpt-5_2_off','gemini_gemini-3-flash-preview_off',
          'openai_gpt-3_5-turbo_off'],
         'openai_gpt-3_5-turbo_off');
-
-      // S7: agent-level (needs micro data, lazy-loaded)
-      document.getElementById('s7-section').style.display = 'block';
-      buildModelPicker('s7-model-select', s7SelectedIdx, idx => {
-        s7SelectedIdx = idx;
-        loadMicro(idx, renderS7);
-      });
-      loadMicro(s7SelectedIdx, renderS7);
 
       // Figure 20: Comparison Tool (needs micro data, lazy-loaded on run)
       initFigJ();
@@ -2391,6 +2396,508 @@ function renderCutoffTimeline() {
     { label: 'Late 2025',   startDate: '2025-08', endDate: '2025-08' },
   ]);
   document.getElementById('s-cutoff-timeline').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 3 — AGENT ANALYSIS
+// ═══════════════════════════════════════════════════════════════
+
+function loadAgentsJSON(callback) {
+  if (agentsData) { callback(agentsData); return; }
+  fetch('agents/agents.json')
+    .then(r => r.json())
+    .then(data => { agentsData = data; callback(data); });
+}
+
+function renderAgentAnalysis() {
+  // Fig 22: heatmap (moved from Fig 10 — reuse existing s7 code)
+  document.getElementById('s7-section').style.display = 'block';
+  buildModelPicker('s7-model-select', s7SelectedIdx, idx => {
+    s7SelectedIdx = idx;
+    loadMicro(idx, renderS7);
+  });
+  loadMicro(s7SelectedIdx, renderS7);
+
+  // Fig 21: demographics
+  loadAgentsJSON(renderFig21Demographics);
+
+  // Fig 23: agent spotlight
+  loadAgentsJSON(initFig23Spotlight);
+
+  // Fig 24: trait effects
+  loadAgentsJSON(() => {
+    buildModelPicker('fig24-model-select', 0, idx => {
+      loadMicro(idx, (rows, cfg) => renderFig24TraitEffects(rows, cfg));
+    });
+    loadMicro(0, (rows, cfg) => renderFig24TraitEffects(rows, cfg));
+  });
+
+  // Fig 25: regression table
+  loadAgentsJSON(() => {
+    buildModelPicker('fig25-model-select', 0, idx => {
+      loadMicro(idx, (rows, cfg) => renderFig25Regression(rows, cfg));
+    });
+    loadMicro(0, (rows, cfg) => renderFig25Regression(rows, cfg));
+  });
+}
+
+// ── Fig 21: Sample Demographics ──────────────────────────────
+function renderFig21Demographics(agents) {
+  const el = document.getElementById('fig21-chart');
+  if (!el) return;
+
+  const W = CW, H = 320;
+  const halfW = (W - 40) / 2;
+
+  // Age histogram
+  const bins = [0,0,0,0,0,0,0,0,0,0]; // 10 bins for 15-64 (5-year bins)
+  const binLabels = ['15–19','20–24','25–29','30–34','35–39','40–44','45–49','50–54','55–59','60–64'];
+  agents.forEach(a => {
+    const idx = Math.min(Math.floor((a.age - 15) / 5), 9);
+    if (idx >= 0 && idx < 10) bins[idx]++;
+  });
+  const maxBin = Math.max(...bins);
+
+  const barH = 22, gap = 4, padL = 50, padR = 30;
+  const ageH = binLabels.length * (barH + gap) + 40;
+  let ageSvg = `<text x="${padL}" y="14" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Age Distribution</text>`;
+  binLabels.forEach((lbl, i) => {
+    const y = 28 + i * (barH + gap);
+    const bw = maxBin > 0 ? (bins[i] / maxBin) * (halfW - padL - padR) : 0;
+    ageSvg += `<text x="${padL - 6}" y="${y + barH / 2 + 4}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="end">${lbl}</text>`;
+    ageSvg += `<rect x="${padL}" y="${y}" width="${bw.toFixed(1)}" height="${barH}" fill="#7C3AED" opacity="0.7" rx="2"/>`;
+    if (bins[i] > 0) ageSvg += `<text x="${padL + bw + 4}" y="${y + barH / 2 + 4}" font-size="9" fill="#555" font-family="${SERIF}">${bins[i]}</text>`;
+  });
+
+  // Trait breakdown
+  const dims = [
+    { name: 'Extraversion', hi: 'extroverted', lo: 'introverted' },
+    { name: 'Agreeableness', hi: 'agreeable', lo: 'antagonistic' },
+    { name: 'Conscientiousness', hi: 'conscientious', lo: 'unconscientious' },
+    { name: 'Neuroticism', hi: 'neurotic', lo: 'emotionally stable' },
+    { name: 'Openness', hi: 'open to experience', lo: 'closed to experience' },
+  ];
+  const traitCounts = dims.map(d => {
+    let hiCount = 0;
+    agents.forEach(a => { if (a.traits.includes(d.hi)) hiCount++; });
+    return { dim: d.name, hi: d.hi, lo: d.lo, hiCount, loCount: agents.length - hiCount };
+  });
+
+  const traitH = dims.length * (barH + gap + 14) + 40;
+  const barW = halfW - 80;
+  const traitColors = ['#7C3AED','#22C55E','#3B82F6','#F59E0B','#EC4899'];
+  let traitSvg = `<text x="0" y="14" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Big-5 Personality Traits</text>`;
+  traitCounts.forEach((tc, i) => {
+    const y = 28 + i * (barH + gap + 14);
+    const hiW = (tc.hiCount / agents.length) * barW;
+    const loW = barW - hiW;
+    traitSvg += `<text x="0" y="${y + 10}" font-size="10" fill="#333" font-family="${SERIF}" font-weight="bold">${tc.dim}</text>`;
+    traitSvg += `<rect x="0" y="${y + 14}" width="${hiW.toFixed(1)}" height="${barH}" fill="${traitColors[i]}" opacity="0.75" rx="2"/>`;
+    traitSvg += `<rect x="${hiW.toFixed(1)}" y="${y + 14}" width="${loW.toFixed(1)}" height="${barH}" fill="${traitColors[i]}" opacity="0.3" rx="2"/>`;
+    traitSvg += `<text x="${hiW / 2}" y="${y + 14 + barH / 2 + 4}" font-size="9" fill="#fff" font-family="${SERIF}" text-anchor="middle">${tc.hi} (${tc.hiCount})</text>`;
+    traitSvg += `<text x="${hiW + loW / 2}" y="${y + 14 + barH / 2 + 4}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle">${tc.lo} (${tc.loCount})</text>`;
+  });
+
+  const totalH = Math.max(ageH, traitH) + 10;
+  el.innerHTML =
+    `<svg width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">` +
+    `<g transform="translate(0,0)">${ageSvg}</g>` +
+    `<g transform="translate(${halfW + 40},0)">${traitSvg}</g>` +
+    `</svg>`;
+}
+
+// ── Fig 23: Agent Spotlight ──────────────────────────────────
+let spotlightAgentIdx = 0;
+let spotlightChecked = new Set();
+
+function initFig23Spotlight(agents) {
+  // Agent picker
+  const agentSel = document.getElementById('fig23-agent-select');
+  if (!agentSel) return;
+  let html = '<div class="spotlight-controls"><label style="font-size:11px;color:#555;font-weight:bold">Agent: </label>';
+  html += '<select id="fig23-agent-dd" style="font-family:Georgia,serif;font-size:12px;padding:4px 8px;border:1px solid #ccc">';
+  agents.forEach((a, i) => {
+    html += `<option value="${i}">${esc(a.name)}, ${a.age}</option>`;
+  });
+  html += '</select></div>';
+  agentSel.innerHTML = html;
+
+  // Model checkboxes grouped by provider
+  const modelSel = document.getElementById('fig23-model-select');
+  const providers = ['anthropic', 'openai', 'gemini'];
+  const provLabels = { anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Gemini' };
+  let mhtml = '<div class="spotlight-model-grid">';
+  providers.forEach(prov => {
+    mhtml += '<div class="spotlight-provider-group">';
+    mhtml += `<label class="provider-label"><input type="checkbox" class="spotlight-prov-all" data-provider="${prov}" checked> ${provLabels[prov]}</label>`;
+    CONFIG.MODELS.forEach((m, i) => {
+      if (m.provider !== prov) return;
+      const checked = true; // start with all checked
+      spotlightChecked.add(i);
+      mhtml += `<label><input type="checkbox" class="spotlight-model-cb" data-idx="${i}" ${checked ? 'checked' : ''}> ${esc(m.label)}</label>`;
+    });
+    mhtml += '</div>';
+  });
+  mhtml += '</div>';
+  modelSel.innerHTML = mhtml;
+
+  // Event handlers
+  document.getElementById('fig23-agent-dd').addEventListener('change', e => {
+    spotlightAgentIdx = +e.target.value;
+    renderFig23Chart();
+  });
+  document.querySelectorAll('.spotlight-model-cb').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const idx = +cb.dataset.idx;
+      if (cb.checked) spotlightChecked.add(idx); else spotlightChecked.delete(idx);
+      // Update provider "select all" checkbox
+      const prov = CONFIG.MODELS[idx].provider;
+      const provCbs = [...document.querySelectorAll(`.spotlight-model-cb[data-idx]`)].filter(c => CONFIG.MODELS[+c.dataset.idx].provider === prov);
+      const provAll = document.querySelector(`.spotlight-prov-all[data-provider="${prov}"]`);
+      if (provAll) provAll.checked = provCbs.every(c => c.checked);
+      renderFig23Chart();
+    });
+  });
+  document.querySelectorAll('.spotlight-prov-all').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const prov = cb.dataset.provider;
+      const checked = cb.checked;
+      document.querySelectorAll('.spotlight-model-cb').forEach(mcb => {
+        if (CONFIG.MODELS[+mcb.dataset.idx].provider === prov) {
+          mcb.checked = checked;
+          if (checked) spotlightChecked.add(+mcb.dataset.idx); else spotlightChecked.delete(+mcb.dataset.idx);
+        }
+      });
+      renderFig23Chart();
+    });
+  });
+
+  renderFig23Chart();
+}
+
+function renderFig23Chart() {
+  const el = document.getElementById('fig23-chart');
+  const legendEl = document.getElementById('fig23-legend');
+  if (!el) return;
+
+  const indices = [...spotlightChecked].sort((a, b) => a - b);
+  if (!indices.length) { el.innerHTML = '<p style="color:#888;font-size:12px;padding:20px 0">Select at least one model.</p>'; legendEl.innerHTML = ''; return; }
+
+  // Load all selected micro CSVs (cached), then render
+  let loaded = 0;
+  const results = {};
+  indices.forEach(idx => {
+    loadMicro(idx, (rows, cfg) => {
+      results[idx] = computeAgentCurve(rows, spotlightAgentIdx);
+      if (++loaded === indices.length) drawFig23(el, legendEl, indices, results);
+    });
+  });
+}
+
+function computeAgentCurve(microRows, agentIdx) {
+  // For this agent, compute stay-home rate at each infection level
+  const byLevel = {};
+  microRows.forEach(r => {
+    if (+r.agent_id !== agentIdx) return;
+    const lv = parseFloat(r.infection_level);
+    if (!byLevel[lv]) byLevel[lv] = { yes: 0, total: 0 };
+    byLevel[lv].total++;
+    if (r.response === 'yes') byLevel[lv].yes++;
+  });
+  return CONFIG.INFECTION_LEVELS.map(lv => {
+    const b = byLevel[lv];
+    return { level: lv, rate: b ? b.yes / b.total : null };
+  });
+}
+
+function drawFig23(el, legendEl, indices, results) {
+  const W = CW, H = CH;
+  const pad = { ...PAD };
+  const xMin = 0, xMax = 0.075;
+  const toX = v => pad.l + (v - xMin) / (xMax - xMin) * (W - pad.l - pad.r);
+  const toY = v => H - pad.b - v * (H - pad.t - pad.b);
+
+  let svg = '';
+  // Grid
+  [0, 0.25, 0.5, 0.75, 1.0].forEach(v => {
+    const y = toY(v);
+    svg += `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W - pad.r}" y2="${y.toFixed(1)}" stroke="${GRID_COLOR}"/>`;
+    svg += `<text x="${pad.l - 6}" y="${(y + 4).toFixed(1)}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="end">${(v * 100).toFixed(0)}%</text>`;
+  });
+  [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07].forEach(v => {
+    const x = toX(v);
+    svg += `<line x1="${x.toFixed(1)}" y1="${pad.t}" x2="${x.toFixed(1)}" y2="${H - pad.b}" stroke="${GRID_COLOR}"/>`;
+    svg += `<text x="${x.toFixed(1)}" y="${H - pad.b + 14}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">${(v * 100).toFixed(0)}%</text>`;
+  });
+  svg += `<text x="${(pad.l + W - pad.r) / 2}" y="${H - 6}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">Infection Rate (% of Population)</text>`;
+  svg += `<text x="12" y="${(pad.t + H - pad.b) / 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${(pad.t + H - pad.b) / 2})">Stay-Home Rate</text>`;
+
+  // Lines
+  indices.forEach(idx => {
+    const m = CONFIG.MODELS[idx];
+    const curve = results[idx];
+    if (!curve) return;
+    const pts = curve.filter(p => p.rate !== null).map(p => `${toX(p.level / 100).toFixed(1)},${toY(p.rate).toFixed(1)}`);
+    if (pts.length < 2) return;
+    const dash = m.dash ? ` stroke-dasharray="${m.dash}"` : '';
+    svg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${m.color}" stroke-width="1.8"${dash}/>`;
+  });
+
+  el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${svg}</svg>`;
+
+  // Legend
+  legendEl.innerHTML = indices.map(idx => {
+    const m = CONFIG.MODELS[idx];
+    const dashStyle = m.dash ? `background:repeating-linear-gradient(90deg,${m.color} 0,${m.color} 4px,transparent 4px,transparent 7px)` : `background:${m.color}`;
+    return `<span class="legend-item"><span class="legend-swatch" style="${dashStyle}"></span>${esc(m.label)}</span>`;
+  }).join('');
+}
+
+// ── Fig 24: Trait Effects ────────────────────────────────────
+function renderFig24TraitEffects(microRows, cfg) {
+  const el = document.getElementById('fig24-chart');
+  if (!el || !agentsData) return;
+
+  // Compute transition point per agent
+  const agentVotes = {};
+  microRows.forEach(r => {
+    const aid = +r.agent_id;
+    const lv = parseFloat(r.infection_level);
+    const key = `${aid}|${lv}`;
+    if (!agentVotes[key]) agentVotes[key] = { yes: 0, total: 0 };
+    agentVotes[key].total++;
+    if (r.response === 'yes') agentVotes[key].yes++;
+  });
+
+  const transitions = agentsData.map(a => {
+    let tp = null;
+    for (const lv of CONFIG.INFECTION_LEVELS) {
+      const key = `${a.agent_id}|${lv}`;
+      const v = agentVotes[key];
+      if (v && v.yes > v.total / 2) { tp = lv; break; }
+    }
+    return { agent: a, tp: tp !== null ? tp : 8 }; // 8 = never transitions (beyond max)
+  });
+
+  // Trait dimension analysis
+  const dims = [
+    { name: 'Extraversion', hi: 'extroverted', lo: 'introverted' },
+    { name: 'Agreeableness', hi: 'agreeable', lo: 'antagonistic' },
+    { name: 'Conscientiousness', hi: 'conscientious', lo: 'unconscientious' },
+    { name: 'Neuroticism', hi: 'neurotic', lo: 'emotionally stable' },
+    { name: 'Openness', hi: 'open to experience', lo: 'closed to experience' },
+  ];
+
+  const traitColors = ['#7C3AED','#22C55E','#3B82F6','#F59E0B','#EC4899'];
+
+  const W = CW, barH = 20, rowH = 60, padL = 120, padR = 60;
+  const traitH = dims.length * rowH + 50;
+  const maxTP = 7;
+  const barScale = (W - padL - padR) / maxTP;
+
+  let svg = `<text x="${padL}" y="14" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Mean Transition Point by Trait</text>`;
+  svg += `<text x="${padL}" y="28" font-size="10" fill="#888" font-family="${SERIF}" font-style="italic">${esc(cfg.label)}</text>`;
+
+  dims.forEach((d, i) => {
+    const hiAgents = transitions.filter(t => t.agent.traits.includes(d.hi));
+    const loAgents = transitions.filter(t => t.agent.traits.includes(d.lo));
+    const hiMean = hiAgents.reduce((s, t) => s + t.tp, 0) / (hiAgents.length || 1);
+    const loMean = loAgents.reduce((s, t) => s + t.tp, 0) / (loAgents.length || 1);
+    const y = 44 + i * rowH;
+
+    svg += `<text x="${padL - 8}" y="${y + 14}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="end" font-weight="bold">${d.name}</text>`;
+
+    // Hi bar
+    const hiW = Math.max(hiMean * barScale, 2);
+    svg += `<rect x="${padL}" y="${y}" width="${hiW.toFixed(1)}" height="${barH}" fill="${traitColors[i]}" opacity="0.8" rx="2"/>`;
+    svg += `<text x="${padL + hiW + 4}" y="${y + 14}" font-size="9" fill="#333" font-family="${SERIF}">${d.hi} (${hiMean.toFixed(2)}%)</text>`;
+
+    // Lo bar
+    const loW = Math.max(loMean * barScale, 2);
+    svg += `<rect x="${padL}" y="${y + barH + 4}" width="${loW.toFixed(1)}" height="${barH}" fill="${traitColors[i]}" opacity="0.35" rx="2"/>`;
+    svg += `<text x="${padL + loW + 4}" y="${y + barH + 18}" font-size="9" fill="#555" font-family="${SERIF}">${d.lo} (${loMean.toFixed(2)}%)</text>`;
+  });
+
+  // Age scatter below trait bars
+  const scatterY0 = traitH + 20;
+  const scatterH = 200;
+  const scatterPad = { t: 30, b: 40, l: padL, r: padR };
+  const ageMin = 15, ageMax = 65;
+  const toAX = age => scatterPad.l + (age - ageMin) / (ageMax - ageMin) * (W - scatterPad.l - scatterPad.r);
+  const toAY = tp => scatterY0 + scatterPad.t + (1 - tp / maxTP) * (scatterH - scatterPad.t - scatterPad.b);
+
+  svg += `<text x="${padL}" y="${scatterY0 + 14}" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Age vs. Transition Point</text>`;
+  // Grid
+  [0, 1, 2, 3, 4, 5, 6, 7].forEach(v => {
+    const y = toAY(v);
+    svg += `<line x1="${scatterPad.l}" y1="${y.toFixed(1)}" x2="${W - scatterPad.r}" y2="${y.toFixed(1)}" stroke="${GRID_COLOR}"/>`;
+    svg += `<text x="${scatterPad.l - 6}" y="${(y + 3).toFixed(1)}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="end">${v}%</text>`;
+  });
+  [20, 30, 40, 50, 60].forEach(v => {
+    const x = toAX(v);
+    svg += `<line x1="${x.toFixed(1)}" y1="${scatterY0 + scatterPad.t}" x2="${x.toFixed(1)}" y2="${scatterY0 + scatterH - scatterPad.b}" stroke="${GRID_COLOR}"/>`;
+    svg += `<text x="${x.toFixed(1)}" y="${scatterY0 + scatterH - scatterPad.b + 14}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+  });
+  svg += `<text x="${(scatterPad.l + W - scatterPad.r) / 2}" y="${scatterY0 + scatterH - 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">Agent Age</text>`;
+  svg += `<text x="12" y="${scatterY0 + (scatterPad.t + scatterH - scatterPad.b) / 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${scatterY0 + (scatterPad.t + scatterH - scatterPad.b) / 2})">Transition Point (%)</text>`;
+
+  // Dots
+  transitions.forEach(t => {
+    const cx = toAX(t.agent.age);
+    const cy = toAY(t.tp);
+    svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="#7C3AED" opacity="0.5"/>`;
+  });
+
+  // Trend line (simple linear regression)
+  const n = transitions.length;
+  const sumX = transitions.reduce((s, t) => s + t.agent.age, 0);
+  const sumY = transitions.reduce((s, t) => s + t.tp, 0);
+  const sumXY = transitions.reduce((s, t) => s + t.agent.age * t.tp, 0);
+  const sumXX = transitions.reduce((s, t) => s + t.agent.age * t.agent.age, 0);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  const x1 = ageMin, x2 = ageMax;
+  const y1 = intercept + slope * x1, y2 = intercept + slope * x2;
+  svg += `<line x1="${toAX(x1).toFixed(1)}" y1="${toAY(y1).toFixed(1)}" x2="${toAX(x2).toFixed(1)}" y2="${toAY(y2).toFixed(1)}" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7"/>`;
+  svg += `<text x="${W - scatterPad.r}" y="${scatterY0 + scatterPad.t + 14}" font-size="9" fill="#7C3AED" font-family="${SERIF}" text-anchor="end" font-style="italic">slope = ${slope.toFixed(3)}</text>`;
+
+  el.innerHTML = `<svg width="${W}" height="${scatterY0 + scatterH + 10}" viewBox="0 0 ${W} ${scatterY0 + scatterH + 10}">${svg}</svg>`;
+}
+
+// ── Fig 25: Agent-Level Logistic Regression ──────────────────
+function renderFig25Regression(microRows, cfg) {
+  const el = document.getElementById('fig25-results');
+  if (!el || !agentsData) return;
+
+  // Build agent trait lookup
+  const agentMap = {};
+  agentsData.forEach(a => { agentMap[a.agent_id] = a; });
+
+  // Build observation array: each row = (stay_home, infection_level, infection_level^2, traits, age)
+  const obs = [];
+  microRows.forEach(r => {
+    const a = agentMap[+r.agent_id];
+    if (!a) return;
+    obs.push({
+      y: r.response === 'yes' ? 1 : 0,
+      x: parseFloat(r.infection_level) / 100, // normalize to 0-0.07
+      x2: Math.pow(parseFloat(r.infection_level) / 100, 2),
+      ext: a.traits.includes('extroverted') ? 1 : 0,
+      agr: a.traits.includes('agreeable') ? 1 : 0,
+      con: a.traits.includes('conscientious') ? 1 : 0,
+      neu: a.traits.includes('neurotic') ? 1 : 0,
+      opn: a.traits.includes('open to experience') ? 1 : 0,
+      age: (a.age - 40) / 20, // centered and scaled
+    });
+  });
+
+  if (!obs.length) { el.innerHTML = '<p style="color:#c00;font-size:12px">No data loaded.</p>'; return; }
+
+  // Simple logistic regression via IRLS (iteratively reweighted least squares)
+  // Model 1: y ~ intercept + x + x^2
+  const X1 = obs.map(o => [1, o.x, o.x2]);
+  const y = obs.map(o => o.y);
+  const beta1 = logisticIRLS(X1, y, 25);
+
+  // Model 2: y ~ intercept + x + x^2 + ext + agr + con + neu + opn + age
+  const X2 = obs.map(o => [1, o.x, o.x2, o.ext, o.agr, o.con, o.neu, o.opn, o.age]);
+  const beta2 = logisticIRLS(X2, y, 25);
+
+  // Format as table
+  const labels1 = ['Intercept', 'Infection Rate', 'Infection Rate²'];
+  const labels2 = ['Intercept', 'Infection Rate', 'Infection Rate²', 'Extraverted', 'Agreeable', 'Conscientious', 'Neurotic', 'Open to Experience', 'Age (scaled)'];
+
+  function fmtCoef(b) {
+    if (b === null || isNaN(b)) return '—';
+    return b.toFixed(3);
+  }
+
+  let html = `<div style="font-size:12px;font-weight:bold;color:#111;margin-bottom:4px">${esc(cfg.label)}</div>`;
+  html += '<table class="ols-table" style="width:100%">';
+  html += '<thead><tr><th></th><th>Model 1</th><th>Model 2</th></tr></thead><tbody>';
+  labels2.forEach((lbl, i) => {
+    const v1 = i < beta1.length ? fmtCoef(beta1[i]) : '';
+    const v2 = i < beta2.length ? fmtCoef(beta2[i]) : '—';
+    html += `<tr><td style="font-weight:bold">${lbl}</td><td>${v1}</td><td>${v2}</td></tr>`;
+  });
+  html += `<tr><td style="font-weight:bold">N</td><td>${obs.length.toLocaleString()}</td><td>${obs.length.toLocaleString()}</td></tr>`;
+  html += '</tbody></table>';
+
+  el.innerHTML = html;
+}
+
+// ── Logistic regression via IRLS ─────────────────────────────
+function logisticIRLS(X, y, maxIter) {
+  const n = X.length, p = X[0].length;
+  let beta = new Array(p).fill(0);
+
+  for (let iter = 0; iter < maxIter; iter++) {
+    // Compute predictions
+    const mu = X.map(xi => {
+      let z = 0;
+      for (let j = 0; j < p; j++) z += beta[j] * xi[j];
+      return 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, z))));
+    });
+
+    // Weighted least squares step: (X'WX)^-1 X'W z
+    // where W = diag(mu*(1-mu)), z = X*beta + W^-1*(y - mu)
+    // Compute X'WX and X'Wz
+    const XtWX = Array.from({ length: p }, () => new Array(p).fill(0));
+    const XtWz = new Array(p).fill(0);
+
+    for (let i = 0; i < n; i++) {
+      const w = mu[i] * (1 - mu[i]) + 1e-10;
+      const zi = 0;
+      let eta = 0;
+      for (let j = 0; j < p; j++) eta += beta[j] * X[i][j];
+      const z_i = eta + (y[i] - mu[i]) / w;
+
+      for (let j = 0; j < p; j++) {
+        XtWz[j] += X[i][j] * w * z_i;
+        for (let k = j; k < p; k++) {
+          XtWX[j][k] += X[i][j] * w * X[i][k];
+        }
+      }
+    }
+    // Symmetrize
+    for (let j = 0; j < p; j++)
+      for (let k = 0; k < j; k++)
+        XtWX[j][k] = XtWX[k][j];
+
+    // Solve via Gaussian elimination
+    const newBeta = solveLinear(XtWX, XtWz);
+    if (!newBeta) return beta;
+
+    // Check convergence
+    let maxDiff = 0;
+    for (let j = 0; j < p; j++) maxDiff = Math.max(maxDiff, Math.abs(newBeta[j] - beta[j]));
+    beta = newBeta;
+    if (maxDiff < 1e-6) break;
+  }
+  return beta;
+}
+
+function solveLinear(A, b) {
+  const n = A.length;
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let col = 0; col < n; col++) {
+    let maxRow = col;
+    for (let row = col + 1; row < n; row++)
+      if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+    if (Math.abs(M[col][col]) < 1e-12) return null;
+    for (let row = col + 1; row < n; row++) {
+      const f = M[row][col] / M[col][col];
+      for (let j = col; j <= n; j++) M[row][j] -= f * M[col][j];
+    }
+  }
+  const x = new Array(n);
+  for (let row = n - 1; row >= 0; row--) {
+    x[row] = M[row][n];
+    for (let j = row + 1; j < n; j++) x[row] -= M[row][j] * x[j];
+    x[row] /= M[row][row];
+  }
+  return x;
 }
 
 init();

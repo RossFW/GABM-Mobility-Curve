@@ -204,6 +204,43 @@
     #curves-section-nav .nav-sep { color: #bbb; margin: 0 4px; }
     #curves-section-nav .section-link { cursor: pointer; }
     #curves-section-nav .section-link.active { font-weight: bold; color: #111; }
+
+    /* ── Agent Analysis subsection nav ──────────── */
+    #agents-section-nav {
+      position: sticky; top: 0; z-index: 20;
+      background: #fff; padding: 10px 0 8px;
+      border-bottom: 1px solid #eee;
+      font-size: 12px; color: #555;
+      font-family: Georgia, serif;
+      margin-bottom: 24px;
+    }
+    #agents-section-nav a { color: #333; text-decoration: none; font-style: italic; }
+    #agents-section-nav a:hover { text-decoration: underline; }
+    #agents-section-nav .nav-sep { color: #bbb; margin: 0 4px; }
+    #agents-section-nav .section-link { cursor: pointer; }
+    #agents-section-nav .section-link.active { font-weight: bold; color: #111; }
+
+    /* ── Agent Spotlight controls ──────────────────── */
+    .spotlight-controls { margin-bottom: 12px; }
+    .spotlight-controls select {
+      font-family: Georgia, serif; font-size: 12px;
+      padding: 4px 8px; border: 1px solid #ccc; background: #fff;
+    }
+    .spotlight-model-grid {
+      display: flex; gap: 24px; flex-wrap: wrap; margin-top: 8px;
+    }
+    .spotlight-provider-group { display: flex; flex-direction: column; gap: 4px; }
+    .spotlight-provider-group label {
+      font-size: 11px; color: #333; cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .spotlight-provider-group .provider-label {
+      font-size: 11px; font-weight: bold; color: #555;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 2px; cursor: pointer;
+    }
+    .spotlight-provider-group input[type="checkbox"] { cursor: pointer; }
+
     .curve-section-header {
       margin: 40px 0 18px;
       padding-bottom: 6px;
@@ -256,8 +293,6 @@
       <a class="section-link" data-filter="cutoff" href="#">Knowledge Cutoff</a>
       <span class="nav-sep">·</span>
       <a class="section-link" data-filter="release" href="#">Release Date</a>
-      <span class="nav-sep">·</span>
-      <a class="section-link" data-filter="agent" href="#">Agent Analysis</a>
       <span class="nav-sep">·</span>
       <a class="section-link" data-filter="comparison" href="#">Comparison Tool</a>
     </div>
@@ -509,21 +544,6 @@
       </div>
     </div>
 
-    <div id="section-agent" class="curve-section-header">Agent-Level Analysis</div>
-
-    <!-- Figure 10: Agent-Level Analysis -->
-    <div class="section" id="s7-section" data-section="agent" style="display:none">
-      <div class="fig-num">Figure 10</div>
-      <div class="fig-title">Agent-Level Decision Heatmap and Concordance</div>
-      <div class="fig-caption">Heatmap shows individual agent majority decisions across all 40 infection levels, sorted by transition point (first level where stay-home is majority decision). Concordance shows the fraction of agents with unanimous (5/5), exactly 4/5, or exactly 3/5 agreement at each infection level. The colored strip at the top of the chart indicates whether the overall majority of agents are staying home (amber) or going out (blue).</div>
-      <div id="s7-model-select" style="margin-bottom:12px"></div>
-      <div class="heatmap-wrapper" id="s7-heatmap"></div>
-      <div style="margin-top:24px">
-        <div style="font-size:14px;font-weight:bold;color:#111;margin-bottom:8px">Concordance</div>
-        <div class="chart-container" id="s7-concordance"></div>
-      </div>
-    </div>
-
     <div id="section-comparison" class="curve-section-header">Comparison Tool</div>
 
     <!-- Figure 20: Model Comparison (Dummy Variable OLS) -->
@@ -569,15 +589,81 @@
        TAB 3 — AGENT ANALYSIS
   ══════════════════════════════════════════════ -->
   <div id="tab-agents" class="tab-pane">
-    <div class="section">
-      <div class="fig-num">Coming soon</div>
-      <div class="fig-title">Agent-Level Analysis</div>
-      <div class="fig-caption">Individual-level logistic regression using micro data (420,000 rows). Will include age effects, Big-5 trait coefficients, and cross-model agent consistency.</div>
-      <div class="placeholder-box">
-        Agent analysis requires loading per-config micro CSVs (~20,000 rows each).<br>
-        Implementation deferred to a subsequent session.
+
+    <div id="agents-section-nav">
+      <a class="section-link active" data-filter="all" href="#">All</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="demographics" href="#">Demographics</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="heatmap" href="#">Heatmap</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="spotlight" href="#">Agent Spotlight</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="traits" href="#">Trait Effects</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="regression" href="#">Regression</a>
+    </div>
+
+    <div id="aa-section-demographics" class="curve-section-header">Demographics</div>
+
+    <!-- Figure 21: Sample Demographics -->
+    <div class="section" id="fig21-section" data-section="demographics">
+      <div class="fig-num">Figure 21</div>
+      <div class="fig-title">Agent Population &mdash; Sample Demographics</div>
+      <div class="fig-caption">Age distribution and Big-5 personality trait breakdown for the 100 frozen agents used across all 21 LLM configurations. Each agent is assigned one pole per personality dimension (e.g., extroverted or introverted).</div>
+      <div class="chart-container" id="fig21-chart"></div>
+    </div>
+
+    <div id="aa-section-heatmap" class="curve-section-header">Heatmap</div>
+
+    <!-- Figure 22: Agent-Level Decision Heatmap and Concordance (moved from Fig 10) -->
+    <div class="section" id="s7-section" data-section="heatmap">
+      <div class="fig-num">Figure 22</div>
+      <div class="fig-title">Agent-Level Decision Heatmap and Concordance</div>
+      <div class="fig-caption">Heatmap shows individual agent majority decisions across all 40 infection levels, sorted by transition point (first level where stay-home is majority decision). Concordance shows the fraction of agents with unanimous (5/5), exactly 4/5, or exactly 3/5 agreement at each infection level. The colored strip at the top of the chart indicates whether the overall majority of agents are staying home (amber) or going out (blue).</div>
+      <div id="s7-model-select" style="margin-bottom:12px"></div>
+      <div class="heatmap-wrapper" id="s7-heatmap"></div>
+      <div style="margin-top:24px">
+        <div style="font-size:14px;font-weight:bold;color:#111;margin-bottom:8px">Concordance</div>
+        <div class="chart-container" id="s7-concordance"></div>
       </div>
     </div>
+
+    <div id="aa-section-spotlight" class="curve-section-header">Agent Spotlight</div>
+
+    <!-- Figure 23: Agent Spotlight -->
+    <div class="section" id="fig23-section" data-section="spotlight">
+      <div class="fig-num">Figure 23</div>
+      <div class="fig-title">Agent Spotlight &mdash; Cross-Model Comparison</div>
+      <div class="fig-caption">Select an individual agent and one or more LLM configurations to compare how that agent responds to rising infection levels across different models. Each line shows the agent's stay-home rate (proportion of 5 reps) at each infection level.</div>
+      <div id="fig23-agent-select" style="margin-bottom:8px"></div>
+      <div id="fig23-model-select" style="margin-bottom:12px"></div>
+      <div class="chart-container" id="fig23-chart"></div>
+      <div class="legend" id="fig23-legend"></div>
+    </div>
+
+    <div id="aa-section-traits" class="curve-section-header">Trait Effects</div>
+
+    <!-- Figure 24: Trait Effects -->
+    <div class="section" id="fig24-section" data-section="traits">
+      <div class="fig-num">Figure 24</div>
+      <div class="fig-title">Trait Effects on Behavior</div>
+      <div class="fig-caption">For a selected model, each agent's transition point (first infection level where stay-home is the majority decision) is computed and grouped by Big-5 personality dimension. Paired bars show the mean transition point for each trait pole. Age scatter shows whether older agents transition earlier or later.</div>
+      <div id="fig24-model-select" style="margin-bottom:12px"></div>
+      <div class="chart-container" id="fig24-chart"></div>
+    </div>
+
+    <div id="aa-section-regression" class="curve-section-header">Regression</div>
+
+    <!-- Figure 25: Agent-Level Regression -->
+    <div class="section" id="fig25-section" data-section="regression">
+      <div class="fig-num">Figure 25</div>
+      <div class="fig-title">Agent-Level Logistic Regression</div>
+      <div class="fig-caption">Logistic regression on individual agent decisions (20,000 observations per config). Model 1 tests infection level alone; Model 2 adds Big-5 personality traits and age as predictors. Follows the regression approach from Paper 1 (PhD Proposal, Table 1).</div>
+      <div id="fig25-model-select" style="margin-bottom:12px"></div>
+      <div id="fig25-results"></div>
+    </div>
+
   </div><!-- end tab-agents -->
 
   <!-- ══════════════════════════════════════════════
