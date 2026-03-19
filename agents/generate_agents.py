@@ -63,13 +63,15 @@ def generate_age(rng):
 # ── Name generation (from Paper 1 redone utils.py) ────────────────────────────
 
 def generate_names(n, country_alpha2="US"):
-    """n/2 male + n/2 female names, no repeats, from top 200 US names."""
+    """n/2 male + n/2 female names, no repeats, from top 200 US names.
+    Returns list of (name, gender) tuples."""
     nd = NameDataset()
     male_names = nd.get_top_names(100, "Male", country_alpha2)[country_alpha2]["M"]
     female_names = nd.get_top_names(100, "Female", country_alpha2)[country_alpha2]["F"]
-    names = random.sample(male_names, k=n // 2) + random.sample(female_names, k=n // 2)
-    random.shuffle(names)
-    return names
+    paired = ([(n, "male") for n in random.sample(male_names, k=n // 2)]
+            + [(n, "female") for n in random.sample(female_names, k=n // 2)])
+    random.shuffle(paired)
+    return paired
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -80,15 +82,16 @@ def main():
     random.seed(RANDOM_SEED)
     np_rng = np.random.default_rng(RANDOM_SEED)
 
-    names = generate_names(N_AGENTS)
+    name_gender_pairs = generate_names(N_AGENTS)
 
     agents = []
-    for i, name in enumerate(names):
+    for i, (name, gender) in enumerate(name_gender_pairs):
         traits = generate_big5_traits(np_rng)
         age = generate_age(np_rng)
         agents.append({
             "agent_id": i,
             "name": name,
+            "gender": gender,
             "age": age,
             "traits": traits,
             "traits_str": f"{traits[0]}, {traits[1]}, {traits[2]}, {traits[3]}, and {traits[4]}",
@@ -103,6 +106,9 @@ def main():
     # Quick sanity check
     ages = [a["age"] for a in agents]
     print(f"Age range: {min(ages)}-{max(ages)}, mean: {sum(ages)/len(ages):.1f}")
+    males = sum(1 for a in agents if a["gender"] == "male")
+    females = sum(1 for a in agents if a["gender"] == "female")
+    print(f"Gender: {males} male, {females} female")
     trait_counts = {}
     for a in agents:
         for t in a["traits"]:

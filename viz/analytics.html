@@ -635,7 +635,7 @@
     <div class="section" id="fig23-section" data-section="spotlight">
       <div class="fig-num">Figure 23</div>
       <div class="fig-title">Agent Spotlight &mdash; Cross-Model Comparison</div>
-      <div class="fig-caption">Select an individual agent and one or more LLM configurations to compare how that agent responds to rising infection levels across different models. Each line shows the agent's stay-home rate (proportion of 5 reps) at each infection level.</div>
+      <div class="fig-caption">Select an individual agent and one or more LLM configurations to compare how that agent responds to rising infection levels across different models. Each line shows how many of the 5 runs the agent chose to stay home at each infection level (0 = always goes out, 5 = always stays home).</div>
       <div id="fig23-agent-select" style="margin-bottom:8px"></div>
       <div id="fig23-model-select" style="margin-bottom:12px"></div>
       <div class="chart-container" id="fig23-chart"></div>
@@ -659,7 +659,7 @@
     <div class="section" id="fig25-section" data-section="regression">
       <div class="fig-num">Figure 25</div>
       <div class="fig-title">Agent-Level Logistic Regression</div>
-      <div class="fig-caption">Logistic regression on individual agent decisions (20,000 observations per config). Model 1 tests infection level alone; Model 2 adds Big-5 personality traits and age as predictors. Follows the regression approach from Paper 1 (PhD Proposal, Table 1).</div>
+      <div class="fig-caption">Logistic regression on individual agent decisions (20,000 observations per config). Model 1 tests infection level alone; Model 2 adds gender, Big-5 personality traits, and age as predictors. Follows the regression approach from Paper 1 (PhD Proposal, Table 1).</div>
       <div id="fig25-model-select" style="margin-bottom:12px"></div>
       <div id="fig25-results"></div>
     </div>

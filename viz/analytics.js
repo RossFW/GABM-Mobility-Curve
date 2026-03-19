@@ -2449,11 +2449,11 @@ function renderFig21Demographics(agents) {
   const W = CW, H = 320;
   const halfW = (W - 40) / 2;
 
-  // Age histogram
-  const bins = [0,0,0,0,0,0,0,0,0,0]; // 10 bins for 15-64 (5-year bins)
-  const binLabels = ['15–19','20–24','25–29','30–34','35–39','40–44','45–49','50–54','55–59','60–64'];
+  // Age histogram (18–65 range, 5-year bins)
+  const bins = [0,0,0,0,0,0,0,0,0,0]; // 10 bins for 18-67 (5-year bins)
+  const binLabels = ['18–22','23–27','28–32','33–37','38–42','43–47','48–52','53–57','58–62','63–67'];
   agents.forEach(a => {
-    const idx = Math.min(Math.floor((a.age - 15) / 5), 9);
+    const idx = Math.min(Math.floor((a.age - 18) / 5), 9);
     if (idx >= 0 && idx < 10) bins[idx]++;
   });
   const maxBin = Math.max(...bins);
@@ -2469,7 +2469,10 @@ function renderFig21Demographics(agents) {
     if (bins[i] > 0) ageSvg += `<text x="${padL + bw + 4}" y="${y + barH / 2 + 4}" font-size="9" fill="#555" font-family="${SERIF}">${bins[i]}</text>`;
   });
 
-  // Trait breakdown
+  // Gender + Trait breakdown
+  const maleCount = agents.filter(a => a.gender === 'male').length;
+  const femaleCount = agents.length - maleCount;
+
   const dims = [
     { name: 'Extraversion', hi: 'extroverted', lo: 'introverted' },
     { name: 'Agreeableness', hi: 'agreeable', lo: 'antagonistic' },
@@ -2483,17 +2486,30 @@ function renderFig21Demographics(agents) {
     return { dim: d.name, hi: d.hi, lo: d.lo, hiCount, loCount: agents.length - hiCount };
   });
 
-  const traitH = dims.length * (barH + gap + 14) + 40;
+  const rowStep = barH + gap + 14;
+  const traitH = (1 + dims.length) * rowStep + 40; // +1 for gender row
   const barW = halfW - 80;
-  const traitColors = ['#7C3AED','#22C55E','#3B82F6','#F59E0B','#EC4899'];
-  let traitSvg = `<text x="0" y="14" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Big-5 Personality Traits</text>`;
+  const traitColors = ['#6366F1','#7C3AED','#22C55E','#3B82F6','#F59E0B','#EC4899'];
+  let traitSvg = `<text x="0" y="14" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Agent Characteristics</text>`;
+
+  // Gender row
+  const gy = 28;
+  const mW = (maleCount / agents.length) * barW;
+  const fW = barW - mW;
+  traitSvg += `<text x="0" y="${gy + 10}" font-size="10" fill="#333" font-family="${SERIF}" font-weight="bold">Gender</text>`;
+  traitSvg += `<rect x="0" y="${gy + 14}" width="${mW.toFixed(1)}" height="${barH}" fill="${traitColors[0]}" opacity="0.75" rx="2"/>`;
+  traitSvg += `<rect x="${mW.toFixed(1)}" y="${gy + 14}" width="${fW.toFixed(1)}" height="${barH}" fill="${traitColors[0]}" opacity="0.3" rx="2"/>`;
+  traitSvg += `<text x="${mW / 2}" y="${gy + 14 + barH / 2 + 4}" font-size="9" fill="#fff" font-family="${SERIF}" text-anchor="middle">male (${maleCount})</text>`;
+  traitSvg += `<text x="${mW + fW / 2}" y="${gy + 14 + barH / 2 + 4}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle">female (${femaleCount})</text>`;
+
+  // Big-5 trait rows
   traitCounts.forEach((tc, i) => {
-    const y = 28 + i * (barH + gap + 14);
+    const y = 28 + (i + 1) * rowStep;
     const hiW = (tc.hiCount / agents.length) * barW;
     const loW = barW - hiW;
     traitSvg += `<text x="0" y="${y + 10}" font-size="10" fill="#333" font-family="${SERIF}" font-weight="bold">${tc.dim}</text>`;
-    traitSvg += `<rect x="0" y="${y + 14}" width="${hiW.toFixed(1)}" height="${barH}" fill="${traitColors[i]}" opacity="0.75" rx="2"/>`;
-    traitSvg += `<rect x="${hiW.toFixed(1)}" y="${y + 14}" width="${loW.toFixed(1)}" height="${barH}" fill="${traitColors[i]}" opacity="0.3" rx="2"/>`;
+    traitSvg += `<rect x="0" y="${y + 14}" width="${hiW.toFixed(1)}" height="${barH}" fill="${traitColors[i + 1]}" opacity="0.75" rx="2"/>`;
+    traitSvg += `<rect x="${hiW.toFixed(1)}" y="${y + 14}" width="${loW.toFixed(1)}" height="${barH}" fill="${traitColors[i + 1]}" opacity="0.3" rx="2"/>`;
     traitSvg += `<text x="${hiW / 2}" y="${y + 14 + barH / 2 + 4}" font-size="9" fill="#fff" font-family="${SERIF}" text-anchor="middle">${tc.hi} (${tc.hiCount})</text>`;
     traitSvg += `<text x="${hiW + loW / 2}" y="${y + 14 + barH / 2 + 4}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle">${tc.lo} (${tc.loCount})</text>`;
   });
@@ -2517,7 +2533,8 @@ function initFig23Spotlight(agents) {
   let html = '<div class="spotlight-controls"><label style="font-size:11px;color:#555;font-weight:bold">Agent: </label>';
   html += '<select id="fig23-agent-dd" style="font-family:Georgia,serif;font-size:12px;padding:4px 8px;border:1px solid #ccc">';
   agents.forEach((a, i) => {
-    html += `<option value="${i}">${esc(a.name)}, ${a.age}</option>`;
+    const g = a.gender === 'male' ? 'M' : 'F';
+    html += `<option value="${i}">${esc(a.name)}, ${g}, ${a.age}</option>`;
   });
   html += '</select></div>';
   agentSel.innerHTML = html;
@@ -2595,7 +2612,7 @@ function renderFig23Chart() {
 }
 
 function computeAgentCurve(microRows, agentIdx) {
-  // For this agent, compute stay-home rate at each infection level
+  // For this agent, compute stay-home count (out of 5 reps) at each infection level
   const byLevel = {};
   microRows.forEach(r => {
     if (+r.agent_id !== agentIdx) return;
@@ -2606,7 +2623,7 @@ function computeAgentCurve(microRows, agentIdx) {
   });
   return CONFIG.INFECTION_LEVELS.map(lv => {
     const b = byLevel[lv];
-    return { level: lv, rate: b ? b.yes / b.total : null };
+    return { level: lv, count: b ? b.yes : null, total: b ? b.total : 0 };
   });
 }
 
@@ -2615,14 +2632,15 @@ function drawFig23(el, legendEl, indices, results) {
   const pad = { ...PAD };
   const xMin = 0, xMax = 0.075;
   const toX = v => pad.l + (v - xMin) / (xMax - xMin) * (W - pad.l - pad.r);
-  const toY = v => H - pad.b - v * (H - pad.t - pad.b);
+  const toY = v => H - pad.b - (v / 5) * (H - pad.t - pad.b); // 0–5 scale
 
   let svg = '';
-  // Grid
-  [0, 0.25, 0.5, 0.75, 1.0].forEach(v => {
+  // Y-axis grid (0–5 stay-home count)
+  [0, 1, 2, 3, 4, 5].forEach(v => {
     const y = toY(v);
     svg += `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W - pad.r}" y2="${y.toFixed(1)}" stroke="${GRID_COLOR}"/>`;
-    svg += `<text x="${pad.l - 6}" y="${(y + 4).toFixed(1)}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="end">${(v * 100).toFixed(0)}%</text>`;
+    const label = v === 0 ? '0 (goes out)' : v === 5 ? '5 (stays home)' : String(v);
+    svg += `<text x="${pad.l - 6}" y="${(y + 4).toFixed(1)}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="end">${label}</text>`;
   });
   [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07].forEach(v => {
     const x = toX(v);
@@ -2630,14 +2648,14 @@ function drawFig23(el, legendEl, indices, results) {
     svg += `<text x="${x.toFixed(1)}" y="${H - pad.b + 14}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">${(v * 100).toFixed(0)}%</text>`;
   });
   svg += `<text x="${(pad.l + W - pad.r) / 2}" y="${H - 6}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">Infection Rate (% of Population)</text>`;
-  svg += `<text x="12" y="${(pad.t + H - pad.b) / 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${(pad.t + H - pad.b) / 2})">Stay-Home Rate</text>`;
+  svg += `<text x="12" y="${(pad.t + H - pad.b) / 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${(pad.t + H - pad.b) / 2})">Stay-Home Decisions (out of 5 runs)</text>`;
 
   // Lines
   indices.forEach(idx => {
     const m = CONFIG.MODELS[idx];
     const curve = results[idx];
     if (!curve) return;
-    const pts = curve.filter(p => p.rate !== null).map(p => `${toX(p.level / 100).toFixed(1)},${toY(p.rate).toFixed(1)}`);
+    const pts = curve.filter(p => p.count !== null).map(p => `${toX(p.level / 100).toFixed(1)},${toY(p.count).toFixed(1)}`);
     if (pts.length < 2) return;
     const dash = m.dash ? ` stroke-dasharray="${m.dash}"` : '';
     svg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${m.color}" stroke-width="1.8"${dash}/>`;
@@ -2722,7 +2740,7 @@ function renderFig24TraitEffects(microRows, cfg) {
   const scatterY0 = traitH + 20;
   const scatterH = 200;
   const scatterPad = { t: 30, b: 40, l: padL, r: padR };
-  const ageMin = 15, ageMax = 65;
+  const ageMin = 18, ageMax = 65;
   const toAX = age => scatterPad.l + (age - ageMin) / (ageMax - ageMin) * (W - scatterPad.l - scatterPad.r);
   const toAY = tp => scatterY0 + scatterPad.t + (1 - tp / maxTP) * (scatterH - scatterPad.t - scatterPad.b);
 
@@ -2782,6 +2800,7 @@ function renderFig25Regression(microRows, cfg) {
       y: r.response === 'yes' ? 1 : 0,
       x: parseFloat(r.infection_level) / 100, // normalize to 0-0.07
       x2: Math.pow(parseFloat(r.infection_level) / 100, 2),
+      female: a.gender === 'female' ? 1 : 0,
       ext: a.traits.includes('extroverted') ? 1 : 0,
       agr: a.traits.includes('agreeable') ? 1 : 0,
       con: a.traits.includes('conscientious') ? 1 : 0,
@@ -2799,13 +2818,13 @@ function renderFig25Regression(microRows, cfg) {
   const y = obs.map(o => o.y);
   const beta1 = logisticIRLS(X1, y, 25);
 
-  // Model 2: y ~ intercept + x + x^2 + ext + agr + con + neu + opn + age
-  const X2 = obs.map(o => [1, o.x, o.x2, o.ext, o.agr, o.con, o.neu, o.opn, o.age]);
+  // Model 2: y ~ intercept + x + x^2 + female + ext + agr + con + neu + opn + age
+  const X2 = obs.map(o => [1, o.x, o.x2, o.female, o.ext, o.agr, o.con, o.neu, o.opn, o.age]);
   const beta2 = logisticIRLS(X2, y, 25);
 
   // Format as table
   const labels1 = ['Intercept', 'Infection Rate', 'Infection Rate²'];
-  const labels2 = ['Intercept', 'Infection Rate', 'Infection Rate²', 'Extraverted', 'Agreeable', 'Conscientious', 'Neurotic', 'Open to Experience', 'Age (scaled)'];
+  const labels2 = ['Intercept', 'Infection Rate', 'Infection Rate²', 'Female', 'Extraverted', 'Agreeable', 'Conscientious', 'Neurotic', 'Open to Experience', 'Age (scaled)'];
 
   function fmtCoef(b) {
     if (b === null || isNaN(b)) return '—';
