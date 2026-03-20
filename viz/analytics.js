@@ -2404,7 +2404,7 @@ function renderCutoffTimeline() {
 
 function loadAgentsJSON(callback) {
   if (agentsData) { callback(agentsData); return; }
-  fetch('agents/agents.json')
+  fetch('agents/agents.json?v=' + Date.now())
     .then(r => r.json())
     .then(data => { agentsData = data; callback(data); });
 }
@@ -2517,61 +2517,191 @@ function renderFig21Demographics(agents) {
   const totalH = Math.max(ageH, traitH) + 10;
   el.innerHTML =
     `<svg width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">` +
-    `<g transform="translate(0,0)">${ageSvg}</g>` +
-    `<g transform="translate(${halfW + 40},0)">${traitSvg}</g>` +
+    `<g transform="translate(0,0)">${traitSvg}</g>` +
+    `<g transform="translate(${halfW + 40},0)">${ageSvg}</g>` +
     `</svg>`;
 }
 
 // ── Fig 23: Agent Spotlight ──────────────────────────────────
 let spotlightAgentIdx = 0;
 let spotlightChecked = new Set();
+let spotlightMicroRows = {}; // idx → raw micro rows (for reasoning text on click)
+
+// Sprite mapping — mirrors town-agents.js CHAR_NAMES (agent index → sprite filename)
+const SPOTLIGHT_SPRITES = [
+  'Pipoya_F01','Pipoya_M01','Pipoya_F02','Pipoya_M02','Pipoya_M03',
+  'Pipoya_M04','Pipoya_F03','Pipoya_F04','Pipoya_M05','Pipoya_M06',
+  'Pipoya_F05','Pipoya_F06','Pipoya_F07','Pipoya_M07','Pipoya_F08',
+  'Pipoya_F09','Pipoya_M08','Pipoya_M09','Pipoya_M10','Pipoya_M11',
+  'Pipoya_F10','Pipoya_M12','Pipoya_M13','Pipoya_M14','Pipoya_M15',
+  'Pipoya_F11','Pipoya_M16','Pipoya_M17','Pipoya_F12','Pipoya_M18',
+  'Pipoya_F13','Pipoya_M19','Pipoya_M20','Pipoya_M21','Pipoya_M22',
+  'Pipoya_M23','Pipoya_F14','Pipoya_F15','Pipoya_F16','Pipoya_F17',
+  'Pipoya_M24','Pipoya_F18','Pipoya_F19','Pipoya_M25','Pipoya_M26',
+  'Pipoya_F20','Pipoya_F21','Pipoya_F22','Pipoya_M27','Pipoya_M28',
+  'Pipoya_F23','Pipoya_F24','Pipoya_F25','Pipoya_M29','Pipoya_F26',
+  'Pipoya_M30','Pipoya_F27','Pipoya_M31','Pipoya_M32','Pipoya_F28',
+  'Pipoya_M33','Pipoya_M34','Pipoya_F29','Pipoya_F30','Pipoya_M35',
+  'Pipoya_M36','Pipoya_F31','Pipoya_F32','Pipoya_M37','Pipoya_M38',
+  'Pipoya_M39','Pipoya_M40','Pipoya_M41','Pipoya_F33','Pipoya_F34',
+  'Pipoya_F35','Pipoya_M42','Pipoya_M43','Pipoya_F36','Pipoya_F37',
+  'Pipoya_F38','Pipoya_F39','Pipoya_F40','Pipoya_F41','Pipoya_F42',
+  'Pipoya_M44','Pipoya_M45','Pipoya_M46','Pipoya_M47','Pipoya_F43',
+  'Pipoya_F44','Pipoya_F45','Pipoya_F46','Pipoya_F47','Pipoya_F48',
+  'Pipoya_M48','Pipoya_F49','Pipoya_F50','Pipoya_M49','Pipoya_M50',
+];
+
+function renderSpotlightProfile(agents, idx) {
+  const el = document.getElementById('fig23-profile');
+  if (!el) return;
+  const a = agents[idx];
+  const sprite = SPOTLIGHT_SPRITES[idx] || 'Pipoya_F01';
+  // Sprite sheet: 96×128, frames 32×32. "down" idle = (32,0). Show at 3× = 96px.
+  const spriteUrl = `assets/characters/${sprite}.png`;
+  const traitTags = (a.traits || []).map(t => `<span class="spotlight-trait-tag">${esc(t)}</span>`).join(' ');
+  const genderLabel = a.gender === 'male' ? 'Male' : 'Female';
+
+  el.innerHTML = `
+    <div class="spotlight-sprite" style="background-image:url('${spriteUrl}');background-size:${96*3}px ${128*3}px;background-position:-${32*3}px 0"></div>
+    <div class="spotlight-info">
+      <div class="spotlight-name">${esc(a.name)}</div>
+      <div class="spotlight-demo">${genderLabel}, Age ${a.age}</div>
+      <div class="spotlight-traits">${traitTags}</div>
+      <div class="spotlight-agent-dd-wrap">
+        <select id="fig23-agent-dd">
+          ${agents.map((ag, i) => {
+            const g = ag.gender === 'male' ? 'M' : 'F';
+            return `<option value="${i}"${i === idx ? ' selected' : ''}>${esc(ag.name)}, ${g}, ${ag.age}</option>`;
+          }).join('')}
+        </select>
+      </div>
+    </div>`;
+
+  document.getElementById('fig23-agent-dd').addEventListener('change', e => {
+    spotlightAgentIdx = +e.target.value;
+    renderSpotlightProfile(agents, spotlightAgentIdx);
+    clearSpotlightResponses();
+    renderFig23Chart();
+  });
+}
+
+function clearSpotlightResponses() {
+  const el = document.getElementById('fig23-responses');
+  if (el) el.innerHTML = '';
+}
+
+// Distinct color palette for spotlight chart (position-based, always distinguishable)
+const SPOTLIGHT_PALETTE = [
+  '#7C3AED', // violet
+  '#22C55E', // green
+  '#3B82F6', // blue
+  '#F59E0B', // amber
+  '#EC4899', // pink
+  '#06B6D4', // cyan
+  '#EF4444', // red
+  '#8B5CF6', // purple
+  '#14B8A6', // teal
+  '#F97316', // orange
+  '#84CC16', // lime
+];
+let spotlightColorMap = {}; // idx → color, rebuilt each render
+
+// Preset groupings — indices into CONFIG.MODELS
+const SPOTLIGHT_PRESETS = [
+  { label: 'Flagships',                indices: [0, 5, 14] },  // Opus 4.5, GPT-5.2, Gemini 3 Flash
+  { label: 'Reasoning (GPT-5.2)',      indices: [5, 6, 7, 8] },
+  { label: 'Reasoning (Gemini 3)',     indices: [14, 15, 16, 17] },
+  { label: 'Size (Anthropic)',         indices: [0, 1, 2] },   // Opus, Sonnet, Haiku
+  { label: 'Size (Gemini)',            indices: [18, 19] },     // Flash Lite, Flash
+  { label: 'Evolution (OpenAI)',       indices: [12, 11, 9, 5] },  // 3.5 Turbo, 4o, 5.1, 5.2
+  { label: 'Evolution (Anthropic)',    indices: [3, 1] },       // Sonnet 4.0, Sonnet 4.5
+  { label: 'Evolution (Gemini)',       indices: [20, 19, 14] }, // 2.0, 2.5, 3 Flash
+  { label: 'Anthropic',               indices: [0, 1, 2, 3, 4] },
+  { label: 'OpenAI',                  indices: [5, 6, 7, 8, 9, 10, 11, 12, 13] },
+  { label: 'Gemini',                  indices: [14, 15, 16, 17, 18, 19, 20] },
+];
+let activePreset = 0; // start with Flagships
+
+function applyPreset(presetIdx) {
+  activePreset = presetIdx;
+  spotlightChecked.clear();
+  SPOTLIGHT_PRESETS[presetIdx].indices.forEach(i => spotlightChecked.add(i));
+  syncCheckboxes();
+  clearSpotlightResponses();
+  renderFig23Chart();
+  // Update active pill
+  document.querySelectorAll('.spotlight-preset-pill').forEach((pill, i) => {
+    pill.classList.toggle('active', i === presetIdx);
+  });
+}
+
+function syncCheckboxes() {
+  document.querySelectorAll('.spotlight-model-cb').forEach(cb => {
+    cb.checked = spotlightChecked.has(+cb.dataset.idx);
+  });
+  ['anthropic', 'openai', 'gemini'].forEach(prov => {
+    const provCbs = [...document.querySelectorAll(`.spotlight-model-cb`)].filter(c => CONFIG.MODELS[+c.dataset.idx].provider === prov);
+    const provAll = document.querySelector(`.spotlight-prov-all[data-provider="${prov}"]`);
+    if (provAll) provAll.checked = provCbs.length > 0 && provCbs.every(c => c.checked);
+  });
+}
 
 function initFig23Spotlight(agents) {
-  // Agent picker
-  const agentSel = document.getElementById('fig23-agent-select');
-  if (!agentSel) return;
-  let html = '<div class="spotlight-controls"><label style="font-size:11px;color:#555;font-weight:bold">Agent: </label>';
-  html += '<select id="fig23-agent-dd" style="font-family:Georgia,serif;font-size:12px;padding:4px 8px;border:1px solid #ccc">';
-  agents.forEach((a, i) => {
-    const g = a.gender === 'male' ? 'M' : 'F';
-    html += `<option value="${i}">${esc(a.name)}, ${g}, ${a.age}</option>`;
-  });
-  html += '</select></div>';
-  agentSel.innerHTML = html;
+  // Profile card
+  renderSpotlightProfile(agents, spotlightAgentIdx);
 
-  // Model checkboxes grouped by provider
   const modelSel = document.getElementById('fig23-model-select');
+
+  // Preset pills
+  let phtml = '<div class="spotlight-presets">';
+  SPOTLIGHT_PRESETS.forEach((p, i) => {
+    phtml += `<button class="spotlight-preset-pill${i === activePreset ? ' active' : ''}" data-preset="${i}">${esc(p.label)}</button>`;
+  });
+  phtml += '</div>';
+
+  // Model checkboxes grouped by provider (collapsible detail)
   const providers = ['anthropic', 'openai', 'gemini'];
   const provLabels = { anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Gemini' };
-  let mhtml = '<div class="spotlight-model-grid">';
+
+  // Apply default preset
+  spotlightChecked.clear();
+  SPOTLIGHT_PRESETS[activePreset].indices.forEach(i => spotlightChecked.add(i));
+
+  let mhtml = '<details class="spotlight-model-details"><summary style="font-size:11px;color:#888;cursor:pointer;margin-bottom:6px">Fine-tune model selection</summary>';
+  mhtml += '<div class="spotlight-model-grid">';
   providers.forEach(prov => {
     mhtml += '<div class="spotlight-provider-group">';
-    mhtml += `<label class="provider-label"><input type="checkbox" class="spotlight-prov-all" data-provider="${prov}" checked> ${provLabels[prov]}</label>`;
+    mhtml += `<label class="provider-label"><input type="checkbox" class="spotlight-prov-all" data-provider="${prov}"> ${provLabels[prov]}</label>`;
     CONFIG.MODELS.forEach((m, i) => {
       if (m.provider !== prov) return;
-      const checked = true; // start with all checked
-      spotlightChecked.add(i);
-      mhtml += `<label><input type="checkbox" class="spotlight-model-cb" data-idx="${i}" ${checked ? 'checked' : ''}> ${esc(m.label)}</label>`;
+      mhtml += `<label><input type="checkbox" class="spotlight-model-cb" data-idx="${i}" ${spotlightChecked.has(i) ? 'checked' : ''}> ${esc(m.label)}</label>`;
     });
     mhtml += '</div>';
   });
-  mhtml += '</div>';
-  modelSel.innerHTML = mhtml;
+  mhtml += '</div></details>';
 
-  // Event handlers
-  document.getElementById('fig23-agent-dd').addEventListener('change', e => {
-    spotlightAgentIdx = +e.target.value;
-    renderFig23Chart();
+  modelSel.innerHTML = phtml + mhtml;
+
+  // Update provider "select all" state
+  syncCheckboxes();
+
+  // Preset click handlers
+  document.querySelectorAll('.spotlight-preset-pill').forEach(pill => {
+    pill.addEventListener('click', () => applyPreset(+pill.dataset.preset));
   });
+
+  // Checkbox event handlers
   document.querySelectorAll('.spotlight-model-cb').forEach(cb => {
     cb.addEventListener('change', () => {
       const idx = +cb.dataset.idx;
       if (cb.checked) spotlightChecked.add(idx); else spotlightChecked.delete(idx);
-      // Update provider "select all" checkbox
       const prov = CONFIG.MODELS[idx].provider;
-      const provCbs = [...document.querySelectorAll(`.spotlight-model-cb[data-idx]`)].filter(c => CONFIG.MODELS[+c.dataset.idx].provider === prov);
+      const provCbs = [...document.querySelectorAll(`.spotlight-model-cb`)].filter(c => CONFIG.MODELS[+c.dataset.idx].provider === prov);
       const provAll = document.querySelector(`.spotlight-prov-all[data-provider="${prov}"]`);
       if (provAll) provAll.checked = provCbs.every(c => c.checked);
+      // Deactivate preset pills when manually toggling
+      document.querySelectorAll('.spotlight-preset-pill').forEach(p => p.classList.remove('active'));
+      clearSpotlightResponses();
       renderFig23Chart();
     });
   });
@@ -2585,6 +2715,8 @@ function initFig23Spotlight(agents) {
           if (checked) spotlightChecked.add(+mcb.dataset.idx); else spotlightChecked.delete(+mcb.dataset.idx);
         }
       });
+      document.querySelectorAll('.spotlight-preset-pill').forEach(p => p.classList.remove('active'));
+      clearSpotlightResponses();
       renderFig23Chart();
     });
   });
@@ -2598,21 +2730,24 @@ function renderFig23Chart() {
   if (!el) return;
 
   const indices = [...spotlightChecked].sort((a, b) => a - b);
-  if (!indices.length) { el.innerHTML = '<p style="color:#888;font-size:12px;padding:20px 0">Select at least one model.</p>'; legendEl.innerHTML = ''; return; }
+  if (!indices.length) {
+    el.innerHTML = '<p style="color:#888;font-size:12px;padding:20px 0">Select at least one model.</p>';
+    legendEl.innerHTML = '';
+    return;
+  }
 
-  // Load all selected micro CSVs (cached), then render
   let loaded = 0;
   const results = {};
   indices.forEach(idx => {
     loadMicro(idx, (rows, cfg) => {
       results[idx] = computeAgentCurve(rows, spotlightAgentIdx);
+      spotlightMicroRows[idx] = rows; // keep raw rows for reasoning text
       if (++loaded === indices.length) drawFig23(el, legendEl, indices, results);
     });
   });
 }
 
 function computeAgentCurve(microRows, agentIdx) {
-  // For this agent, compute stay-home count (out of 5 reps) at each infection level
   const byLevel = {};
   microRows.forEach(r => {
     if (+r.agent_id !== agentIdx) return;
@@ -2632,16 +2767,17 @@ function drawFig23(el, legendEl, indices, results) {
   const pad = { ...PAD };
   const xMin = 0, xMax = 0.075;
   const toX = v => pad.l + (v - xMin) / (xMax - xMin) * (W - pad.l - pad.r);
-  const toY = v => H - pad.b - (v / 5) * (H - pad.t - pad.b); // 0–5 scale
+  const toY = v => H - pad.b - (v / 5) * (H - pad.t - pad.b);
 
   let svg = '';
-  // Y-axis grid (0–5 stay-home count)
+  // Y-axis grid
   [0, 1, 2, 3, 4, 5].forEach(v => {
     const y = toY(v);
     svg += `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W - pad.r}" y2="${y.toFixed(1)}" stroke="${GRID_COLOR}"/>`;
     const label = v === 0 ? '0 (goes out)' : v === 5 ? '5 (stays home)' : String(v);
     svg += `<text x="${pad.l - 6}" y="${(y + 4).toFixed(1)}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="end">${label}</text>`;
   });
+  // X-axis grid
   [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07].forEach(v => {
     const x = toX(v);
     svg += `<line x1="${x.toFixed(1)}" y1="${pad.t}" x2="${x.toFixed(1)}" y2="${H - pad.b}" stroke="${GRID_COLOR}"/>`;
@@ -2650,25 +2786,136 @@ function drawFig23(el, legendEl, indices, results) {
   svg += `<text x="${(pad.l + W - pad.r) / 2}" y="${H - 6}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">Infection Rate (% of Population)</text>`;
   svg += `<text x="12" y="${(pad.t + H - pad.b) / 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${(pad.t + H - pad.b) / 2})">Stay-Home Decisions (out of 5 runs)</text>`;
 
-  // Lines
-  indices.forEach(idx => {
-    const m = CONFIG.MODELS[idx];
-    const curve = results[idx];
-    if (!curve) return;
-    const pts = curve.filter(p => p.count !== null).map(p => `${toX(p.level / 100).toFixed(1)},${toY(p.count).toFixed(1)}`);
-    if (pts.length < 2) return;
-    const dash = m.dash ? ` stroke-dasharray="${m.dash}"` : '';
-    svg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${m.color}" stroke-width="1.8"${dash}/>`;
+  // Build position-based color map for this render
+  spotlightColorMap = {};
+  indices.forEach((idx, pos) => {
+    spotlightColorMap[idx] = SPOTLIGHT_PALETTE[pos % SPOTLIGHT_PALETTE.length];
   });
 
-  el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${svg}</svg>`;
+  // Lines + clickable dots
+  const dotData = [];
+  indices.forEach(idx => {
+    const m = CONFIG.MODELS[idx];
+    const color = spotlightColorMap[idx];
+    const curve = results[idx];
+    if (!curve) return;
+    const validPts = curve.filter(p => p.count !== null);
+    const pts = validPts.map(p => `${toX(p.level / 100).toFixed(1)},${toY(p.count).toFixed(1)}`);
+    if (pts.length < 2) return;
+    const dash = m.dash ? ` stroke-dasharray="${m.dash}"` : '';
+    svg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8"${dash} class="spotlight-line" data-idx="${idx}"/>`;
+    // Dots
+    validPts.forEach(p => {
+      const cx = toX(p.level / 100);
+      const cy = toY(p.count);
+      svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4" fill="${color}" stroke="#fff" stroke-width="1.2" class="spotlight-dot" data-idx="${idx}" data-level="${p.level}" style="cursor:pointer" opacity="0.7"/>`;
+      dotData.push({ idx, level: p.level, cx, cy, count: p.count });
+    });
+  });
 
-  // Legend
+  // Click hint
+  svg += `<text x="${W - pad.r}" y="${pad.t - 6}" font-size="9" fill="#aaa" font-family="${SERIF}" text-anchor="end" font-style="italic">Click a dot to see reasoning</text>`;
+
+  el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" id="fig23-svg">${svg}</svg>`;
+
+  // Click handler: clicking any dot shows ALL models at that infection level
+  const svgEl = document.getElementById('fig23-svg');
+  svgEl.addEventListener('click', e => {
+    const dot = e.target.closest('.spotlight-dot');
+    if (!dot) return;
+    const level = parseFloat(dot.dataset.level);
+    showSpotlightResponses(level, indices);
+
+    // Highlight all dots at this infection level, dim others
+    svgEl.querySelectorAll('.spotlight-dot').forEach(d => {
+      const dLevel = parseFloat(d.dataset.level);
+      if (Math.abs(dLevel - level) < 0.001) {
+        d.setAttribute('opacity', '1');
+        d.setAttribute('r', '6');
+      } else {
+        d.setAttribute('opacity', '0.3');
+        d.setAttribute('r', '4');
+      }
+    });
+    svgEl.querySelectorAll('.spotlight-line').forEach(l => l.setAttribute('opacity', '0.6'));
+  });
+
+  // Hover
+  svgEl.addEventListener('mouseover', e => {
+    const dot = e.target.closest('.spotlight-dot');
+    if (!dot) return;
+    dot.setAttribute('r', '6');
+    dot.setAttribute('opacity', '1');
+  });
+  svgEl.addEventListener('mouseout', e => {
+    const dot = e.target.closest('.spotlight-dot');
+    if (!dot) return;
+    dot.setAttribute('r', '4');
+  });
+
+  // Legend (using spotlight palette colors)
   legendEl.innerHTML = indices.map(idx => {
     const m = CONFIG.MODELS[idx];
-    const dashStyle = m.dash ? `background:repeating-linear-gradient(90deg,${m.color} 0,${m.color} 4px,transparent 4px,transparent 7px)` : `background:${m.color}`;
+    const color = spotlightColorMap[idx];
+    const dashStyle = m.dash ? `background:repeating-linear-gradient(90deg,${color} 0,${color} 4px,transparent 4px,transparent 7px)` : `background:${color}`;
     return `<span class="legend-item"><span class="legend-swatch" style="${dashStyle}"></span>${esc(m.label)}</span>`;
   }).join('');
+}
+
+function showSpotlightResponses(level, indices) {
+  const el = document.getElementById('fig23-responses');
+  if (!el) return;
+
+  let html = `<div class="spotlight-resp-level-header">Responses at ${level.toFixed(1)}% infection</div>`;
+
+  let hasAny = false;
+  indices.forEach(idx => {
+    const m = CONFIG.MODELS[idx];
+    const color = spotlightColorMap[idx] || m.color;
+    const rows = spotlightMicroRows[idx];
+    if (!rows) return;
+
+    const reps = rows.filter(r =>
+      +r.agent_id === spotlightAgentIdx &&
+      Math.abs(parseFloat(r.infection_level) - level) < 0.001
+    ).sort((a, b) => (+a.rep) - (+b.rep));
+
+    if (!reps.length) return;
+    hasAny = true;
+
+    const yesCount = reps.filter(r => r.response === 'yes').length;
+    const noCount = reps.length - yesCount;
+    const countLabel = yesCount === 5 ? '5/5 home' : noCount === 5 ? '5/5 out' : `${yesCount} home, ${noCount} out`;
+
+    // Each model is a collapsible details element
+    html += `<details class="spotlight-resp-model-section">
+      <summary class="spotlight-resp-header">
+        <span class="spotlight-resp-swatch" style="background:${color}"></span>
+        <span class="spotlight-resp-model">${esc(m.label)}</span>
+        <span style="margin-left:auto;font-size:11px;color:#666">${countLabel}</span>
+      </summary>
+      <div class="spotlight-resp-list">`;
+
+    reps.forEach((r, i) => {
+      const isYes = r.response === 'yes';
+      const badge = isYes
+        ? '<span class="spotlight-resp-badge yes">Stays Home</span>'
+        : '<span class="spotlight-resp-badge no">Goes Out</span>';
+      const text = (r.reasoning_text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      html += `<div class="spotlight-resp-run">
+        <div><strong style="font-size:11px;color:#888">Rep ${i + 1}:</strong> ${badge}</div>
+        <div class="spotlight-resp-text">${text}</div>
+      </div>`;
+    });
+
+    html += '</div></details>';
+  });
+
+  if (!hasAny) {
+    html += '<div class="spotlight-click-hint">No data found for this infection level.</div>';
+  }
+
+  el.innerHTML = html;
 }
 
 // ── Fig 24: Trait Effects ────────────────────────────────────

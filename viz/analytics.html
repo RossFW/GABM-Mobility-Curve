@@ -241,6 +241,129 @@
     }
     .spotlight-provider-group input[type="checkbox"] { cursor: pointer; }
 
+    /* ── Agent profile card ──────────────────────────── */
+    .spotlight-profile {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 14px 18px; margin-bottom: 14px;
+      background: #faf9f7; border: 1px solid #e0ddd8;
+    }
+    .spotlight-sprite {
+      width: 96px; height: 96px;
+      image-rendering: pixelated;
+      background-repeat: no-repeat;
+      flex-shrink: 0;
+    }
+    .spotlight-info { flex: 1; min-width: 0; }
+    .spotlight-name {
+      font-size: 16px; font-weight: bold; color: #111;
+      margin-bottom: 2px;
+    }
+    .spotlight-demo {
+      font-size: 12px; color: #666; margin-bottom: 6px;
+    }
+    .spotlight-traits {
+      font-size: 11px; color: #555; line-height: 1.6;
+    }
+    .spotlight-trait-tag {
+      display: inline-block; background: #f0eef5; color: #555;
+      padding: 1px 7px; border-radius: 3px; margin: 2px 3px 2px 0;
+      font-size: 10px;
+    }
+    .spotlight-agent-dd-wrap {
+      margin-top: 8px;
+    }
+    .spotlight-agent-dd-wrap select {
+      font-family: Georgia, serif; font-size: 12px;
+      padding: 4px 8px; border: 1px solid #ccc; background: #fff;
+    }
+
+    /* ── Response panel (click-to-inspect) ────────────── */
+    .spotlight-responses {
+      margin-top: 16px;
+    }
+    .spotlight-resp-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #f4f4f4; border: 1px solid #ddd;
+      border-bottom: none;
+    }
+    .spotlight-resp-model {
+      font-size: 12px; font-weight: bold; color: #111;
+    }
+    .spotlight-resp-level {
+      font-size: 11px; color: #666;
+    }
+    .spotlight-resp-swatch {
+      width: 12px; height: 3px; display: inline-block;
+    }
+    .spotlight-resp-list {
+      border: 1px solid #ddd;
+    }
+    .spotlight-resp-run {
+      padding: 10px 14px;
+      border-bottom: 1px solid #eee;
+      font-size: 12px; line-height: 1.6; color: #333;
+    }
+    .spotlight-resp-run:last-child { border-bottom: none; }
+    .spotlight-resp-badge {
+      display: inline-block; padding: 1px 8px; border-radius: 3px;
+      font-size: 10px; font-weight: bold; margin-right: 8px;
+    }
+    .spotlight-resp-badge.yes {
+      background: #dcfce7; color: #166534;
+    }
+    .spotlight-resp-badge.no {
+      background: #fee2e2; color: #991b1b;
+    }
+    .spotlight-resp-text {
+      margin-top: 4px; color: #555; font-size: 11px; line-height: 1.6;
+      font-style: italic;
+    }
+    .spotlight-click-hint {
+      font-size: 11px; color: #aaa; font-style: italic;
+      margin-top: 6px;
+    }
+
+    /* ── Preset pills ──────────────────────────────── */
+    .spotlight-presets {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+    }
+    .spotlight-preset-pill {
+      font-family: Georgia, serif; font-size: 11px;
+      padding: 4px 10px; border: 1px solid #ccc; border-radius: 14px;
+      background: #fff; color: #555; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .spotlight-preset-pill:hover {
+      border-color: #999; color: #111;
+    }
+    .spotlight-preset-pill.active {
+      background: #111; color: #fff; border-color: #111;
+    }
+    .spotlight-model-details {
+      margin-bottom: 8px;
+    }
+
+    /* ── Accordion response panel ────────────────────── */
+    .spotlight-resp-level-header {
+      font-size: 13px; font-weight: bold; color: #111;
+      padding: 10px 0 6px; border-bottom: 2px solid #ddd;
+      margin-bottom: 4px;
+    }
+    .spotlight-resp-model-section {
+      border: 1px solid #ddd; margin-bottom: -1px;
+    }
+    .spotlight-resp-model-section[open] {
+      margin-bottom: 6px; border-color: #ccc;
+    }
+    .spotlight-resp-model-section summary {
+      cursor: pointer; list-style: none;
+    }
+    .spotlight-resp-model-section summary::-webkit-details-marker { display: none; }
+    .spotlight-resp-model-section summary::marker { display: none; content: ''; }
+    .spotlight-resp-model-section .spotlight-resp-list {
+      border: none; border-top: 1px solid #eee;
+    }
+
     .curve-section-header {
       margin: 40px 0 18px;
       padding-bottom: 6px;
@@ -362,7 +485,7 @@
     <!-- Figure 5: Gemini Generational -->
     <div class="section" id="figD-section" data-section="generational" style="display:none">
       <div class="fig-num">Figure 5</div>
-      <div class="fig-title">Gemini &mdash; Generational Progression (reasoning = off)</div>
+      <div class="fig-title">Gemini &mdash; Model Evolution (reasoning = off)</div>
       <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview at reasoning = off. Gemini 2.5 Flash Lite excluded due to anomalous inverted response curve (see Figure 4).</div>
       <div class="chart-container" id="figD-chart"></div>
       <div class="legend" id="figD-legend"></div>
@@ -373,10 +496,10 @@
       </div>
     </div>
 
-    <!-- Figure 6: Anthropic Generational Progression -->
+    <!-- Figure 6: Anthropic Model Evolution -->
     <div class="section" id="figAnthroGen-section" data-section="generational" style="display:none">
       <div class="fig-num">Figure 6</div>
-      <div class="fig-title">Anthropic &mdash; Generational Progression (reasoning = off)</div>
+      <div class="fig-title">Anthropic &mdash; Model Evolution (reasoning = off)</div>
       <div class="fig-caption">Mobility curves for Claude Sonnet 4.0 and Claude Sonnet 4.5, both with reasoning off. Each line = mean mobility across 5 repetitions per infection level.</div>
       <div class="chart-container" id="figAnthroGen-chart"></div>
       <div class="legend" id="figAnthroGen-legend"></div>
@@ -390,7 +513,7 @@
     <!-- Figure 7: OpenAI Generational -->
     <div class="section" id="figC-section" data-section="generational" style="display:none">
       <div class="fig-num">Figure 7</div>
-      <div class="fig-title">OpenAI &mdash; Generational Progression (reasoning = off)</div>
+      <div class="fig-title">OpenAI &mdash; Model Evolution (reasoning = off)</div>
       <div class="fig-caption">Mobility curves for GPT-3.5 Turbo through GPT-5.2, all at reasoning = off. Illustrates how behavioral responses have shifted across model generations.</div>
       <div class="chart-container" id="figC-chart"></div>
       <div class="legend" id="figC-legend"></div>
@@ -595,9 +718,9 @@
       <span class="nav-sep">&middot;</span>
       <a class="section-link" data-filter="demographics" href="#">Demographics</a>
       <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="heatmap" href="#">Heatmap</a>
-      <span class="nav-sep">&middot;</span>
       <a class="section-link" data-filter="spotlight" href="#">Agent Spotlight</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="heatmap" href="#">Heatmap</a>
       <span class="nav-sep">&middot;</span>
       <a class="section-link" data-filter="traits" href="#">Trait Effects</a>
       <span class="nav-sep">&middot;</span>
@@ -614,6 +737,20 @@
       <div class="chart-container" id="fig21-chart"></div>
     </div>
 
+    <div id="aa-section-spotlight" class="curve-section-header">Agent Spotlight</div>
+
+    <!-- Figure 23: Agent Spotlight -->
+    <div class="section" id="fig23-section" data-section="spotlight">
+      <div class="fig-num">Figure 23</div>
+      <div class="fig-title">Agent Spotlight &mdash; Cross-Model Comparison</div>
+      <div class="fig-caption">Select an individual agent and one or more LLM configurations to compare how that agent responds to rising infection levels across different models. Each line shows how many of the 5 runs the agent chose to stay home at each infection level (0 = always goes out, 5 = always stays home). Click any data point to read the agent's reasoning.</div>
+      <div id="fig23-profile" class="spotlight-profile"></div>
+      <div id="fig23-model-select" style="margin-bottom:12px"></div>
+      <div class="chart-container" id="fig23-chart"></div>
+      <div class="legend" id="fig23-legend"></div>
+      <div id="fig23-responses" class="spotlight-responses"></div>
+    </div>
+
     <div id="aa-section-heatmap" class="curve-section-header">Heatmap</div>
 
     <!-- Figure 22: Agent-Level Decision Heatmap and Concordance (moved from Fig 10) -->
@@ -627,19 +764,6 @@
         <div style="font-size:14px;font-weight:bold;color:#111;margin-bottom:8px">Concordance</div>
         <div class="chart-container" id="s7-concordance"></div>
       </div>
-    </div>
-
-    <div id="aa-section-spotlight" class="curve-section-header">Agent Spotlight</div>
-
-    <!-- Figure 23: Agent Spotlight -->
-    <div class="section" id="fig23-section" data-section="spotlight">
-      <div class="fig-num">Figure 23</div>
-      <div class="fig-title">Agent Spotlight &mdash; Cross-Model Comparison</div>
-      <div class="fig-caption">Select an individual agent and one or more LLM configurations to compare how that agent responds to rising infection levels across different models. Each line shows how many of the 5 runs the agent chose to stay home at each infection level (0 = always goes out, 5 = always stays home).</div>
-      <div id="fig23-agent-select" style="margin-bottom:8px"></div>
-      <div id="fig23-model-select" style="margin-bottom:12px"></div>
-      <div class="chart-container" id="fig23-chart"></div>
-      <div class="legend" id="fig23-legend"></div>
     </div>
 
     <div id="aa-section-traits" class="curve-section-header">Trait Effects</div>
