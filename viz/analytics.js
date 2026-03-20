@@ -2955,44 +2955,135 @@ function renderFig24TraitEffects(microRows, cfg) {
 
   const traitColors = ['#7C3AED','#22C55E','#3B82F6','#F59E0B','#EC4899'];
 
-  const W = CW, barH = 20, rowH = 60, padL = 120, padR = 60;
+  const W = CW, barH = 18, rowH = 54, maxTP = 7;
+  const gap = 40; // gap between left and right panels
+  const halfW = (W - gap) / 2;
+  const labelW = 110; // space for trait dimension labels (shared center)
   const traitH = dims.length * rowH + 50;
-  const maxTP = 7;
-  const barScale = (W - padL - padR) / maxTP;
 
-  let svg = `<text x="${padL}" y="14" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Mean Transition Point by Trait</text>`;
-  svg += `<text x="${padL}" y="28" font-size="10" fill="#888" font-family="${SERIF}" font-style="italic">${esc(cfg.label)}</text>`;
+  // Precompute trait data for both panels
+  const traitData = dims.map((d, i) => {
+    const hiAll = transitions.filter(t => t.agent.traits.includes(d.hi));
+    const loAll = transitions.filter(t => t.agent.traits.includes(d.lo));
+    const hiTrans = hiAll.filter(t => t.tp <= maxTP);
+    const loTrans = loAll.filter(t => t.tp <= maxTP);
+    return {
+      dim: d, color: traitColors[i],
+      hiAll: hiAll.length, loAll: loAll.length,
+      hiNever: hiAll.length - hiTrans.length, loNever: loAll.length - loTrans.length,
+      hiPctNever: hiAll.length ? (hiAll.length - hiTrans.length) / hiAll.length * 100 : 0,
+      loPctNever: loAll.length ? (loAll.length - loTrans.length) / loAll.length * 100 : 0,
+      hiMean: hiTrans.length ? hiTrans.reduce((s, t) => s + t.tp, 0) / hiTrans.length : null,
+      loMean: loTrans.length ? loTrans.reduce((s, t) => s + t.tp, 0) / loTrans.length : null,
+      hiTransN: hiTrans.length, loTransN: loTrans.length,
+    };
+  });
 
-  dims.forEach((d, i) => {
-    const hiAgents = transitions.filter(t => t.agent.traits.includes(d.hi));
-    const loAgents = transitions.filter(t => t.agent.traits.includes(d.lo));
-    const hiMean = hiAgents.reduce((s, t) => s + t.tp, 0) / (hiAgents.length || 1);
-    const loMean = loAgents.reduce((s, t) => s + t.tp, 0) / (loAgents.length || 1);
+  // ── LEFT PANEL: % Never Transitioned ──
+  const L = { x: 0, padL: 10, padR: 10 };
+  const lBarMax = halfW - L.padL - L.padR - labelW;
+  const lScale = lBarMax / 100; // 100% max
+
+  let svg = `<text x="${halfW / 2}" y="14" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">% Never Transitioned</text>`;
+  svg += `<text x="${halfW / 2}" y="28" font-size="10" fill="#888" font-family="${SERIF}" font-style="italic" text-anchor="middle">${esc(cfg.label)}</text>`;
+
+  traitData.forEach((td, i) => {
     const y = 44 + i * rowH;
+    // Trait dimension label — right-aligned at center divider
+    svg += `<text x="${halfW - 4}" y="${y + barH / 2 + 10}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="end" font-weight="bold">${td.dim.name}</text>`;
 
-    svg += `<text x="${padL - 8}" y="${y + 14}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="end" font-weight="bold">${d.name}</text>`;
+    // Hi trait bar (grows right-to-left from label area)
+    const barAreaRight = halfW - labelW;
+    const hiW = Math.max(td.hiPctNever * lScale, 1);
+    const hiX = barAreaRight - hiW;
+    svg += `<rect x="${hiX.toFixed(1)}" y="${y}" width="${hiW.toFixed(1)}" height="${barH}" fill="${td.color}" opacity="0.8" rx="2"/>`;
+    const hiLabel = `${td.dim.hi} (${td.hiPctNever.toFixed(0)}%) n=${td.hiNever}`;
+    // Label outside bar (to the left)
+    if (hiX > hiLabel.length * 5.2 + 4) {
+      svg += `<text x="${hiX - 4}" y="${y + 12}" font-size="9" fill="#333" font-family="${SERIF}" text-anchor="end">${hiLabel}</text>`;
+    } else {
+      svg += `<text x="${barAreaRight - 4}" y="${y + 12}" font-size="9" fill="#fff" font-family="${SERIF}" text-anchor="end">${hiLabel}</text>`;
+    }
 
-    // Hi bar
-    const hiW = Math.max(hiMean * barScale, 2);
-    svg += `<rect x="${padL}" y="${y}" width="${hiW.toFixed(1)}" height="${barH}" fill="${traitColors[i]}" opacity="0.8" rx="2"/>`;
-    svg += `<text x="${padL + hiW + 4}" y="${y + 14}" font-size="9" fill="#333" font-family="${SERIF}">${d.hi} (${hiMean.toFixed(2)}%)</text>`;
+    // Lo trait bar
+    const loW = Math.max(td.loPctNever * lScale, 1);
+    const loX = barAreaRight - loW;
+    svg += `<rect x="${loX.toFixed(1)}" y="${y + barH + 4}" width="${loW.toFixed(1)}" height="${barH}" fill="${td.color}" opacity="0.35" rx="2"/>`;
+    const loLabel = `${td.dim.lo} (${td.loPctNever.toFixed(0)}%) n=${td.loNever}`;
+    if (loX > loLabel.length * 5.2 + 4) {
+      svg += `<text x="${loX - 4}" y="${y + barH + 16}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="end">${loLabel}</text>`;
+    } else {
+      svg += `<text x="${barAreaRight - 4}" y="${y + barH + 16}" font-size="9" fill="#333" font-family="${SERIF}" text-anchor="end">${loLabel}</text>`;
+    }
+  });
 
-    // Lo bar
-    const loW = Math.max(loMean * barScale, 2);
-    svg += `<rect x="${padL}" y="${y + barH + 4}" width="${loW.toFixed(1)}" height="${barH}" fill="${traitColors[i]}" opacity="0.35" rx="2"/>`;
-    svg += `<text x="${padL + loW + 4}" y="${y + barH + 18}" font-size="9" fill="#555" font-family="${SERIF}">${d.lo} (${loMean.toFixed(2)}%)</text>`;
+  // ── RIGHT PANEL: Mean Transition Point (transitioned only) ──
+  const R = { x: halfW + gap, padL: 10, padR: 30 };
+  const rBarMax = halfW - R.padL - R.padR;
+  const rScale = rBarMax / maxTP;
+
+  svg += `<text x="${R.x + halfW / 2}" y="14" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">Mean Transition Point</text>`;
+  svg += `<text x="${R.x + halfW / 2}" y="28" font-size="10" fill="#888" font-family="${SERIF}" font-style="italic" text-anchor="middle">among transitioned agents</text>`;
+
+  traitData.forEach((td, i) => {
+    const y = 44 + i * rowH;
+    const barX = R.x + R.padL;
+    const barMaxW = halfW - R.padL - R.padR;
+
+    // Hi trait bar
+    if (td.hiMean !== null) {
+      const hiW = Math.min(Math.max(td.hiMean * rScale, 2), barMaxW);
+      svg += `<rect x="${barX}" y="${y}" width="${hiW.toFixed(1)}" height="${barH}" fill="${td.color}" opacity="0.8" rx="2"/>`;
+      const hiLabel = `${td.dim.hi} (${td.hiMean.toFixed(1)}%) n=${td.hiTransN}`;
+      const hiSpace = R.x + halfW - R.padR - (barX + hiW + 4);
+      if (hiSpace < hiLabel.length * 5) {
+        svg += `<text x="${barX + hiW - 4}" y="${y + 12}" font-size="9" fill="#fff" font-family="${SERIF}" text-anchor="end">${hiLabel}</text>`;
+      } else {
+        svg += `<text x="${barX + hiW + 4}" y="${y + 12}" font-size="9" fill="#333" font-family="${SERIF}">${hiLabel}</text>`;
+      }
+    } else {
+      svg += `<text x="${barX + 4}" y="${y + 12}" font-size="9" fill="#bbb" font-family="${SERIF}" font-style="italic">${td.dim.hi} — no agents transitioned</text>`;
+    }
+
+    // Lo trait bar
+    if (td.loMean !== null) {
+      const loW = Math.min(Math.max(td.loMean * rScale, 2), barMaxW);
+      svg += `<rect x="${barX}" y="${y + barH + 4}" width="${loW.toFixed(1)}" height="${barH}" fill="${td.color}" opacity="0.35" rx="2"/>`;
+      const loLabel = `${td.dim.lo} (${td.loMean.toFixed(1)}%) n=${td.loTransN}`;
+      const loSpace = R.x + halfW - R.padR - (barX + loW + 4);
+      if (loSpace < loLabel.length * 5) {
+        svg += `<text x="${barX + loW - 4}" y="${y + barH + 16}" font-size="9" fill="#333" font-family="${SERIF}" text-anchor="end">${loLabel}</text>`;
+      } else {
+        svg += `<text x="${barX + loW + 4}" y="${y + barH + 16}" font-size="9" fill="#555" font-family="${SERIF}">${loLabel}</text>`;
+      }
+    } else {
+      svg += `<text x="${barX + 4}" y="${y + barH + 16}" font-size="9" fill="#bbb" font-family="${SERIF}" font-style="italic">${td.dim.lo} — no agents transitioned</text>`;
+    }
   });
 
   // Age scatter below trait bars
   const scatterY0 = traitH + 20;
-  const scatterH = 200;
-  const scatterPad = { t: 30, b: 40, l: padL, r: padR };
+  const scatterH = 250;
+  const neverBand = 30; // extra height for "Never" zone above 7%
+  const scatterPad = { t: 30, b: 40, l: 80, r: 60 };
   const ageMin = 18, ageMax = 65;
+  const plotTop = scatterY0 + scatterPad.t + neverBand;
+  const plotBot = scatterY0 + scatterH - scatterPad.b;
   const toAX = age => scatterPad.l + (age - ageMin) / (ageMax - ageMin) * (W - scatterPad.l - scatterPad.r);
-  const toAY = tp => scatterY0 + scatterPad.t + (1 - tp / maxTP) * (scatterH - scatterPad.t - scatterPad.b);
+  const toAY = tp => {
+    if (tp > maxTP) return scatterY0 + scatterPad.t + neverBand / 2; // center in "Never" band
+    return plotTop + (1 - tp / maxTP) * (plotBot - plotTop);
+  };
 
-  svg += `<text x="${padL}" y="${scatterY0 + 14}" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Age vs. Transition Point</text>`;
-  // Grid
+  svg += `<text x="${scatterPad.l}" y="${scatterY0 + 14}" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}">Age vs. Transition Point</text>`;
+
+  // "Never" band background
+  svg += `<rect x="${scatterPad.l}" y="${scatterY0 + scatterPad.t}" width="${W - scatterPad.l - scatterPad.r}" height="${neverBand}" fill="#f5f5f5" rx="2"/>`;
+  svg += `<text x="${scatterPad.l - 6}" y="${(scatterY0 + scatterPad.t + neverBand / 2 + 3).toFixed(1)}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="end">Never</text>`;
+  // Separator line below "Never" band
+  svg += `<line x1="${scatterPad.l}" y1="${plotTop}" x2="${W - scatterPad.r}" y2="${plotTop}" stroke="#ccc" stroke-dasharray="3,3"/>`;
+
+  // Grid lines for 0-7%
   [0, 1, 2, 3, 4, 5, 6, 7].forEach(v => {
     const y = toAY(v);
     svg += `<line x1="${scatterPad.l}" y1="${y.toFixed(1)}" x2="${W - scatterPad.r}" y2="${y.toFixed(1)}" stroke="${GRID_COLOR}"/>`;
@@ -3000,33 +3091,71 @@ function renderFig24TraitEffects(microRows, cfg) {
   });
   [20, 30, 40, 50, 60].forEach(v => {
     const x = toAX(v);
-    svg += `<line x1="${x.toFixed(1)}" y1="${scatterY0 + scatterPad.t}" x2="${x.toFixed(1)}" y2="${scatterY0 + scatterH - scatterPad.b}" stroke="${GRID_COLOR}"/>`;
-    svg += `<text x="${x.toFixed(1)}" y="${scatterY0 + scatterH - scatterPad.b + 14}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+    svg += `<line x1="${x.toFixed(1)}" y1="${plotTop}" x2="${x.toFixed(1)}" y2="${plotBot}" stroke="${GRID_COLOR}"/>`;
+    svg += `<text x="${x.toFixed(1)}" y="${plotBot + 14}" font-size="9" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
   });
   svg += `<text x="${(scatterPad.l + W - scatterPad.r) / 2}" y="${scatterY0 + scatterH - 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle">Agent Age</text>`;
-  svg += `<text x="12" y="${scatterY0 + (scatterPad.t + scatterH - scatterPad.b) / 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${scatterY0 + (scatterPad.t + scatterH - scatterPad.b) / 2})">Transition Point (%)</text>`;
+  svg += `<text x="12" y="${(plotTop + plotBot) / 2}" font-size="10" fill="${AX_COLOR}" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${(plotTop + plotBot) / 2})">Transition Point (%)</text>`;
 
-  // Dots
+  // Dots — different style for "never" agents
   transitions.forEach(t => {
     const cx = toAX(t.agent.age);
     const cy = toAY(t.tp);
-    svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="#7C3AED" opacity="0.5"/>`;
+    if (t.tp > maxTP) {
+      svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="#999" opacity="0.5"/>`;
+    } else {
+      svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="#7C3AED" opacity="0.5"/>`;
+    }
   });
 
-  // Trend line (simple linear regression)
-  const n = transitions.length;
-  const sumX = transitions.reduce((s, t) => s + t.agent.age, 0);
-  const sumY = transitions.reduce((s, t) => s + t.tp, 0);
-  const sumXY = transitions.reduce((s, t) => s + t.agent.age * t.tp, 0);
-  const sumXX = transitions.reduce((s, t) => s + t.agent.age * t.agent.age, 0);
-  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
-  const x1 = ageMin, x2 = ageMax;
-  const y1 = intercept + slope * x1, y2 = intercept + slope * x2;
-  svg += `<line x1="${toAX(x1).toFixed(1)}" y1="${toAY(y1).toFixed(1)}" x2="${toAX(x2).toFixed(1)}" y2="${toAY(y2).toFixed(1)}" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7"/>`;
-  svg += `<text x="${W - scatterPad.r}" y="${scatterY0 + scatterPad.t + 14}" font-size="9" fill="#7C3AED" font-family="${SERIF}" text-anchor="end" font-style="italic">slope = ${slope.toFixed(3)}</text>`;
+  // Trend line — exclude never-transitioners (regression on transitioned agents only)
+  const transitioned = transitions.filter(t => t.tp <= maxTP);
+  const neverCount = transitions.length - transitioned.length;
+  const n = transitioned.length;
 
-  el.innerHTML = `<svg width="${W}" height="${scatterY0 + scatterH + 10}" viewBox="0 0 ${W} ${scatterY0 + scatterH + 10}">${svg}</svg>`;
+  // Annotation: how many never transitioned — place above the Never band, not inside it
+  svg += `<text x="${W - scatterPad.r}" y="${scatterY0 + scatterPad.t - 4}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="end">${neverCount} of ${transitions.length} agents never transitioned (gray)</text>`;
+
+  if (n >= 3) {
+    const sumX = transitioned.reduce((s, t) => s + t.agent.age, 0);
+    const sumY = transitioned.reduce((s, t) => s + t.tp, 0);
+    const sumXY = transitioned.reduce((s, t) => s + t.agent.age * t.tp, 0);
+    const sumXX = transitioned.reduce((s, t) => s + t.agent.age * t.agent.age, 0);
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    // t-test for slope significance
+    const yHat = transitioned.map(t => intercept + slope * t.agent.age);
+    const sse = transitioned.reduce((s, t, i) => s + Math.pow(t.tp - yHat[i], 2), 0);
+    const sxx = sumXX - sumX * sumX / n;
+    const se = Math.sqrt(sse / ((n - 2) * sxx));
+    const tStat = Math.abs(slope / se);
+    const pVal = 2 * (1 - normalCDF(tStat));
+    const sig = pVal < 0.05;
+
+    const trendColor = sig ? '#22C55E' : '#999';
+    const x1 = ageMin, x2 = ageMax;
+    const y1 = intercept + slope * x1, y2 = intercept + slope * x2;
+    const ty1 = Math.max(toAY(Math.min(y1, maxTP)), plotTop);
+    const ty2 = Math.max(toAY(Math.min(y2, maxTP)), plotTop);
+    svg += `<line x1="${toAX(x1).toFixed(1)}" y1="${ty1.toFixed(1)}" x2="${toAX(x2).toFixed(1)}" y2="${ty2.toFixed(1)}" stroke="${trendColor}" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7"/>`;
+    const sigLabel = sig ? `slope = ${slope.toFixed(3)}, p < 0.05 (n = ${n})` : `slope = ${slope.toFixed(3)}, n.s. (n = ${n})`;
+    svg += `<text x="${W - scatterPad.r}" y="${plotTop + 14}" font-size="9" fill="${trendColor}" font-family="${SERIF}" text-anchor="end" font-style="italic">${sigLabel}</text>`;
+  }
+
+  // Footnote
+  const footY = scatterY0 + scatterH + 14;
+  const footLines = [
+    'Transition point = first infection level (0\u20137%) where an agent\u2019s majority decision across 5 repetitions is to stay home (\u22653 of 5).',
+    '\u201CNever\u201D = agents who never reached majority stay-home at any tested level. Left panel shows % never-transitioned per trait pole.',
+    'Right panel: mean transition point computed from transitioned agents only (n = sample size). Trend line excludes never-transitioners.',
+  ];
+  footLines.forEach((line, i) => {
+    svg += `<text x="10" y="${footY + i * 13}" font-size="7.5" fill="#aaa" font-family="${SERIF}">${line}</text>`;
+  });
+
+  const totalH = footY + footLines.length * 13 + 6;
+  el.innerHTML = `<svg width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">${svg}</svg>`;
 }
 
 // ── Fig 25: Agent-Level Logistic Regression ──────────────────
@@ -3090,6 +3219,17 @@ function renderFig25Regression(microRows, cfg) {
   html += '</tbody></table>';
 
   el.innerHTML = html;
+}
+
+// ── Normal CDF approximation (for p-value computation) ──────
+function normalCDF(x) {
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429;
+  const p = 0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x) / Math.SQRT2;
+  const t = 1.0 / (1.0 + p * x);
+  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return 0.5 * (1.0 + sign * y);
 }
 
 // ── Logistic regression via IRLS ─────────────────────────────
