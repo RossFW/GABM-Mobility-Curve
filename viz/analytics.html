@@ -220,6 +220,22 @@
     #agents-section-nav .section-link { cursor: pointer; }
     #agents-section-nav .section-link.active { font-weight: bold; color: #111; }
 
+    /* ── Author Notes subsection nav ──────────── */
+    #author-section-nav {
+      position: sticky; top: 0; z-index: 20;
+      background: #fff; padding: 10px 0 8px;
+      border-bottom: 1px solid #eee;
+      font-size: 12px; color: #555;
+      font-family: Georgia, serif;
+      margin-bottom: 24px;
+    }
+    #author-section-nav a { color: #333; text-decoration: none; font-style: italic; }
+    #author-section-nav a:hover { text-decoration: underline; }
+    #author-section-nav .nav-sep { color: #bbb; margin: 0 4px; }
+    #author-section-nav .section-link { cursor: pointer; }
+    #author-section-nav .section-link.active { font-weight: bold; color: #111; }
+    .rq-uncovered td { color: #888; font-style: italic; }
+
     /* ── Agent Spotlight controls ──────────────────── */
     .spotlight-controls { margin-bottom: 12px; }
     .spotlight-controls select {
@@ -703,9 +719,16 @@
        TAB 2 — MODEL CHARACTERISTICS
   ══════════════════════════════════════════════ -->
   <div id="tab-characteristics" class="tab-pane">
-    <div class="author-note" style="color:#888;font-style:italic;padding:24px 0">
-      This tab is reserved for future use.
+
+    <!-- Figure 22b: Cross-Repetition Concordance -->
+    <div class="section" id="fig22b-section" data-section="concordance">
+      <div class="fig-num">Figure 22b</div>
+      <div class="fig-title">Cross-Repetition Concordance</div>
+      <div class="fig-caption">Fraction of agents with unanimous (5/5), exactly 4/5, or exactly 3/5 agreement at each infection level. Measures within-agent decision consistency across the 5 repetitions. The colored strip at the top indicates whether the overall majority of agents are staying home (amber) or going out (blue).</div>
+      <div id="concordance-model-select" style="margin-bottom:12px"></div>
+      <div class="chart-container" id="concordance-chart"></div>
     </div>
+
   </div><!-- end tab-characteristics -->
 
   <!-- ══════════════════════════════════════════════
@@ -720,11 +743,11 @@
       <span class="nav-sep">&middot;</span>
       <a class="section-link" data-filter="spotlight" href="#">Agent Spotlight</a>
       <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="heatmap" href="#">Heatmap</a>
+      <a class="section-link" data-filter="trait-analysis" href="#">Trait Analysis</a>
       <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="traits" href="#">Trait Effects</a>
+      <a class="section-link" data-filter="cross-model" href="#">Cross-Model</a>
       <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="regression" href="#">Regression</a>
+      <a class="section-link" data-filter="consistency" href="#">Consistency</a>
     </div>
 
     <div id="aa-section-demographics" class="curve-section-header">Demographics</div>
@@ -751,25 +774,19 @@
       <div id="fig23-responses" class="spotlight-responses"></div>
     </div>
 
-    <div id="aa-section-heatmap" class="curve-section-header">Heatmap</div>
+    <div id="aa-section-trait-analysis" class="curve-section-header">Trait Analysis</div>
 
-    <!-- Figure 22: Agent-Level Decision Heatmap and Concordance (moved from Fig 10) -->
-    <div class="section" id="s7-section" data-section="heatmap">
-      <div class="fig-num">Figure 22</div>
-      <div class="fig-title">Agent-Level Decision Heatmap and Concordance</div>
-      <div class="fig-caption">Heatmap shows individual agent majority decisions across all 40 infection levels, sorted by transition point (first level where stay-home is majority decision). Concordance shows the fraction of agents with unanimous (5/5), exactly 4/5, or exactly 3/5 agreement at each infection level. The colored strip at the top of the chart indicates whether the overall majority of agents are staying home (amber) or going out (blue).</div>
-      <div id="s7-model-select" style="margin-bottom:12px"></div>
-      <div class="heatmap-wrapper" id="s7-heatmap"></div>
-      <div style="margin-top:24px">
-        <div style="font-size:14px;font-weight:bold;color:#111;margin-bottom:8px">Concordance</div>
-        <div class="chart-container" id="s7-concordance"></div>
-      </div>
+    <!-- Figure 25: Agent-Level Regression -->
+    <div class="section" id="fig25-section" data-section="trait-analysis">
+      <div class="fig-num">Figure 25</div>
+      <div class="fig-title">Agent-Level Logistic Regression</div>
+      <div class="fig-caption">Pre-computed logistic regression on individual agent decisions (20,000 obs per config). Model 1: fixed-effects logit with 99 agent dummies (only infection coefficients shown). Model 2: random-effects logit (glmer) with random intercepts per agent &mdash; estimates trait and demographic effects. Follows the regression approach from Paper 1.</div>
+      <div id="fig25-model-select" style="margin-bottom:12px"></div>
+      <div id="fig25-results"></div>
     </div>
 
-    <div id="aa-section-traits" class="curve-section-header">Trait Effects</div>
-
     <!-- Figure 24: Trait Effects -->
-    <div class="section" id="fig24-section" data-section="traits">
+    <div class="section" id="fig24-section" data-section="trait-analysis">
       <div class="fig-num">Figure 24</div>
       <div class="fig-title">Trait Effects on Behavior</div>
       <div class="fig-caption">For a selected model, each agent's transition point (first infection level where stay-home is the majority decision) is computed and grouped by Big-5 personality dimension. Paired bars show the mean transition point for each trait pole. Age scatter shows whether older agents transition earlier or later.</div>
@@ -777,15 +794,35 @@
       <div class="chart-container" id="fig24-chart"></div>
     </div>
 
-    <div id="aa-section-regression" class="curve-section-header">Regression</div>
+    <!-- Figure 22: Agent-Level Decision Heatmap -->
+    <div class="section" id="s7-section" data-section="trait-analysis">
+      <div class="fig-num">Figure 22</div>
+      <div class="fig-title">Agent-Level Decision Heatmap</div>
+      <div class="fig-caption">Individual agent majority decisions across all 40 infection levels, sorted by transition point (first level where stay-home is majority decision). Each cell shows the majority decision across 5 repetitions: amber tones = staying home, blue tones = going out. Shade intensity indicates agreement strength (5/5, 4/5, or 3/5).</div>
+      <div id="s7-model-select" style="margin-bottom:12px"></div>
+      <div class="heatmap-wrapper" id="s7-heatmap"></div>
+    </div>
 
-    <!-- Figure 25: Agent-Level Regression -->
-    <div class="section" id="fig25-section" data-section="regression">
-      <div class="fig-num">Figure 25</div>
-      <div class="fig-title">Agent-Level Logistic Regression</div>
-      <div class="fig-caption">Logistic regression on individual agent decisions (20,000 observations per config). Model 1 tests infection level alone; Model 2 adds gender, Big-5 personality traits, and age as predictors. Follows the regression approach from Paper 1 (PhD Proposal, Table 1).</div>
-      <div id="fig25-model-select" style="margin-bottom:12px"></div>
-      <div id="fig25-results"></div>
+    <div id="aa-section-cross-model" class="curve-section-header">Cross-Model Analysis</div>
+
+    <!-- Figure 26: Cross-Model Trait Coefficient Comparison -->
+    <div class="section" id="fig26-section" data-section="cross-model">
+      <div class="fig-num">Figure 26</div>
+      <div class="fig-title">Cross-Model Trait Coefficient Comparison</div>
+      <div class="fig-caption">Odds ratios from Model 2 (random-effects logit) for each personality trait, gender, and age, compared across all 21 LLM configurations. Log&#x2081;&#x2080; scale; dashed line = OR&thinsp;1 (no effect). Filled dots = significant (p&lt;0.05); hollow = not significant. Whiskers = 95% CI.</div>
+      <button id="fig26-guide-toggle" style="background:none;border:1px solid #ccc;padding:5px 14px;font-family:'Libre Baskerville',Georgia,serif;font-size:12px;cursor:pointer;border-radius:3px;color:#555;margin-bottom:8px">How to Read This Figure &#x25BE;</button>
+      <div id="fig26-guide" style="display:none"></div>
+      <div class="chart-container" id="fig26-chart"></div>
+    </div>
+
+    <div id="aa-section-consistency" class="curve-section-header">Agent Consistency</div>
+
+    <!-- Figure 27: Agent Behavioral Consistency Across Models -->
+    <div class="section" id="fig27-section" data-section="consistency">
+      <div class="fig-num">Figure 27</div>
+      <div class="fig-title">Agent Behavioral Consistency Across Models</div>
+      <div class="fig-caption">Spearman rank correlation (&rho;) of per-agent stay-home rates between each pair of 21 LLM configurations. High &rho; indicates agents maintain their relative behavioral ordering regardless of which model simulates them &mdash; evidence that personality traits genuinely drive decisions.</div>
+      <div class="chart-container" id="fig27-chart"></div>
     </div>
 
   </div><!-- end tab-agents -->
@@ -795,85 +832,115 @@
   ══════════════════════════════════════════════ -->
   <div id="tab-author" class="tab-pane">
 
-    <div class="author-note">
-      This tab contains working notes for the author — anomalies, caveats, and diagnostic figures not intended for the final publication.
+    <div id="author-section-nav">
+      <a class="section-link active" data-filter="all" href="#">All</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="rq" href="#">Research Questions</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="logodds" href="#">Understanding: Log Odds</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="spearman" href="#">Understanding: Spearman</a>
     </div>
 
-    <!-- Headline Summary Stats -->
-    <div class="section" id="s0-section" style="display:none">
-      <div class="fig-num">Author Note — Summary Stats</div>
-      <div class="fig-title">Headline Findings</div>
-      <div class="summary-card" id="s0-card"></div>
-    </div>
-
-    <!-- Paper 1 Legacy (moved from main figures) -->
-    <div class="section" id="s2-section" style="display:none">
-      <div class="fig-num">Author Note — Paper 1 Legacy</div>
-      <div class="fig-title">Paper 1 Baseline: GPT-3.5 vs. Modern Models</div>
-      <div class="fig-caption">GPT-3.5 Turbo (Paper 1 baseline, 2022) shown in bold amber dashed. One representative per modern provider highlighted; all remaining configurations shown in gray. Hover a gray line to identify it.</div>
-      <div class="chart-container" id="s2-chart"></div>
-      <div class="legend" id="s2-legend"></div>
-      <div class="ols-table-wrap">
-        <div class="ols-table-label">OLS shift from GPT-3.5 baseline (&Delta;&beta;&#x2080;, &Delta;&beta;&#x2081;)</div>
-        <table class="ols-table" id="s2-ols"></table>
+    <!-- Research Questions & Evidence Map -->
+    <div class="section" id="rq-section" data-section="rq">
+      <div class="fig-num">Research Questions</div>
+      <div class="fig-title">Research Questions &amp; Evidence Map</div>
+      <div id="rq-content">
+        <table class="ols-table" style="width:100%;margin-top:12px">
+          <thead>
+            <tr><th style="width:50px">RQ</th><th>Question</th><th style="width:140px">Evidence</th><th style="width:200px">Key Finding</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>RQ1</td><td>Do different LLM providers produce meaningfully different mobility curves?</td><td>Figs 8&ndash;9</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ2</td><td>Does reasoning budget affect behavioral sensitivity?</td><td>Figs 1&ndash;2</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ3</td><td>Do larger models within a provider show different behavioral patterns?</td><td>Figs 3&ndash;4</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ4</td><td>How has model behavior evolved across generations?</td><td>Figs 5&ndash;7</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ5</td><td>Do LLMs interpret personality traits consistently across providers?</td><td>Figs 24, 26</td><td>Directions consistent; magnitudes vary 100&times; across providers</td></tr>
+            <tr><td>RQ6</td><td>Are agent-level behavioral differences preserved across models?</td><td>Figs 23, 27</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ7</td><td>Does training data recency (knowledge cutoff) predict behavior?</td><td>Figs 11&ndash;15</td><td><em>TBD</em></td></tr>
+          </tbody>
+          <tbody>
+            <tr><td colspan="4" style="padding:14px 0 6px;font-weight:600;font-size:11px;color:#999;border-top:2px solid #ddd;letter-spacing:0.5px">FIGURES WITHOUT DEDICATED RESEARCH QUESTIONS</td></tr>
+            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 20: Interactive Comparison Tool</td><td>Mobility Curves</td><td><em>Exploratory</em></td></tr>
+            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 21: Sample Demographics</td><td>Agent Analysis</td><td><em>Descriptive</em></td></tr>
+            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 22: Agent Decision Heatmap</td><td>Agent Analysis</td><td><em>Supports RQ6</em></td></tr>
+            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 22b: Cross-Repetition Concordance</td><td>Model Characteristics</td><td><em>Supports RQ6</em></td></tr>
+            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 25: Logistic Regression</td><td>Agent Analysis</td><td><em>Supports RQ5</em></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Outlier Spotlights -->
-    <div class="section" id="s6-section">
-      <div class="fig-num">Author Note A</div>
-      <div class="fig-title">Outlier Spotlights</div>
-      <div class="fig-caption">Notable anomalies identified in the probe data. These inform discussion and caveats in the paper but are not primary research figures.</div>
-      <div class="outlier-grid" id="s6-cards"></div>
+    <!-- Understanding: Log Odds -->
+    <div class="section" id="logodds-section" data-section="logodds">
+      <div class="fig-num">Author Note &mdash; Statistical Methods</div>
+      <div class="fig-title">Understanding Log Odds &amp; the Regression Table</div>
+      <div id="logodds-walkthrough"></div>
     </div>
 
-    <!-- Timelines moved to Mobility Curves tab (Figs 11, 16) -->
+    <!-- Spearman's ρ Walkthrough -->
+    <div class="section" id="spearman-section" data-section="spearman">
+      <div class="fig-num">Author Note &mdash; Statistical Methods</div>
+      <div class="fig-title">Understanding Spearman&rsquo;s Rank Correlation (&rho;)</div>
+      <div id="spearman-walkthrough" style="font-family:'Libre Baskerville','Georgia',serif;font-size:13px;line-height:1.7;color:#333;max-width:780px">
 
-    <!-- OLS diagnostic figures (moved from Model Characteristics) -->
-    <div class="section" id="figE-section">
-      <div class="fig-num">Author Note — OLS Scatter</div>
-      <div class="fig-title">OLS Summary: Baseline Caution vs. Behavioral Sensitivity</div>
-      <div class="fig-caption">Each point is one of the 21 LLM configurations. X-axis: &beta;&#x2080; (intercept) — predicted mobility at 0% new cases, measuring default activity level. Y-axis: &beta;&#x2081; (linear coefficient) — linear term from quadratic OLS (Y = &beta;&#x2080; + &beta;&#x2081;X + &beta;&#x2082;X&sup2;), measuring behavioral sensitivity. Hover a point to identify the model.</div>
-      <div class="chart-container" id="figE-chart"></div>
-      <div class="legend" id="figE-legend"></div>
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">1. What is Spearman&rsquo;s rank correlation?</h4>
+        <p>A non-parametric measure of how well two variables&rsquo; <em>rankings</em> agree. Unlike Pearson correlation, it doesn&rsquo;t assume linearity &mdash; it only cares about <em>ordering</em>. If agents who rank high in one model also rank high in another, &rho; is close to +1.</p>
+        <ul style="margin:6px 0;padding-left:20px">
+          <li>&rho; = +1: perfect agreement (identical rankings)</li>
+          <li>&rho; = 0: no relationship (random orderings)</li>
+          <li>&rho; = &minus;1: perfect disagreement (reversed rankings)</li>
+        </ul>
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">2. Worked example with 5 agents</h4>
+        <p>Consider 5 agents simulated by two different LLM configs. Each agent&rsquo;s stay-home rate is the proportion of decisions where they chose to stay home.</p>
+
+        <table class="ols-table" style="width:auto;margin:10px 0">
+          <thead>
+            <tr><th>Agent</th><th>Config A rate</th><th>Rank A</th><th>Config B rate</th><th>Rank B</th><th><em>d</em></th><th><em>d</em>&sup2;</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Alice</td><td>0.85</td><td>5</td><td>0.72</td><td>4</td><td>1</td><td>1</td></tr>
+            <tr><td>Bob</td><td>0.30</td><td>1</td><td>0.45</td><td>2</td><td>&minus;1</td><td>1</td></tr>
+            <tr><td>Carol</td><td>0.60</td><td>3</td><td>0.55</td><td>3</td><td>0</td><td>0</td></tr>
+            <tr><td>Dave</td><td>0.45</td><td>2</td><td>0.38</td><td>1</td><td>1</td><td>1</td></tr>
+            <tr><td>Eve</td><td>0.70</td><td>4</td><td>0.80</td><td>5</td><td>&minus;1</td><td>1</td></tr>
+          </tbody>
+        </table>
+
+        <p><strong>Step 1:</strong> Rank each column from lowest (1) to highest (5).</p>
+        <p><strong>Step 2:</strong> Compute <em>d</em> = Rank A &minus; Rank B for each agent.</p>
+        <p><strong>Step 3:</strong> Apply the formula:</p>
+        <p style="text-align:center;font-size:15px;margin:12px 0">&rho; = 1 &minus; (6 &times; &Sigma;<em>d</em>&sup2;) / (<em>n</em> &times; (<em>n</em>&sup2; &minus; 1))</p>
+        <p style="text-align:center;font-size:14px">&rho; = 1 &minus; (6 &times; 4) / (5 &times; 24) = 1 &minus; 24/120 = 1 &minus; 0.2 = <strong>0.80</strong></p>
+        <p>Interpretation: &rho; = 0.80 indicates strong agreement &mdash; the two models largely agree on which agents are cautious and which are bold.</p>
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">3. How we use it in Figure 27</h4>
+        <ul style="margin:6px 0;padding-left:20px">
+          <li>Instead of 5 agents, we have <strong>100</strong></li>
+          <li>Instead of 2 configs, we compute &rho; for all <strong>21 &times; 21 = 441 pairs</strong> (210 unique off-diagonal pairs)</li>
+          <li>Each agent&rsquo;s stay-home rate is computed across all 200 decisions (40 infection levels &times; 5 reps)</li>
+          <li>High &rho; across model pairs &rarr; agents are &ldquo;real individuals&rdquo; whose traits drive behavior consistently</li>
+          <li>Low &rho; &rarr; the LLM model matters more than the agent&rsquo;s traits</li>
+        </ul>
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">4. Interpreting the heatmap</h4>
+        <ul style="margin:6px 0;padding-left:20px">
+          <li><strong>Dark cells</strong> = high &rho; (strong agreement on agent ordering)</li>
+          <li><strong>Light cells</strong> = low &rho; (models rank agents differently)</li>
+          <li>The <strong>diagonal</strong> is always 1.0 (a config correlated with itself)</li>
+          <li>Look for <strong>provider blocks</strong>: do models from the same provider agree more with each other than with models from other providers?</li>
+        </ul>
+      </div>
     </div>
 
-    <div class="section" id="figF-section">
-      <div class="fig-num">Author Note — Sensitivity Ranking</div>
-      <div class="fig-title">Behavioral Sensitivity Ranking (&beta; slope)</div>
-      <div class="fig-caption">All 21 configurations ranked by &beta;&#x2081; (linear coefficient from quadratic OLS). More negative values indicate a stronger reduction in mobility per unit of new cases (stronger behavioral response).</div>
-      <div class="chart-container" id="figF-chart"></div>
-    </div>
-
-    <div class="section" id="figG-section">
-      <div class="fig-num">Author Note — Cutoff vs &beta;</div>
-      <div class="fig-title">Knowledge Cutoff Date vs. Behavioral Sensitivity</div>
-      <div class="fig-caption">Does training data recency predict how strongly a model responds to rising infection? X-axis: knowledge cutoff (year). Y-axis: &beta; slope from OLS. Line shows OLS fit across all 21 configurations.</div>
-      <div class="chart-container" id="figG-chart"></div>
-      <div class="legend" id="figG-legend"></div>
-    </div>
-
-    <div class="section" id="figH-section">
-      <div class="fig-num">Author Note — Release vs &alpha;</div>
-      <div class="fig-title">Release Date vs. Default Caution</div>
-      <div class="fig-caption">Are newer model releases more or less cautious at baseline (0% infection)? X-axis: model release date (year). Y-axis: &alpha; intercept from OLS. Line shows OLS fit.</div>
-      <div class="chart-container" id="figH-chart"></div>
-      <div class="legend" id="figH-legend"></div>
-    </div>
-
-    <div class="section" id="figI-section">
-      <div class="fig-num">Author Note — Family Comparison</div>
-      <div class="fig-title">Model Family Generational Comparison</div>
-      <div class="fig-caption">OLS &beta;&#x2080; (default caution, light bar) and &beta;&#x2081; (sensitivity, dark bar) for each model, grouped by provider family and ordered chronologically. Shows generational drift within each provider.</div>
-      <div class="chart-container" id="figI-chart"></div>
-      <div class="legend" id="figI-legend"></div>
-    </div>
 
   </div><!-- end tab-author -->
 
 </div><!-- end #app -->
 
 <script src="nav.js"></script>
-<script src="analytics.js"></script>
+<script src="analytics.js?v=11"></script>
 </body>
 </html>

@@ -246,41 +246,6 @@ function renderOLSTable(tableId, keys, baseline) {
 // ═══════════════════════════════════════════════════════════════
 // S0: Headline Summary Card
 // ═══════════════════════════════════════════════════════════════
-function renderS0() {
-  const el = document.getElementById('s0-card');
-  const grouped = groupByModel(macroData);
-
-  const modelRates = [];
-  CONFIG.MODELS.forEach(m => {
-    const k = modelKey(m);
-    const rows = grouped[k];
-    if (!rows) return;
-    const totalYes = rows.reduce((s, r) => s + (parseFloat(r.n_yes) || 0), 0);
-    const totalN   = rows.reduce((s, r) => s + (parseFloat(r.n_total) || 0), 0);
-    if (totalN === 0) return;
-    modelRates.push({ m, rate: (1 - totalYes / totalN) * 100 });
-  });
-
-  if (modelRates.length === 0) { el.innerHTML = '<div style="color:#777">No data loaded</div>'; return; }
-
-  modelRates.sort((a, b) => b.rate - a.rate);
-  const highest = modelRates[0];   // highest go-outside = most mobile
-  const lowest  = modelRates[modelRates.length - 1]; // lowest go-outside = most cautious
-  const spread  = highest.rate - lowest.rate;
-
-  const cards = [
-    { val: `${highest.rate.toFixed(1)}%`, lbl: `${highest.m.label} — highest overall mobility`,   color: highest.m.color },
-    { val: `${lowest.rate.toFixed(1)}%`,  lbl: `${lowest.m.label} — lowest mobility (most cautious)`, color: lowest.m.color  },
-    { val: `${spread.toFixed(0)} pp`,     lbl: `Spread between most and least mobile model`,          color: '#111'          },
-    { val: `${modelRates.length}`,        lbl: `Model configurations with complete data`,              color: '#111'          },
-  ];
-
-  el.innerHTML = cards.map(c =>
-    `<div class="summary-stat"><div class="val" style="color:${c.color}">${c.val}</div><div class="lbl">${c.lbl}</div></div>`
-  ).join('');
-
-  document.getElementById('s0-section').style.display = 'block';
-}
 
 // ═══════════════════════════════════════════════════════════════
 // S1: Provider Envelopes
@@ -618,65 +583,6 @@ function renderFigRelLate() {
 // ═══════════════════════════════════════════════════════════════
 // S2: Paper 1 Legacy Comparison
 // ═══════════════════════════════════════════════════════════════
-function renderS2() {
-  const el       = document.getElementById('s2-chart');
-  const legendEl = document.getElementById('s2-legend');
-  const w = CW, h = CH, pad = PAD;
-  const grouped  = groupByModel(macroData);
-
-  const gpt35 = CONFIG.MODELS.find(m => m.model === 'gpt-3.5-turbo');
-  const modernReps = [
-    CONFIG.MODELS.find(m => m.model === 'claude-sonnet-4-5'),
-    CONFIG.MODELS.find(m => m.model === 'gpt-5.2'               && m.reasoning === 'off'),
-    CONFIG.MODELS.find(m => m.model === 'gemini-3-flash-preview' && m.reasoning === 'off'),
-  ].filter(Boolean);
-
-  const highlightKeys = new Set();
-  if (gpt35) highlightKeys.add(modelKey(gpt35));
-  modernReps.forEach(m => highlightKeys.add(modelKey(m)));
-
-  let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
-  let hitTargets = '';
-  const legendItems = [];
-
-  CONFIG.MODELS.forEach(m => {
-    const k    = modelKey(m);
-    const rows = grouped[k];
-    if (!rows || rows.length === 0) return;
-    if (highlightKeys.has(k)) return;
-    const pts      = makePolyline(rows, w, h, pad);
-    const dashAttr = m.dash ? ` stroke-dasharray="${m.dash}"` : '';
-    inner      += `<polyline points="${pts}" stroke="#888" stroke-width="1" fill="none" opacity="0.35"${dashAttr}/>`;
-    hitTargets += `<polyline points="${pts}" stroke="transparent" stroke-width="14" fill="none" class="hit-target" data-label="${esc(m.label)}" data-color="#666"/>`;
-  });
-
-  modernReps.forEach(m => {
-    const k    = modelKey(m);
-    const rows = grouped[k];
-    if (!rows || rows.length === 0) return;
-    const pts = makePolyline(rows, w, h, pad);
-    inner      += `<polyline points="${pts}" stroke="${m.color}" stroke-width="2" fill="none" opacity="0.9"/>`;
-    hitTargets += `<polyline points="${pts}" stroke="transparent" stroke-width="14" fill="none" class="hit-target" data-label="${esc(m.label)}" data-color="${m.color}"/>`;
-    legendItems.push({ label: m.label, color: m.color });
-  });
-
-  if (gpt35) {
-    const k    = modelKey(gpt35);
-    const rows = grouped[k];
-    if (rows && rows.length > 0) {
-      const pts = makePolyline(rows, w, h, pad);
-      inner      += `<polyline points="${pts}" stroke="#E69F00" stroke-width="3" fill="none" opacity="1" stroke-dasharray="8,4"/>`;
-      hitTargets += `<polyline points="${pts}" stroke="transparent" stroke-width="14" fill="none" class="hit-target" data-label="GPT-3.5 Turbo (Paper 1 baseline)" data-color="#E69F00"/>`;
-      legendItems.unshift({ label: 'GPT-3.5 Turbo (Paper 1 baseline)', color: '#E69F00', dash: '8,4' });
-    }
-  }
-
-  el.innerHTML = makeSVG(w, h, inner + hitTargets);
-  wireTooltips(el);
-  legendEl.innerHTML = legendHTML(legendItems);
-  document.getElementById('s2-section').style.display = 'block';
-}
 
 // ═══════════════════════════════════════════════════════════════
 // S3: Small Multiples by Provider
@@ -724,77 +630,6 @@ function renderS3() {
 // ═══════════════════════════════════════════════════════════════
 // S6: Outlier Spotlights
 // ═══════════════════════════════════════════════════════════════
-function renderS6() {
-  const el      = document.getElementById('s6-cards');
-  const grouped = groupByModel(macroData);
-
-  const modelStats = {};
-  CONFIG.MODELS.forEach(m => {
-    const k    = modelKey(m);
-    const rows = grouped[k];
-    if (!rows) return;
-    const totalYes = rows.reduce((s, r) => s + (parseFloat(r.n_yes)   || 0), 0);
-    const totalN   = rows.reduce((s, r) => s + (parseFloat(r.n_total) || 0), 0);
-    const rate0    = rows.find(r => parseFloat(r.infection_level) === 0);
-    modelStats[k]  = {
-      m, overallRate: totalN > 0 ? totalYes / totalN * 100 : 0,
-      mobilityAt0: rate0 ? 100 - parseFloat(rate0.pct_stay_home) : null, rows,
-    };
-  });
-
-  const outliers = [];
-
-  const gpt4o = Object.values(modelStats).find(s => s.m.model === 'gpt-4o');
-  if (gpt4o) {
-    const mobilityRate = 100 - gpt4o.overallRate;
-    outliers.push({
-      title: `GPT-4o: ${mobilityRate.toFixed(1)}% overall mobility`,
-      desc:  'Nearly always goes outside regardless of infection level — the highest-mobility model in the study.',
-      color: gpt4o.m.color, rows: gpt4o.rows,
-    });
-  }
-
-  const lite = Object.values(modelStats).find(s => s.m.model === 'gemini-2.5-flash-lite');
-  if (lite) {
-    const low  = lite.rows.filter(r => parseFloat(r.infection_level) <= 1.0);
-    const high = lite.rows.filter(r => parseFloat(r.infection_level) >= 3.0);
-    // Inverted: go-outside = 100 - pct_stay_home
-    const avgLow  = low.length  > 0 ? low.reduce( (s,r) => s + (100 - parseFloat(r.pct_stay_home)), 0) / low.length  : 0;
-    const avgHigh = high.length > 0 ? high.reduce((s,r) => s + (100 - parseFloat(r.pct_stay_home)), 0) / high.length : 0;
-    outliers.push({
-      title: 'Gemini 2.5 Flash Lite: Anomalous response curve',
-      desc:  `Average mobility at low infection: ${avgLow.toFixed(1)}% vs. high infection: ${avgHigh.toFixed(1)}%. The curve runs backwards — more mobile at higher infection (anomalous).`,
-      color: lite.m.color, rows: lite.rows,
-    });
-  }
-
-  const gpt35 = Object.values(modelStats).find(s => s.m.model === 'gpt-3.5-turbo');
-  if (gpt35 && gpt35.mobilityAt0 !== null) {
-    outliers.push({
-      title: `GPT-3.5 at 0% infection: ${gpt35.mobilityAt0.toFixed(1)}% mobility`,
-      desc:  'Under half of agents go outside even with zero reported cases. The Paper 1 model is extremely cautious by default.',
-      color: '#E69F00', rows: gpt35.rows,
-    });
-  }
-
-  const miniW = 260, miniH = 130, miniPad = { t: 14, r: 12, b: 28, l: 38 };
-  el.innerHTML = outliers.map(o => {
-    let miniSvg = '';
-    if (o.rows) {
-      const pts = makePolyline(o.rows, miniW, miniH, miniPad);
-      const miniInner = yAxisTicks(miniW, miniH, miniPad) +
-        `<polyline points="${pts}" stroke="${o.color}" stroke-width="2" fill="none" opacity="0.9"/>`;
-      miniSvg = makeSVG(miniW, miniH, miniInner);
-    }
-    return `<div class="outlier-card">
-      <div class="oc-title" style="color:${o.color}">${o.title}</div>
-      <div class="oc-desc">${o.desc}</div>
-      ${miniSvg}
-    </div>`;
-  }).join('');
-
-  document.getElementById('s6-section').style.display = 'block';
-}
 
 // ═══════════════════════════════════════════════════════════════
 // S7: Agent-Level Analysis — Heatmap + Concordance
@@ -1012,7 +847,93 @@ function renderS7Concordance(microRows, cfg) {
 
 function renderS7(microRows, cfg) {
   renderS7Heatmap(microRows, cfg);
-  renderS7Concordance(microRows, cfg);
+}
+
+function renderFig22bConcordance(microRows, cfg) {
+  const el = document.getElementById('concordance-chart');
+
+  // Build per-agent per-level vote tallies
+  const agentLevelVotes = {};
+  microRows.forEach(r => {
+    if (!agentLevelVotes[r.agent_id]) agentLevelVotes[r.agent_id] = {};
+    if (!agentLevelVotes[r.agent_id][r.infection_level])
+      agentLevelVotes[r.agent_id][r.infection_level] = { yes: 0, no: 0 };
+    agentLevelVotes[r.agent_id][r.infection_level][r.response]++;
+  });
+
+  const agentIds = Object.keys(agentLevelVotes).map(Number);
+  const nAgents  = agentIds.length;
+
+  // Concordance series (exact values, not cumulative) + majority direction per level
+  const unanimousData = [], exactFourData = [], exactThreeData = [];
+  const majorityHome = [];
+  LEVELS.forEach(level => {
+    let unanimous = 0, exactFour = 0, exactThree = 0;
+    let totalYes = 0, totalVotes = 0;
+    agentIds.forEach(id => {
+      const v = agentLevelVotes[id]?.[level];
+      if (!v) return;
+      const mx = Math.max(v.yes, v.no);
+      if (mx === 5) unanimous++;
+      if (mx === 4) exactFour++;
+      if (mx === 3) exactThree++;
+      totalYes   += v.yes;
+      totalVotes += v.yes + v.no;
+    });
+    unanimousData.push({ level, pct: (unanimous  / nAgents) * 100 });
+    exactFourData.push({ level, pct: (exactFour  / nAgents) * 100 });
+    exactThreeData.push({ level, pct: (exactThree / nAgents) * 100 });
+    majorityHome.push(totalVotes > 0 && totalYes / totalVotes > 0.5);
+  });
+
+  const w = CW, h = CH, pad = PAD;
+
+  const stripH = 8;
+  const stripY = pad.t;
+  let stripSvg = '';
+  LEVELS.forEach((level, i) => {
+    const x1 = levelToX(level, w, pad);
+    const x2 = i + 1 < LEVELS.length ? levelToX(LEVELS[i + 1], w, pad) : x1 + 4;
+    const col = majorityHome[i] ? '#D55E00' : '#0072B2';
+    stripSvg += `<rect x="${x1.toFixed(1)}" y="${stripY}" width="${(x2 - x1).toFixed(1)}" height="${stripH}" fill="${col}" opacity="0.45"/>`;
+  });
+
+  const series = [
+    { label: 'Unanimous (5/5)', data: unanimousData,  color: '#111111', dash: null,  sw: 2.0 },
+    { label: 'Exact 4/5',       data: exactFourData,  color: '#0072B2', dash: null,  sw: 1.75 },
+    { label: 'Exact 3/5',       data: exactThreeData, color: '#888888', dash: '5,3', sw: 1.5  },
+  ];
+
+  let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
+    axisLabels(w, h, pad, 'New cases (%)', '% agents') +
+    stripSvg;
+
+  series.forEach(s => {
+    const pts = s.data.map(d =>
+      `${levelToX(d.level, w, pad).toFixed(1)},${pctToY(d.pct, h, pad).toFixed(1)}`
+    ).join(' ');
+    const dashAttr = s.dash ? `stroke-dasharray="${s.dash}"` : '';
+    inner += `<polyline points="${pts}" stroke="${s.color}" stroke-width="${s.sw}" fill="none" opacity="0.9" ${dashAttr}/>`;
+  });
+
+  const legendItems = series.map(s => {
+    const dashStyle = s.dash ? `border-top:2px dashed ${s.color}` : `border-top:2.5px solid ${s.color}`;
+    return `<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#333">
+      <span style="display:inline-block;width:22px;height:0;${dashStyle}"></span>${s.label}
+    </span>`;
+  }).join('');
+
+  const majLegend = `
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#333">
+      <span style="display:inline-block;width:14px;height:8px;background:#D55E00;opacity:0.6;border-radius:1px"></span>Majority staying home
+    </span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:#333">
+      <span style="display:inline-block;width:14px;height:8px;background:#0072B2;opacity:0.6;border-radius:1px"></span>Majority going out
+    </span>`;
+
+  el.innerHTML = `
+    <div class="chart-container">${makeSVG(w, h, inner)}</div>
+    <div class="legend" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:16px">${legendItems}${majLegend}</div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1045,6 +966,12 @@ function initSectionNavs() {
     link.addEventListener('click', e => {
       e.preventDefault();
       filterSectionTab('tab-agents', 'agents-section-nav', link.dataset.filter);
+    });
+  });
+  document.querySelectorAll('#author-section-nav .section-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      filterSectionTab('tab-author', 'author-section-nav', link.dataset.filter);
     });
   });
 }
@@ -1185,6 +1112,7 @@ function init() {
   initTabs();
   initRegToggles();
   initSectionNavs();
+  renderLogOddsWalkthrough();
 
   Papa.parse(CONFIG.ALL_MACRO, {
     download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
@@ -1196,8 +1124,6 @@ function init() {
       computeAllOLS();
 
       // ── Tab 1: Mobility Curves ────────────────────────────────
-      renderS0();
-      // s1 (provider envelopes) removed from main flow
       renderFigA();
       renderFigB();
       renderFigAnthro();
@@ -1213,15 +1139,7 @@ function init() {
       renderFigRelLegacy();
       renderFigRelSpring();
       renderFigRelLate();
-      renderS2();
       renderS3();
-      renderS6();
-
-      // OLS table for Author Note — Paper 1 Legacy
-      renderOLSTable('s2-ols',
-        ['anthropic_claude-sonnet-4-5_off','openai_gpt-5_2_off','gemini_gemini-3-flash-preview_off',
-         'openai_gpt-3_5-turbo_off'],
-        'openai_gpt-3_5-turbo_off');
 
       // Figure 20: Comparison Tool (needs micro data, lazy-loaded on run)
       initFigJ();
@@ -1295,333 +1213,131 @@ function parseDate(s) {
   return y + (m - 1) / 12 + (d - 1) / 365;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Author Notes — Log Odds Walkthrough
+// ═══════════════════════════════════════════════════════════════
+function renderLogOddsWalkthrough() {
+  const el = document.getElementById('logodds-walkthrough');
+  if (!el) return;
+
+  const style = 'font-family:"Libre Baskerville","Georgia",serif;font-size:13px;line-height:1.7;color:#333;max-width:780px';
+
+  let html = `<div style="${style}">`;
+
+  // 1. What are log odds?
+  html += '<h4 style="margin:18px 0 8px;font-size:14px;color:#111">1. What are log odds?</h4>';
+  html += '<p>Logistic regression models the probability of an event using <em>log-odds</em> (also called the <em>logit</em>). The progression from probability to log-odds works like this:</p>';
+  html += '<ul style="margin:6px 0;padding-left:20px">';
+  html += '<li><strong>Probability</strong> (P): the chance of staying home, between 0 and 1</li>';
+  html += '<li><strong>Odds</strong>: P / (1 &minus; P) &mdash; "how much more likely to stay home than go out"</li>';
+  html += '<li><strong>Log-odds</strong>: ln(odds) &mdash; the natural logarithm of the odds</li>';
+  html += '</ul>';
+
+  html += '<table class="ols-table" style="width:auto;margin:10px 0">';
+  html += '<thead><tr><th>Probability</th><th>Odds</th><th>Log-odds</th><th>Interpretation</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr><td>0.10</td><td>0.11</td><td>&minus;2.20</td><td>Very unlikely to stay home</td></tr>';
+  html += '<tr><td>0.25</td><td>0.33</td><td>&minus;1.10</td><td>Unlikely to stay home</td></tr>';
+  html += '<tr><td>0.50</td><td>1.00</td><td>0.00</td><td>Equally likely either way</td></tr>';
+  html += '<tr><td>0.75</td><td>3.00</td><td>1.10</td><td>Likely to stay home</td></tr>';
+  html += '<tr><td>0.90</td><td>9.00</td><td>2.20</td><td>Very likely to stay home</td></tr>';
+  html += '</tbody></table>';
+  html += '<p>The key property: log-odds range from &minus;&infin; to +&infin;, making them suitable as a linear predictor in regression.</p>';
+
+  // 2. Reading the regression table
+  html += '<h4 style="margin:18px 0 8px;font-size:14px;color:#111">2. Reading the regression table (Figure 25)</h4>';
+  html += '<p>Each row in the table is a predictor variable. The <strong>Coef</strong> column shows the change in log-odds of staying home for a one-unit change in that predictor, holding all other predictors constant.</p>';
+  html += '<ul style="margin:6px 0;padding-left:20px">';
+  html += '<li><strong>Positive coefficient</strong> &rarr; increases log-odds of staying home (more cautious)</li>';
+  html += '<li><strong>Negative coefficient</strong> &rarr; decreases log-odds of staying home (more bold, goes out)</li>';
+  html += '<li><strong>OR (Odds Ratio)</strong> = exp(coefficient) &mdash; the multiplicative effect on the odds</li>';
+  html += '</ul>';
+  html += '<p>For binary predictors (e.g., extraverted = 1 vs. 0), the OR tells you: "how many times more likely is an extraverted agent to stay home compared to an introverted one?" More precisely:</p>';
+  html += '<div style="background:#f5f5f5;padding:10px 14px;border-radius:4px;margin:8px 0;font-size:13px">';
+  html += '<p style="margin:0 0 6px;font-weight:bold">Odds Ratio (formal definition):</p>';
+  html += '<p style="margin:0 0 8px;font-family:monospace;font-size:12px">';
+  html += 'OR = odds(trait present) / odds(trait absent)</p>';
+  html += '<p style="margin:0 0 4px">Where <em>odds</em> = P(staying home) / P(going out). So expanding fully:</p>';
+  html += '<p style="margin:0;font-family:monospace;font-size:12px">';
+  html += 'OR = [P(extraverted stays home) / P(extraverted goes out)]<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/ [P(introverted stays home) / P(introverted goes out)]</p>';
+  html += '</div>';
+  html += '<p>Since <code style="background:#e8e8e8;padding:1px 4px;border-radius:2px">stay_home = 1</code> is our dependent variable, all ORs are framed in terms of staying home. An OR of 0.0045 for extraversion means an extraverted agent has 0.45% the odds of staying home that an introverted agent does &mdash; equivalently, the introverted agent is ~222&times; more likely to stay home.</p>';
+
+  // 3. Worked example
+  html += '<h4 style="margin:18px 0 8px;font-size:14px;color:#111">3. Worked example (Claude Sonnet 4.5)</h4>';
+  html += '<p>From the Claude Sonnet 4.5 regression (Model 2, random-effects logit):</p>';
+
+  html += '<table class="ols-table" style="width:auto;margin:10px 0">';
+  html += '<thead><tr><th>Predictor</th><th>Coefficient</th><th>OR = exp(Coef)</th><th>Meaning</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr><td>Conscientious</td><td>+7.755</td><td>2,334</td><td>2,334&times; the odds of staying home vs. unconscientious</td></tr>';
+  html += '<tr><td>Extraverted</td><td>&minus;5.408</td><td>0.0045</td><td>0.45% the odds of staying home vs. introverted</td></tr>';
+  html += '<tr><td>Agreeable</td><td>+2.944</td><td>18.98</td><td>~19&times; the odds of staying home vs. antagonistic</td></tr>';
+  html += '<tr><td>Emot. Stable</td><td>&minus;5.707</td><td>0.0033</td><td>0.33% the odds of staying home vs. neurotic</td></tr>';
+  html += '<tr><td>Infection Rate</td><td>+3.075</td><td>21.64</td><td>Per 1pp rise in infection: 21.6&times; odds of staying home</td></tr>';
+  html += '</tbody></table>';
+
+  html += '<p><strong>Full calculation for a specific agent:</strong></p>';
+  html += '<p>Consider an introverted, agreeable, conscientious, neurotic, closed female agent, age 40, at 3% infection:</p>';
+  html += '<p style="font-family:monospace;font-size:12px;background:#f5f5f5;padding:8px;border-radius:4px;overflow-x:auto">';
+  html += 'log-odds = &minus;7.465 (intercept)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 3.075 &times; 3 (infection 3%)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (&minus;0.296) &times; 9 (infection&sup2;)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0 (female, reference)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0 (introverted, reference)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 2.944 (agreeable)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 7.755 (conscientious)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0 (neurotic, reference)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0 (closed, reference)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (&minus;0.001) &times; 40 (age)<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= &minus;7.465 + 9.225 &minus; 2.664 + 2.944 + 7.755 &minus; 0.04<br>';
+  html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong>9.755</strong></p>';
+  html += '<p>Converting back to probability:</p>';
+  html += '<p style="font-family:monospace;font-size:12px;background:#f5f5f5;padding:8px;border-radius:4px">';
+  html += 'odds = exp(9.755) = 17,260<br>';
+  html += 'P(stay home) = odds / (1 + odds) = 17,260 / 17,261 = <strong>0.99994</strong></p>';
+  html += '<p>This agent is virtually certain to stay home at 3% infection under Claude Sonnet 4.5 &mdash; driven overwhelmingly by the conscientious trait (coef = +7.755).</p>';
+
+  // 4. OR interpretation
+  html += '<h4 style="margin:18px 0 8px;font-size:14px;color:#111">4. What OR > 1 and OR < 1 mean</h4>';
+  html += '<table class="ols-table" style="width:auto;margin:10px 0">';
+  html += '<thead><tr><th>OR value</th><th>Meaning</th><th>Example from Claude Sonnet 4.5</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr><td>OR &gt;&gt; 1</td><td>Much more likely to stay home</td><td>Conscientious: OR = 2,334</td></tr>';
+  html += '<tr><td>OR &gt; 1</td><td>Somewhat more likely to stay home</td><td>Agreeable: OR = 18.98</td></tr>';
+  html += '<tr><td>OR = 1</td><td>No effect</td><td>(reference line in forest plot)</td></tr>';
+  html += '<tr><td>OR &lt; 1</td><td>More likely to go out</td><td>Extraverted: OR = 0.0045</td></tr>';
+  html += '<tr><td>OR &lt;&lt; 1</td><td>Much more likely to go out</td><td>Emot. Stable: OR = 0.0033</td></tr>';
+  html += '</tbody></table>';
+  html += '<p><em>Note:</em> These extreme ORs (thousands or thousandths) are common in our data because LLM decisions are near-deterministic &mdash; a conscientious agent almost <em>always</em> stays home, producing very large effect sizes in the logistic model.</p>';
+
+  // 5. Cross-model variation
+  html += '<h4 style="margin:18px 0 8px;font-size:14px;color:#111">5. Why coefficients vary across models</h4>';
+  html += '<p>Different LLMs interpret personality traits with vastly different magnitudes. Claude Sonnet 4.5 shows conscientiousness as an OR of 2,334, while other models may show ORs of 5 or 50 for the same trait. This is a central finding (RQ5) &mdash; the <em>direction</em> of trait effects is largely consistent across providers, but the <em>magnitude</em> varies by orders of magnitude.</p>';
+  html += '<p>See <strong>Figure 24</strong> (trait scatter) and <strong>Figure 26</strong> (cross-model forest plot) for visual comparisons across all 21 configurations.</p>';
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function renderTab2() {
-  renderFigE();
-  renderFigF();
-  renderFigG();
-  renderFigH();
-  renderFigI();
+  // Fig 22b: concordance (moved from Agent Analysis)
+  buildModelPicker('concordance-model-select', 0, idx => {
+    loadMicro(idx, (rows, cfg) => renderFig22bConcordance(rows, cfg));
+  });
+  loadMicro(0, (rows, cfg) => renderFig22bConcordance(rows, cfg));
 }
 
 // ── Provider colors (Okabe-Ito compatible) ────────────────────
 const PROV_COLORS = { anthropic: '#7C3AED', openai: '#22C55E', gemini: '#3B82F6' };
 const PROV_LABELS = { anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Gemini' };
 
-// ── Generic scatter SVG (for Figs E, G, H) ───────────────────
-function makeScatterSVG(points, opts) {
-  // points: [{x, y, color, label, dash}]
-  // opts: {w, h, xLabel, yLabel, xFmt, yFmt, fitLine}
-  const { w = CW, h = CH, xLabel = '', yLabel = '', xFmt = v => v.toFixed(1),
-          yFmt = v => v.toFixed(1), fitLine = null } = opts;
-  const pad = { t: 36, r: 40, b: 54, l: 70 };
-  const xs = points.map(p => p.x), ys = points.map(p => p.y);
-  const xMin = Math.min(...xs), xMax = Math.max(...xs);
-  const yMin = Math.min(...ys), yMax = Math.max(...ys);
-  const xPad = (xMax - xMin) * 0.08 || 0.5;
-  const yPad = (yMax - yMin) * 0.12 || 1;
-  const xLo = xMin - xPad, xHi = xMax + xPad;
-  const yLo = yMin - yPad, yHi = yMax + yPad;
 
-  const toSX = x => pad.l + (x - xLo) / (xHi - xLo) * (w - pad.l - pad.r);
-  const toSY = y => pad.t + (1 - (y - yLo) / (yHi - yLo)) * (h - pad.t - pad.b);
 
-  // Gridlines
-  const nTicksY = 5;
-  let svg = '';
-  for (let i = 0; i <= nTicksY; i++) {
-    const v = yLo + i * (yHi - yLo) / nTicksY;
-    const sy = toSY(v);
-    svg += `<line x1="${pad.l}" y1="${sy.toFixed(1)}" x2="${w - pad.r}" y2="${sy.toFixed(1)}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
-    svg += `<text x="${pad.l - 6}" y="${(sy + 4).toFixed(1)}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="end">${yFmt(v)}</text>`;
-  }
 
-  // X-axis ticks (auto 5 ticks)
-  const nTicksX = 5;
-  for (let i = 0; i <= nTicksX; i++) {
-    const v = xLo + i * (xHi - xLo) / nTicksX;
-    const sx = toSX(v);
-    svg += `<line x1="${sx.toFixed(1)}" y1="${pad.t}" x2="${sx.toFixed(1)}" y2="${h - pad.b}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
-    svg += `<text x="${sx.toFixed(1)}" y="${h - pad.b + 14}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="middle">${xFmt(v)}</text>`;
-  }
 
-  // Axis labels
-  svg += `<text x="${(pad.l + w - pad.r) / 2}" y="${h - 6}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}" text-anchor="middle" font-style="italic">${xLabel}</text>`;
-  svg += `<text x="${14}" y="${(pad.t + h - pad.b) / 2}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}" text-anchor="middle" font-style="italic" transform="rotate(-90,14,${(pad.t + h - pad.b) / 2})">${yLabel}</text>`;
 
-  // Fit line
-  if (fitLine) {
-    const { alpha, beta } = fitLine;
-    const x1 = xLo, x2 = xHi;
-    const y1 = alpha + beta * x1, y2 = alpha + beta * x2;
-    svg += `<line x1="${toSX(x1).toFixed(1)}" y1="${toSY(y1).toFixed(1)}" x2="${toSX(x2).toFixed(1)}" y2="${toSY(y2).toFixed(1)}" stroke="#999" stroke-width="1.5" stroke-dasharray="5,3"/>`;
-  }
-
-  // Points (drawn last so they're on top)
-  const tooltip = document.createElement('div');
-  tooltip.className = 'svg-tooltip';
-  const ptsSVG = points.map((p, i) => {
-    const sx = toSX(p.x).toFixed(1), sy = toSY(p.y).toFixed(1);
-    return `<circle cx="${sx}" cy="${sy}" r="6" fill="${p.color}" stroke="#fff" stroke-width="1.5" opacity="0.9"
-      data-label="${esc(p.label)}" data-x="${xFmt(p.x)}" data-y="${yFmt(p.y)}" class="scatter-pt"/>`;
-  }).join('');
-  svg += ptsSVG;
-
-  return makeSVG(w, h, svg);
-}
-
-// Figure E — α vs β scatter
-function renderFigE() {
-  const el = document.getElementById('figE-chart');
-  if (!el || !olsResults.length) return;
-  const points = olsResults.map(r => ({
-    x: r.b0, y: r.b1, color: PROV_COLORS[r.provider], label: r.label,
-  }));
-  const w = CW, h = CH;
-  el.innerHTML = makeScatterSVG(points, {
-    w, h,
-    xLabel: 'β₀ — baseline mobility at 0% infection (%)',
-    yLabel: 'β₁ — linear coefficient',
-    xFmt: v => v.toFixed(0) + '%',
-    yFmt: v => v.toFixed(1),
-  });
-
-  // Wire tooltips
-  el.querySelectorAll('.scatter-pt').forEach(circle => {
-    const tt = el.querySelector('.svg-tooltip') || (() => {
-      const d = document.createElement('div'); d.className = 'svg-tooltip'; el.appendChild(d); return d;
-    })();
-    circle.addEventListener('mouseenter', ev => {
-      tt.style.display = 'block';
-      tt.innerHTML = `<strong>${circle.dataset.label}</strong><br>β₀ = ${circle.dataset.x}<br>β₁ = ${circle.dataset.y}`;
-    });
-    circle.addEventListener('mousemove', ev => {
-      const r = el.getBoundingClientRect();
-      tt.style.left = (ev.clientX - r.left + 12) + 'px';
-      tt.style.top  = (ev.clientY - r.top  - 10) + 'px';
-    });
-    circle.addEventListener('mouseleave', () => { tt.style.display = 'none'; });
-  });
-
-  // Legend
-  const legEl = document.getElementById('figE-legend');
-  if (legEl) legEl.innerHTML = ['anthropic','openai','gemini'].map(p =>
-    `<div class="legend-item"><div class="legend-swatch" style="background:${PROV_COLORS[p]};height:10px;width:10px;border-radius:50%"></div><span>${PROV_LABELS[p]}</span></div>`
-  ).join('');
-}
-
-// Figure F — slope ranking horizontal bar chart
-function renderFigF() {
-  const el = document.getElementById('figF-chart');
-  if (!el || !olsResults.length) return;
-
-  const sorted = [...olsResults].sort((a, b) => b.b1 - a.b1);
-  const maxBeta = Math.max(...sorted.map(r => r.b1));
-  const rowH = 22, padL = 170, padR = 60, padT = 16, padB = 20;
-  const w = CW, h = sorted.length * rowH + padT + padB;
-  const barW = w - padL - padR;
-
-  let svg = '';
-  // Gridlines at 0, 5, 10, ...
-  for (let v = 0; v <= Math.ceil(maxBeta + 2); v += 5) {
-    const x = padL + (v / (maxBeta + 2)) * barW;
-    svg += `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${h - padB}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
-    svg += `<text x="${x.toFixed(1)}" y="${h - padB + 12}" fill="${AX_COLOR}" font-size="9" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
-  }
-  // Zero line
-  const x0 = padL + Math.max(0, 0 / (maxBeta + 2)) * barW;
-  svg += `<line x1="${x0}" y1="${padT}" x2="${x0}" y2="${h - padB}" stroke="#aaa" stroke-width="1"/>`;
-
-  sorted.forEach((r, i) => {
-    const y = padT + i * rowH;
-    const bw = (Math.max(0, r.b1) / (maxBeta + 2)) * barW;
-    svg += `<rect x="${padL}" y="${y + 3}" width="${bw.toFixed(1)}" height="${rowH - 6}" fill="${PROV_COLORS[r.provider]}" opacity="0.8"/>`;
-    svg += `<text x="${padL - 6}" y="${y + rowH / 2 + 4}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="end">${esc(r.label)}</text>`;
-    svg += `<text x="${(padL + bw + 4).toFixed(1)}" y="${y + rowH / 2 + 4}" fill="#555" font-size="9" font-family="${SERIF}">${r.b1.toFixed(2)}</text>`;
-  });
-
-  svg += `<text x="${padL + barW / 2}" y="${h - 4}" fill="${AX_COLOR}" font-size="11" font-family="${SERIF}" text-anchor="middle" font-style="italic">&beta;&#x2081; linear coefficient</text>`;
-  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" style="display:block;background:${SVG_BG}">${svgBorder(w, h)}${svg}</svg>`;
-}
-
-// Figure G — knowledge cutoff vs β
-function renderFigG() {
-  const el = document.getElementById('figG-chart');
-  if (!el || !olsResults.length || !modelMetadata.length) return;
-
-  const points = olsResults.map(r => {
-    const meta = modelMetadata.find(m =>
-      m.provider === r.provider && m.alias === r.model && m.reasoning === r.reasoning
-    );
-    if (!meta) return null;
-    const x = parseYearMonth(meta.knowledge_cutoff);
-    return x ? { x, y: r.b1, color: PROV_COLORS[r.provider], label: r.label } : null;
-  }).filter(Boolean);
-
-  if (!points.length) return;
-  const xs = points.map(p => p.x), ys = points.map(p => p.y);
-  const fitLine = fitOLS(xs, ys);
-  const beta_str = `β = ${fitLine.beta >= 0 ? '+' : ''}${fitLine.beta.toFixed(2)} per year, R² = ${fitLine.r2.toFixed(2)}`;
-
-  el.innerHTML = makeScatterSVG(points, {
-    xLabel: `Knowledge cutoff year   [OLS fit: ${beta_str}]`,
-    yLabel: 'β₁ — linear coefficient',
-    xFmt: v => v.toFixed(1),
-    yFmt: v => v.toFixed(1),
-    fitLine,
-  });
-  wireScatterTooltips(el, 'x', 'Knowledge cutoff', 'β');
-
-  const legEl = document.getElementById('figG-legend');
-  if (legEl) legEl.innerHTML = ['anthropic','openai','gemini'].map(p =>
-    `<div class="legend-item"><div class="legend-swatch" style="background:${PROV_COLORS[p]};height:10px;width:10px;border-radius:50%"></div><span>${PROV_LABELS[p]}</span></div>`
-  ).join('');
-}
-
-// Figure H — release date vs α
-function renderFigH() {
-  const el = document.getElementById('figH-chart');
-  if (!el || !olsResults.length || !modelMetadata.length) return;
-
-  const points = olsResults.map(r => {
-    const meta = modelMetadata.find(m =>
-      m.provider === r.provider && m.alias === r.model && m.reasoning === r.reasoning
-    );
-    if (!meta) return null;
-    const x = parseDate(meta.release_date);
-    return x ? { x, y: r.b0, color: PROV_COLORS[r.provider], label: r.label } : null;
-  }).filter(Boolean);
-
-  if (!points.length) return;
-  const xs = points.map(p => p.x), ys = points.map(p => p.y);
-  const fitLine = fitOLS(xs, ys);
-  const beta_str = `β = ${fitLine.beta >= 0 ? '+' : ''}${fitLine.beta.toFixed(1)}%/year, R² = ${fitLine.r2.toFixed(2)}`;
-
-  el.innerHTML = makeScatterSVG(points, {
-    xLabel: `Model release year   [OLS fit: ${beta_str}]`,
-    yLabel: 'β₀ — baseline mobility (%)',
-    xFmt: v => v.toFixed(1),
-    yFmt: v => v.toFixed(0) + '%',
-    fitLine,
-  });
-  wireScatterTooltips(el, 'x', 'Release year', 'α');
-
-  const legEl = document.getElementById('figH-legend');
-  if (legEl) legEl.innerHTML = ['anthropic','openai','gemini'].map(p =>
-    `<div class="legend-item"><div class="legend-swatch" style="background:${PROV_COLORS[p]};height:10px;width:10px;border-radius:50%"></div><span>${PROV_LABELS[p]}</span></div>`
-  ).join('');
-}
-
-// Wire tooltips for generic scatter (post-render)
-function wireScatterTooltips(el, xKey, xLbl, yLbl) {
-  const svg = el.querySelector('svg');
-  if (!svg) return;
-  let tt = el.querySelector('.svg-tooltip');
-  if (!tt) { tt = document.createElement('div'); tt.className = 'svg-tooltip'; el.appendChild(tt); }
-  el.querySelectorAll('.scatter-pt').forEach(c => {
-    c.addEventListener('mouseenter', () => {
-      tt.style.display = 'block';
-      tt.innerHTML = `<strong>${c.dataset.label}</strong><br>${xLbl}: ${c.dataset.x}<br>${yLbl}: ${c.dataset.y}`;
-    });
-    c.addEventListener('mousemove', ev => {
-      const r = el.getBoundingClientRect();
-      tt.style.left = (ev.clientX - r.left + 12) + 'px';
-      tt.style.top  = (ev.clientY - r.top  - 10) + 'px';
-    });
-    c.addEventListener('mouseleave', () => { tt.style.display = 'none'; });
-  });
-}
-
-// Figure I — model family grouped comparison (α and β per model, ordered by release date)
-function renderFigI() {
-  const el = document.getElementById('figI-chart');
-  if (!el || !olsResults.length || !modelMetadata.length) return;
-
-  // Merge OLS + metadata, deduplicate by (provider, model, reasoning)
-  // Sort by release_date
-  const merged = olsResults.map(r => {
-    const meta = modelMetadata.find(m =>
-      m.provider === r.provider && m.alias === r.model && m.reasoning === r.reasoning
-    );
-    if (!meta) return null;
-    return { ...r, release_date: parseDate(meta.release_date) };
-  }).filter(Boolean).sort((a, b) => (a.release_date || 0) - (b.release_date || 0));
-
-  if (!merged.length) return;
-
-  // Group by provider for labeling
-  const providers = ['anthropic', 'openai', 'gemini'];
-  const w = CW, padT = 36, padB = 90, padL = 55, padR = 20;
-  const rowH = 22, groupGap = 16;
-  const nBars = merged.length;
-  const barW = Math.floor((w - padL - padR - (providers.length - 1) * groupGap) / nBars) - 2;
-  const h = CH;
-
-  const maxAlpha = Math.max(...merged.map(r => r.b0));
-  const maxBeta  = Math.max(...merged.map(r => r.b1));
-  const maxVal   = Math.max(maxAlpha, maxBeta * 5);  // scale b1 so it's visible alongside b0
-
-  const toBarH = v => ((v / maxVal) * (h - padT - padB));
-
-  let svg = '';
-  // Y axis ticks for α (0–100%)
-  [0, 25, 50, 75, 100].forEach(v => {
-    if (v > maxVal) return;
-    const y = h - padB - toBarH(v);
-    svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" stroke="${GRID_COLOR}" stroke-width="1"/>`;
-    svg += `<text x="${padL - 4}" y="${(y + 4).toFixed(1)}" fill="${AX_COLOR}" font-size="9" font-family="${SERIF}" text-anchor="end">${v}%</text>`;
-  });
-
-  let x = padL + 4;
-  let prevProvider = null;
-  merged.forEach((r, i) => {
-    if (prevProvider && r.provider !== prevProvider) x += groupGap;
-    prevProvider = r.provider;
-
-    const pcolor = PROV_COLORS[r.provider];
-    const alphaH = toBarH(r.b0);
-    const betaH  = toBarH(r.b1 * 5);  // scale b1 for visibility
-    const baseline = h - padB;
-
-    // α bar — handle negative alpha (draw downward)
-    const alphaRect = alphaH >= 0
-      ? { y: baseline - alphaH, height: alphaH }
-      : { y: baseline, height: -alphaH };
-    svg += `<rect x="${x.toFixed(1)}" y="${alphaRect.y.toFixed(1)}" width="${barW}" height="${alphaRect.height.toFixed(1)}" fill="${pcolor}" opacity="${alphaH >= 0 ? 0.85 : 0.4}"/>`;
-
-    // β bar — handle negative beta (draw downward, red tint)
-    const betaRect = betaH >= 0
-      ? { y: baseline - betaH, height: betaH }
-      : { y: baseline, height: -betaH };
-    const betaFill = betaH >= 0 ? '#111' : '#DC2626';
-    svg += `<rect x="${(x + barW * 0.35).toFixed(1)}" y="${betaRect.y.toFixed(1)}" width="${(barW * 0.3).toFixed(1)}" height="${betaRect.height.toFixed(1)}" fill="${betaFill}" opacity="0.5"/>`;
-
-    // Label (rotated)
-    svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${h - padB + 10}" fill="${AX_COLOR}" font-size="8" font-family="${SERIF}" text-anchor="end" transform="rotate(-55,${(x + barW / 2).toFixed(1)},${h - padB + 10})">${esc(r.label)}</text>`;
-    x += barW + 2;
-  });
-
-  // Provider group labels
-  let gx = padL + 4;
-  let prevProv2 = null;
-  providers.forEach(prov => {
-    const group = merged.filter(r => r.provider === prov);
-    if (!group.length) return;
-    if (prevProv2) gx += groupGap;
-    const gw = group.length * (barW + 2) - 2;
-    svg += `<text x="${(gx + gw / 2).toFixed(1)}" y="${padT - 10}" fill="${PROV_COLORS[prov]}" font-size="10" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${PROV_LABELS[prov]}</text>`;
-    gx += gw + 2;
-    prevProv2 = prov;
-  });
-
-  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" style="display:block;background:${SVG_BG}">${svgBorder(w, h)}${svg}</svg>`;
-
-  const legEl = document.getElementById('figI-legend');
-  if (legEl) legEl.innerHTML = `
-    <div class="legend-item"><div class="legend-swatch" style="background:#7C3AED;height:10px;border-radius:2px"></div><span>Anthropic &beta;&#x2080;</span></div>
-    <div class="legend-item"><div class="legend-swatch" style="background:#22C55E;height:10px;border-radius:2px"></div><span>OpenAI &beta;&#x2080;</span></div>
-    <div class="legend-item"><div class="legend-swatch" style="background:#3B82F6;height:10px;border-radius:2px"></div><span>Gemini &beta;&#x2080;</span></div>
-    <div class="legend-item"><div class="legend-swatch" style="background:#111;opacity:0.5;height:10px;border-radius:2px"></div><span>&beta;&#x2081; &times;5 (dark overlay)</span></div>`;
-}
 
 // ═══════════════════════════════════════════════════════════════
 // REGRESSION TAB — Dummy Variable OLS Tables
@@ -2432,13 +2148,18 @@ function renderAgentAnalysis() {
     loadMicro(0, (rows, cfg) => renderFig24TraitEffects(rows, cfg));
   });
 
-  // Fig 25: regression table
-  loadAgentsJSON(() => {
-    buildModelPicker('fig25-model-select', 0, idx => {
-      loadMicro(idx, (rows, cfg) => renderFig25Regression(rows, cfg));
-    });
-    loadMicro(0, (rows, cfg) => renderFig25Regression(rows, cfg));
+  // Fig 25: regression table (pre-computed from R)
+  buildModelPicker('fig25-model-select', 0, idx => {
+    loadRegression(idx, (data, cfg) => renderFig25Regression(data, cfg));
   });
+  loadRegression(0, (data, cfg) => renderFig25Regression(data, cfg));
+
+  // Fig 26: cross-model trait forest plot + interpretation guide
+  loadAllRegressions(renderFig26ForestPlot);
+  renderFig26Guide();
+
+  // Fig 27: agent consistency matrix
+  loadAgentConsistency(renderFig27ConsistencyMatrix);
 }
 
 // ── Fig 21: Sample Demographics ──────────────────────────────
@@ -2477,7 +2198,7 @@ function renderFig21Demographics(agents) {
     { name: 'Extraversion', hi: 'extroverted', lo: 'introverted' },
     { name: 'Agreeableness', hi: 'agreeable', lo: 'antagonistic' },
     { name: 'Conscientiousness', hi: 'conscientious', lo: 'unconscientious' },
-    { name: 'Neuroticism', hi: 'neurotic', lo: 'emotionally stable' },
+    { name: 'Emotional Stability', hi: 'emotionally stable', lo: 'neurotic' },
     { name: 'Openness', hi: 'open to experience', lo: 'closed to experience' },
   ];
   const traitCounts = dims.map(d => {
@@ -2949,7 +2670,7 @@ function renderFig24TraitEffects(microRows, cfg) {
     { name: 'Extraversion', hi: 'extroverted', lo: 'introverted' },
     { name: 'Agreeableness', hi: 'agreeable', lo: 'antagonistic' },
     { name: 'Conscientiousness', hi: 'conscientious', lo: 'unconscientious' },
-    { name: 'Neuroticism', hi: 'neurotic', lo: 'emotionally stable' },
+    { name: 'Emotional Stability', hi: 'emotionally stable', lo: 'neurotic' },
     { name: 'Openness', hi: 'open to experience', lo: 'closed to experience' },
   ];
 
@@ -2989,8 +2710,8 @@ function renderFig24TraitEffects(microRows, cfg) {
 
   traitData.forEach((td, i) => {
     const y = 44 + i * rowH;
-    // Trait dimension label — right-aligned at center divider
-    svg += `<text x="${halfW - 4}" y="${y + barH / 2 + 10}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="end" font-weight="bold">${td.dim.name}</text>`;
+    // Trait dimension label — centered in gap between panels
+    svg += `<text x="${halfW + gap / 2}" y="${y + barH + 6}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${td.dim.name}</text>`;
 
     // Hi trait bar (grows right-to-left from label area)
     const barAreaRight = halfW - labelW;
@@ -3158,65 +2879,148 @@ function renderFig24TraitEffects(microRows, cfg) {
   el.innerHTML = `<svg width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">${svg}</svg>`;
 }
 
-// ── Fig 25: Agent-Level Logistic Regression ──────────────────
-function renderFig25Regression(microRows, cfg) {
-  const el = document.getElementById('fig25-results');
-  if (!el || !agentsData) return;
+// ── Fig 25: Agent-Level Logistic Regression (pre-computed from R) ──
+const regressionCache = {};
 
-  // Build agent trait lookup
-  const agentMap = {};
-  agentsData.forEach(a => { agentMap[a.agent_id] = a; });
+function loadRegression(modelIdx, callback) {
+  const m = CONFIG.MODELS[modelIdx];
+  const dirKey = configDirKey(m);
+  if (regressionCache[dirKey]) { callback(regressionCache[dirKey], m); return; }
 
-  // Build observation array: each row = (stay_home, infection_level, infection_level^2, traits, age)
-  const obs = [];
-  microRows.forEach(r => {
-    const a = agentMap[+r.agent_id];
-    if (!a) return;
-    obs.push({
-      y: r.response === 'yes' ? 1 : 0,
-      x: parseFloat(r.infection_level) / 100, // normalize to 0-0.07
-      x2: Math.pow(parseFloat(r.infection_level) / 100, 2),
-      female: a.gender === 'female' ? 1 : 0,
-      ext: a.traits.includes('extroverted') ? 1 : 0,
-      agr: a.traits.includes('agreeable') ? 1 : 0,
-      con: a.traits.includes('conscientious') ? 1 : 0,
-      neu: a.traits.includes('neurotic') ? 1 : 0,
-      opn: a.traits.includes('open to experience') ? 1 : 0,
-      age: (a.age - 40) / 20, // centered and scaled
+  fetch(`${CONFIG.DATA_BASE}/regressions/${dirKey}.json`, { cache: 'no-cache' })
+    .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+    .then(data => {
+      regressionCache[dirKey] = data;
+      callback(data, m);
+    })
+    .catch(err => {
+      const el = document.getElementById('fig25-results');
+      if (el) el.innerHTML = `<div style="color:#c00;padding:12px;font-size:12px">Failed to load regression for ${esc(m.label)}: ${esc(String(err))}</div>`;
     });
-  });
+}
 
-  if (!obs.length) { el.innerHTML = '<p style="color:#c00;font-size:12px">No data loaded.</p>'; return; }
+function renderFig25Regression(regData, cfg) {
+  const el = document.getElementById('fig25-results');
+  if (!el) return;
 
-  // Simple logistic regression via IRLS (iteratively reweighted least squares)
-  // Model 1: y ~ intercept + x + x^2
-  const X1 = obs.map(o => [1, o.x, o.x2]);
-  const y = obs.map(o => o.y);
-  const beta1 = logisticIRLS(X1, y, 25);
+  const m1 = regData.model1;
+  const m2 = regData.model2;
 
-  // Model 2: y ~ intercept + x + x^2 + female + ext + agr + con + neu + opn + age
-  const X2 = obs.map(o => [1, o.x, o.x2, o.female, o.ext, o.agr, o.con, o.neu, o.opn, o.age]);
-  const beta2 = logisticIRLS(X2, y, 25);
+  if (m1 && m1.error) { el.innerHTML = `<p style="color:#c00;font-size:12px">Model 1 error: ${esc(m1.error)}</p>`; return; }
+  if (m2 && m2.error) { el.innerHTML = `<p style="color:#c00;font-size:12px">Model 2 error: ${esc(m2.error)}</p>`; return; }
 
-  // Format as table
-  const labels1 = ['Intercept', 'Infection Rate', 'Infection Rate²'];
-  const labels2 = ['Intercept', 'Infection Rate', 'Infection Rate²', 'Female', 'Extraverted', 'Agreeable', 'Conscientious', 'Neurotic', 'Open to Experience', 'Age (scaled)'];
+  // Predictor display order and labels
+  const predictors = [
+    { key: 'intercept',         label: 'Intercept' },
+    { key: 'infection_pct',     label: 'Infection Rate (%)' },
+    { key: 'infection_pct_sq',  label: 'Infection Rate² (%)' },
+    { key: 'male',              label: 'Male' },
+    { key: 'extraverted',       label: 'Extraverted' },
+    { key: 'agreeable',         label: 'Agreeable' },
+    { key: 'conscientious',     label: 'Conscientious' },
+    { key: 'emot_stable',       label: 'Emotionally Stable' },
+    { key: 'open_to_exp',       label: 'Open to Experience' },
+    { key: 'age',               label: 'Age (years)' },
+  ];
 
-  function fmtCoef(b) {
-    if (b === null || isNaN(b)) return '—';
-    return b.toFixed(3);
+  function fmtCoef(v) { return v == null ? '—' : v.toFixed(3); }
+  function fmtOR(v) {
+    if (v == null) return '—';
+    if (v > 1e6) return '> 10⁶';
+    if (v < 1e-6) return '< 10⁻⁶';
+    return v.toFixed(3);
+  }
+  function fmtP(v) {
+    if (v == null) return '—';
+    if (v < 0.001) return '< .001';
+    return v.toFixed(3);
   }
 
-  let html = `<div style="font-size:12px;font-weight:bold;color:#111;margin-bottom:4px">${esc(cfg.label)}</div>`;
-  html += '<table class="ols-table" style="width:100%">';
-  html += '<thead><tr><th></th><th>Model 1</th><th>Model 2</th></tr></thead><tbody>';
-  labels2.forEach((lbl, i) => {
-    const v1 = i < beta1.length ? fmtCoef(beta1[i]) : '';
-    const v2 = i < beta2.length ? fmtCoef(beta2[i]) : '—';
-    html += `<tr><td style="font-weight:bold">${lbl}</td><td>${v1}</td><td>${v2}</td></tr>`;
+  let html = `<div style="font-size:13px;font-weight:bold;color:#111;margin-bottom:6px">${esc(cfg.label)}</div>`;
+
+  // Dependent variable banner
+  html += '<div style="background:#f0f7ff;border:1px solid #b3d4fc;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:12px">';
+  html += '<strong>Dependent variable:</strong> <code style="background:#e8e8e8;padding:1px 4px;border-radius:2px">stay_home</code> &mdash; <strong>1 = stay home, 0 = go out</strong>. ';
+  html += 'Positive coefficients (OR &gt; 1) &rarr; higher odds of staying home. Negative (OR &lt; 1) &rarr; higher odds of going out.';
+  html += '</div>';
+
+  // Table
+  html += '<table class="ols-table" style="width:100%;font-size:11px;border-collapse:collapse">';
+  html += '<thead><tr style="border-bottom:2px solid #333">';
+  html += '<th style="text-align:left;padding:3px 6px">Predictor</th>';
+  html += '<th style="text-align:right;padding:3px 6px">Coef</th><th style="text-align:right;padding:3px 6px">OR</th><th style="text-align:center;padding:3px 6px">Sig</th>';
+  html += '<th style="text-align:right;padding:3px 6px;border-left:2px solid #ccc">Coef</th><th style="text-align:right;padding:3px 6px">OR</th><th style="text-align:center;padding:3px 6px">Sig</th>';
+  html += '</tr>';
+  html += '<tr style="border-bottom:1px solid #ccc;font-size:10px;color:#666">';
+  html += '<th></th>';
+  html += '<th colspan="3" style="text-align:center;padding:1px">Model 1: Fixed Effects</th>';
+  html += '<th colspan="3" style="text-align:center;padding:1px;border-left:2px solid #ccc">Model 2: Random Effects</th>';
+  html += '</tr></thead><tbody>';
+
+  const m1c = m1 ? m1.coefficients : {};
+  const m2c = m2 ? m2.coefficients : {};
+
+  predictors.forEach((pred, i) => {
+    const c1 = m1c[pred.key];
+    const c2 = m2c[pred.key];
+    const bg = i % 2 === 0 ? '#fafafa' : '#fff';
+    html += `<tr style="background:${bg}">`;
+    html += `<td style="font-weight:600;padding:3px 6px">${pred.label}</td>`;
+    // Model 1
+    html += `<td style="text-align:right;padding:3px 6px;font-family:monospace">${c1 ? fmtCoef(c1.estimate) : ''}</td>`;
+    html += `<td style="text-align:right;padding:3px 6px;font-family:monospace">${c1 ? fmtOR(c1.or) : ''}</td>`;
+    html += `<td style="text-align:center;padding:3px 6px;font-family:monospace">${c1 ? c1.sig : ''}</td>`;
+    // Model 2
+    html += `<td style="text-align:right;padding:3px 6px;font-family:monospace;border-left:2px solid #ccc">${c2 ? fmtCoef(c2.estimate) : '—'}</td>`;
+    html += `<td style="text-align:right;padding:3px 6px;font-family:monospace">${c2 ? fmtOR(c2.or) : '—'}</td>`;
+    html += `<td style="text-align:center;padding:3px 6px;font-family:monospace">${c2 ? c2.sig : ''}</td>`;
+    html += '</tr>';
   });
-  html += `<tr><td style="font-weight:bold">N</td><td>${obs.length.toLocaleString()}</td><td>${obs.length.toLocaleString()}</td></tr>`;
+
+  // Footer row: fit statistics
+  html += '<tr style="border-top:2px solid #333"><td style="font-weight:600;padding:3px 6px">AIC</td>';
+  html += `<td colspan="3" style="text-align:center;padding:3px 6px">${m1 && m1.fit ? m1.fit.aic.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit ? m2.fit.aic.toLocaleString() : '—'}</td>`;
+  html += '</tr>';
+  html += '<tr><td style="font-weight:600;padding:3px 6px">BIC</td>';
+  html += `<td colspan="3" style="text-align:center;padding:3px 6px">${m1 && m1.fit && m1.fit.bic ? m1.fit.bic.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit && m2.fit.bic ? m2.fit.bic.toLocaleString() : '—'}</td>`;
+  html += '</tr>';
+  html += '<tr><td style="font-weight:600;padding:3px 6px">N</td>';
+  html += `<td colspan="3" style="text-align:center;padding:3px 6px">${m1 && m1.fit ? m1.fit.n.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit ? m2.fit.n.toLocaleString() : '—'}</td>`;
+  html += '</tr>';
+  if (m2 && m2.fit && m2.fit.n_groups) {
+    html += '<tr><td style="font-weight:600;padding:3px 6px">Groups (agents)</td>';
+    html += '<td colspan="3" style="text-align:center;padding:3px 6px"></td>';
+    html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2.fit.n_groups}</td>`;
+    html += '</tr>';
+    html += '<tr><td style="font-weight:600;padding:3px 6px">RE Variance (σ²<sub>u</sub>)</td>';
+    html += '<td colspan="3" style="text-align:center;padding:3px 6px"></td>';
+    html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2.fit.re_variance.toFixed(4)}</td>`;
+    html += '</tr>';
+  }
   html += '</tbody></table>';
+
+  // Convergence warning (R's NULL serializes as {} — filter it out)
+  if (m2 && m2.warning && typeof m2.warning === 'string' && m2.warning.length > 0) {
+    html += `<div style="margin-top:6px;padding:4px 8px;background:#fff3cd;border:1px solid #ffc107;border-radius:3px;font-size:10px;color:#856404">⚠ Convergence: ${esc(m2.warning)}</div>`;
+  }
+
+  // Footnotes
+  html += '<div style="margin-top:12px;font-size:10px;color:#666;line-height:1.5;border-top:1px solid #ddd;padding-top:8px">';
+  html += '<div style="font-weight:600;margin-bottom:4px">Notes</div>';
+  html += '<div>Model 1 = fixed-effects logit (glm) with 99 agent dummies (only infection coefficients reported). ';
+  html += 'Model 2 = random-effects logit (glmer, lme4) with random intercepts per agent.</div>';
+  html += '<div style="margin-top:4px">Dummy coding: male = 1, extraverted = 1, agreeable = 1, conscientious = 1, emotionally stable = 1, open to experience = 1. ';
+  html += 'Reference categories: female, introverted, antagonistic, unconscientious, neurotic, closed to experience.</div>';
+  html += '<div style="margin-top:4px">No normalization: age in raw years (18–65), infection rate as percentage (0–7%).</div>';
+  html += '<div style="margin-top:4px">Coefficients are log-odds (DV: stay_home, where 1 = stay home, 0 = go out). OR = exp(coefficient). OR > 1 → higher odds of staying home; OR < 1 → higher odds of going out. ';
+  html += 'OR CIs = exp(coef ± 1.96 × SE). See "Understanding: Log Odds" in Author Notes for a worked example.</div>';
+  html += '<div style="margin-top:4px">Significance: *** p < 0.001, ** p < 0.01, * p < 0.05, . p < 0.1</div>';
+  html += '<div style="margin-top:4px">20,000 observations per configuration (100 agents × 40 infection levels × 5 repetitions). ';
+  html += 'Computed in R using glm() and lme4::glmer(optimizer = bobyqa).</div>';
+  html += '</div>';
 
   el.innerHTML = html;
 }
@@ -3232,78 +3036,456 @@ function normalCDF(x) {
   return 0.5 * (1.0 + sign * y);
 }
 
-// ── Logistic regression via IRLS ─────────────────────────────
-function logisticIRLS(X, y, maxIter) {
-  const n = X.length, p = X[0].length;
-  let beta = new Array(p).fill(0);
 
-  for (let iter = 0; iter < maxIter; iter++) {
-    // Compute predictions
-    const mu = X.map(xi => {
-      let z = 0;
-      for (let j = 0; j < p; j++) z += beta[j] * xi[j];
-      return 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, z))));
-    });
+// ── Fig 26: Cross-Model Trait Coefficient Forest Plot ────────
 
-    // Weighted least squares step: (X'WX)^-1 X'W z
-    // where W = diag(mu*(1-mu)), z = X*beta + W^-1*(y - mu)
-    // Compute X'WX and X'Wz
-    const XtWX = Array.from({ length: p }, () => new Array(p).fill(0));
-    const XtWz = new Array(p).fill(0);
-
-    for (let i = 0; i < n; i++) {
-      const w = mu[i] * (1 - mu[i]) + 1e-10;
-      const zi = 0;
-      let eta = 0;
-      for (let j = 0; j < p; j++) eta += beta[j] * X[i][j];
-      const z_i = eta + (y[i] - mu[i]) / w;
-
-      for (let j = 0; j < p; j++) {
-        XtWz[j] += X[i][j] * w * z_i;
-        for (let k = j; k < p; k++) {
-          XtWX[j][k] += X[i][j] * w * X[i][k];
-        }
-      }
+function loadAllRegressions(callback) {
+  const keys = [...new Set(CONFIG.MODELS.map(m => configDirKey(m)))];
+  let loaded = 0;
+  const results = {};
+  keys.forEach(key => {
+    if (regressionCache[key]) {
+      results[key] = regressionCache[key];
+      if (++loaded === keys.length) callback(results);
+      return;
     }
-    // Symmetrize
-    for (let j = 0; j < p; j++)
-      for (let k = 0; k < j; k++)
-        XtWX[j][k] = XtWX[k][j];
-
-    // Solve via Gaussian elimination
-    const newBeta = solveLinear(XtWX, XtWz);
-    if (!newBeta) return beta;
-
-    // Check convergence
-    let maxDiff = 0;
-    for (let j = 0; j < p; j++) maxDiff = Math.max(maxDiff, Math.abs(newBeta[j] - beta[j]));
-    beta = newBeta;
-    if (maxDiff < 1e-6) break;
-  }
-  return beta;
+    fetch(`${CONFIG.DATA_BASE}/regressions/${key}.json`, { cache: 'no-cache' })
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then(data => {
+        regressionCache[key] = data;
+        results[key] = data;
+        if (++loaded === keys.length) callback(results);
+      })
+      .catch(() => { if (++loaded === keys.length) callback(results); });
+  });
 }
 
-function solveLinear(A, b) {
-  const n = A.length;
-  const M = A.map((row, i) => [...row, b[i]]);
-  for (let col = 0; col < n; col++) {
-    let maxRow = col;
-    for (let row = col + 1; row < n; row++)
-      if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
-    [M[col], M[maxRow]] = [M[maxRow], M[col]];
-    if (Math.abs(M[col][col]) < 1e-12) return null;
-    for (let row = col + 1; row < n; row++) {
-      const f = M[row][col] / M[col][col];
-      for (let j = col; j <= n; j++) M[row][j] -= f * M[col][j];
+function renderFig26ForestPlot(allRegs) {
+  const el = document.getElementById('fig26-chart');
+  if (!el) return;
+
+  const TRAIT_MAP = [
+    { key: 'extraverted',   label: 'Extraversion (vs. Introversion)',                          leftDir: 'Extraverts go out more than Introverts',                                         rightDir: 'Extraverts stay home more than Introverts',                                         traitNoun: 'Extraverts',                         refNoun: 'Introverts' },
+    { key: 'agreeable',     label: 'Agreeableness (vs. Antagonism)',                           leftDir: 'Agreeable people go out more than Antagonistic people',                           rightDir: 'Agreeable people stay home more than Antagonistic people',                           traitNoun: 'Agreeable people',                    refNoun: 'Antagonistic people' },
+    { key: 'conscientious', label: 'Conscientiousness (vs. Unconscientiousness)',              leftDir: 'Conscientious people go out more than Unconscientious people',                    rightDir: 'Conscientious people stay home more than Unconscientious people',                    traitNoun: 'Conscientious people',                refNoun: 'Unconscientious people' },
+    { key: 'emot_stable',   label: 'Emotional Stability (vs. Neuroticism)',                    leftDir: 'Emotionally stable people go out more than Neurotic people',                      rightDir: 'Emotionally stable people stay home more than Neurotic people',                      traitNoun: 'Emotionally stable people',           refNoun: 'Neurotic people' },
+    { key: 'open_to_exp',   label: 'Openness to Experience (vs. Closedness to Experience)',    leftDir: 'People open to experience go out more than those closed to experience',            rightDir: 'People open to experience stay home more than those closed to experience',            traitNoun: 'People open to experience',           refNoun: 'People closed to experience' },
+    { key: 'male',          label: 'Male (vs. Female)',                                        leftDir: 'Males go out more than Females',                                                 rightDir: 'Males stay home more than Females',                                                 traitNoun: 'Males',                               refNoun: 'Females' },
+    { key: 'age',           label: 'Age (per year older)',                                     leftDir: 'Older people go out more than Younger people',                                   rightDir: 'Older people stay home more than Younger people',                                   traitNoun: null,                                  refNoun: null },
+  ];
+
+  // Collect configs in display order (matches CONFIG.MODELS)
+  const configs = [];
+  const seen = new Set();
+  CONFIG.MODELS.forEach(m => {
+    const key = configDirKey(m);
+    if (seen.has(key)) return;
+    seen.add(key);
+    if (allRegs[key] && allRegs[key].model2 && allRegs[key].model2.coefficients) {
+      configs.push({ key, label: m.label, provider: m.provider, color: CONFIG.PROVIDER_COLORS[m.provider] || '#999' });
+    }
+  });
+
+  const nConfigs = configs.length;
+  if (nConfigs === 0) {
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data available.</div>';
+    return;
+  }
+
+  // Layout
+  const W = Math.min(el.parentElement?.offsetWidth || 860, 860);
+  const rowH = 14;
+  const panelPad = { t: 24, b: 30, l: 160, r: 30 };
+  const gapBetweenProviders = 6;
+  const panelGap = 14;
+
+  // Count provider groups for spacing
+  let prevProv = '';
+  let provGaps = 0;
+  configs.forEach(c => { if (c.provider !== prevProv) { if (prevProv) provGaps++; prevProv = c.provider; } });
+
+  const panelInnerH = nConfigs * rowH + provGaps * gapBetweenProviders;
+  const panelH = panelPad.t + panelInnerH + panelPad.b;
+  const totalH = TRAIT_MAP.length * (panelH + panelGap) - panelGap;
+  const plotW = W - panelPad.l - panelPad.r;
+
+  // X scale: log10(OR), range [-4, +4]
+  const xMin = -4, xMax = 4;
+  function xScale(logOR) {
+    return panelPad.l + ((logOR - xMin) / (xMax - xMin)) * plotW;
+  }
+
+  // Tick values on log10 scale
+  const ticks = [-3, -2, -1, 0, 1, 2, 3];
+  const tickLabels = ['0.001', '0.01', '0.1', '1', '10', '100', '1000'];
+
+  let svg = '';
+
+  TRAIT_MAP.forEach((trait, ti) => {
+    const py = ti * (panelH + panelGap);
+
+    // Panel background
+    svg += `<rect x="0" y="${py}" width="${W}" height="${panelH}" fill="${ti % 2 === 0 ? '#fafafa' : '#f5f5f5'}" rx="3"/>`;
+
+    // Panel title
+    svg += `<text x="${W / 2}" y="${py + 16}" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">${trait.label}</text>`;
+
+    // X-axis reference line at OR=1 (log10=0)
+    const x0 = xScale(0);
+    svg += `<line x1="${x0}" y1="${py + panelPad.t}" x2="${x0}" y2="${py + panelPad.t + panelInnerH}" stroke="#999" stroke-width="1" stroke-dasharray="4,3"/>`;
+
+    // Tick lines + labels (bottom)
+    ticks.forEach((t, i) => {
+      const tx = xScale(t);
+      svg += `<line x1="${tx}" y1="${py + panelPad.t + panelInnerH}" x2="${tx}" y2="${py + panelPad.t + panelInnerH + 4}" stroke="#bbb" stroke-width="0.5"/>`;
+      svg += `<text x="${tx}" y="${py + panelPad.t + panelInnerH + 15}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${tickLabels[i]}</text>`;
+    });
+
+    // Direction labels — trait-specific (on every panel)
+    svg += `<text x="${panelPad.l + 4}" y="${py + panelH - 2}" font-size="8" fill="#999" font-family="${SERIF}" font-style="italic">\u2190 ${trait.leftDir}</text>`;
+    svg += `<text x="${W - panelPad.r - 4}" y="${py + panelH - 2}" font-size="8" fill="#999" font-family="${SERIF}" font-style="italic" text-anchor="end">${trait.rightDir} \u2192</text>`;
+
+    // Plot each config
+    let rowIdx = 0;
+    let lastProv = '';
+    configs.forEach(c => {
+      if (c.provider !== lastProv && lastProv !== '') rowIdx += gapBetweenProviders / rowH;
+      lastProv = c.provider;
+
+      const cy = py + panelPad.t + rowIdx * rowH + rowH / 2;
+      const coef = allRegs[c.key].model2.coefficients[trait.key];
+
+      if (!coef) {
+        rowIdx++;
+        return;
+      }
+
+      const or = coef.or;
+      const orLo = typeof coef.or_ci_lo === 'number' ? coef.or_ci_lo : 0;
+      const orHi = typeof coef.or_ci_hi === 'number' ? coef.or_ci_hi : Infinity;
+      const sig = coef.p < 0.05;
+
+      // Convert to log10, clamping to display range
+      const safeLog = v => v <= 0 ? xMin : Math.log10(v);
+      const logOR = Math.max(xMin, Math.min(xMax, safeLog(or)));
+      let logLo = Math.max(xMin, safeLog(orLo));
+      let logHi = Math.min(xMax, safeLog(orHi));
+
+      const px = xScale(logOR);
+      const pxLo = xScale(logLo);
+      const pxHi = xScale(logHi);
+
+      // CI whisker
+      svg += `<line x1="${pxLo.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${pxHi.toFixed(1)}" y2="${cy.toFixed(1)}" stroke="${c.color}" stroke-width="1.5" opacity="0.6"/>`;
+
+      // Arrow indicators for clipped CIs
+      if (logLo <= xMin + 0.01) {
+        svg += `<polygon points="${pxLo},${cy - 3} ${pxLo},${cy + 3} ${pxLo - 5},${cy}" fill="${c.color}" opacity="0.6"/>`;
+      }
+      if (logHi >= xMax - 0.01) {
+        svg += `<polygon points="${pxHi},${cy - 3} ${pxHi},${cy + 3} ${pxHi + 5},${cy}" fill="${c.color}" opacity="0.6"/>`;
+      }
+
+      // Point estimate (filled = sig, hollow = not sig)
+      if (sig) {
+        svg += `<circle cx="${px.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="${c.color}" stroke="${c.color}" stroke-width="1"/>`;
+      } else {
+        svg += `<circle cx="${px.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="white" stroke="${c.color}" stroke-width="1.5"/>`;
+      }
+
+      // Invisible hit target for tooltip
+      const fmtOR = v => v >= 100 ? Math.round(v).toLocaleString() : v >= 1 ? v.toFixed(2) : v >= 0.01 ? v.toFixed(4) : v.toExponential(2);
+      const tipLine1 = `${esc(c.label)} \u2014 ${trait.label}`;
+      const tipLine2 = `OR = ${fmtOR(or)}  [${fmtOR(orLo)}, ${orHi === Infinity ? '\u221E' : fmtOR(orHi)}]${sig ? '' : ' (n.s.)'}`;
+      // Plain-English sentence
+      let tipLine3 = '';
+      if (trait.traitNoun) {
+        tipLine3 = `${trait.traitNoun} have ${fmtOR(or)}\u00D7 the odds of staying home than that of ${trait.refNoun}`;
+      } else {
+        // Age — continuous
+        tipLine3 = `Each additional year of age \u2192 ${fmtOR(or)}\u00D7 the odds of staying home`;
+      }
+      svg += `<circle class="forest-dot" cx="${px.toFixed(1)}" cy="${cy.toFixed(1)}" r="8" fill="transparent" stroke="none" style="cursor:pointer" data-tip1="${tipLine1.replace(/"/g, '&quot;')}" data-tip2="${tipLine2.replace(/"/g, '&quot;')}" data-tip3="${tipLine3.replace(/"/g, '&quot;')}"/>`;
+
+      // Config label (left)
+      svg += `<text x="${panelPad.l - 6}" y="${(cy + 3.5).toFixed(1)}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="end">${esc(c.label)}</text>`;
+
+      rowIdx++;
+    });
+
+    // Provider group separator lines
+    rowIdx = 0;
+    lastProv = '';
+    configs.forEach(c => {
+      if (c.provider !== lastProv && lastProv !== '') {
+        const sepY = py + panelPad.t + rowIdx * rowH;
+        svg += `<line x1="${panelPad.l}" y1="${sepY.toFixed(1)}" x2="${W - panelPad.r}" y2="${sepY.toFixed(1)}" stroke="#ddd" stroke-width="0.5"/>`;
+        rowIdx += gapBetweenProviders / rowH;
+      }
+      lastProv = c.provider;
+      rowIdx++;
+    });
+  });
+
+  // Footnotes
+  const footY = totalH + 16;
+  const footnotes = [
+    'Source: Model 2 random-effects logit (glmer) coefficients. OR = exp(\u03B2). OR > 1 = higher odds of staying home.',
+    'Dummy coding: trait present = 1 (reference = absent). Male = 1 (reference = female). Age = raw years (18\u201365), OR is per-year increment.',
+    '95% CIs = exp(\u03B2 \u00B1 1.96 \u00D7 SE). Arrows indicate CIs extending beyond display range. 20,000 observations per configuration.',
+  ];
+  footnotes.forEach((f, i) => {
+    svg += `<text x="10" y="${footY + i * 12}" font-size="7.5" fill="#aaa" font-family="${SERIF}">${f}</text>`;
+  });
+
+  const svgH = footY + footnotes.length * 12 + 8;
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${svgH}" viewBox="0 0 ${W} ${svgH}" style="display:block;background:${SVG_BG};border:1px solid #ccc">${svg}</svg>`;
+
+  // Wire forest plot tooltips
+  let forestTip = document.getElementById('forest-tooltip');
+  if (!forestTip) {
+    forestTip = document.createElement('div');
+    forestTip.id = 'forest-tooltip';
+    forestTip.style.cssText = 'display:none;position:fixed;background:#222;color:#fff;padding:6px 12px;font-size:11px;font-family:Georgia,serif;border-radius:3px;pointer-events:none;z-index:200;line-height:1.6;max-width:400px';
+    document.body.appendChild(forestTip);
+  }
+  el.querySelectorAll('.forest-dot').forEach(dot => {
+    dot.addEventListener('mouseenter', () => {
+      forestTip.innerHTML = `<strong>${dot.dataset.tip1}</strong><br>${dot.dataset.tip2}<br><em>${dot.dataset.tip3}</em>`;
+      forestTip.style.display = 'block';
+    });
+    dot.addEventListener('mousemove', e => {
+      forestTip.style.left = (e.clientX + 14) + 'px';
+      forestTip.style.top = (e.clientY - 36) + 'px';
+    });
+    dot.addEventListener('mouseleave', () => { forestTip.style.display = 'none'; });
+  });
+}
+
+// ── Fig 26 Interpretation Guide ─────────────────────────────
+
+function renderFig26Guide() {
+  const el = document.getElementById('fig26-guide');
+  if (!el) return;
+
+  const S = 'font-family:"Libre Baskerville","Georgia",serif';
+  const mono = 'font-family:monospace;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:4px';
+
+  let html = `<div style="${S};font-size:13px;line-height:1.7;color:#333;max-width:780px;margin:8px 0 12px;border:1px solid #e0e0e0;border-radius:4px;padding:14px 18px">`;
+
+  // ── What is an Odds Ratio? ──
+  html += '<h4 style="margin:0 0 8px;font-size:14px;color:#111">What is an Odds Ratio?</h4>';
+  html += '<p style="margin:0 0 8px">Each dot in the figure above is an <strong>odds ratio (OR)</strong>. The OR compares how likely agents <em>with</em> a trait are to stay home versus agents <em>without</em> it.</p>';
+
+  html += '<p style="margin:0 0 4px">Start with <strong>odds</strong> &mdash; not probability, but the ratio of staying home to going out:</p>';
+  html += `<div style="${mono};margin:6px 0">`;
+  html += 'odds = P(staying home) / P(going out)</div>';
+  html += '<p style="margin:4px 0 8px;font-size:12px;color:#666">Example: if an agent stays home 80% of the time, odds = 0.80 / 0.20 = <strong>4</strong> (they stay home 4 times for every 1 time they go out).</p>';
+
+  html += '<p style="margin:0 0 4px">The <strong>odds ratio</strong> then compares two groups:</p>';
+  html += `<div style="${mono};margin:6px 0">`;
+  html += 'OR = odds(extraverted agent stays home) / odds(introverted agent stays home)</div>';
+
+  // ── Concrete worked example ──
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Worked example</h4>';
+  html += '<p style="margin:0 0 4px">Suppose introverted agents stay home 90% of the time and extraverted agents stay home 30%:</p>';
+  html += `<div style="${mono};margin:6px 0">`;
+  html += 'Introverted odds = 0.90 / 0.10 = 9<br>';
+  html += 'Extraverted odds = 0.30 / 0.70 = 0.43<br><br>';
+  html += 'OR = 0.43 / 9 = <strong>0.048</strong></div>';
+  html += '<p style="margin:4px 0 8px">An OR of 0.048 means extraverted agents have roughly <strong>1/20th</strong> the odds of staying home compared to introverts. In the forest plot, this dot would appear far to the <em>left</em> of the dashed line.</p>';
+
+  // ── Quick reference table ──
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Quick reference</h4>';
+  html += '<table class="ols-table" style="width:auto;margin:8px 0">';
+  html += '<thead><tr><th>OR</th><th>What it means</th><th>In the figure</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr><td style="text-align:center"><strong>OR = 100</strong></td>';
+  html += '<td>Agents with the trait have <strong>100&times;</strong> the odds of staying home</td>';
+  html += '<td>Dot far <strong>right</strong> of dashed line</td></tr>';
+  html += '<tr><td style="text-align:center"><strong>OR = 10</strong></td>';
+  html += '<td>Agents with the trait have <strong>10&times;</strong> the odds of staying home</td>';
+  html += '<td>Dot moderately right</td></tr>';
+  html += '<tr><td style="text-align:center"><strong>OR = 1</strong></td>';
+  html += '<td>No difference &mdash; trait has no effect</td>';
+  html += '<td>Dot on the <strong>dashed line</strong></td></tr>';
+  html += '<tr><td style="text-align:center"><strong>OR = 0.1</strong></td>';
+  html += '<td>Agents with the trait have <strong>1/10th</strong> the odds of staying home</td>';
+  html += '<td>Dot moderately left</td></tr>';
+  html += '<tr><td style="text-align:center"><strong>OR = 0.01</strong></td>';
+  html += '<td>Agents with the trait have <strong>1/100th</strong> the odds &mdash; they almost always go out</td>';
+  html += '<td>Dot far <strong>left</strong> of dashed line</td></tr>';
+  html += '</tbody></table>';
+
+  // ── Note on age ──
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">A note on age</h4>';
+  html += '<p style="margin:0 0 4px">Unlike the personality traits (which are binary: present or absent), <strong>age is continuous</strong> (18&ndash;65). The OR for age is the effect of <em>one additional year</em>. An OR of 0.999 per year looks negligible, but it compounds across the full range:</p>';
+  html += `<div style="${mono};margin:6px 0">`;
+  html += 'Cumulative OR across 47 years = OR<sup>47</sup><br>';
+  html += 'If OR = 0.999: 0.999<sup>47</sup> = 0.954 (barely any effect)<br>';
+  html += 'If OR = 0.95: &nbsp;0.95<sup>47</sup> &nbsp;= 0.089 (a 65-year-old has 1/11th the odds of an 18-year-old)</div>';
+  html += '<p style="margin:4px 0 0;font-size:12px;color:#666">Check the Age panel below to see whether your models show a meaningful per-year effect or not.</p>';
+
+  html += '</div>';
+  el.innerHTML = html;
+
+  // Wire toggle button
+  const btn = document.getElementById('fig26-guide-toggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const open = el.style.display !== 'none';
+      el.style.display = open ? 'none' : 'block';
+      btn.innerHTML = open ? 'How to Read This Figure &#x25BE;' : 'How to Read This Figure &#x25B4;';
+    });
+  }
+}
+
+// ── Fig 27: Agent Behavioral Consistency Matrix ─────────────
+
+function ranks(arr) {
+  const sorted = arr.map((v, i) => [v, i]).sort((a, b) => a[0] - b[0]);
+  const r = new Array(arr.length);
+  let i = 0;
+  while (i < sorted.length) {
+    let j = i;
+    while (j < sorted.length && sorted[j][0] === sorted[i][0]) j++;
+    const avg = (i + j + 1) / 2;
+    for (let k = i; k < j; k++) r[sorted[k][1]] = avg;
+    i = j;
+  }
+  return r;
+}
+
+function spearmanRho(x, y) {
+  const rx = ranks(x), ry = ranks(y);
+  const n = x.length;
+  const mx = rx.reduce((a, b) => a + b) / n;
+  const my = ry.reduce((a, b) => a + b) / n;
+  let num = 0, dx = 0, dy = 0;
+  for (let i = 0; i < n; i++) {
+    num += (rx[i] - mx) * (ry[i] - my);
+    dx += (rx[i] - mx) ** 2;
+    dy += (ry[i] - my) ** 2;
+  }
+  return dx === 0 || dy === 0 ? 0 : num / Math.sqrt(dx * dy);
+}
+
+let agentConsistencyCache = null;
+
+function loadAgentConsistency(callback) {
+  if (agentConsistencyCache) { callback(agentConsistencyCache); return; }
+  fetch(`${CONFIG.DATA_BASE}/agent_consistency.json`)
+    .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+    .then(data => {
+      agentConsistencyCache = data;
+      callback(data);
+    })
+    .catch(err => {
+      const el = document.getElementById('fig27-chart');
+      if (el) el.innerHTML = `<div style="color:#c00;padding:20px">Could not load agent consistency data: ${esc(String(err))}. Run: python analysis/compute_agent_consistency.py</div>`;
+    });
+}
+
+function renderFig27ConsistencyMatrix(data) {
+  const el = document.getElementById('fig27-chart');
+  if (!el) return;
+
+  const configs = data.configs;
+  const labels = data.labels;
+  const providers = data.providers;
+  const rates = data.rates;
+  const n = configs.length;
+
+  // Compute Spearman correlation matrix
+  const rhoMatrix = [];
+  for (let i = 0; i < n; i++) {
+    rhoMatrix[i] = [];
+    for (let j = 0; j < n; j++) {
+      rhoMatrix[i][j] = i === j ? 1.0 : spearmanRho(rates[i], rates[j]);
     }
   }
-  const x = new Array(n);
-  for (let row = n - 1; row >= 0; row--) {
-    x[row] = M[row][n];
-    for (let j = row + 1; j < n; j++) x[row] -= M[row][j] * x[j];
-    x[row] /= M[row][row];
+
+  // Layout
+  const cellSize = 32;
+  const labelW = 130;
+  const topLabelH = 130;
+  const pad = 10;
+  const W = labelW + n * cellSize + pad * 2;
+  const H = topLabelH + n * cellSize + pad * 2 + 40;
+
+  // Color scale: interpolate from white (rho ~0.4) to blue (rho=1.0)
+  function rhoColor(rho) {
+    const t = Math.max(0, Math.min(1, (rho - 0.4) / 0.6));
+    const r = Math.round(255 - t * 200);
+    const g = Math.round(255 - t * 200);
+    const b = Math.round(255 - t * 55);
+    return `rgb(${r},${g},${b})`;
   }
-  return x;
+
+  let svg = '';
+  const ox = pad + labelW;
+  const oy = pad + topLabelH;
+
+  // Provider group separators
+  const provBreaks = [];
+  for (let i = 1; i < n; i++) {
+    if (providers[i] !== providers[i - 1]) provBreaks.push(i);
+  }
+
+  // Cells
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const rho = rhoMatrix[i][j];
+      const x = ox + j * cellSize;
+      const y = oy + i * cellSize;
+      svg += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" fill="${rhoColor(rho)}" stroke="#fff" stroke-width="1">`;
+      svg += `<title>${esc(labels[i])} vs ${esc(labels[j])}: \u03C1 = ${rho.toFixed(3)}</title>`;
+      svg += `</rect>`;
+      // Show value in cell if big enough
+      if (cellSize >= 28) {
+        const textColor = rho > 0.8 ? '#fff' : '#333';
+        svg += `<text x="${x + cellSize / 2}" y="${y + cellSize / 2 + 3}" font-size="7.5" fill="${textColor}" font-family="${SERIF}" text-anchor="middle">${rho.toFixed(2)}</text>`;
+      }
+    }
+  }
+
+  // Row labels (left)
+  for (let i = 0; i < n; i++) {
+    const provColor = CONFIG.PROVIDER_COLORS[providers[i]] || '#333';
+    svg += `<text x="${ox - 4}" y="${oy + i * cellSize + cellSize / 2 + 3}" font-size="8.5" fill="${provColor}" font-family="${SERIF}" text-anchor="end">${esc(labels[i])}</text>`;
+  }
+
+  // Column labels (top, rotated)
+  for (let j = 0; j < n; j++) {
+    const provColor = CONFIG.PROVIDER_COLORS[providers[j]] || '#333';
+    const tx = ox + j * cellSize + cellSize / 2;
+    const ty = oy - 4;
+    svg += `<text x="${tx}" y="${ty}" font-size="8.5" fill="${provColor}" font-family="${SERIF}" text-anchor="start" transform="rotate(-55,${tx},${ty})">${esc(labels[j])}</text>`;
+  }
+
+  // Provider group separator lines
+  provBreaks.forEach(idx => {
+    const pos = idx * cellSize;
+    svg += `<line x1="${ox + pos}" y1="${oy}" x2="${ox + pos}" y2="${oy + n * cellSize}" stroke="#666" stroke-width="1.5"/>`;
+    svg += `<line x1="${ox}" y1="${oy + pos}" x2="${ox + n * cellSize}" y2="${oy + pos}" stroke="#666" stroke-width="1.5"/>`;
+  });
+
+  // Border
+  svg += `<rect x="${ox}" y="${oy}" width="${n * cellSize}" height="${n * cellSize}" fill="none" stroke="#666" stroke-width="1.5"/>`;
+
+  // Color legend
+  const legY = oy + n * cellSize + 14;
+  const legW = 200;
+  const legX = ox + (n * cellSize - legW) / 2;
+  for (let i = 0; i < legW; i++) {
+    const rho = 0.4 + (i / legW) * 0.6;
+    svg += `<rect x="${legX + i}" y="${legY}" width="1.5" height="10" fill="${rhoColor(rho)}"/>`;
+  }
+  svg += `<text x="${legX}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="start">0.4</text>`;
+  svg += `<text x="${legX + legW}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="end">1.0</text>`;
+  svg += `<text x="${legX + legW / 2}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="middle">Spearman \u03C1</text>`;
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
 }
 
 init();

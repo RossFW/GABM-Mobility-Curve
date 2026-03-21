@@ -1,6 +1,6 @@
 # Project Status — GABM Mobility Curve
 
-*Last updated: March 17 2026*
+*Last updated: March 20 2026*
 
 ---
 
@@ -70,30 +70,30 @@
 
 ---
 
-## Phase 3: OLS Regression Analysis 🔲 NEXT
+## Phase 3: Regression Analysis 🔄 IN PROGRESS
 
-Primary analysis on macro data:
+Agent-level logistic regression (micro data, 20K obs per config):
 
-- [ ] Write `combine_results.py` — merges all 21 macro CSVs into `data/combined/all_macro.csv` (840 rows: 21 configs × 40 levels)
-- [ ] OLS regression: `pct_stay_home ~ infection_level` per model config
-  - Compare slope (sensitivity) and intercept (baseline) across all 21 configs
-  - Provider fixed effects and reasoning-level contrasts
-  - Also fit sigmoid: `logit(pct_stay_home) ~ infection_level`
+- [x] R script: `analysis/compute_regressions.R` — fixed-effects + random-effects logit
+- [x] All 21 configs processed — JSON output in `viz/data/real/regressions/`
+- [x] Model 1: fixed-effects logit with agent dummies (infection coefficients)
+- [x] Model 2: random-effects logit via glmer (trait + demographic effects)
+- [x] Fig 25 loads pre-computed regression JSON (replaced client-side IRLS)
+- [x] Fig 26: cross-model trait coefficient forest plot (7 panels, all 21 configs)
+- [x] Fig 27: agent consistency matrix (Spearman ρ, pre-computed via Python)
+- [x] Fig 22 split: heatmap + concordance now separate figures (Fig 22 / Fig 22b)
 - [ ] Export regression table for paper (LaTeX format)
-- [ ] Uncertainty: Wilson CIs or bootstrap (resample 100 agents, 1000× iterations)
-
-Secondary: agent-level analysis
-- [ ] `data/combined/all_micro.csv` — full 420K row merge
-- [ ] OLS: `stay_home ~ infection_level + age + trait_*` per model
-- [ ] Compare how demographic predictors differ across LLMs
+- [ ] Macro-level OLS: `pct_stay_home ~ infection_level` per config
 
 ---
 
 ## Phase 4: Viz with Real Data ✅ COMPLETE
 
 - [x] `viz/data/real/` populated via `combine_data.py`
-- [x] `analytics.html` — 20 figures rendering with real data (academic LaTeX style)
+- [x] `analytics.html` — 28 figures rendering with real data (academic LaTeX style)
 - [x] `town.html` — real agent data loaded (Phaser 3 town view)
+- [x] Research questions & evidence map (Author Notes)
+- [x] Spearman's ρ walkthrough (Author Notes)
 
 ---
 
