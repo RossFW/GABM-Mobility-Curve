@@ -39,7 +39,9 @@
       "aic": 5499.09,
       "bic": 6305.24,
       "n": 20000,
-      "deviance": 5295.09
+      "deviance": 5295.09,
+      "null_deviance": 16335.9,
+      "pseudo_r2": 0.6759
     }
   },
   "model2": {

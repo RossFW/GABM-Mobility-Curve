@@ -183,10 +183,12 @@ for (dir_name in config_dirs) {
         type         = "fixed_effects_logit",
         coefficients = m1_coefs,
         fit          = list(
-          aic      = round(AIC(m1), 2),
-          bic      = round(BIC(m1), 2),
-          n        = n_obs,
-          deviance = round(deviance(m1), 2)
+          aic          = round(AIC(m1), 2),
+          bic          = round(BIC(m1), 2),
+          n            = n_obs,
+          deviance     = round(deviance(m1), 2),
+          null_deviance = round(m1$null.deviance, 2),
+          pseudo_r2    = round(1 - deviance(m1) / m1$null.deviance, 4)
         )
       )
     }, error = function(e) {
