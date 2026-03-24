@@ -833,10 +833,12 @@
     <div class="section" id="fig27-lo-section" data-section="traits-infection">
       <div class="fig-num">Figure 27</div>
       <div class="fig-title">Log-Odds Landscape: Traits &amp; Infection</div>
-      <div class="fig-caption">For each model: the personality log-odds range across 100 agents (bar = IQR, whisker = full range) compared to the infection log-odds range across 0%&ndash;7% infection levels. Hollow markers show the theoretical min/max personality &mdash; the most &ldquo;go out&rdquo; and &ldquo;stay home&rdquo; trait combinations possible. On a linear log-odds scale, widths are directly comparable: wider = more influence. Hover any element for details.</div>
+      <div class="fig-caption">For each model, the combined personality log-odds range across 100 agents (bar&nbsp;=&nbsp;IQR, whisker&nbsp;=&nbsp;full range) is compared to the infection log-odds range across 0%&ndash;7% infection levels. Hollow markers show the theoretical min/max personality &mdash; the most &ldquo;go out&rdquo; and &ldquo;stay home&rdquo; trait combinations possible. The right-hand column shows the Personality/Infection ratio: how many times wider the personality spread is than the infection range. A secondary axis maps log-odds to P(stay&nbsp;home). Use the filter pills to compare subsets of models.</div>
+      <button id="fig27-lo-guide-toggle" style="background:none;border:1px solid #ccc;padding:5px 14px;font-family:'Libre Baskerville',Georgia,serif;font-size:12px;cursor:pointer;border-radius:3px;color:#555;margin-bottom:8px">How to Read This Figure &#x25BE;</button>
+      <div id="fig27-lo-guide" style="display:none"></div>
       <div id="fig27-lo-filters"></div>
       <div class="chart-container" id="fig27-lo-chart"></div>
-      <div class="fig-note">Personality log-odds = &Sigma;&beta;<sub>trait</sub> &times; trait<sub>i</sub> + &beta;<sub>male</sub> &times; male + &beta;<sub>age</sub> &times; age for each of 100 agents. Infection log-odds = &beta;<sub>inf</sub> &times; x + &beta;<sub>inf&sup2;</sub> &times; x&sup2; over 0&ndash;7%. On this scale, effects are additive: a personality spread of 20 and an infection range of 8 means personality swings log-odds 2.5&times; more than infection. All coefficients from Model 2 (random-effects logit).</div>
+      <div class="fig-note">Personality log-odds = &Sigma;&beta;<sub>trait</sub> &times; trait<sub>i</sub> + &beta;<sub>male</sub> &times; male + &beta;<sub>age</sub> &times; age for each of 100 agents. Infection log-odds = &beta;<sub>inf</sub> &times; x + &beta;<sub>inf&sup2;</sub> &times; x&sup2; over 0&ndash;7%. On this additive scale, widths are directly comparable: a personality spread of 20 and an infection range of 8 means personality swings log-odds 2.5&times; more than infection. The ratio column quantifies this comparison as a single number. All coefficients from Model 2 (random-effects logit).</div>
     </div>
 
     <div class="curve-section-header">Trait Breakdown</div>
@@ -845,7 +847,7 @@
     <div class="section" id="fig26-section" data-section="trait-breakdown">
       <div class="fig-num">Figure 28</div>
       <div class="fig-title">Cross-Model Trait Coefficient Comparison</div>
-      <div class="fig-caption">Log-odds coefficients (&beta;) from Model 2 (random-effects logit) for each personality trait, gender, and age, compared across all 21 LLM configurations. Dashed line = 0 (no effect). Amber markers show infection log-odds range; red I-beam shows intercept. Filled dots = significant (p&lt;0.05); hollow = not significant. Whiskers = 95% CI.</div>
+      <div class="fig-caption">Log-odds coefficients (&beta;) from Model 2 (random-effects logit) for each personality trait, gender, and age, compared across all 21 LLM configurations. Each panel is one trait dimension. Dashed line&nbsp;=&nbsp;0 (no effect); amber markers show the infection log-odds range; red I-beam shows the intercept. Filled dots&nbsp;=&nbsp;significant (p&lt;0.05); hollow&nbsp;=&nbsp;not significant; whiskers&nbsp;=&nbsp;95%&nbsp;CI. The right-hand column shows the &beta;&nbsp;Trait/Infection ratio. A secondary axis maps log-odds to P(stay&nbsp;home). Use filter pills to compare subsets.</div>
       <button id="fig26-guide-toggle" style="background:none;border:1px solid #ccc;padding:5px 14px;font-family:'Libre Baskerville',Georgia,serif;font-size:12px;cursor:pointer;border-radius:3px;color:#555;margin-bottom:8px">How to Read This Figure &#x25BE;</button>
       <div id="fig26-guide" style="display:none"></div>
       <div id="fig29-filters"></div>
@@ -1243,7 +1245,7 @@
 <script src="nav.js"></script>
 <script src="analytics-shared.js?v=58"></script>
 <script src="analytics-curves.js?v=57"></script>
-<script src="analytics-cohort.js?v=86"></script>
+<script src="analytics-cohort.js?v=87"></script>
 <script src="analytics-responses.js?v=59"></script>
 <script src="analytics-author.js?v=57"></script>
 <script src="analytics-init.js?v=57"></script>

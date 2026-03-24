@@ -129,7 +129,8 @@ function renderAgentAnalysis() {
   // Fig 25: predictive accuracy guide (collapsible footnotes)
   renderFig25Guide();
 
-  // Fig 29: cross-model trait forest plot + interpretation guide
+  // Fig 27: log-odds landscape guide + Fig 28: forest plot guide
+  renderFig27LOGuide();
   renderFig26Guide();
 
   // Figs 27 (Log-Odds Landscape), 29 (Forest Plot), 28 (Consistency Matrix)
@@ -1438,8 +1439,14 @@ function renderFig26Guide() {
   html += '<p style="margin:0 0 4px">Each row includes two reference markers to help you judge the trait\'s importance:</p>';
   html += '<ul style="margin:4px 0 8px;padding-left:20px">';
   html += '<li><span style="color:#e11d48;font-weight:bold">Red I-beam</span> = intercept (baseline log-odds with no traits, no infection)</li>';
-  html += '<li><span style="color:#D97706;font-weight:bold">Amber line with \u25CF and \u25C6</span> = infection log-odds range from 0% to peak level. If a trait dot is <em>farther</em> from zero than the amber range is wide, that trait alone outweighs infection\'s full effect.</li>';
+  html += '<li><span style="color:#D97706;font-weight:bold">Amber line with \u25CF and \u25C6</span> = infection log-odds range (min to max effect over 0\u20137%). If a trait dot is <em>farther</em> from zero than the amber range is wide, that single trait outweighs infection\'s full effect.</li>';
   html += '</ul>';
+
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">\u03B2 Trait / Infection ratio column</h4>';
+  html += '<p style="margin:0 0 8px">The right-hand column shows |<strong>\u03B2<sub>trait</sub></strong>| divided by the infection log-odds range (max effect over 0\u20137%). Values above 1.0\u00D7 mean that trait alone shifts log-odds more than the entire infection range. This makes it easy to scan which traits dominate infection for each model.</p>';
+
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Secondary P(stay home) axis</h4>';
+  html += '<p style="margin:0 0 8px">The top axis translates log-odds into <strong>probability of staying home</strong>, assuming all other variables are zero (intercept only). This helps ground the abstract \u03B2 values in a concrete behavioral outcome. Note: the mapping is nonlinear \u2014 equal distances in log-odds correspond to unequal probability changes.</p>';
 
   html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">A note on age</h4>';
   html += '<p style="margin:0 0 4px">Age is <strong>continuous</strong> (18\u201365). The \u03B2 shown is per year. Multiply by 47 for the full age range effect. Hover for the full-range value.</p>';
@@ -2409,6 +2416,52 @@ function renderFig27Guide() {
 
   // Wire toggle button
   const btn = document.getElementById('fig27-guide-toggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const open = el.style.display !== 'none';
+      el.style.display = open ? 'none' : 'block';
+      btn.innerHTML = open ? 'How to Read This Figure &#x25BE;' : 'How to Read This Figure &#x25B4;';
+    });
+  }
+}
+
+// ── Fig 27 Interpretation Guide ─────────────────────────────
+
+function renderFig27LOGuide() {
+  const el = document.getElementById('fig27-lo-guide');
+  if (!el) return;
+
+  const S = 'font-family:"Libre Baskerville","Georgia",serif';
+
+  let html = `<div style="${S};font-size:13px;line-height:1.7;color:#333;max-width:780px;margin:8px 0 12px;border:1px solid #e0e0e0;border-radius:4px;padding:14px 18px">`;
+
+  html += '<h4 style="margin:0 0 8px;font-size:14px;color:#111">What this figure shows</h4>';
+  html += '<p style="margin:0 0 8px">Each row is one LLM configuration. Two horizontal ranges are plotted on the same log-odds axis, letting you directly compare how much <strong>personality</strong> (who the agent is) versus <strong>infection</strong> (the situation) shifts the stay-home decision.</p>';
+
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Reading a row</h4>';
+  html += '<ul style="margin:4px 0 8px;padding-left:20px">';
+  html += '<li><strong>Provider-colored bar</strong> = personality log-odds range across the 100 agents (thick bar = IQR, thin whisker = full range). Wider = more variation between agents.</li>';
+  html += '<li><strong>Hollow markers (\u25CB)</strong> = theoretical min/max personality \u2014 the most extreme trait combinations possible. These bracket what any agent <em>could</em> score, even if no agent in the sample hits the extremes.</li>';
+  html += '<li><strong>Amber bar</strong> = infection log-odds range from 0% to 7% infection. This is the total situational push.</li>';
+  html += '</ul>';
+
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Comparing widths</h4>';
+  html += '<p style="margin:0 0 8px">Because log-odds are <strong>additive</strong>, widths on this scale are directly comparable. If the personality bar is twice as wide as the amber bar, personality variation has twice the influence of infection on the stay-home decision. The <strong>Personality/Infection</strong> ratio column on the right quantifies this comparison as a single number.</p>';
+
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">The ratio column</h4>';
+  html += '<ul style="margin:4px 0 8px;padding-left:20px">';
+  html += '<li><strong>&gt; 1.0\u00D7</strong> = personality spread is wider than infection range \u2014 \u201Cwho you are\u201D matters more than \u201Chow bad it is\u201D</li>';
+  html += '<li><strong>= 1.0\u00D7</strong> = equal magnitude</li>';
+  html += '<li><strong>&lt; 1.0\u00D7</strong> = infection range is wider \u2014 the situation dominates individual differences</li>';
+  html += '</ul>';
+
+  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Secondary P(stay home) axis</h4>';
+  html += '<p style="margin:0 0 8px">The top axis translates log-odds into <strong>probability of staying home</strong>, assuming all other variables are at their reference level. This grounds the abstract scale in a concrete behavioral outcome. The mapping is nonlinear: the same log-odds distance produces a larger probability change near 50% than near 0% or 100%.</p>';
+
+  html += '</div>';
+  el.innerHTML = html;
+
+  const btn = document.getElementById('fig27-lo-guide-toggle');
   if (btn) {
     btn.addEventListener('click', () => {
       const open = el.style.display !== 'none';
