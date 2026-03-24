@@ -15,9 +15,18 @@
 agents/agents.json              100 frozen agent personas — do not modify
 data/metadata/models.csv        21 configs: alias, version, release date, pricing
 analysis/compute_regressions.R  Fixed-effects + random-effects logit (R/lme4)
+analysis/compute_trait_mentions.py    Trait keyword scan → viz/data/real/trait_mentions.json
+analysis/compute_verbosity_stats.py   Token distribution stats → viz/data/real/verbosity_stats.json
+analysis/compute_response_text_similarity.py  Rep agreement + Jaccard → viz/data/real/response_text_similarity.json
 viz/data/real/regressions/      21 pre-computed regression JSONs
-viz/analytics.html              Research dashboard — 25 figures across 5 tabs
-viz/analytics.js + config.js    Dashboard logic
+viz/analytics.html              Research dashboard — 36 figures across 4 tabs
+viz/analytics-shared.js         Shared globals, SVG helpers, OLS math, data loaders
+viz/analytics-curves.js         Mobility Curves tab rendering
+viz/analytics-cohort.js         Cohort Analysis tab rendering (largest file)
+viz/analytics-responses.js      Response Analysis tab (Figures 31-36)
+viz/analytics-author.js         Author Notes tab rendering
+viz/analytics-init.js           Tab switching, nav, init() entry point
+viz/config.js                   Shared config (models, colors, infection levels)
 viz/town.html                   Phaser 3 town view (Dewberry Hollow)
 docs/ROADMAP.md                 Master roadmap — read this first
 docs/STATUS.md                  Phase tracker
@@ -39,7 +48,7 @@ Two models per config, computed in R (`analysis/compute_regressions.R`):
 - Reference: female, introverted, antagonistic, unconscientious, neurotic, closed
 
 **Run:** `Rscript analysis/compute_regressions.R` (requires R + lme4, data.table, jsonlite)
-**Output:** `viz/data/real/regressions/{config_key}.json` — loaded by Fig 25 in analytics.js
+**Output:** `viz/data/real/regressions/{config_key}.json` — loaded by Fig 25 in analytics-cohort.js
 
 ## Visualization
 
@@ -47,7 +56,7 @@ Two models per config, computed in R (`analysis/compute_regressions.R`):
 cd viz && python3 -m http.server 8000
 ```
 
-- **`analytics.html`** — 25 figures: mobility curves, model characteristics, agent analysis, regression
+- **`analytics.html`** — 36 figures across 4 tabs: Mobility Curves (1–21), Cohort Analysis (22–29), Response Analysis (30–36), Author Notes
 - **`town.html`** — Phaser 3 town, model selector, infection scrubber
 - **`methodology.html`** — Research design, prompt template, statistical approach
 

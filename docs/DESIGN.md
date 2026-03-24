@@ -4,7 +4,7 @@
 
 > "Different LLMs make different behavioral choices under equivalent perceived risk."
 
-This study measures how 38 LLM configurations respond to community infection
+This study measures how 21 LLM configurations respond to community infection
 risk signals, holding all other context constant. The dependent variable is the
 **mobility curve**: the proportion of agents who choose to stay home as a
 function of daily new infection rate.
@@ -22,7 +22,7 @@ The probe design was chosen instead for two reasons:
    behavioral comparison hard. Probes hold the context identical.
 
 2. **Cost efficiency**: 7,500 calls/config vs 25,000, roughly 4× cheaper,
-   making it feasible to run all 38 useful configs within budget.
+   making it feasible to run all 21 useful configs within budget.
 
 The probe approach is methodologically consistent with Paper 2, which also
 asked agents "given that X% were newly infected yesterday, do you stay home?"
@@ -123,6 +123,6 @@ Secondary analyses:
 1. Run `agents/generate_agents.py` → freeze `agents.json`
 2. Test run: `python probe_mobility.py --test --provider openai --model gpt-3.5-turbo`
 3. Review output CSV and cost estimate
-4. Run all 38 configs: `python probe_mobility.py --all`
+4. Run all 21 configs: `python probe_mobility.py --all`
 5. Analyze with scripts in `analysis/`
 6. Write paper

@@ -1,0 +1,945 @@
+{
+  "configs": [
+    "anthropic_claude-opus-4-5_off",
+    "anthropic_claude-sonnet-4-5_off",
+    "anthropic_claude-haiku-4-5_off",
+    "anthropic_claude-sonnet-4-0_off",
+    "anthropic_claude-3-haiku-20240307_off",
+    "openai_gpt-5_2_off",
+    "openai_gpt-5_2_low",
+    "openai_gpt-5_2_medium",
+    "openai_gpt-5_2_high",
+    "openai_gpt-5_1_off",
+    "openai_gpt-4_1_off",
+    "openai_gpt-4o_off",
+    "openai_gpt-3_5-turbo_off",
+    "openai_o3_required",
+    "gemini_gemini-3-flash-preview_off",
+    "gemini_gemini-3-flash-preview_low",
+    "gemini_gemini-3-flash-preview_medium",
+    "gemini_gemini-3-flash-preview_high",
+    "gemini_gemini-2_5-flash-lite_off",
+    "gemini_gemini-2_5-flash_off",
+    "gemini_gemini-2_0-flash_off"
+  ],
+  "labels": [
+    "Claude Opus 4.5",
+    "Claude Sonnet 4.5",
+    "Claude Haiku 4.5",
+    "Claude Sonnet 4.0",
+    "Claude 3 Haiku",
+    "GPT-5.2",
+    "GPT-5.2 (low)",
+    "GPT-5.2 (med)",
+    "GPT-5.2 (high)",
+    "GPT-5.1",
+    "GPT-4.1",
+    "GPT-4o",
+    "GPT-3.5 Turbo",
+    "o3",
+    "Gemini 3 Flash",
+    "Gemini 3 Flash (low)",
+    "Gemini 3 Flash (med)",
+    "Gemini 3 Flash (high)",
+    "Gemini 2.5 Flash Lite",
+    "Gemini 2.5 Flash",
+    "Gemini 2.0 Flash"
+  ],
+  "providers": [
+    "anthropic",
+    "anthropic",
+    "anthropic",
+    "anthropic",
+    "anthropic",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "gemini",
+    "gemini",
+    "gemini",
+    "gemini",
+    "gemini",
+    "gemini",
+    "gemini"
+  ],
+  "dimensions": [
+    "extraversion",
+    "agreeableness",
+    "conscientiousness",
+    "neuroticism",
+    "openness"
+  ],
+  "mention_rates": {
+    "anthropic_claude-opus-4-5_off": {
+      "extraversion": 0.7797,
+      "agreeableness": 0.7081,
+      "conscientiousness": 0.998,
+      "neuroticism": 0.9405,
+      "openness": 0.6472
+    },
+    "anthropic_claude-sonnet-4-5_off": {
+      "extraversion": 0.6816,
+      "agreeableness": 0.5449,
+      "conscientiousness": 0.9534,
+      "neuroticism": 0.9452,
+      "openness": 0.3797
+    },
+    "anthropic_claude-haiku-4-5_off": {
+      "extraversion": 0.5637,
+      "agreeableness": 0.6439,
+      "conscientiousness": 0.9031,
+      "neuroticism": 0.8377,
+      "openness": 0.3263
+    },
+    "anthropic_claude-sonnet-4-0_off": {
+      "extraversion": 0.325,
+      "agreeableness": 0.3708,
+      "conscientiousness": 0.6009,
+      "neuroticism": 0.6206,
+      "openness": 0.1578
+    },
+    "anthropic_claude-3-haiku-20240307_off": {
+      "extraversion": 0.6317,
+      "agreeableness": 0.362,
+      "conscientiousness": 0.2658,
+      "neuroticism": 0.2092,
+      "openness": 0.022
+    },
+    "openai_gpt-5_2_off": {
+      "extraversion": 0.0299,
+      "agreeableness": 0.0026,
+      "conscientiousness": 0.0973,
+      "neuroticism": 0.0231,
+      "openness": 0.0004
+    },
+    "openai_gpt-5_2_low": {
+      "extraversion": 0.0382,
+      "agreeableness": 0.0084,
+      "conscientiousness": 0.1813,
+      "neuroticism": 0.0604,
+      "openness": 0.0006
+    },
+    "openai_gpt-5_2_medium": {
+      "extraversion": 0.0352,
+      "agreeableness": 0.0098,
+      "conscientiousness": 0.1858,
+      "neuroticism": 0.0542,
+      "openness": 0.0006
+    },
+    "openai_gpt-5_2_high": {
+      "extraversion": 0.0317,
+      "agreeableness": 0.0114,
+      "conscientiousness": 0.1464,
+      "neuroticism": 0.0362,
+      "openness": 0.0008
+    },
+    "openai_gpt-5_1_off": {
+      "extraversion": 0.2928,
+      "agreeableness": 0.1212,
+      "conscientiousness": 0.4656,
+      "neuroticism": 0.1963,
+      "openness": 0.051
+    },
+    "openai_gpt-4_1_off": {
+      "extraversion": 0.445,
+      "agreeableness": 0.2059,
+      "conscientiousness": 0.8262,
+      "neuroticism": 0.5765,
+      "openness": 0.1943
+    },
+    "openai_gpt-4o_off": {
+      "extraversion": 0.6294,
+      "agreeableness": 0.1235,
+      "conscientiousness": 0.4909,
+      "neuroticism": 0.449,
+      "openness": 0.0912
+    },
+    "openai_gpt-3_5-turbo_off": {
+      "extraversion": 0.0795,
+      "agreeableness": 0.0031,
+      "conscientiousness": 0.0017,
+      "neuroticism": 0.0011,
+      "openness": 0.0092
+    },
+    "openai_o3_required": {
+      "extraversion": 0.4996,
+      "agreeableness": 0.0931,
+      "conscientiousness": 0.6298,
+      "neuroticism": 0.2454,
+      "openness": 0.0211
+    },
+    "gemini_gemini-3-flash-preview_off": {
+      "extraversion": 0.2397,
+      "agreeableness": 0.1701,
+      "conscientiousness": 0.4869,
+      "neuroticism": 0.335,
+      "openness": 0.1916
+    },
+    "gemini_gemini-3-flash-preview_low": {
+      "extraversion": 0.5796,
+      "agreeableness": 0.2862,
+      "conscientiousness": 0.7746,
+      "neuroticism": 0.6673,
+      "openness": 0.1821
+    },
+    "gemini_gemini-3-flash-preview_medium": {
+      "extraversion": 0.6037,
+      "agreeableness": 0.3308,
+      "conscientiousness": 0.8178,
+      "neuroticism": 0.7116,
+      "openness": 0.1915
+    },
+    "gemini_gemini-3-flash-preview_high": {
+      "extraversion": 0.5753,
+      "agreeableness": 0.3167,
+      "conscientiousness": 0.7896,
+      "neuroticism": 0.6922,
+      "openness": 0.1823
+    },
+    "gemini_gemini-2_5-flash-lite_off": {
+      "extraversion": 0.9828,
+      "agreeableness": 0.1703,
+      "conscientiousness": 0.7462,
+      "neuroticism": 0.4738,
+      "openness": 0.298
+    },
+    "gemini_gemini-2_5-flash_off": {
+      "extraversion": 0.4495,
+      "agreeableness": 0.3417,
+      "conscientiousness": 0.4845,
+      "neuroticism": 0.4018,
+      "openness": 0.1644
+    },
+    "gemini_gemini-2_0-flash_off": {
+      "extraversion": 0.976,
+      "agreeableness": 0.3975,
+      "conscientiousness": 0.8737,
+      "neuroticism": 0.8138,
+      "openness": 0.3292
+    }
+  },
+  "echo_rates": {
+    "anthropic_claude-opus-4-5_off": {
+      "extraversion": {
+        "assigned": 0.7797,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.7081,
+        "unassigned": 0.0013
+      },
+      "conscientiousness": {
+        "assigned": 0.9482,
+        "unassigned": 0.5181
+      },
+      "neuroticism": {
+        "assigned": 0.9405,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.6472,
+        "unassigned": 0.0
+      }
+    },
+    "anthropic_claude-sonnet-4-5_off": {
+      "extraversion": {
+        "assigned": 0.6816,
+        "unassigned": 0.0013
+      },
+      "agreeableness": {
+        "assigned": 0.5449,
+        "unassigned": 0.0003
+      },
+      "conscientiousness": {
+        "assigned": 0.9499,
+        "unassigned": 0.4734
+      },
+      "neuroticism": {
+        "assigned": 0.9452,
+        "unassigned": 0.0008
+      },
+      "openness": {
+        "assigned": 0.3795,
+        "unassigned": 0.0003
+      }
+    },
+    "anthropic_claude-haiku-4-5_off": {
+      "extraversion": {
+        "assigned": 0.5637,
+        "unassigned": 0.0001
+      },
+      "agreeableness": {
+        "assigned": 0.6439,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.7909,
+        "unassigned": 0.4231
+      },
+      "neuroticism": {
+        "assigned": 0.8377,
+        "unassigned": 0.0003
+      },
+      "openness": {
+        "assigned": 0.3252,
+        "unassigned": 0.0011
+      }
+    },
+    "anthropic_claude-sonnet-4-0_off": {
+      "extraversion": {
+        "assigned": 0.325,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.3708,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.5865,
+        "unassigned": 0.1835
+      },
+      "neuroticism": {
+        "assigned": 0.6206,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.1578,
+        "unassigned": 0.0
+      }
+    },
+    "anthropic_claude-3-haiku-20240307_off": {
+      "extraversion": {
+        "assigned": 0.6317,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.362,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.257,
+        "unassigned": 0.0165
+      },
+      "neuroticism": {
+        "assigned": 0.2092,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.0203,
+        "unassigned": 0.0017
+      }
+    },
+    "openai_gpt-5_2_off": {
+      "extraversion": {
+        "assigned": 0.0299,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.0026,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.096,
+        "unassigned": 0.0022
+      },
+      "neuroticism": {
+        "assigned": 0.0231,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.0004,
+        "unassigned": 0.0001
+      }
+    },
+    "openai_gpt-5_2_low": {
+      "extraversion": {
+        "assigned": 0.0382,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.0084,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.1789,
+        "unassigned": 0.0209
+      },
+      "neuroticism": {
+        "assigned": 0.0604,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.0006,
+        "unassigned": 0.0
+      }
+    },
+    "openai_gpt-5_2_medium": {
+      "extraversion": {
+        "assigned": 0.0352,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.0098,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.1834,
+        "unassigned": 0.0175
+      },
+      "neuroticism": {
+        "assigned": 0.0542,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.0006,
+        "unassigned": 0.0
+      }
+    },
+    "openai_gpt-5_2_high": {
+      "extraversion": {
+        "assigned": 0.0317,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.0114,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.1443,
+        "unassigned": 0.0146
+      },
+      "neuroticism": {
+        "assigned": 0.0362,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.0008,
+        "unassigned": 0.0001
+      }
+    },
+    "openai_gpt-5_1_off": {
+      "extraversion": {
+        "assigned": 0.2928,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.1212,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.3983,
+        "unassigned": 0.1562
+      },
+      "neuroticism": {
+        "assigned": 0.1963,
+        "unassigned": 0.0001
+      },
+      "openness": {
+        "assigned": 0.0257,
+        "unassigned": 0.0252
+      }
+    },
+    "openai_gpt-4_1_off": {
+      "extraversion": {
+        "assigned": 0.445,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.2059,
+        "unassigned": 0.0002
+      },
+      "conscientiousness": {
+        "assigned": 0.7617,
+        "unassigned": 0.3715
+      },
+      "neuroticism": {
+        "assigned": 0.5765,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.1898,
+        "unassigned": 0.0044
+      }
+    },
+    "openai_gpt-4o_off": {
+      "extraversion": {
+        "assigned": 0.6294,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.1235,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.4783,
+        "unassigned": 0.1142
+      },
+      "neuroticism": {
+        "assigned": 0.449,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.0909,
+        "unassigned": 0.0003
+      }
+    },
+    "openai_gpt-3_5-turbo_off": {
+      "extraversion": {
+        "assigned": 0.0795,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.0031,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.0017,
+        "unassigned": 0.0011
+      },
+      "neuroticism": {
+        "assigned": 0.0011,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.0092,
+        "unassigned": 0.0
+      }
+    },
+    "openai_o3_required": {
+      "extraversion": {
+        "assigned": 0.4996,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.093,
+        "unassigned": 0.0003
+      },
+      "conscientiousness": {
+        "assigned": 0.5444,
+        "unassigned": 0.2492
+      },
+      "neuroticism": {
+        "assigned": 0.2454,
+        "unassigned": 0.0001
+      },
+      "openness": {
+        "assigned": 0.0182,
+        "unassigned": 0.0029
+      }
+    },
+    "gemini_gemini-3-flash-preview_off": {
+      "extraversion": {
+        "assigned": 0.2397,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.1699,
+        "unassigned": 0.0001
+      },
+      "conscientiousness": {
+        "assigned": 0.4273,
+        "unassigned": 0.1255
+      },
+      "neuroticism": {
+        "assigned": 0.3349,
+        "unassigned": 0.0001
+      },
+      "openness": {
+        "assigned": 0.187,
+        "unassigned": 0.0046
+      }
+    },
+    "gemini_gemini-3-flash-preview_low": {
+      "extraversion": {
+        "assigned": 0.5796,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.2861,
+        "unassigned": 0.0015
+      },
+      "conscientiousness": {
+        "assigned": 0.6917,
+        "unassigned": 0.3656
+      },
+      "neuroticism": {
+        "assigned": 0.6673,
+        "unassigned": 0.0001
+      },
+      "openness": {
+        "assigned": 0.1787,
+        "unassigned": 0.0034
+      }
+    },
+    "gemini_gemini-3-flash-preview_medium": {
+      "extraversion": {
+        "assigned": 0.6037,
+        "unassigned": 0.0001
+      },
+      "agreeableness": {
+        "assigned": 0.3308,
+        "unassigned": 0.0006
+      },
+      "conscientiousness": {
+        "assigned": 0.7215,
+        "unassigned": 0.4084
+      },
+      "neuroticism": {
+        "assigned": 0.7116,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.187,
+        "unassigned": 0.0044
+      }
+    },
+    "gemini_gemini-3-flash-preview_high": {
+      "extraversion": {
+        "assigned": 0.5753,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.3166,
+        "unassigned": 0.0018
+      },
+      "conscientiousness": {
+        "assigned": 0.6968,
+        "unassigned": 0.3841
+      },
+      "neuroticism": {
+        "assigned": 0.6921,
+        "unassigned": 0.0001
+      },
+      "openness": {
+        "assigned": 0.1766,
+        "unassigned": 0.0057
+      }
+    },
+    "gemini_gemini-2_5-flash-lite_off": {
+      "extraversion": {
+        "assigned": 0.9828,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.1703,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.7405,
+        "unassigned": 0.2767
+      },
+      "neuroticism": {
+        "assigned": 0.4738,
+        "unassigned": 0.0
+      },
+      "openness": {
+        "assigned": 0.2958,
+        "unassigned": 0.0022
+      }
+    },
+    "gemini_gemini-2_5-flash_off": {
+      "extraversion": {
+        "assigned": 0.4491,
+        "unassigned": 0.0015
+      },
+      "agreeableness": {
+        "assigned": 0.3417,
+        "unassigned": 0.0
+      },
+      "conscientiousness": {
+        "assigned": 0.4678,
+        "unassigned": 0.1192
+      },
+      "neuroticism": {
+        "assigned": 0.4018,
+        "unassigned": 0.0003
+      },
+      "openness": {
+        "assigned": 0.164,
+        "unassigned": 0.0004
+      }
+    },
+    "gemini_gemini-2_0-flash_off": {
+      "extraversion": {
+        "assigned": 0.976,
+        "unassigned": 0.0
+      },
+      "agreeableness": {
+        "assigned": 0.3972,
+        "unassigned": 0.0007
+      },
+      "conscientiousness": {
+        "assigned": 0.8401,
+        "unassigned": 0.3939
+      },
+      "neuroticism": {
+        "assigned": 0.8138,
+        "unassigned": 0.0001
+      },
+      "openness": {
+        "assigned": 0.3124,
+        "unassigned": 0.0168
+      }
+    }
+  },
+  "pole_rates": {
+    "anthropic_claude-opus-4-5_off": {
+      "extraversion_positive": 0.4661,
+      "extraversion_negative": 0.3136,
+      "agreeableness_positive": 0.3435,
+      "agreeableness_negative": 0.3659,
+      "conscientiousness_positive": 0.998,
+      "conscientiousness_negative": 0.4682,
+      "neuroticism_positive": 0.356,
+      "neuroticism_negative": 0.5845,
+      "openness_positive": 0.2137,
+      "openness_negative": 0.4334
+    },
+    "anthropic_claude-sonnet-4-5_off": {
+      "extraversion_positive": 0.4197,
+      "extraversion_negative": 0.2632,
+      "agreeableness_positive": 0.2417,
+      "agreeableness_negative": 0.3035,
+      "conscientiousness_positive": 0.9534,
+      "conscientiousness_negative": 0.47,
+      "neuroticism_positive": 0.3834,
+      "neuroticism_negative": 0.5627,
+      "openness_positive": 0.2047,
+      "openness_negative": 0.1751
+    },
+    "anthropic_claude-haiku-4-5_off": {
+      "extraversion_positive": 0.4869,
+      "extraversion_negative": 0.077,
+      "agreeableness_positive": 0.4242,
+      "agreeableness_negative": 0.2197,
+      "conscientiousness_positive": 0.9031,
+      "conscientiousness_negative": 0.3109,
+      "neuroticism_positive": 0.302,
+      "neuroticism_negative": 0.536,
+      "openness_positive": 0.2501,
+      "openness_negative": 0.0763
+    },
+    "anthropic_claude-sonnet-4-0_off": {
+      "extraversion_positive": 0.2075,
+      "extraversion_negative": 0.1174,
+      "agreeableness_positive": 0.2346,
+      "agreeableness_negative": 0.1361,
+      "conscientiousness_positive": 0.6009,
+      "conscientiousness_negative": 0.1691,
+      "neuroticism_positive": 0.1938,
+      "neuroticism_negative": 0.4268,
+      "openness_positive": 0.156,
+      "openness_negative": 0.0019
+    },
+    "anthropic_claude-3-haiku-20240307_off": {
+      "extraversion_positive": 0.2985,
+      "extraversion_negative": 0.3332,
+      "agreeableness_positive": 0.2119,
+      "agreeableness_negative": 0.1502,
+      "conscientiousness_positive": 0.2658,
+      "conscientiousness_negative": 0.0076,
+      "neuroticism_positive": 0.094,
+      "neuroticism_negative": 0.1153,
+      "openness_positive": 0.0059,
+      "openness_negative": 0.0161
+    },
+    "openai_gpt-5_2_off": {
+      "extraversion_positive": 0.0059,
+      "extraversion_negative": 0.024,
+      "agreeableness_positive": 0.0021,
+      "agreeableness_negative": 0.0006,
+      "conscientiousness_positive": 0.0973,
+      "conscientiousness_negative": 0.001,
+      "neuroticism_positive": 0.0187,
+      "neuroticism_negative": 0.0044,
+      "openness_positive": 0.0002,
+      "openness_negative": 0.0003
+    },
+    "openai_gpt-5_2_low": {
+      "extraversion_positive": 0.0181,
+      "extraversion_negative": 0.0201,
+      "agreeableness_positive": 0.0017,
+      "agreeableness_negative": 0.0067,
+      "conscientiousness_positive": 0.1813,
+      "conscientiousness_negative": 0.0185,
+      "neuroticism_positive": 0.0529,
+      "neuroticism_negative": 0.0076,
+      "openness_positive": 0.0,
+      "openness_negative": 0.0006
+    },
+    "openai_gpt-5_2_medium": {
+      "extraversion_positive": 0.0151,
+      "extraversion_negative": 0.0201,
+      "agreeableness_positive": 0.0036,
+      "agreeableness_negative": 0.0062,
+      "conscientiousness_positive": 0.1858,
+      "conscientiousness_negative": 0.0152,
+      "neuroticism_positive": 0.0476,
+      "neuroticism_negative": 0.0066,
+      "openness_positive": 0.0,
+      "openness_negative": 0.0006
+    },
+    "openai_gpt-5_2_high": {
+      "extraversion_positive": 0.014,
+      "extraversion_negative": 0.0177,
+      "agreeableness_positive": 0.0053,
+      "agreeableness_negative": 0.0061,
+      "conscientiousness_positive": 0.1464,
+      "conscientiousness_negative": 0.0126,
+      "neuroticism_positive": 0.0305,
+      "neuroticism_negative": 0.0057,
+      "openness_positive": 0.0001,
+      "openness_negative": 0.0008
+    },
+    "openai_gpt-5_1_off": {
+      "extraversion_positive": 0.2235,
+      "extraversion_negative": 0.0693,
+      "agreeableness_positive": 0.0447,
+      "agreeableness_negative": 0.0765,
+      "conscientiousness_positive": 0.4656,
+      "conscientiousness_negative": 0.089,
+      "neuroticism_positive": 0.0477,
+      "neuroticism_negative": 0.1487,
+      "openness_positive": 0.034,
+      "openness_negative": 0.017
+    },
+    "openai_gpt-4_1_off": {
+      "extraversion_positive": 0.3995,
+      "extraversion_negative": 0.0456,
+      "agreeableness_positive": 0.0813,
+      "agreeableness_negative": 0.1248,
+      "conscientiousness_positive": 0.8262,
+      "conscientiousness_negative": 0.307,
+      "neuroticism_positive": 0.1785,
+      "neuroticism_negative": 0.398,
+      "openness_positive": 0.1613,
+      "openness_negative": 0.033
+    },
+    "openai_gpt-4o_off": {
+      "extraversion_positive": 0.5168,
+      "extraversion_negative": 0.1126,
+      "agreeableness_positive": 0.1146,
+      "agreeableness_negative": 0.0089,
+      "conscientiousness_positive": 0.4909,
+      "conscientiousness_negative": 0.1016,
+      "neuroticism_positive": 0.0625,
+      "neuroticism_negative": 0.3865,
+      "openness_positive": 0.0784,
+      "openness_negative": 0.0128
+    },
+    "openai_gpt-3_5-turbo_off": {
+      "extraversion_positive": 0.0014,
+      "extraversion_negative": 0.0781,
+      "agreeableness_positive": 0.0,
+      "agreeableness_negative": 0.0031,
+      "conscientiousness_positive": 0.0017,
+      "conscientiousness_negative": 0.0011,
+      "neuroticism_positive": 0.0011,
+      "neuroticism_negative": 0.0,
+      "openness_positive": 0.0,
+      "openness_negative": 0.0092
+    },
+    "openai_o3_required": {
+      "extraversion_positive": 0.2564,
+      "extraversion_negative": 0.2432,
+      "agreeableness_positive": 0.0474,
+      "agreeableness_negative": 0.0459,
+      "conscientiousness_positive": 0.6298,
+      "conscientiousness_negative": 0.1638,
+      "neuroticism_positive": 0.1809,
+      "neuroticism_negative": 0.0645,
+      "openness_positive": 0.0084,
+      "openness_negative": 0.0126
+    },
+    "gemini_gemini-3-flash-preview_off": {
+      "extraversion_positive": 0.1958,
+      "extraversion_negative": 0.0439,
+      "agreeableness_positive": 0.1085,
+      "agreeableness_negative": 0.0616,
+      "conscientiousness_positive": 0.4869,
+      "conscientiousness_negative": 0.0658,
+      "neuroticism_positive": 0.1128,
+      "neuroticism_negative": 0.2223,
+      "openness_positive": 0.1213,
+      "openness_negative": 0.0703
+    },
+    "gemini_gemini-3-flash-preview_low": {
+      "extraversion_positive": 0.411,
+      "extraversion_negative": 0.1686,
+      "agreeableness_positive": 0.0421,
+      "agreeableness_negative": 0.2455,
+      "conscientiousness_positive": 0.7746,
+      "conscientiousness_negative": 0.2828,
+      "neuroticism_positive": 0.2713,
+      "neuroticism_negative": 0.3961,
+      "openness_positive": 0.0119,
+      "openness_negative": 0.1702
+    },
+    "gemini_gemini-3-flash-preview_medium": {
+      "extraversion_positive": 0.436,
+      "extraversion_negative": 0.1678,
+      "agreeableness_positive": 0.0499,
+      "agreeableness_negative": 0.2814,
+      "conscientiousness_positive": 0.8178,
+      "conscientiousness_negative": 0.3121,
+      "neuroticism_positive": 0.2798,
+      "neuroticism_negative": 0.4318,
+      "openness_positive": 0.0143,
+      "openness_negative": 0.1772
+    },
+    "gemini_gemini-3-flash-preview_high": {
+      "extraversion_positive": 0.4201,
+      "extraversion_negative": 0.1552,
+      "agreeableness_positive": 0.0488,
+      "agreeableness_negative": 0.2695,
+      "conscientiousness_positive": 0.7896,
+      "conscientiousness_negative": 0.2913,
+      "neuroticism_positive": 0.2696,
+      "neuroticism_negative": 0.4226,
+      "openness_positive": 0.0147,
+      "openness_negative": 0.1676
+    },
+    "gemini_gemini-2_5-flash-lite_off": {
+      "extraversion_positive": 0.5168,
+      "extraversion_negative": 0.466,
+      "agreeableness_positive": 0.1422,
+      "agreeableness_negative": 0.028,
+      "conscientiousness_positive": 0.7462,
+      "conscientiousness_negative": 0.271,
+      "neuroticism_positive": 0.154,
+      "neuroticism_negative": 0.3197,
+      "openness_positive": 0.2512,
+      "openness_negative": 0.0467
+    },
+    "gemini_gemini-2_5-flash_off": {
+      "extraversion_positive": 0.1832,
+      "extraversion_negative": 0.2676,
+      "agreeableness_positive": 0.2979,
+      "agreeableness_negative": 0.0439,
+      "conscientiousness_positive": 0.4845,
+      "conscientiousness_negative": 0.1026,
+      "neuroticism_positive": 0.1283,
+      "neuroticism_negative": 0.2738,
+      "openness_positive": 0.1386,
+      "openness_negative": 0.0259
+    },
+    "gemini_gemini-2_0-flash_off": {
+      "extraversion_positive": 0.5111,
+      "extraversion_negative": 0.4649,
+      "agreeableness_positive": 0.2364,
+      "agreeableness_negative": 0.1615,
+      "conscientiousness_positive": 0.8737,
+      "conscientiousness_negative": 0.3604,
+      "neuroticism_positive": 0.3971,
+      "neuroticism_negative": 0.4168,
+      "openness_positive": 0.2293,
+      "openness_negative": 0.0999
+    }
+  }
+}

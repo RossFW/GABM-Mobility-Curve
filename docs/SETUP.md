@@ -48,7 +48,7 @@ python probe_mobility.py --provider gemini
 python probe_mobility.py --provider anthropic
 python probe_mobility.py --provider openai
 
-# All 22 configs
+# All 21 configs
 python probe_mobility.py --all
 ```
 
@@ -93,7 +93,7 @@ rsync -avz user@machine-b:"path/to/GABM mobility curve/data/" data/
 rsync -avz user@machine-c:"path/to/GABM mobility curve/data/" data/
 ```
 
-Then run `combine_results.py` (see Phase 4 in the plan).
+Then run `combine_data.py` (see Phase 4 in the plan).
 
 ## Rate limits (as of March 2026)
 

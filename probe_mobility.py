@@ -17,7 +17,7 @@ Usage:
     # Full run for a single provider
     python probe_mobility.py --provider gemini
 
-    # Full run for all 38 useful configs
+    # Full run for all 21 useful configs
     python probe_mobility.py --all
 
     # Resume interrupted run (skips configs that already have output)

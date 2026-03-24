@@ -1,6 +1,6 @@
 # Paper 3 Roadmap — GABM Mobility Curve
 
-*Last updated: March 17 2026*
+*Last updated: March 23 2026*
 
 ## One-Line Summary
 
@@ -19,13 +19,21 @@ Cross-sectional probe: 100 frozen agents × 40 infection levels × 21 LLM config
 - GitHub repo live: RossFW/GABM-Mobility-Curve
 - **Phase 2 data collection complete** (March 2026): all 21 configs, 420,000 rows, validated, backed up to GitHub
 - Model metadata documented: `data/metadata/models.csv` + `docs/MODEL_CARD.md`
-- Visualization live with real data: `viz/analytics.html` (20-figure academic dashboard) + `viz/town.html` + `viz/methodology.html`
+- Visualization live with real data: `viz/analytics.html` (39-figure academic dashboard) + `viz/town.html` + `viz/methodology.html`
+- Regression analysis complete: fixed-effects + random-effects logit for all 21 configs
+- Dashboard restructured: 4 tabs (Mobility Curves, Cohort Analysis, Response Analysis, Author Notes)
+- **Response Analysis figures** (March 2026): 7 new figures (33–39) covering trait utilization, verbosity, decision entropy, response consistency
+  - Pre-computation scripts: `compute_trait_mentions.py`, `compute_verbosity_stats.py`, `compute_response_text_similarity.py`
+  - Key findings: 0/420K format errors; Gemini 2.5 Flash Lite = 100% deterministic; GPT-5.1 only 64.7% decision agreement at temp=0
+- **analytics.js refactored** (March 2026): split 7,765-line monolith into 6 tab-specific files
+  - `analytics-shared.js` (700) → `analytics-curves.js` (1,147) → `analytics-cohort.js` (4,668) → `analytics-responses.js` (555) → `analytics-author.js` (440) → `analytics-init.js` (261)
+  - Trait mention keywords tightened: removed common words (responsible, organized, calm, curious) that inflated rates
 
-### 🔲 Immediate Next: OLS Regression on Macro Data
+### 🔲 Immediate Next
 
 ```bash
 # Step 1: Combine all 21 macro CSVs
-python combine_results.py   # → data/combined/all_macro.csv (840 rows)
+python combine_data.py      # → viz/data/real/all_macro.csv
 
 # Step 2: Run OLS regression
 python analyze_results.py   # → figures/ + regression table
@@ -67,7 +75,7 @@ Output: `data/{provider}_{model}_{reasoning}/probe_results_macro.csv`
 
 ---
 
-## The Research Figures (analytics.html — 20 figures)
+## The Research Figures (analytics.html — 36 figures)
 
 | Tab | Figures | Key question |
 |-----|---------|-------------|
@@ -142,7 +150,7 @@ GABM mobility curve/          ← THIS REPO (Paper 3)
 ├── viz/                      ← interactive visualizations
 │   ├── town.html             ← Phaser 3 town view
 │   ├── methodology.html      ← research design, prompt, configs, analysis approach
-│   ├── analytics.html        ← academic research dashboard (20 figures)
+│   ├── analytics.html        ← academic research dashboard (36 figures)
 │   └── data/real/            ← real probe data (populated by combine_data.py)
 ├── site/coverage.html        ← model coverage matrix
 └── docs/

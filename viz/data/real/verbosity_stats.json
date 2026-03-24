@@ -1,0 +1,3960 @@
+{
+  "configs": [
+    "anthropic_claude-opus-4-5_off",
+    "anthropic_claude-sonnet-4-5_off",
+    "anthropic_claude-haiku-4-5_off",
+    "anthropic_claude-sonnet-4-0_off",
+    "anthropic_claude-3-haiku-20240307_off",
+    "openai_gpt-5_2_off",
+    "openai_gpt-5_2_low",
+    "openai_gpt-5_2_medium",
+    "openai_gpt-5_2_high",
+    "openai_gpt-5_1_off",
+    "openai_gpt-4_1_off",
+    "openai_gpt-4o_off",
+    "openai_gpt-3_5-turbo_off",
+    "openai_o3_required",
+    "gemini_gemini-3-flash-preview_off",
+    "gemini_gemini-3-flash-preview_low",
+    "gemini_gemini-3-flash-preview_medium",
+    "gemini_gemini-3-flash-preview_high",
+    "gemini_gemini-2_5-flash-lite_off",
+    "gemini_gemini-2_5-flash_off",
+    "gemini_gemini-2_0-flash_off"
+  ],
+  "labels": [
+    "Claude Opus 4.5",
+    "Claude Sonnet 4.5",
+    "Claude Haiku 4.5",
+    "Claude Sonnet 4.0",
+    "Claude 3 Haiku",
+    "GPT-5.2",
+    "GPT-5.2 (low)",
+    "GPT-5.2 (med)",
+    "GPT-5.2 (high)",
+    "GPT-5.1",
+    "GPT-4.1",
+    "GPT-4o",
+    "GPT-3.5 Turbo",
+    "o3",
+    "Gemini 3 Flash",
+    "Gemini 3 Flash (low)",
+    "Gemini 3 Flash (med)",
+    "Gemini 3 Flash (high)",
+    "Gemini 2.5 Flash Lite",
+    "Gemini 2.5 Flash",
+    "Gemini 2.0 Flash"
+  ],
+  "providers": [
+    "anthropic",
+    "anthropic",
+    "anthropic",
+    "anthropic",
+    "anthropic",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "openai",
+    "gemini",
+    "gemini",
+    "gemini",
+    "gemini",
+    "gemini",
+    "gemini",
+    "gemini"
+  ],
+  "by_model": {
+    "anthropic_claude-opus-4-5_off": {
+      "output_tokens": {
+        "mean": 158.0,
+        "median": 155.0,
+        "p10": 134.0,
+        "p25": 143.0,
+        "p75": 170.0,
+        "p90": 189.0,
+        "min": 104,
+        "max": 260
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 105.82
+    },
+    "anthropic_claude-sonnet-4-5_off": {
+      "output_tokens": {
+        "mean": 157.5,
+        "median": 156.0,
+        "p10": 128.0,
+        "p25": 140.0,
+        "p75": 175.0,
+        "p90": 191.0,
+        "min": 84,
+        "max": 264
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 63.34
+    },
+    "anthropic_claude-haiku-4-5_off": {
+      "output_tokens": {
+        "mean": 156.9,
+        "median": 155.0,
+        "p10": 130.0,
+        "p25": 141.0,
+        "p75": 170.0,
+        "p90": 186.0,
+        "min": 72,
+        "max": 331
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 21.05
+    },
+    "anthropic_claude-sonnet-4-0_off": {
+      "output_tokens": {
+        "mean": 126.4,
+        "median": 126.0,
+        "p10": 102.0,
+        "p25": 113.0,
+        "p75": 139.0,
+        "p90": 151.0,
+        "min": 74,
+        "max": 213
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 53.99
+    },
+    "anthropic_claude-3-haiku-20240307_off": {
+      "output_tokens": {
+        "mean": 101.1,
+        "median": 97.0,
+        "p10": 74.0,
+        "p25": 82.0,
+        "p75": 116.0,
+        "p90": 129.0,
+        "min": 68,
+        "max": 278
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 3.87
+    },
+    "openai_gpt-5_2_off": {
+      "output_tokens": {
+        "mean": 85.7,
+        "median": 85.0,
+        "p10": 73.0,
+        "p25": 78.0,
+        "p75": 92.0,
+        "p90": 99.0,
+        "min": 52,
+        "max": 144
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 32.47
+    },
+    "openai_gpt-5_2_low": {
+      "output_tokens": {
+        "mean": 134.6,
+        "median": 131.0,
+        "p10": 111.0,
+        "p25": 119.0,
+        "p75": 146.0,
+        "p90": 163.0,
+        "min": 69,
+        "max": 310
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 46.16
+    },
+    "openai_gpt-5_2_medium": {
+      "output_tokens": {
+        "mean": 179.4,
+        "median": 172.0,
+        "p10": 133.0,
+        "p25": 150.0,
+        "p75": 200.0,
+        "p90": 234.0,
+        "min": 92,
+        "max": 642
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 58.72
+    },
+    "openai_gpt-5_2_high": {
+      "output_tokens": {
+        "mean": 231.1,
+        "median": 215.0,
+        "p10": 159.0,
+        "p25": 182.0,
+        "p75": 262.0,
+        "p90": 322.0,
+        "min": 91,
+        "max": 881
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 73.19
+    },
+    "openai_gpt-5_1_off": {
+      "output_tokens": {
+        "mean": 110.3,
+        "median": 110.0,
+        "p10": 90.0,
+        "p25": 100.0,
+        "p75": 120.0,
+        "p90": 132.0,
+        "min": 51,
+        "max": 219
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 28.11
+    },
+    "openai_gpt-4_1_off": {
+      "output_tokens": {
+        "mean": 84.3,
+        "median": 85.0,
+        "p10": 61.0,
+        "p25": 74.0,
+        "p75": 95.0,
+        "p90": 106.0,
+        "min": 33,
+        "max": 169
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 23.21
+    },
+    "openai_gpt-4o_off": {
+      "output_tokens": {
+        "mean": 66.8,
+        "median": 68.0,
+        "p10": 46.0,
+        "p25": 58.0,
+        "p75": 77.0,
+        "p90": 85.0,
+        "min": 25,
+        "max": 131
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 25.51
+    },
+    "openai_gpt-3_5-turbo_off": {
+      "output_tokens": {
+        "mean": 18.8,
+        "median": 19.0,
+        "p10": 18.0,
+        "p25": 18.0,
+        "p75": 19.0,
+        "p90": 19.0,
+        "min": 12,
+        "max": 59
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 3.0
+    },
+    "openai_o3_required": {
+      "output_tokens": {
+        "mean": 443.8,
+        "median": 414.0,
+        "p10": 275.0,
+        "p25": 340.0,
+        "p75": 530.0,
+        "p90": 651.0,
+        "min": 63,
+        "max": 1635
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 80.68
+    },
+    "gemini_gemini-3-flash-preview_off": {
+      "output_tokens": {
+        "mean": 98.0,
+        "median": 97.0,
+        "p10": 78.0,
+        "p25": 86.0,
+        "p75": 109.0,
+        "p90": 120.0,
+        "min": 43,
+        "max": 176
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 8.34
+    },
+    "gemini_gemini-3-flash-preview_low": {
+      "output_tokens": {
+        "mean": 80.0,
+        "median": 80.0,
+        "p10": 62.0,
+        "p25": 71.0,
+        "p75": 89.0,
+        "p90": 98.0,
+        "min": 35,
+        "max": 137
+      },
+      "reasoning_tokens": {
+        "mean": 780.3,
+        "median": 658.0,
+        "p10": 513.0,
+        "p25": 569.0,
+        "p75": 876.0,
+        "p90": 1262.0,
+        "min": 317,
+        "max": 2824
+      },
+      "total_cost_usd": 54.08
+    },
+    "gemini_gemini-3-flash-preview_medium": {
+      "output_tokens": {
+        "mean": 75.8,
+        "median": 76.0,
+        "p10": 56.0,
+        "p25": 67.0,
+        "p75": 85.0,
+        "p90": 94.0,
+        "min": 27,
+        "max": 140
+      },
+      "reasoning_tokens": {
+        "mean": 1060.1,
+        "median": 805.0,
+        "p10": 565.0,
+        "p25": 641.0,
+        "p75": 1202.0,
+        "p90": 1888.0,
+        "min": 361,
+        "max": 6235
+      },
+      "total_cost_usd": 70.62
+    },
+    "gemini_gemini-3-flash-preview_high": {
+      "output_tokens": {
+        "mean": 76.0,
+        "median": 76.0,
+        "p10": 56.0,
+        "p25": 66.0,
+        "p75": 86.0,
+        "p90": 95.0,
+        "min": 28,
+        "max": 139
+      },
+      "reasoning_tokens": {
+        "mean": 1115.2,
+        "median": 808.0,
+        "p10": 562.0,
+        "p25": 642.0,
+        "p75": 1235.0,
+        "p90": 1959.0,
+        "min": 384,
+        "max": 13375
+      },
+      "total_cost_usd": 73.94
+    },
+    "gemini_gemini-2_5-flash-lite_off": {
+      "output_tokens": {
+        "mean": 125.7,
+        "median": 122.0,
+        "p10": 96.0,
+        "p25": 108.0,
+        "p75": 141.0,
+        "p90": 160.0,
+        "min": 58,
+        "max": 340
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 1.5
+    },
+    "gemini_gemini-2_5-flash_off": {
+      "output_tokens": {
+        "mean": 136.2,
+        "median": 130.0,
+        "p10": 78.0,
+        "p25": 100.0,
+        "p75": 165.0,
+        "p90": 198.0,
+        "min": 40,
+        "max": 465
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 8.29
+    },
+    "gemini_gemini-2_0-flash_off": {
+      "output_tokens": {
+        "mean": 116.7,
+        "median": 115.0,
+        "p10": 92.0,
+        "p25": 102.0,
+        "p75": 129.0,
+        "p90": 145.0,
+        "min": 49,
+        "max": 205
+      },
+      "reasoning_tokens": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "total_cost_usd": 1.42
+    }
+  },
+  "by_model_by_level": {
+    "anthropic_claude-opus-4-5_off": {
+      "0": {
+        "mean_output": 138.8,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 154.0,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 154.6,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 155.2,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 155.7,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 157.8,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 156.8,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 158.7,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 156.2,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 157.1,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 155.2,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 158.3,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 157.2,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 158.4,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 157.1,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 161.4,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 157.9,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 158.2,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 160.0,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 159.1,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 156.0,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 159.5,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 160.1,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 158.6,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 159.3,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 162.3,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 160.7,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 160.0,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 159.0,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 158.7,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 157.2,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 159.7,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 160.0,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 159.9,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 160.4,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 162.7,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 158.8,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 160.8,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 159.3,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 160.4,
+        "mean_reasoning": 0.0
+      }
+    },
+    "anthropic_claude-sonnet-4-5_off": {
+      "0": {
+        "mean_output": 141.5,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 151.0,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 153.3,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 154.6,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 156.7,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 154.1,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 155.5,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 155.7,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 155.9,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 158.3,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 163.0,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 162.8,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 159.4,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 158.9,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 160.9,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 162.4,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 160.1,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 160.9,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 161.9,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 161.3,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 161.0,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 160.2,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 158.1,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 160.1,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 158.7,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 160.9,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 159.1,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 158.3,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 157.3,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 157.5,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 151.1,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 155.1,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 157.1,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 158.9,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 154.3,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 154.6,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 157.6,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 159.4,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 158.6,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 154.8,
+        "mean_reasoning": 0.0
+      }
+    },
+    "anthropic_claude-haiku-4-5_off": {
+      "0": {
+        "mean_output": 142.2,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 140.9,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 145.6,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 148.8,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 149.7,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 152.9,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 154.4,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 156.6,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 157.8,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 158.6,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 157.0,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 153.9,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 156.8,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 155.0,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 156.0,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 157.3,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 157.8,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 158.0,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 155.0,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 156.9,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 161.5,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 159.1,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 159.1,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 159.4,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 160.4,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 160.3,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 157.7,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 160.1,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 159.8,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 159.8,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 159.8,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 161.3,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 161.7,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 162.5,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 161.0,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 161.3,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 159.7,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 159.2,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 158.0,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 162.0,
+        "mean_reasoning": 0.0
+      }
+    },
+    "anthropic_claude-sonnet-4-0_off": {
+      "0": {
+        "mean_output": 123.4,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 124.8,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 126.9,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 126.4,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 126.1,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 125.0,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 126.7,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 128.4,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 125.6,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 124.7,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 124.7,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 124.7,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 123.1,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 124.7,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 123.9,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 124.6,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 125.2,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 124.7,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 126.2,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 125.2,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 124.1,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 125.8,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 127.2,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 126.5,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 127.0,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 127.8,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 129.2,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 127.2,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 128.6,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 127.3,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 125.2,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 128.9,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 129.9,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 126.6,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 129.1,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 127.1,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 128.1,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 127.4,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 127.4,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 129.4,
+        "mean_reasoning": 0.0
+      }
+    },
+    "anthropic_claude-3-haiku-20240307_off": {
+      "0": {
+        "mean_output": 110.2,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 103.9,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 96.3,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 94.7,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 92.0,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 105.8,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 94.2,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 93.9,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 94.7,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 94.4,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 109.8,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 99.8,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 101.7,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 101.3,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 99.8,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 102.9,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 99.8,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 101.0,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 100.2,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 100.3,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 106.0,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 101.7,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 100.3,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 100.4,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 100.4,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 103.5,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 99.4,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 99.9,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 99.8,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 100.3,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 106.1,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 100.3,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 101.5,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 102.2,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 102.9,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 104.2,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 99.4,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 109.8,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 105.7,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 103.3,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_gpt-5_2_off": {
+      "0": {
+        "mean_output": 87.7,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 86.4,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 85.6,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 85.2,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 85.3,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 84.6,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 84.0,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 85.2,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 83.9,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 85.0,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 84.7,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 86.6,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 85.7,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 86.0,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 87.8,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 85.6,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 86.8,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 86.3,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 86.2,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 86.8,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 85.5,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 85.3,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 85.8,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 85.4,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 85.5,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 85.0,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 85.1,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 85.2,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 85.6,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 86.3,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 85.9,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 86.1,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 85.3,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 86.8,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 86.3,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 85.2,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 85.8,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 84.6,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 86.7,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 85.8,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_gpt-5_2_low": {
+      "0": {
+        "mean_output": 137.6,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 169.6,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 158.8,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 152.1,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 142.9,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 138.9,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 137.5,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 135.3,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 133.2,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 131.5,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 132.0,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 135.2,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 134.1,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 134.4,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 135.4,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 136.3,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 134.6,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 135.2,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 134.0,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 133.1,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 135.6,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 132.9,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 132.5,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 133.7,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 132.4,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 130.8,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 130.9,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 133.4,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 131.7,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 131.7,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 127.1,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 130.1,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 129.4,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 129.1,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 129.4,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 129.2,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 126.9,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 125.1,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 126.2,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 124.1,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_gpt-5_2_medium": {
+      "0": {
+        "mean_output": 177.4,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 236.2,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 225.7,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 216.1,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 209.2,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 196.1,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 193.5,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 188.5,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 186.0,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 181.7,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 179.9,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 182.1,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 180.9,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 179.0,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 177.9,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 181.5,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 181.5,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 180.0,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 177.0,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 174.3,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 175.8,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 171.9,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 175.8,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 173.4,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 172.5,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 174.7,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 169.3,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 172.2,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 171.8,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 170.4,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 168.3,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 171.0,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 170.2,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 167.4,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 165.8,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 167.0,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 164.5,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 157.2,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 160.1,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 153.7,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_gpt-5_2_high": {
+      "0": {
+        "mean_output": 212.5,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 303.0,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 296.1,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 289.4,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 269.5,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 256.9,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 257.2,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 249.2,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 247.5,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 236.8,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 228.0,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 230.8,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 235.4,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 227.8,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 230.2,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 230.7,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 228.3,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 223.2,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 222.6,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 219.7,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 215.7,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 219.3,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 221.0,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 217.2,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 220.7,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 227.8,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 225.7,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 224.7,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 231.2,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 221.5,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 217.0,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 221.0,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 227.2,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 216.2,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 216.5,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 222.1,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 209.1,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 198.3,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 202.2,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 196.2,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_gpt-5_1_off": {
+      "0": {
+        "mean_output": 87.1,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 115.1,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 113.5,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 115.2,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 113.2,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 113.5,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 114.2,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 114.7,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 115.5,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 115.4,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 116.3,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 113.8,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 110.7,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 112.8,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 111.9,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 109.7,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 110.6,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 110.5,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 110.9,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 109.7,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 108.4,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 109.7,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 107.7,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 109.2,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 108.8,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 108.0,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 107.6,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 108.8,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 108.5,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 109.7,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 107.6,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 113.2,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 108.3,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 110.3,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 110.2,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 108.0,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 108.3,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 110.3,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 107.9,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 107.7,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_gpt-4_1_off": {
+      "0": {
+        "mean_output": 60.9,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 81.9,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 84.4,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 85.3,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 87.4,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 87.0,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 86.8,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 88.0,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 88.4,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 88.4,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 87.8,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 86.3,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 84.9,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 87.0,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 87.3,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 85.0,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 85.8,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 85.7,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 86.0,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 85.2,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 85.5,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 83.2,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 82.9,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 83.7,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 83.8,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 84.7,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 82.0,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 82.3,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 83.7,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 82.8,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 84.2,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 82.4,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 83.1,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 84.4,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 81.7,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 82.4,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 88.8,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 83.8,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 83.5,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 83.5,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_gpt-4o_off": {
+      "0": {
+        "mean_output": 44.5,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 69.8,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 71.0,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 71.6,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 70.4,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 71.0,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 71.5,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 70.7,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 71.4,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 70.7,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 70.9,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 68.6,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 68.8,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 71.0,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 70.6,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 68.5,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 69.1,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 68.2,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 67.8,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 68.3,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 67.6,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 65.4,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 67.0,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 66.5,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 65.1,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 63.8,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 65.0,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 66.2,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 65.0,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 64.7,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 63.6,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 63.1,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 65.8,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 64.3,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 63.1,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 64.5,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 62.8,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 66.3,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 63.3,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 64.1,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_gpt-3_5-turbo_off": {
+      "0": {
+        "mean_output": 17.1,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 18.2,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 18.1,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 18.2,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 18.1,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 18.2,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 18.4,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 18.5,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 18.6,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 18.2,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 18.8,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 18.9,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 18.8,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 19.1,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 18.9,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 19.1,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 18.9,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 18.9,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 18.8,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 18.9,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 19.1,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 18.9,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 18.9,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 19.3,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 19.0,
+        "mean_reasoning": 0.0
+      }
+    },
+    "openai_o3_required": {
+      "0": {
+        "mean_output": 224.4,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 394.4,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 417.2,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 434.7,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 459.6,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 446.7,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 463.9,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 483.4,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 476.6,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 484.1,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 443.7,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 479.2,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 462.1,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 487.0,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 456.7,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 450.6,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 478.9,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 465.4,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 464.7,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 458.0,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 440.2,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 458.1,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 473.3,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 450.1,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 464.1,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 452.5,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 454.7,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 452.6,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 445.5,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 444.1,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 419.9,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 454.7,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 446.7,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 447.4,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 444.2,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 433.9,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 409.7,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 411.4,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 406.7,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 409.4,
+        "mean_reasoning": 0.0
+      }
+    },
+    "gemini_gemini-3-flash-preview_off": {
+      "0": {
+        "mean_output": 89.8,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 96.2,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 97.0,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 98.0,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 96.2,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 97.7,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 97.7,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 97.3,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 98.1,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 97.8,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 98.6,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 99.7,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 100.3,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 98.5,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 100.2,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 100.1,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 98.4,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 98.2,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 99.4,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 98.4,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 97.6,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 97.6,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 98.0,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 98.7,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 99.0,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 98.9,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 98.1,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 96.4,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 97.9,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 98.3,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 98.8,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 97.5,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 98.4,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 98.1,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 99.2,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 98.3,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 97.8,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 98.0,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 98.1,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 97.9,
+        "mean_reasoning": 0.0
+      }
+    },
+    "gemini_gemini-3-flash-preview_low": {
+      "0": {
+        "mean_output": 67.2,
+        "mean_reasoning": 665.6
+      },
+      "0.1": {
+        "mean_output": 80.8,
+        "mean_reasoning": 713.6
+      },
+      "0.2": {
+        "mean_output": 81.5,
+        "mean_reasoning": 729.3
+      },
+      "0.3": {
+        "mean_output": 81.4,
+        "mean_reasoning": 729.7
+      },
+      "0.4": {
+        "mean_output": 81.2,
+        "mean_reasoning": 737.6
+      },
+      "0.5": {
+        "mean_output": 79.8,
+        "mean_reasoning": 760.4
+      },
+      "0.6": {
+        "mean_output": 80.6,
+        "mean_reasoning": 775.7
+      },
+      "0.7": {
+        "mean_output": 80.3,
+        "mean_reasoning": 776.2
+      },
+      "0.8": {
+        "mean_output": 80.5,
+        "mean_reasoning": 770.8
+      },
+      "0.9": {
+        "mean_output": 79.9,
+        "mean_reasoning": 788.8
+      },
+      "1.0": {
+        "mean_output": 80.7,
+        "mean_reasoning": 762.5
+      },
+      "1.1": {
+        "mean_output": 80.9,
+        "mean_reasoning": 782.4
+      },
+      "1.2": {
+        "mean_output": 81.4,
+        "mean_reasoning": 782.4
+      },
+      "1.3": {
+        "mean_output": 82.1,
+        "mean_reasoning": 770.1
+      },
+      "1.4": {
+        "mean_output": 80.8,
+        "mean_reasoning": 793.8
+      },
+      "1.5": {
+        "mean_output": 82.4,
+        "mean_reasoning": 782.8
+      },
+      "1.6": {
+        "mean_output": 81.4,
+        "mean_reasoning": 790.7
+      },
+      "1.7": {
+        "mean_output": 81.8,
+        "mean_reasoning": 782.1
+      },
+      "1.8": {
+        "mean_output": 80.8,
+        "mean_reasoning": 791.3
+      },
+      "1.9": {
+        "mean_output": 79.7,
+        "mean_reasoning": 801.8
+      },
+      "2.0": {
+        "mean_output": 80.5,
+        "mean_reasoning": 781.6
+      },
+      "2.1": {
+        "mean_output": 79.4,
+        "mean_reasoning": 799.9
+      },
+      "2.2": {
+        "mean_output": 80.1,
+        "mean_reasoning": 808.4
+      },
+      "2.3": {
+        "mean_output": 80.4,
+        "mean_reasoning": 780.0
+      },
+      "2.4": {
+        "mean_output": 80.2,
+        "mean_reasoning": 778.4
+      },
+      "2.5": {
+        "mean_output": 81.8,
+        "mean_reasoning": 799.8
+      },
+      "2.6": {
+        "mean_output": 80.2,
+        "mean_reasoning": 805.2
+      },
+      "2.7": {
+        "mean_output": 80.3,
+        "mean_reasoning": 798.7
+      },
+      "2.8": {
+        "mean_output": 78.8,
+        "mean_reasoning": 794.9
+      },
+      "2.9": {
+        "mean_output": 79.6,
+        "mean_reasoning": 801.3
+      },
+      "3.0": {
+        "mean_output": 79.1,
+        "mean_reasoning": 787.9
+      },
+      "3.1": {
+        "mean_output": 80.4,
+        "mean_reasoning": 802.4
+      },
+      "3.2": {
+        "mean_output": 80.1,
+        "mean_reasoning": 790.7
+      },
+      "3.3": {
+        "mean_output": 79.6,
+        "mean_reasoning": 799.3
+      },
+      "3.4": {
+        "mean_output": 80.0,
+        "mean_reasoning": 805.1
+      },
+      "3.5": {
+        "mean_output": 79.0,
+        "mean_reasoning": 801.7
+      },
+      "4.0": {
+        "mean_output": 79.3,
+        "mean_reasoning": 797.4
+      },
+      "5.0": {
+        "mean_output": 79.2,
+        "mean_reasoning": 802.8
+      },
+      "6.0": {
+        "mean_output": 78.4,
+        "mean_reasoning": 795.3
+      },
+      "7.0": {
+        "mean_output": 79.5,
+        "mean_reasoning": 794.8
+      }
+    },
+    "gemini_gemini-3-flash-preview_medium": {
+      "0": {
+        "mean_output": 63.8,
+        "mean_reasoning": 873.4
+      },
+      "0.1": {
+        "mean_output": 77.6,
+        "mean_reasoning": 950.1
+      },
+      "0.2": {
+        "mean_output": 77.8,
+        "mean_reasoning": 1019.7
+      },
+      "0.3": {
+        "mean_output": 75.8,
+        "mean_reasoning": 994.2
+      },
+      "0.4": {
+        "mean_output": 76.6,
+        "mean_reasoning": 1004.0
+      },
+      "0.5": {
+        "mean_output": 77.5,
+        "mean_reasoning": 1049.0
+      },
+      "0.6": {
+        "mean_output": 76.1,
+        "mean_reasoning": 985.1
+      },
+      "0.7": {
+        "mean_output": 77.2,
+        "mean_reasoning": 998.8
+      },
+      "0.8": {
+        "mean_output": 76.3,
+        "mean_reasoning": 1024.6
+      },
+      "0.9": {
+        "mean_output": 76.3,
+        "mean_reasoning": 1083.1
+      },
+      "1.0": {
+        "mean_output": 75.3,
+        "mean_reasoning": 1034.9
+      },
+      "1.1": {
+        "mean_output": 76.9,
+        "mean_reasoning": 1078.4
+      },
+      "1.2": {
+        "mean_output": 76.2,
+        "mean_reasoning": 1102.8
+      },
+      "1.3": {
+        "mean_output": 76.7,
+        "mean_reasoning": 1074.2
+      },
+      "1.4": {
+        "mean_output": 77.5,
+        "mean_reasoning": 1068.9
+      },
+      "1.5": {
+        "mean_output": 77.4,
+        "mean_reasoning": 1054.1
+      },
+      "1.6": {
+        "mean_output": 77.0,
+        "mean_reasoning": 1042.9
+      },
+      "1.7": {
+        "mean_output": 76.2,
+        "mean_reasoning": 1085.2
+      },
+      "1.8": {
+        "mean_output": 75.5,
+        "mean_reasoning": 1086.7
+      },
+      "1.9": {
+        "mean_output": 77.3,
+        "mean_reasoning": 1049.8
+      },
+      "2.0": {
+        "mean_output": 76.6,
+        "mean_reasoning": 1057.8
+      },
+      "2.1": {
+        "mean_output": 77.4,
+        "mean_reasoning": 1082.8
+      },
+      "2.2": {
+        "mean_output": 76.7,
+        "mean_reasoning": 1043.6
+      },
+      "2.3": {
+        "mean_output": 75.2,
+        "mean_reasoning": 1089.3
+      },
+      "2.4": {
+        "mean_output": 76.1,
+        "mean_reasoning": 1106.4
+      },
+      "2.5": {
+        "mean_output": 76.6,
+        "mean_reasoning": 1080.4
+      },
+      "2.6": {
+        "mean_output": 75.6,
+        "mean_reasoning": 1114.5
+      },
+      "2.7": {
+        "mean_output": 75.7,
+        "mean_reasoning": 1075.3
+      },
+      "2.8": {
+        "mean_output": 75.4,
+        "mean_reasoning": 1073.0
+      },
+      "2.9": {
+        "mean_output": 75.3,
+        "mean_reasoning": 1065.5
+      },
+      "3.0": {
+        "mean_output": 75.3,
+        "mean_reasoning": 1040.0
+      },
+      "3.1": {
+        "mean_output": 75.9,
+        "mean_reasoning": 1109.8
+      },
+      "3.2": {
+        "mean_output": 73.9,
+        "mean_reasoning": 1155.9
+      },
+      "3.3": {
+        "mean_output": 75.0,
+        "mean_reasoning": 1079.5
+      },
+      "3.4": {
+        "mean_output": 76.0,
+        "mean_reasoning": 1143.4
+      },
+      "3.5": {
+        "mean_output": 76.4,
+        "mean_reasoning": 1073.1
+      },
+      "4.0": {
+        "mean_output": 75.3,
+        "mean_reasoning": 1096.1
+      },
+      "5.0": {
+        "mean_output": 74.9,
+        "mean_reasoning": 1086.3
+      },
+      "6.0": {
+        "mean_output": 75.0,
+        "mean_reasoning": 1072.4
+      },
+      "7.0": {
+        "mean_output": 74.5,
+        "mean_reasoning": 1097.7
+      }
+    },
+    "gemini_gemini-3-flash-preview_high": {
+      "0": {
+        "mean_output": 65.3,
+        "mean_reasoning": 947.7
+      },
+      "0.1": {
+        "mean_output": 77.9,
+        "mean_reasoning": 1013.2
+      },
+      "0.2": {
+        "mean_output": 76.8,
+        "mean_reasoning": 1018.7
+      },
+      "0.3": {
+        "mean_output": 77.4,
+        "mean_reasoning": 992.2
+      },
+      "0.4": {
+        "mean_output": 77.4,
+        "mean_reasoning": 1050.3
+      },
+      "0.5": {
+        "mean_output": 77.1,
+        "mean_reasoning": 1081.2
+      },
+      "0.6": {
+        "mean_output": 76.9,
+        "mean_reasoning": 1003.4
+      },
+      "0.7": {
+        "mean_output": 75.8,
+        "mean_reasoning": 1109.5
+      },
+      "0.8": {
+        "mean_output": 76.0,
+        "mean_reasoning": 1058.4
+      },
+      "0.9": {
+        "mean_output": 75.6,
+        "mean_reasoning": 1118.7
+      },
+      "1.0": {
+        "mean_output": 77.6,
+        "mean_reasoning": 1082.2
+      },
+      "1.1": {
+        "mean_output": 76.6,
+        "mean_reasoning": 1098.4
+      },
+      "1.2": {
+        "mean_output": 77.8,
+        "mean_reasoning": 1114.7
+      },
+      "1.3": {
+        "mean_output": 76.5,
+        "mean_reasoning": 1079.1
+      },
+      "1.4": {
+        "mean_output": 77.2,
+        "mean_reasoning": 1102.1
+      },
+      "1.5": {
+        "mean_output": 78.0,
+        "mean_reasoning": 1168.1
+      },
+      "1.6": {
+        "mean_output": 77.0,
+        "mean_reasoning": 1153.2
+      },
+      "1.7": {
+        "mean_output": 76.3,
+        "mean_reasoning": 1126.4
+      },
+      "1.8": {
+        "mean_output": 76.3,
+        "mean_reasoning": 1076.6
+      },
+      "1.9": {
+        "mean_output": 77.0,
+        "mean_reasoning": 1079.2
+      },
+      "2.0": {
+        "mean_output": 75.7,
+        "mean_reasoning": 1092.9
+      },
+      "2.1": {
+        "mean_output": 76.1,
+        "mean_reasoning": 1168.1
+      },
+      "2.2": {
+        "mean_output": 76.0,
+        "mean_reasoning": 1170.1
+      },
+      "2.3": {
+        "mean_output": 76.7,
+        "mean_reasoning": 1100.0
+      },
+      "2.4": {
+        "mean_output": 76.1,
+        "mean_reasoning": 1116.3
+      },
+      "2.5": {
+        "mean_output": 76.7,
+        "mean_reasoning": 1117.4
+      },
+      "2.6": {
+        "mean_output": 76.4,
+        "mean_reasoning": 1090.5
+      },
+      "2.7": {
+        "mean_output": 75.2,
+        "mean_reasoning": 1189.0
+      },
+      "2.8": {
+        "mean_output": 77.1,
+        "mean_reasoning": 1154.2
+      },
+      "2.9": {
+        "mean_output": 76.5,
+        "mean_reasoning": 1086.5
+      },
+      "3.0": {
+        "mean_output": 74.3,
+        "mean_reasoning": 1144.6
+      },
+      "3.1": {
+        "mean_output": 75.1,
+        "mean_reasoning": 1137.8
+      },
+      "3.2": {
+        "mean_output": 76.2,
+        "mean_reasoning": 1194.3
+      },
+      "3.3": {
+        "mean_output": 74.6,
+        "mean_reasoning": 1142.6
+      },
+      "3.4": {
+        "mean_output": 76.0,
+        "mean_reasoning": 1218.2
+      },
+      "3.5": {
+        "mean_output": 76.6,
+        "mean_reasoning": 1119.8
+      },
+      "4.0": {
+        "mean_output": 75.3,
+        "mean_reasoning": 1246.1
+      },
+      "5.0": {
+        "mean_output": 74.6,
+        "mean_reasoning": 1205.7
+      },
+      "6.0": {
+        "mean_output": 75.2,
+        "mean_reasoning": 1221.4
+      },
+      "7.0": {
+        "mean_output": 74.6,
+        "mean_reasoning": 1219.9
+      }
+    },
+    "gemini_gemini-2_5-flash-lite_off": {
+      "0": {
+        "mean_output": 114.0,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 128.3,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 127.5,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 123.3,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 125.6,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 128.9,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 124.9,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 124.3,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 127.3,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 125.8,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 127.4,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 124.8,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 122.0,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 121.3,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 126.5,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 125.6,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 126.8,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 127.7,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 124.9,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 121.3,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 127.5,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 121.9,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 123.2,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 126.3,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 123.5,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 126.0,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 129.7,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 129.5,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 126.8,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 127.8,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 124.9,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 121.9,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 126.1,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 126.5,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 124.5,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 130.6,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 129.5,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 129.4,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 129.6,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 123.0,
+        "mean_reasoning": 0.0
+      }
+    },
+    "gemini_gemini-2_5-flash_off": {
+      "0": {
+        "mean_output": 111.2,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 125.3,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 125.8,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 126.2,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 129.2,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 130.4,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 131.6,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 130.5,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 133.5,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 133.8,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 138.3,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 144.8,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 135.5,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 130.8,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 142.1,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 145.3,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 138.2,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 144.7,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 141.1,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 138.5,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 127.5,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 138.5,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 136.3,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 138.0,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 138.7,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 145.9,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 140.4,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 134.6,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 143.9,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 142.9,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 137.8,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 135.9,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 136.9,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 139.4,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 143.3,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 143.6,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 139.7,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 136.5,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 136.9,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 134.9,
+        "mean_reasoning": 0.0
+      }
+    },
+    "gemini_gemini-2_0-flash_off": {
+      "0": {
+        "mean_output": 90.8,
+        "mean_reasoning": 0.0
+      },
+      "0.1": {
+        "mean_output": 120.2,
+        "mean_reasoning": 0.0
+      },
+      "0.2": {
+        "mean_output": 117.4,
+        "mean_reasoning": 0.0
+      },
+      "0.3": {
+        "mean_output": 120.0,
+        "mean_reasoning": 0.0
+      },
+      "0.4": {
+        "mean_output": 121.8,
+        "mean_reasoning": 0.0
+      },
+      "0.5": {
+        "mean_output": 119.9,
+        "mean_reasoning": 0.0
+      },
+      "0.6": {
+        "mean_output": 119.3,
+        "mean_reasoning": 0.0
+      },
+      "0.7": {
+        "mean_output": 117.7,
+        "mean_reasoning": 0.0
+      },
+      "0.8": {
+        "mean_output": 120.2,
+        "mean_reasoning": 0.0
+      },
+      "0.9": {
+        "mean_output": 119.0,
+        "mean_reasoning": 0.0
+      },
+      "1.0": {
+        "mean_output": 117.1,
+        "mean_reasoning": 0.0
+      },
+      "1.1": {
+        "mean_output": 118.1,
+        "mean_reasoning": 0.0
+      },
+      "1.2": {
+        "mean_output": 119.5,
+        "mean_reasoning": 0.0
+      },
+      "1.3": {
+        "mean_output": 118.1,
+        "mean_reasoning": 0.0
+      },
+      "1.4": {
+        "mean_output": 120.0,
+        "mean_reasoning": 0.0
+      },
+      "1.5": {
+        "mean_output": 120.7,
+        "mean_reasoning": 0.0
+      },
+      "1.6": {
+        "mean_output": 117.9,
+        "mean_reasoning": 0.0
+      },
+      "1.7": {
+        "mean_output": 117.6,
+        "mean_reasoning": 0.0
+      },
+      "1.8": {
+        "mean_output": 120.0,
+        "mean_reasoning": 0.0
+      },
+      "1.9": {
+        "mean_output": 117.9,
+        "mean_reasoning": 0.0
+      },
+      "2.0": {
+        "mean_output": 113.2,
+        "mean_reasoning": 0.0
+      },
+      "2.1": {
+        "mean_output": 116.6,
+        "mean_reasoning": 0.0
+      },
+      "2.2": {
+        "mean_output": 117.8,
+        "mean_reasoning": 0.0
+      },
+      "2.3": {
+        "mean_output": 117.3,
+        "mean_reasoning": 0.0
+      },
+      "2.4": {
+        "mean_output": 116.7,
+        "mean_reasoning": 0.0
+      },
+      "2.5": {
+        "mean_output": 118.8,
+        "mean_reasoning": 0.0
+      },
+      "2.6": {
+        "mean_output": 119.4,
+        "mean_reasoning": 0.0
+      },
+      "2.7": {
+        "mean_output": 115.4,
+        "mean_reasoning": 0.0
+      },
+      "2.8": {
+        "mean_output": 115.9,
+        "mean_reasoning": 0.0
+      },
+      "2.9": {
+        "mean_output": 115.7,
+        "mean_reasoning": 0.0
+      },
+      "3.0": {
+        "mean_output": 114.6,
+        "mean_reasoning": 0.0
+      },
+      "3.1": {
+        "mean_output": 117.3,
+        "mean_reasoning": 0.0
+      },
+      "3.2": {
+        "mean_output": 113.4,
+        "mean_reasoning": 0.0
+      },
+      "3.3": {
+        "mean_output": 115.4,
+        "mean_reasoning": 0.0
+      },
+      "3.4": {
+        "mean_output": 117.5,
+        "mean_reasoning": 0.0
+      },
+      "3.5": {
+        "mean_output": 116.9,
+        "mean_reasoning": 0.0
+      },
+      "4.0": {
+        "mean_output": 114.7,
+        "mean_reasoning": 0.0
+      },
+      "5.0": {
+        "mean_output": 113.5,
+        "mean_reasoning": 0.0
+      },
+      "6.0": {
+        "mean_output": 113.7,
+        "mean_reasoning": 0.0
+      },
+      "7.0": {
+        "mean_output": 111.9,
+        "mean_reasoning": 0.0
+      }
+    }
+  }
+}
