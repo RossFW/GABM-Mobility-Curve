@@ -75,7 +75,7 @@ Output: `data/{provider}_{model}_{reasoning}/probe_results_macro.csv`
 
 ---
 
-## The Research Figures (analytics.html — 36 figures)
+## The Research Figures (analytics.html — 37 figures)
 
 | Tab | Figures | Key question |
 |-----|---------|-------------|
@@ -150,7 +150,7 @@ GABM mobility curve/          ← THIS REPO (Paper 3)
 ├── viz/                      ← interactive visualizations
 │   ├── town.html             ← Phaser 3 town view
 │   ├── methodology.html      ← research design, prompt, configs, analysis approach
-│   ├── analytics.html        ← academic research dashboard (36 figures)
+│   ├── analytics.html        ← academic research dashboard (37 figures)
 │   └── data/real/            ← real probe data (populated by combine_data.py)
 ├── site/coverage.html        ← model coverage matrix
 └── docs/

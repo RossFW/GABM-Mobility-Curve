@@ -696,4 +696,45 @@ function computeActualCrossovers(agents, microRows) {
   return results;
 }
 
+/* ── computeTraitPowerRatios — shared between Cohort + Response Analysis ── */
+function computeTraitPowerRatios(regData) {
+  const coefs = regData.model2.coefficients;
+  const b1 = coefs.infection_pct.estimate;
+  const b2 = coefs.infection_pct_sq.estimate;
 
+  // Infection log-odds range: evaluate at x=0, x=7, x=vertex (matches Fig 28 cohort)
+  const xVertex = -b1 / (2 * b2);
+  const xClamped = Math.min(7, Math.max(0, xVertex));
+  const vals = [0, b1 * 7 + b2 * 49, b1 * xClamped + b2 * xClamped * xClamped];
+  const infPower = Math.max(Math.abs(Math.min(...vals)), Math.abs(Math.max(...vals)));
+
+  // 5 Big Five traits (adjective labels = dummy variable = 1 pole)
+  const traits = ['extraverted', 'agreeable', 'conscientious', 'emot_stable', 'open_to_exp'];
+  const traitLabels = ['Extraverted', 'Agreeable', 'Conscientious', 'Emotionally Stable', 'Open to Experience'];
+  const traitRatios = traits.map((t, i) => ({
+    trait: t,
+    label: traitLabels[i],
+    beta: coefs[t].estimate,
+    absBeta: Math.abs(coefs[t].estimate),
+    ratio: infPower > 0 ? Math.abs(coefs[t].estimate) / infPower : 0,
+    significant: coefs[t].p < 0.05,
+  }));
+
+  // Combined swing: Big Five + male + age (full range 18–65 = 47 years)
+  const bigFiveSwing = traits.reduce((s, t) => s + Math.abs(coefs[t].estimate), 0);
+  const maleEffect = Math.abs(coefs.male.estimate);
+  const ageEffect = Math.abs(coefs.age.estimate * 47);
+  const combinedSwing = bigFiveSwing + maleEffect + ageEffect;
+
+  return {
+    infPower,
+    xPeak: xClamped,
+    traitRatios,
+    bigFiveSwing,
+    maleEffect,
+    ageEffect,
+    combinedSwing,
+    combinedRatio: infPower > 0 ? combinedSwing / infPower : 0,
+    bigFiveRatio: infPower > 0 ? bigFiveSwing / infPower : 0,
+  };
+}

@@ -156,5 +156,260 @@
       "re_variance": 1.344971
     },
     "warning": {}
+  },
+  "model3": {
+    "type": "mention_interaction_logit",
+    "formula": "stay_home ~ infection_pct + I(infection_pct^2) + male + extraverted + agreeable + conscientious + emot_stable + open_to_exp + age_years + mentioned_ext + mentioned_agr + mentioned_con + mentioned_neu + mentioned_ope + mentioned_infection + mentioned_age + extraverted:mentioned_ext + agreeable:mentioned_agr + conscientious:mentioned_con + emot_stable:mentioned_neu + (1 | agent_id)",
+    "coefficients": {
+      "intercept": {
+        "estimate": -6.88938,
+        "se": 1.660839,
+        "z": -4.1481,
+        "p": 0.00003352,
+        "or": 0.00101855,
+        "or_ci_lo": 0.00003929,
+        "or_ci_hi": 0.02640675,
+        "sig": "***"
+      },
+      "infection_pct": {
+        "estimate": 1.999291,
+        "se": 0.077519,
+        "z": 25.791,
+        "p": 1.12000688e-146,
+        "or": 7.38381657,
+        "or_ci_lo": 6.34300934,
+        "or_ci_hi": 8.59540705,
+        "sig": "***"
+      },
+      "infection_pct_sq": {
+        "estimate": -0.231024,
+        "se": 0.01168,
+        "z": -19.7787,
+        "p": 4.54039138e-87,
+        "or": 0.79372018,
+        "or_ci_lo": 0.77575543,
+        "or_ci_hi": 0.81210095,
+        "sig": "***"
+      },
+      "male": {
+        "estimate": 0.642365,
+        "se": 0.419829,
+        "z": 1.5301,
+        "p": 0.12600057,
+        "or": 1.90097227,
+        "or_ci_lo": 0.83485353,
+        "or_ci_hi": 4.32853839,
+        "sig": ""
+      },
+      "extraverted": {
+        "estimate": 1.970086,
+        "se": 0.473621,
+        "z": 4.1596,
+        "p": 0.00003188,
+        "or": 7.17129046,
+        "or_ci_lo": 2.83428336,
+        "or_ci_hi": 18.14476544,
+        "sig": "***"
+      },
+      "agreeable": {
+        "estimate": -0.187898,
+        "se": 0.438675,
+        "z": -0.4283,
+        "p": 0.66841005,
+        "or": 0.82869923,
+        "or_ci_lo": 0.35074344,
+        "or_ci_hi": 1.95796223,
+        "sig": ""
+      },
+      "conscientious": {
+        "estimate": 1.797511,
+        "se": 0.456714,
+        "z": 3.9357,
+        "p": 0.00008294,
+        "or": 6.03461104,
+        "or_ci_lo": 2.46539495,
+        "or_ci_hi": 14.77107364,
+        "sig": "***"
+      },
+      "emot_stable": {
+        "estimate": 0.606808,
+        "se": 0.434073,
+        "z": 1.3979,
+        "p": 0.16213099,
+        "or": 1.83456613,
+        "or_ci_lo": 0.78350732,
+        "or_ci_hi": 4.29559848,
+        "sig": ""
+      },
+      "open_to_exp": {
+        "estimate": -0.289644,
+        "se": 0.426915,
+        "z": -0.6785,
+        "p": 0.49748164,
+        "or": 0.74853016,
+        "or_ci_lo": 0.32419911,
+        "or_ci_hi": 1.72825088,
+        "sig": ""
+      },
+      "mentioned_ext": {
+        "estimate": -0.192442,
+        "se": 0.250787,
+        "z": -0.7674,
+        "p": 0.44287028,
+        "or": 0.82494183,
+        "or_ci_lo": 0.50460261,
+        "or_ci_hi": 1.34864348,
+        "sig": ""
+      },
+      "mentioned_agr": {
+        "estimate": 1.562784,
+        "se": 0.221687,
+        "z": 7.0495,
+        "p": 1.79559724e-12,
+        "or": 4.77208612,
+        "or_ci_lo": 3.09032679,
+        "or_ci_hi": 7.36906079,
+        "sig": "***"
+      },
+      "mentioned_con": {
+        "estimate": 0.665826,
+        "se": 0.249038,
+        "z": 2.6736,
+        "p": 0.00750429,
+        "or": 1.94609661,
+        "or_ci_lo": 1.19448131,
+        "or_ci_hi": 3.17065823,
+        "sig": "**"
+      },
+      "mentioned_neu": {
+        "estimate": 4.761441,
+        "se": 0.389858,
+        "z": 12.2133,
+        "p": 2.64091438e-34,
+        "or": 116.91423212,
+        "or_ci_lo": 54.45193375,
+        "or_ci_hi": 251.02758947,
+        "sig": "***"
+      },
+      "mentioned_ope": {
+        "estimate": -0.100892,
+        "se": 0.228967,
+        "z": -0.4406,
+        "p": 0.65947287,
+        "or": 0.90403038,
+        "or_ci_lo": 0.57714146,
+        "or_ci_hi": 1.41606691,
+        "sig": ""
+      },
+      "mentioned_infection": {
+        "estimate": 7.696475,
+        "se": 1.379094,
+        "z": 5.5808,
+        "p": 2.3938497e-08,
+        "or": 2200.57784586,
+        "or_ci_lo": 147.44450642,
+        "or_ci_hi": 32843.15552613,
+        "sig": "***"
+      },
+      "mentioned_age": {
+        "estimate": 2.299361,
+        "se": 0.536947,
+        "z": 4.2823,
+        "p": 0.0000185,
+        "or": 9.96780677,
+        "or_ci_lo": 3.47969484,
+        "or_ci_hi": 28.55341524,
+        "sig": "***"
+      },
+      "extraverted_mentioned_ext": {
+        "estimate": -5.192123,
+        "se": 0.299134,
+        "z": -17.3572,
+        "p": 1.74137483e-67,
+        "or": 0.00556019,
+        "or_ci_lo": 0.00309358,
+        "or_ci_hi": 0.00999351,
+        "sig": "***"
+      },
+      "agreeable_mentioned_agr": {
+        "estimate": 0.125162,
+        "se": 0.304208,
+        "z": 0.4114,
+        "p": 0.68075332,
+        "or": 1.13333182,
+        "or_ci_lo": 0.62432433,
+        "or_ci_hi": 2.05732975,
+        "sig": ""
+      },
+      "conscientious_mentioned_con": {
+        "estimate": -0.795205,
+        "se": 0.336805,
+        "z": -2.361,
+        "p": 0.01822457,
+        "or": 0.45148881,
+        "or_ci_lo": 0.23332041,
+        "or_ci_hi": 0.87365758,
+        "sig": "*"
+      },
+      "emot_stable_mentioned_neu": {
+        "estimate": -6.899089,
+        "se": 0.416393,
+        "z": -16.5687,
+        "p": 1.17325361e-61,
+        "or": 0.0010087,
+        "or_ci_lo": 0.00044599,
+        "or_ci_hi": 0.00228142,
+        "sig": "***"
+      },
+      "age": {
+        "estimate": -0.006884,
+        "se": 0.015429,
+        "z": -0.4462,
+        "p": 0.65544956,
+        "or": 0.99313925,
+        "or_ci_lo": 0.96355586,
+        "or_ci_hi": 1.02363092,
+        "sig": ""
+      }
+    },
+    "contrast_flags": {
+      "ext": {
+        "mention_rate": 0.6317,
+        "sufficient": true
+      },
+      "agr": {
+        "mention_rate": 0.362,
+        "sufficient": true
+      },
+      "con": {
+        "mention_rate": 0.2658,
+        "sufficient": true
+      },
+      "neu": {
+        "mention_rate": 0.2092,
+        "sufficient": true
+      },
+      "ope": {
+        "mention_rate": 0.025,
+        "sufficient": false
+      },
+      "infection": {
+        "mention_rate": 0.9947,
+        "sufficient": false
+      },
+      "age": {
+        "mention_rate": 0.0167,
+        "sufficient": false
+      }
+    },
+    "n_interactions": 4,
+    "fit": {
+      "aic": 5484.47,
+      "bic": 5658.34,
+      "n": 20000,
+      "n_groups": 100,
+      "re_variance": 3.872722
+    },
+    "warning": {}
   }
 }

@@ -156,5 +156,280 @@
       "re_variance": 2.863388
     },
     "warning": {}
+  },
+  "model3": {
+    "type": "mention_interaction_logit",
+    "formula": "stay_home ~ infection_pct + I(infection_pct^2) + male + extraverted + agreeable + conscientious + emot_stable + open_to_exp + age_years + mentioned_ext + mentioned_agr + mentioned_con + mentioned_neu + mentioned_ope + mentioned_infection + mentioned_age + extraverted:mentioned_ext + agreeable:mentioned_agr + conscientious:mentioned_con + emot_stable:mentioned_neu + open_to_exp:mentioned_ope + infection_pct:mentioned_infection + (1 | agent_id)",
+    "coefficients": {
+      "intercept": {
+        "estimate": -7.885057,
+        "se": 1.286664,
+        "z": -6.1283,
+        "p": 8.88244768e-10,
+        "or": 0.00037633,
+        "or_ci_lo": 0.00003022,
+        "or_ci_hi": 0.0046859,
+        "sig": "***"
+      },
+      "infection_pct": {
+        "estimate": 0.699392,
+        "se": 0.187876,
+        "z": 3.7226,
+        "p": 0.00019716,
+        "or": 2.01252797,
+        "or_ci_lo": 1.39257572,
+        "or_ci_hi": 2.90847295,
+        "sig": "***"
+      },
+      "infection_pct_sq": {
+        "estimate": -0.193494,
+        "se": 0.020342,
+        "z": -9.5118,
+        "p": 1.87339241e-21,
+        "or": 0.82407465,
+        "or_ci_lo": 0.79186417,
+        "or_ci_hi": 0.85759536,
+        "sig": "***"
+      },
+      "male": {
+        "estimate": -0.85938,
+        "se": 0.546256,
+        "z": -1.5732,
+        "p": 0.11566809,
+        "or": 0.42342436,
+        "or_ci_lo": 0.14514208,
+        "or_ci_hi": 1.23525988,
+        "sig": ""
+      },
+      "extraverted": {
+        "estimate": -4.20438,
+        "se": 0.625724,
+        "z": -6.7192,
+        "p": 1.82692546e-11,
+        "or": 0.01493004,
+        "or_ci_lo": 0.0043796,
+        "or_ci_hi": 0.05089649,
+        "sig": "***"
+      },
+      "agreeable": {
+        "estimate": 2.322528,
+        "se": 0.566421,
+        "z": 4.1004,
+        "p": 0.00004125,
+        "or": 10.2014324,
+        "or_ci_lo": 3.36135164,
+        "or_ci_hi": 30.96052847,
+        "sig": "***"
+      },
+      "conscientious": {
+        "estimate": 3.683762,
+        "se": 0.620798,
+        "z": 5.9339,
+        "p": 2.95795836e-09,
+        "or": 39.79581075,
+        "or_ci_lo": 11.78700646,
+        "or_ci_hi": 134.36037033,
+        "sig": "***"
+      },
+      "emot_stable": {
+        "estimate": -2.910741,
+        "se": 0.639864,
+        "z": -4.549,
+        "p": 5.39011204e-06,
+        "or": 0.0544354,
+        "or_ci_lo": 0.01553168,
+        "or_ci_hi": 0.19078506,
+        "sig": "***"
+      },
+      "open_to_exp": {
+        "estimate": 2.99226,
+        "se": 0.565411,
+        "z": 5.2922,
+        "p": 1.20865037e-07,
+        "or": 19.93066986,
+        "or_ci_lo": 6.58012446,
+        "or_ci_hi": 60.36840239,
+        "sig": "***"
+      },
+      "mentioned_ext": {
+        "estimate": 10.612846,
+        "se": 0.600805,
+        "z": 17.6644,
+        "p": 7.88906477e-70,
+        "or": 40653.7374426,
+        "or_ci_lo": 12522.31695108,
+        "or_ci_hi": 131982.47373136,
+        "sig": "***"
+      },
+      "mentioned_agr": {
+        "estimate": -4.553092,
+        "se": 0.320595,
+        "z": -14.202,
+        "p": 8.90356624e-46,
+        "or": 0.01053459,
+        "or_ci_lo": 0.00561981,
+        "or_ci_hi": 0.01974756,
+        "sig": "***"
+      },
+      "mentioned_con": {
+        "estimate": -5.223958,
+        "se": 0.468845,
+        "z": -11.1422,
+        "p": 7.81796816e-29,
+        "or": 0.00538597,
+        "or_ci_lo": 0.00214869,
+        "or_ci_hi": 0.01350059,
+        "sig": "***"
+      },
+      "mentioned_neu": {
+        "estimate": 4.093557,
+        "se": 0.342559,
+        "z": 11.9499,
+        "p": 6.49842939e-33,
+        "or": 59.95278497,
+        "or_ci_lo": 30.63493963,
+        "or_ci_hi": 117.32800749,
+        "sig": "***"
+      },
+      "mentioned_ope": {
+        "estimate": -2.61824,
+        "se": 0.28363,
+        "z": -9.2312,
+        "p": 2.67670801e-20,
+        "or": 0.07293109,
+        "or_ci_lo": 0.04182942,
+        "or_ci_hi": 0.12715796,
+        "sig": "***"
+      },
+      "mentioned_infection": {
+        "estimate": 1.260974,
+        "se": 0.371868,
+        "z": 3.3909,
+        "p": 0.0006966,
+        "or": 3.52885554,
+        "or_ci_lo": 1.70252424,
+        "or_ci_hi": 7.31432843,
+        "sig": "***"
+      },
+      "mentioned_age": {
+        "estimate": 0.077374,
+        "se": 0.654699,
+        "z": 0.1182,
+        "p": 0.90592345,
+        "or": 1.08044571,
+        "or_ci_lo": 0.29944141,
+        "or_ci_hi": 3.89846863,
+        "sig": ""
+      },
+      "extraverted_mentioned_ext": {
+        "estimate": -11.892428,
+        "se": 0.662369,
+        "z": -17.9544,
+        "p": 4.43453825e-72,
+        "or": 6.84201911e-06,
+        "or_ci_lo": 1.86794668e-06,
+        "or_ci_hi": 0.00002506,
+        "sig": "***"
+      },
+      "agreeable_mentioned_agr": {
+        "estimate": 7.729772,
+        "se": 0.435398,
+        "z": 17.7533,
+        "p": 1.62429713e-70,
+        "or": 2275.08443029,
+        "or_ci_lo": 969.12295069,
+        "or_ci_hi": 5340.92104746,
+        "sig": "***"
+      },
+      "conscientious_mentioned_con": {
+        "estimate": 4.815013,
+        "se": 0.497561,
+        "z": 9.6772,
+        "p": 3.76750181e-22,
+        "or": 123.34841548,
+        "or_ci_lo": 46.51590362,
+        "or_ci_hi": 327.08881088,
+        "sig": "***"
+      },
+      "emot_stable_mentioned_neu": {
+        "estimate": -10.109182,
+        "se": 0.614603,
+        "z": -16.4483,
+        "p": 8.623018e-61,
+        "or": 0.0000407,
+        "or_ci_lo": 0.0000122,
+        "or_ci_hi": 0.00013577,
+        "sig": "***"
+      },
+      "open_to_exp_mentioned_ope": {
+        "estimate": 0.152415,
+        "se": 1.613824,
+        "z": 0.0944,
+        "p": 0.92475708,
+        "or": 1.16464313,
+        "or_ci_lo": 0.04925818,
+        "or_ci_hi": 27.53641245,
+        "sig": ""
+      },
+      "infection_pct_mentioned_infection": {
+        "estimate": 1.25034,
+        "se": 0.169796,
+        "z": 7.3638,
+        "p": 1.78759137e-13,
+        "or": 3.4915283,
+        "or_ci_lo": 2.50312543,
+        "or_ci_hi": 4.87021935,
+        "sig": "***"
+      },
+      "age": {
+        "estimate": 0.042531,
+        "se": 0.020599,
+        "z": 2.0647,
+        "p": 0.03895172,
+        "or": 1.04344826,
+        "or_ci_lo": 1.00215898,
+        "or_ci_hi": 1.08643867,
+        "sig": "*"
+      }
+    },
+    "contrast_flags": {
+      "ext": {
+        "mention_rate": 0.6037,
+        "sufficient": true
+      },
+      "agr": {
+        "mention_rate": 0.3308,
+        "sufficient": true
+      },
+      "con": {
+        "mention_rate": 0.8178,
+        "sufficient": true
+      },
+      "neu": {
+        "mention_rate": 0.7116,
+        "sufficient": true
+      },
+      "ope": {
+        "mention_rate": 0.1915,
+        "sufficient": true
+      },
+      "infection": {
+        "mention_rate": 0.6355,
+        "sufficient": true
+      },
+      "age": {
+        "mention_rate": 0.0333,
+        "sufficient": false
+      }
+    },
+    "n_interactions": 6,
+    "fit": {
+      "aic": 1619.03,
+      "bic": 1808.72,
+      "n": 20000,
+      "n_groups": 100,
+      "re_variance": 3.678311
+    },
+    "warning": {}
   }
 }

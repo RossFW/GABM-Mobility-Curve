@@ -156,5 +156,240 @@
       "re_variance": 0.667426
     },
     "warning": {}
+  },
+  "model3": {
+    "type": "mention_interaction_logit",
+    "formula": "stay_home ~ infection_pct + I(infection_pct^2) + male + extraverted + agreeable + conscientious + emot_stable + open_to_exp + age_years + mentioned_ext + mentioned_agr + mentioned_con + mentioned_neu + mentioned_ope + mentioned_infection + mentioned_age + conscientious:mentioned_con + emot_stable:mentioned_neu + (1 | agent_id)",
+    "coefficients": {
+      "intercept": {
+        "estimate": -22.002269,
+        "se": 1262.519053,
+        "z": -0.0174,
+        "p": 0.98609575,
+        "or": 2.78314484e-10,
+        "or_ci_lo": 0,
+        "or_ci_hi": "Inf",
+        "sig": ""
+      },
+      "infection_pct": {
+        "estimate": 3.053313,
+        "se": 0.086179,
+        "z": 35.4297,
+        "p": 5.94990264e-275,
+        "or": 21.18541029,
+        "or_ci_lo": 17.89285018,
+        "or_ci_hi": 25.0838522,
+        "sig": "***"
+      },
+      "infection_pct_sq": {
+        "estimate": -0.362982,
+        "se": 0.012914,
+        "z": -28.1079,
+        "p": 7.85029339e-174,
+        "or": 0.69559924,
+        "or_ci_lo": 0.67821374,
+        "or_ci_hi": 0.7134304,
+        "sig": "***"
+      },
+      "male": {
+        "estimate": 0.404008,
+        "se": 0.191803,
+        "z": 2.1064,
+        "p": 0.03517263,
+        "or": 1.49781565,
+        "or_ci_lo": 1.02847112,
+        "or_ci_hi": 2.18134635,
+        "sig": "*"
+      },
+      "extraverted": {
+        "estimate": -0.707935,
+        "se": 0.197476,
+        "z": -3.5849,
+        "p": 0.00033718,
+        "or": 0.49266045,
+        "or_ci_lo": 0.33454377,
+        "or_ci_hi": 0.72550841,
+        "sig": "***"
+      },
+      "agreeable": {
+        "estimate": 0.920031,
+        "se": 0.190199,
+        "z": 4.8372,
+        "p": 1.31679719e-06,
+        "or": 2.50936888,
+        "or_ci_lo": 1.72847775,
+        "or_ci_hi": 3.64305078,
+        "sig": "***"
+      },
+      "conscientious": {
+        "estimate": 1.179003,
+        "se": 0.201173,
+        "z": 5.8606,
+        "p": 4.61085008e-09,
+        "or": 3.25112984,
+        "or_ci_lo": 2.19175704,
+        "or_ci_hi": 4.82254422,
+        "sig": "***"
+      },
+      "emot_stable": {
+        "estimate": -1.373811,
+        "se": 0.199486,
+        "z": -6.8867,
+        "p": 5.70835356e-12,
+        "or": 0.2531404,
+        "or_ci_lo": 0.17122033,
+        "or_ci_hi": 0.37425499,
+        "sig": "***"
+      },
+      "open_to_exp": {
+        "estimate": 0.831806,
+        "se": 0.194163,
+        "z": 4.2841,
+        "p": 0.00001835,
+        "or": 2.29746382,
+        "or_ci_lo": 1.57026694,
+        "or_ci_hi": 3.36142846,
+        "sig": "***"
+      },
+      "mentioned_ext": {
+        "estimate": -0.861471,
+        "se": 0.229256,
+        "z": -3.7577,
+        "p": 0.00017149,
+        "or": 0.4225402,
+        "or_ci_lo": 0.26960103,
+        "or_ci_hi": 0.66223863,
+        "sig": "***"
+      },
+      "mentioned_agr": {
+        "estimate": -1.947534,
+        "se": 0.492167,
+        "z": -3.9571,
+        "p": 0.00007588,
+        "or": 0.14262529,
+        "or_ci_lo": 0.05435706,
+        "or_ci_hi": 0.37422875,
+        "sig": "***"
+      },
+      "mentioned_con": {
+        "estimate": -5.684775,
+        "se": 0.567227,
+        "z": -10.022,
+        "p": 1.21954088e-23,
+        "or": 0.0033973,
+        "or_ci_lo": 0.00111764,
+        "or_ci_hi": 0.01032683,
+        "sig": "***"
+      },
+      "mentioned_neu": {
+        "estimate": 6.143025,
+        "se": 0.913306,
+        "z": 6.7261,
+        "p": 1.74223452e-11,
+        "or": 465.45935705,
+        "or_ci_lo": 77.706949,
+        "or_ci_hi": 2788.06999689,
+        "sig": "***"
+      },
+      "mentioned_ope": {
+        "estimate": -4.117113,
+        "se": 3.288251,
+        "z": -1.2521,
+        "p": 0.21054518,
+        "or": 0.01629147,
+        "or_ci_lo": 0.00002588,
+        "or_ci_hi": 10.25596219,
+        "sig": ""
+      },
+      "mentioned_infection": {
+        "estimate": 21.684994,
+        "se": 1262.518978,
+        "z": 0.0172,
+        "p": 0.98629623,
+        "or": 2616214862.6099858,
+        "or_ci_lo": 0,
+        "or_ci_hi": "Inf",
+        "sig": ""
+      },
+      "mentioned_age": {
+        "estimate": 17.231371,
+        "se": 579.131307,
+        "z": 0.0298,
+        "p": 0.97626339,
+        "or": 30443118.65252543,
+        "or_ci_lo": 0,
+        "or_ci_hi": "Inf",
+        "sig": ""
+      },
+      "conscientious_mentioned_con": {
+        "estimate": 5.562137,
+        "se": 0.579336,
+        "z": 9.6009,
+        "p": 7.9257688e-22,
+        "or": 260.37877381,
+        "or_ci_lo": 83.64984009,
+        "or_ci_hi": 810.48697495,
+        "sig": "***"
+      },
+      "emot_stable_mentioned_neu": {
+        "estimate": -9.10027,
+        "se": 1.05162,
+        "z": -8.6536,
+        "p": 4.9913361e-18,
+        "or": 0.00011164,
+        "or_ci_lo": 0.00001421,
+        "or_ci_hi": 0.00087692,
+        "sig": "***"
+      },
+      "age": {
+        "estimate": 0.005146,
+        "se": 0.007024,
+        "z": 0.7326,
+        "p": 0.4637904,
+        "or": 1.00515897,
+        "or_ci_lo": 0.99141629,
+        "or_ci_hi": 1.01909215,
+        "sig": ""
+      }
+    },
+    "contrast_flags": {
+      "ext": {
+        "mention_rate": 0.0352,
+        "sufficient": false
+      },
+      "agr": {
+        "mention_rate": 0.0098,
+        "sufficient": false
+      },
+      "con": {
+        "mention_rate": 0.1858,
+        "sufficient": true
+      },
+      "neu": {
+        "mention_rate": 0.0542,
+        "sufficient": true
+      },
+      "ope": {
+        "mention_rate": 0.0006,
+        "sufficient": false
+      },
+      "infection": {
+        "mention_rate": 0.994,
+        "sufficient": false
+      },
+      "age": {
+        "mention_rate": 0.0331,
+        "sufficient": false
+      }
+    },
+    "n_interactions": 2,
+    "fit": {
+      "aic": 5518.21,
+      "bic": 5676.28,
+      "n": 20000,
+      "n_groups": 100,
+      "re_variance": 0.6963
+    },
+    "warning": {}
   }
 }

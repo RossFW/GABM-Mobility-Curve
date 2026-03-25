@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 # ============================================================
 # GABM Mobility Curve — Regression Analysis
-# Computes fixed-effects logit (Model 1) and random-effects logit (Model 2)
-# for all 21 LLM configurations. Outputs JSON for viz dashboard.
+# Computes fixed-effects logit (Model 1), random-effects logit (Model 2),
+# and mention-interaction logit (Model 3) for all 21 LLM configurations.
+# Outputs JSON for viz dashboard.
 # ============================================================
 
 library(data.table)
@@ -109,7 +110,8 @@ extract_coefs <- function(coef_table, coef_names = NULL) {
 results_summary <- data.table(
   config_key = character(),
   m1_status  = character(),
-  m2_status  = character()
+  m2_status  = character(),
+  m3_status  = character()
 )
 
 for (dir_name in config_dirs) {
@@ -138,11 +140,13 @@ for (dir_name in config_dirs) {
     config_key = dir_name,
     label      = label,
     model1     = NULL,
-    model2     = NULL
+    model2     = NULL,
+    model3     = NULL
   )
 
   m1_status <- "ok"
   m2_status <- "ok"
+  m3_status <- "ok"
 
   tryCatch({
     # Read micro CSV
@@ -246,6 +250,134 @@ for (dir_name in config_dirs) {
       output$model2 <<- list(type = "random_effects_logit", error = e$message)
     })
 
+    # ── Model 3: Mention-Interaction Logit ──────────────────
+    # Same as Model 2, but adds mention flags + trait×mention interactions
+    # Tests: when a model explicitly mentions a trait, does that trait have a stronger effect?
+    tryCatch({
+      # Read mention flags
+      flags_file <- file.path(DATA_DIR, dir_name, "mention_flags.csv")
+      if (!file.exists(flags_file)) {
+        m3_status <<- "SKIP: no mention_flags.csv"
+        output$model3 <<- list(type = "mention_interaction_logit", error = "No mention_flags.csv")
+      } else {
+        flags <- fread(flags_file)
+
+        # Merge flags with df by agent_id, rep, infection_level
+        df3 <- merge(df, flags,
+                     by = c("agent_id", "rep", "infection_level"),
+                     all.x = TRUE)
+
+        # Check for merge quality
+        na_flags <- sum(is.na(df3$mentioned_ext))
+        if (na_flags > 0) {
+          cat("[WARN: ", na_flags, " unmatched rows] ")
+          # Fill NAs with 0
+          flag_cols <- c("mentioned_ext", "mentioned_agr", "mentioned_con",
+                        "mentioned_neu", "mentioned_ope",
+                        "mentioned_infection", "mentioned_age")
+          for (fc in flag_cols) {
+            df3[is.na(get(fc)), (fc) := 0L]
+          }
+        }
+
+        # Pre-check contrast: flag dimensions where mention rate < 5% or > 95%
+        flag_cols <- c("mentioned_ext", "mentioned_agr", "mentioned_con",
+                      "mentioned_neu", "mentioned_ope",
+                      "mentioned_infection", "mentioned_age")
+        contrast_flags <- list()
+        for (fc in flag_cols) {
+          rate <- mean(df3[[fc]], na.rm = TRUE)
+          dim_name <- sub("mentioned_", "", fc)
+          contrast_flags[[dim_name]] <- list(
+            mention_rate = round(rate, 4),
+            sufficient = rate >= 0.05 & rate <= 0.95
+          )
+        }
+
+        # Build formula dynamically — include interactions only for sufficient contrast
+        base_terms <- c("infection_pct", "I(infection_pct^2)",
+                       "male", "extraverted", "agreeable", "conscientious",
+                       "emot_stable", "open_to_exp", "age_years")
+
+        # Always include mention main effects
+        mention_terms <- flag_cols
+
+        # Interaction terms (trait × mentioned_trait)
+        interaction_map <- list(
+          mentioned_ext = "extraverted",
+          mentioned_agr = "agreeable",
+          mentioned_con = "conscientious",
+          mentioned_neu = "emot_stable",
+          mentioned_ope = "open_to_exp",
+          mentioned_infection = "infection_pct",
+          mentioned_age = "age_years"
+        )
+
+        interaction_terms <- c()
+        for (flag in names(interaction_map)) {
+          dim_name <- sub("mentioned_", "", flag)
+          if (contrast_flags[[dim_name]]$sufficient) {
+            interaction_terms <- c(interaction_terms,
+                                  paste0(interaction_map[[flag]], ":", flag))
+          }
+        }
+
+        all_terms <- c(base_terms, mention_terms, interaction_terms)
+        formula_str <- paste("stay_home ~", paste(all_terms, collapse = " + "),
+                           "+ (1 | agent_id)")
+        m3_formula <- as.formula(formula_str)
+
+        cat("[M3: ", length(interaction_terms), " interactions] ")
+
+        m3 <- glmer(
+          m3_formula,
+          family  = binomial,
+          data    = df3,
+          control = glmerControl(
+            optimizer = "bobyqa",
+            optCtrl   = list(maxfun = 200000)
+          )
+        )
+
+        coef_table <- summary(m3)$coefficients
+        m3_coefs <- extract_coefs(coef_table)
+
+        # Rename age_years to age
+        if ("age_years" %in% names(m3_coefs)) {
+          m3_coefs$age <- m3_coefs$age_years
+          m3_coefs$age_years <- NULL
+        }
+
+        # Random effect variance
+        re_var <- as.data.frame(VarCorr(m3))$vcov[1]
+
+        # Check convergence
+        conv_warn <- NULL
+        if (length(m3@optinfo$conv$lme4$messages) > 0) {
+          conv_warn <- paste(m3@optinfo$conv$lme4$messages, collapse = "; ")
+        }
+
+        output$model3 <- list(
+          type           = "mention_interaction_logit",
+          formula        = formula_str,
+          coefficients   = m3_coefs,
+          contrast_flags = contrast_flags,
+          n_interactions = length(interaction_terms),
+          fit            = list(
+            aic         = round(AIC(m3), 2),
+            bic         = round(BIC(m3), 2),
+            n           = nrow(df3),
+            n_groups    = length(unique(df3$agent_id)),
+            re_variance = round(re_var, 6)
+          ),
+          warning        = conv_warn
+        )
+      }
+    }, error = function(e) {
+      m3_status <<- paste("ERROR:", e$message)
+      output$model3 <<- list(type = "mention_interaction_logit", error = e$message)
+    })
+
     # Write JSON
     json_file <- file.path(OUT_DIR, paste0(dir_name, ".json"))
     write_json(output, json_file, pretty = TRUE, auto_unbox = TRUE, digits = 8)
@@ -254,11 +386,13 @@ for (dir_name in config_dirs) {
     cat("FATAL ERROR:", e$message, "\n")
     m1_status <- paste("FATAL:", e$message)
     m2_status <- paste("FATAL:", e$message)
+    m3_status <- paste("FATAL:", e$message)
   })
 
-  cat(m1_status, "/", m2_status, "\n")
+  cat(m1_status, "/", m2_status, "/", m3_status, "\n")
   results_summary <- rbindlist(list(results_summary, data.table(
-    config_key = dir_name, m1_status = m1_status, m2_status = m2_status
+    config_key = dir_name, m1_status = m1_status, m2_status = m2_status,
+    m3_status = m3_status
   )))
 }
 

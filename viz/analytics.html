@@ -854,11 +854,30 @@
       <div class="chart-container" id="fig26-chart"></div>
     </div>
 
+    <!-- Figure 29: Cohort Per-Trait Power Ratio -->
+    <div class="section" id="cohort-trait-power-section" data-section="trait-breakdown">
+      <div class="fig-num">Figure 29</div>
+      <div class="fig-title">Per-Trait Power Ratio &mdash; Individual Trait Effects vs. Infection</div>
+      <div class="fig-caption">Each marker shows one predictor&rsquo;s |&beta;| as a multiple of the infection log-odds range, matching the &beta;&nbsp;Trait/Infection ratio in Figure 28 above. Circles&nbsp;=&nbsp;Big Five traits; diamonds&nbsp;=&nbsp;demographics (gender, age over 47-year span). The grey bar spans the weakest to strongest predictor. Markers to the right of the red dashed line (1.0&times;) indicate predictors individually more powerful than infection&rsquo;s full effect. Faded markers&nbsp;=&nbsp;not significant (p&nbsp;&gt;&nbsp;0.05).</div>
+      <div id="cohort-tp-filters"></div>
+      <div class="chart-container" id="cohort-trait-power-chart"></div>
+      <div class="fig-note">ratio = |&beta;<sub>predictor</sub>| / max(&Delta;<sub>infection</sub>). Age effect scaled to full range (18&ndash;65 = 47 years). Coefficients from Model 2 (random-effects logit).</div>
+    </div>
+
     <div class="curve-section-header">Cross-Model Consistency</div>
 
-    <!-- Figure 29: Agent Behavioral Consistency Across Models -->
+    <!-- Figure 30: Trait Importance Ranking Across Models -->
+    <div class="section" id="trait-rank-section" data-section="cross-model">
+      <div class="fig-num">Figure 30</div>
+      <div class="fig-title">Trait Importance Ranking Across Models</div>
+      <div class="fig-caption">The heatmap shows pairwise Spearman &rho; on 8-predictor importance rankings (Big Five + gender + age + infection): do two models agree on <em>which</em> predictors matter most? High &rho; means models share a similar &ldquo;value system&rdquo; for what drives agent decisions. Compare with Figure 31 below, which measures agreement on <em>which agents</em> are cautious.</div>
+      <div id="trait-rank-filters"></div>
+      <div class="chart-container" id="trait-rank-chart"></div>
+    </div>
+
+    <!-- Figure 31: Agent Behavioral Consistency Across Models -->
     <div class="section" id="fig27-section" data-section="cross-model">
-      <div class="fig-num">Figure 29</div>
+      <div class="fig-num">Figure 31</div>
       <div class="fig-title">Agent Behavioral Consistency Across Models</div>
       <div class="fig-caption">Spearman rank correlation (&rho;) of per-agent stay-home rates between each pair of 21 LLM configurations. High &rho; indicates agents maintain their relative behavioral ordering regardless of which model simulates them &mdash; evidence that personality traits genuinely drive decisions.</div>
       <div id="fig28-filters"></div>
@@ -881,18 +900,18 @@
       <span class="nav-sep">&middot;</span>
       <a class="section-link" data-filter="trait-util" href="#">Trait Utilization</a>
       <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="verbosity" href="#">Verbosity</a>
+      <a class="section-link" data-filter="amplification" href="#">Amplification</a>
       <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="boundary" href="#">Decision Boundary</a>
+      <a class="section-link" data-filter="verbosity" href="#">Verbosity</a>
       <span class="nav-sep">&middot;</span>
       <a class="section-link" data-filter="consistency" href="#">Response Consistency</a>
     </div>
 
     <div class="curve-section-header">Agent Spotlight</div>
 
-    <!-- Figure 30: Agent Spotlight -->
+    <!-- Figure 32: Agent Spotlight -->
     <div class="section" id="fig23-section" data-section="spotlight">
-      <div class="fig-num">Figure 30</div>
+      <div class="fig-num">Figure 32</div>
       <div class="fig-title">Agent Spotlight &mdash; Cross-Model Comparison</div>
       <div class="fig-caption">Select an individual agent and one or more LLM configurations to compare how that agent responds to rising infection levels across different models. Each line shows how many of the 5 runs the agent chose to stay home at each infection level (0 = always goes out, 5 = always stays home). Click any data point to read the agent's reasoning.</div>
       <div id="fig23-profile" class="spotlight-profile"></div>
@@ -904,80 +923,119 @@
 
     <div class="curve-section-header">Trait Utilization</div>
 
-    <!-- Figure 31: Trait Mention Heatmap (10-pole) -->
+    <!-- Figure 33: Trait Mention Heatmap (10-pole) -->
     <div class="section" id="ra-fig33-section" data-section="trait-util" style="display:none">
-      <div class="fig-num">Figure 31</div>
-      <div class="fig-title">Trait Mention Heatmap &mdash; Big Five References in LLM Reasoning</div>
-      <div class="fig-caption">How often does each model reference personality traits in its reasoning? Each cell shows the percentage of 20,000 responses where the model mentioned at least one keyword for that specific pole. Models that rarely mention traits may be ignoring personality information in the prompt.</div>
+      <div class="fig-num">Figure 33</div>
+      <div class="fig-title">Trait Mention Heatmap &mdash; Big Five, Infection &amp; Age References in LLM Reasoning</div>
+      <div class="fig-caption">How often does each model reference personality traits, infection, and age in its reasoning? Each cell shows the percentage of 20,000 responses where the model mentioned at least one keyword for that category. The two rightmost columns show infection context mentions (words like &ldquo;infection&rdquo;, &ldquo;cases&rdquo;, or rate percentages) and age mentions (words like &ldquo;years old&rdquo;, &ldquo;young&rdquo;, or the agent&rsquo;s own age number).</div>
       <div class="chart-container" id="ra-fig33-chart"></div>
-      <div class="fig-note">Keyword matching is case-insensitive. Synonyms listed under each column header. Agents are assigned exactly one pole per dimension. This figure counts all mentions regardless of assignment.</div>
+      <div class="fig-note">Keyword matching is case-insensitive. Synonyms listed under each column header. Big Five columns count pole-level mentions; Infection and Age use combined flags (words + patterns). Keywords validated through 3-iteration audit of 420K responses.</div>
     </div>
 
-    <div class="curve-section-header">Trait Power (Experimental)</div>
-
-    <!-- Experimental: Combined Trait Power vs Infection -->
-    <div class="section" id="ra-trait-power-combined-section" data-section="trait-util" style="display:none">
-      <div class="fig-num">Experimental</div>
-      <div class="fig-title">Combined Trait Power vs Infection &mdash; Do Personal Characteristics Outweigh Infection?</div>
-      <div class="fig-caption">How powerful are all personal characteristics (Big Five traits + gender + age) compared to infection level? Each bar shows the total log-odds swing from the most &ldquo;stay home&rdquo; to most &ldquo;go out&rdquo; personality profile, expressed as a percentage of infection&rsquo;s maximum effect (peak of the quadratic curve over 0&ndash;7%). Values above 100% mean personal characteristics collectively outweigh infection.</div>
-      <div class="chart-container" id="ra-trait-power-combined-chart"></div>
-      <div class="fig-note">max(&Delta;<sub>infection</sub>) = peak of &beta;&#8321;x + &beta;&#8322;x&sup2; over [0, 7%]. Combined swing = &Sigma;|&beta;<sub>trait</sub>| + |&beta;<sub>male</sub>| + |&beta;<sub>age</sub> &times; 47|. Age range = 18&ndash;65 years. Coefficients from Model 2 (random-effects logit with agent random intercepts).</div>
-    </div>
-
-    <!-- Experimental: Per-Trait Power Ratio -->
+    <!-- Figure 34: Per-Trait Power Ratio -->
     <div class="section" id="ra-trait-power-range-section" data-section="trait-util" style="display:none">
-      <div class="fig-num">Experimental</div>
-      <div class="fig-title">Per-Trait Power Ratio &mdash; Which Traits Matter Most Relative to Infection?</div>
-      <div class="fig-caption">Each dot shows one Big Five trait&rsquo;s log-odds effect as a percentage of infection&rsquo;s maximum effect. The grey bar spans the weakest to strongest trait for that model. Dots to the right of the red dashed line indicate traits that are individually more powerful than the full infection range. Faded dots indicate non-significant coefficients (p &gt; 0.05).</div>
+      <div class="fig-num">Figure 34</div>
+      <div class="fig-title">Per-Trait Power Ratio &mdash; Individual Trait Effects vs. Infection</div>
+      <div class="fig-caption">Each marker shows one predictor&rsquo;s |&beta;| as a multiple of the infection log-odds range, matching the &beta;&nbsp;Trait/Infection ratio in Figure 28. Circles&nbsp;=&nbsp;Big Five traits; diamonds&nbsp;=&nbsp;demographics (gender, age over 47-year span). The grey bar spans the weakest to strongest predictor. Markers to the right of the red dashed line (1.0&times;) indicate predictors individually more powerful than infection&rsquo;s full effect. Faded markers&nbsp;=&nbsp;Not Significant (p&nbsp;&gt;&nbsp;0.05). Identical to Figure 29 in Cohort Analysis.</div>
       <div class="chart-container" id="ra-trait-power-range-chart"></div>
-      <div class="fig-note">trait_ratio = |&beta;<sub>trait</sub>| / max(&Delta;<sub>infection</sub>). Only Big Five traits shown (gender and age excluded). Diamond = mean across 5 traits. Coefficients from Model 2 (random-effects logit).</div>
+      <div class="fig-note">ratio = |&beta;<sub>predictor</sub>| / max(&Delta;<sub>infection</sub>). Age effect scaled to full range (18&ndash;65 = 47 years). Coefficients from Model 2 (random-effects logit).</div>
+    </div>
+
+    <div class="curve-section-header">Trait Mention Amplification</div>
+
+    <!-- Figure 35: Model 3 Coefficient Table -->
+    <div class="section" id="ra-m3table-section" data-section="amplification" style="display:none">
+      <div class="fig-num">Figure 35</div>
+      <div class="fig-title">Model 3 Coefficients &mdash; Random-Effects Logit with Mention Interactions</div>
+      <div class="fig-caption">Full coefficient table for Model 3, which extends Model 2 by adding mention flags (did the response text reference each dimension?) and interaction terms (trait&nbsp;&times;&nbsp;mentioned trait). Interaction terms test whether explicitly mentioning a trait amplifies its behavioral effect. Terms are only included when the mention flag has sufficient variance (5&ndash;95% mention rate); excluded interactions are marked with the mention rate that caused exclusion.</div>
+      <div id="ra-m3table-picker" style="margin-bottom:12px"></div>
+      <div class="chart-container" id="ra-m3table-chart"></div>
+      <div class="fig-note">
+        Model 3: <code>glmer(stay_home ~ ... + (1|agent_id), family=binomial)</code>. Interaction terms require sufficient contrast in the mention flag &mdash; dimensions where &lt;5% or &gt;95% of responses mention the dimension have near-constant flags, making the interaction unidentifiable. These are excluded from the regression formula (not set to zero). See contrast flags below the table for each dimension&rsquo;s mention rate and inclusion status.
+        <details style="margin-top:6px">
+          <summary style="cursor:pointer;color:#555;font-weight:600">Full Model 3 Equation</summary>
+          <div style="margin-top:6px;padding:8px 12px;background:#f8f8f8;border:1px solid #ddd;border-radius:4px;font-size:11px;line-height:1.6;overflow-x:auto">
+            log(<em>p</em>/(1&minus;<em>p</em>)) = &beta;<sub>0</sub>
+            + &beta;<sub>1</sub>&middot;infection_pct + &beta;<sub>2</sub>&middot;infection_pct&sup2;
+            + &beta;<sub>3</sub>&middot;male<br>
+            + &beta;<sub>4</sub>&middot;extraverted + &beta;<sub>5</sub>&middot;agreeable + &beta;<sub>6</sub>&middot;conscientious + &beta;<sub>7</sub>&middot;emot_stable + &beta;<sub>8</sub>&middot;open_to_exp
+            + &beta;<sub>9</sub>&middot;age_years<br>
+            + &beta;<sub>10</sub>&middot;mentioned_ext + &beta;<sub>11</sub>&middot;mentioned_agr + &beta;<sub>12</sub>&middot;mentioned_con + &beta;<sub>13</sub>&middot;mentioned_neu + &beta;<sub>14</sub>&middot;mentioned_ope<br>
+            + &beta;<sub>15</sub>&middot;mentioned_infection + &beta;<sub>16</sub>&middot;mentioned_age<br>
+            + &beta;<sub>17</sub>&middot;extraverted&times;mentioned_ext + &beta;<sub>18</sub>&middot;agreeable&times;mentioned_agr + &beta;<sub>19</sub>&middot;conscientious&times;mentioned_con<br>
+            + &beta;<sub>20</sub>&middot;emot_stable&times;mentioned_neu + &beta;<sub>21</sub>&middot;open_to_exp&times;mentioned_ope<br>
+            + &beta;<sub>22</sub>&middot;infection_pct&times;mentioned_infection + &beta;<sub>23</sub>&middot;age_years&times;mentioned_age<br>
+            + <em>u<sub>i</sub></em> &nbsp;&nbsp; (<em>u<sub>i</sub></em> ~ N(0, &sigma;&sup2;<sub>u</sub>))
+          </div>
+          <div style="margin-top:4px;font-size:10px;color:#888">
+            24 fixed effects + 1 random intercept per agent. ~20,000 observations / 24 parameters &asymp; 830 events per variable. Interaction terms &beta;<sub>17</sub>&ndash;&beta;<sub>23</sub> only included when the corresponding mention flag has sufficient contrast (5&ndash;95% mention rate).
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Figure 36: Amplification Forest Plot (single model) -->
+    <div class="section" id="ra-amp35-section" data-section="amplification" style="display:none">
+      <div class="fig-num">Figure 36</div>
+      <div class="fig-title">Trait Mention Amplification &mdash; Does Mentioning a Trait Strengthen Its Effect?</div>
+      <div class="fig-caption">For each Big Five dimension, two rows show the mention effect separately for each trait pole. For example, the &ldquo;Introverted&rdquo; row shows how mentioning extraversion-related words changes stay-home probability for introverted agents (direct &beta;<sub>mentioned</sub>); the &ldquo;Extraverted&rdquo; row shows the same for extraverted agents (derived &beta;<sub>mentioned</sub>&nbsp;+&nbsp;&beta;<sub>interaction</sub>). When the paired dots diverge across zero, that is genuine trait-specific amplification &mdash; each group moves toward its assigned pole. Infection and age show how mentioning changes the continuous slope.</div>
+      <div id="ra-amp35-picker" style="margin-bottom:12px"></div>
+      <div class="chart-container" id="ra-amp35-chart"></div>
+      <div class="fig-note">Negative-pole rows use the direct &beta;<sub>mentioned</sub> coefficient from Model 3. Positive-pole rows derive &beta;<sub>mentioned</sub>&nbsp;+&nbsp;&beta;<sub>interaction</sub> with conservative CIs (assumes zero covariance, slightly wider than true CIs). Context rows show the interaction coefficient directly (slope change when mentioning). Only dimensions with sufficient mention-rate contrast (5&ndash;95%) include interaction terms.</div>
+    </div>
+
+    <!-- Figure 36b: Cross-Model Trait × Mention Combinations (all models, all dimensions) -->
+    <div class="section" id="ra-xmodel-section" data-section="amplification" style="display:none">
+      <div class="fig-num">Figure 36b</div>
+      <div class="fig-title">Trait &times; Mention Combinations &mdash; Predicted Positions Across All Models</div>
+      <div class="fig-caption">For each of the 5 Big Five dimensions plus Age and Infection, how do the four trait&nbsp;&times;&nbsp;mention combinations land on the log-odds scale? Each row shows one model with four markers: hollow circle&nbsp;=&nbsp;low-end&nbsp;(not mentioned), filled circle&nbsp;=&nbsp;low-end&nbsp;(mentioned), hollow triangle&nbsp;=&nbsp;high-end&nbsp;(not mentioned), filled triangle&nbsp;=&nbsp;high-end&nbsp;(mentioned). If mentioning amplifies the trait, the filled markers should spread further apart than the hollow markers. Red I-beam&nbsp;=&nbsp;intercept; amber markers&nbsp;=&nbsp;infection range.</div>
+      <div class="chart-container" id="ra-xmodel-chart"></div>
+      <div class="fig-note">Source: Model 3 random-effects logit with trait&nbsp;&times;&nbsp;mention interaction terms. Positions show predicted log-odds for a reference agent at infection&nbsp;=&nbsp;0%, other traits at reference level. Age panel uses 18 vs.&nbsp;65; Infection panel uses 0% vs.&nbsp;7%. Blank rows indicate insufficient mention-rate contrast (&lt;5% or &gt;95%). Connecting lines show the mention shift for each pole.</div>
+    </div>
+
+    <!-- Figure 37: Cross-Model Amplification Matrix -->
+    <div class="section" id="ra-amp36-section" data-section="amplification" style="display:none">
+      <div class="fig-num">Figure 37</div>
+      <div class="fig-title">Amplification Matrix &mdash; Cross-Model Trait Mention Interactions</div>
+      <div class="fig-caption">How does trait-mention amplification vary across all 21 LLM configurations? Each dot represents one interaction term (trait&nbsp;&times;&nbsp;mentioned trait) from Model&nbsp;3. Dot size reflects the magnitude of the interaction coefficient; red dots indicate mentioning amplifies the trait&rsquo;s effect, blue dots indicate mentioning dampens it. Brighter dots are statistically significant; faded dots are not. Dashed outlines mark dimensions with insufficient mention-rate contrast.</div>
+      <div class="chart-container" id="ra-amp36-chart"></div>
+      <div class="fig-note">Each cell = one interaction coefficient from Model 3 (random-effects logit). Dot area &prop; |coefficient|. Color: red = amplifies (positive interaction), blue = dampens (negative). Opacity: significant at p&nbsp;&lt;&nbsp;0.05 vs. not significant. Dashed outline = insufficient contrast (&lt;5% or &gt;95% mention rate for that dimension).</div>
     </div>
 
     <div class="curve-section-header">Verbosity</div>
 
-    <!-- Figure 32: Output Token Landscape -->
+    <!-- Figure 38: Output Token Landscape -->
     <div class="section" id="ra-fig34-section" data-section="verbosity" style="display:none">
-      <div class="fig-num">Figure 32</div>
+      <div class="fig-num">Figure 38</div>
       <div class="fig-title">Output Token Landscape &mdash; Response Verbosity by Model</div>
       <div class="fig-caption">How verbose is each model&rsquo;s reasoning? Each box shows the distribution of output token counts across 20,000 responses. Longer responses may indicate more thorough reasoning &mdash; or more padding. Models with reasoning enabled use separate thinking tokens not shown here.</div>
       <div class="chart-container" id="ra-fig34-chart"></div>
       <div class="fig-note">Box = interquartile range (25th&ndash;75th percentile); whiskers = 10th&ndash;90th percentile; line = median. Reasoning tokens (internal chain-of-thought) are counted separately and not included in output token counts.</div>
     </div>
 
-    <!-- Figure 33: Verbosity × Infection Level -->
+    <!-- Figure 39: Verbosity × Infection Level -->
     <div class="section" id="ra-fig35-section" data-section="verbosity" style="display:none">
-      <div class="fig-num">Figure 33</div>
+      <div class="fig-num">Figure 39</div>
       <div class="fig-title">Verbosity &times; Infection Level &mdash; Do Models Elaborate More Under Uncertainty?</div>
       <div class="fig-caption">Does response length change with infection severity? Each line shows the average number of output tokens per response at each infection level. An upward trend would suggest models elaborate more when the decision is harder &mdash; a sign of genuine deliberation rather than templated responses.</div>
       <div class="chart-container" id="ra-fig35-chart"></div>
       <div class="fig-note">Each point is the mean of 500 responses (100 agents &times; 5 reps) at that infection level.</div>
     </div>
 
-    <div class="curve-section-header">Decision Boundary</div>
-
-    <!-- Figure 34: Decision Entropy Map -->
-    <div class="section" id="ra-fig36-section" data-section="boundary" style="display:none">
-      <div class="fig-num">Figure 34</div>
-      <div class="fig-title">Decision Entropy Map &mdash; Where Models Change Their Minds</div>
-      <div class="fig-caption">Each cell&rsquo;s color reflects the entropy of stay-home decisions at that infection level &mdash; white means near-unanimous agreement among agents, red means a 50/50 split. The red band marks each model&rsquo;s transition zone: the infection levels where the decision is genuinely uncertain.</div>
-      <div class="chart-container" id="ra-fig36-chart"></div>
-      <div class="fig-note">Entropy = &minus;p&middot;log&#8322;(p) &minus; (1&minus;p)&middot;log&#8322;(1&minus;p), where p = proportion of stay-home decisions out of 500 (100 agents &times; 5 reps). Maximum entropy (1.0) occurs at p = 0.5.</div>
-    </div>
-
     <div class="curve-section-header">Response Consistency</div>
 
-    <!-- Figure 35: Rep-to-Rep Decision Agreement -->
+    <!-- Figure 40: Rep-to-Rep Decision Agreement -->
     <div class="section" id="ra-fig37-section" data-section="consistency" style="display:none">
-      <div class="fig-num">Figure 35</div>
+      <div class="fig-num">Figure 40</div>
       <div class="fig-title">Rep-to-Rep Decision Agreement &mdash; How Consistent Are Models?</div>
       <div class="fig-caption">How consistent are models when asked the same question five times? Each bar shows the percentage of (agent, infection level) combinations where all 5 repetitions produced the same stay-home decision. Temperature-0 models (blue) should theoretically be deterministic; temperature-1 models (orange) are expected to vary.</div>
       <div class="chart-container" id="ra-fig37-chart"></div>
       <div class="fig-note">Each model has 4,000 unique (agent, infection level) groups (100 agents &times; 40 levels), each with 5 repetitions. Agreement = all 5 reps return the same &ldquo;yes&rdquo; or &ldquo;no.&rdquo;</div>
     </div>
 
-    <!-- Figure 36: Response Text Similarity -->
+    <!-- Figure 41: Response Text Similarity -->
     <div class="section" id="ra-fig38-section" data-section="consistency" style="display:none">
-      <div class="fig-num">Figure 36</div>
+      <div class="fig-num">Figure 41</div>
       <div class="fig-title">Response Text Similarity &mdash; Beyond Decision Agreement</div>
       <div class="fig-caption">When models make the same decision across all 5 repetitions, do they also produce the same reasoning? &ldquo;Exact match&rdquo; measures character-identical responses; &ldquo;word overlap&rdquo; (Jaccard) captures semantic similarity even when phrasing differs. Perfect determinism would show both metrics at 100%.</div>
       <div class="chart-container" id="ra-fig38-chart"></div>
@@ -1022,7 +1080,7 @@
             <tr><td>RQ3</td><td>Do larger models within a provider show different behavioral patterns?</td><td>Figs 3&ndash;4</td><td><em>TBD</em></td></tr>
             <tr><td>RQ4</td><td>How has model behavior evolved across generations?</td><td>Figs 5&ndash;7</td><td><em>TBD</em></td></tr>
             <tr><td>RQ5</td><td>Do LLMs interpret personality traits consistently across providers?</td><td>Figs 28, 29</td><td>Directions consistent; magnitudes vary 100&times; across providers</td></tr>
-            <tr><td>RQ6</td><td>Are agent-level behavioral differences preserved across models?</td><td>Figs 27, 32</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ6</td><td>Are agent-level behavioral differences preserved across models?</td><td>Figs 27, 32 (spotlight)</td><td><em>TBD</em></td></tr>
             <tr><td>RQ7</td><td>Does training data recency (knowledge cutoff) predict behavior?</td><td>Figs 10&ndash;14</td><td><em>TBD</em></td></tr>
           </tbody>
           <tbody>
@@ -1109,7 +1167,7 @@
         <p style="text-align:center;font-size:14px">&rho; = 1 &minus; (6 &times; 4) / (5 &times; 24) = 1 &minus; 24/120 = 1 &minus; 0.2 = <strong>0.80</strong></p>
         <p>Interpretation: &rho; = 0.80 indicates strong agreement &mdash; the two models largely agree on which agents are cautious and which are bold.</p>
 
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">3. How we use it in Figure 29</h4>
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">3. How we use it in Figure 31</h4>
         <ul style="margin:6px 0;padding-left:20px">
           <li>Instead of 5 agents, we have <strong>100</strong></li>
           <li>Instead of 2 configs, we compute &rho; for all <strong>21 &times; 21 = 441 pairs</strong> (210 unique off-diagonal pairs)</li>
@@ -1219,6 +1277,15 @@
       <div id="comparison-surface-forces-detail" style="display:none;margin-top:12px"></div>
     </div>
 
+    <!-- Combined Trait Power (moved from Response Analysis) -->
+    <div class="section" id="ra-trait-power-combined-section" data-section="unused">
+      <div class="fig-num">Figure (unused)</div>
+      <div class="fig-title">Combined Trait Power vs Infection &mdash; Do Personal Characteristics Outweigh Infection?</div>
+      <div class="fig-caption">How powerful are all personal characteristics (Big Five traits + gender + age) compared to infection level? Each bar shows the total log-odds swing from the most &ldquo;stay home&rdquo; to most &ldquo;go out&rdquo; personality profile, expressed as a percentage of infection&rsquo;s maximum effect (peak of the quadratic curve over 0&ndash;7%). Values above 100% mean personal characteristics collectively outweigh infection. <em>Superseded by Figure 27&rsquo;s Personality/Infection ratio column.</em></div>
+      <div class="chart-container" id="ra-trait-power-combined-chart"></div>
+      <div class="fig-note">max(&Delta;<sub>infection</sub>) = peak of &beta;&#8321;x + &beta;&#8322;x&sup2; over [0, 7%]. Combined swing = &Sigma;|&beta;<sub>trait</sub>| + |&beta;<sub>male</sub>| + |&beta;<sub>age</sub> &times; 47|. Age range = 18&ndash;65 years. Coefficients from Model 2 (random-effects logit with agent random intercepts).</div>
+    </div>
+
     <!-- Per-Trait Behavioral Breakdown (moved from Cohort Analysis) -->
     <div class="section" id="fig24-section" data-section="unused">
       <div class="fig-num">Figure (unused)</div>
@@ -1243,11 +1310,11 @@
 </div><!-- end #app -->
 
 <script src="nav.js"></script>
-<script src="analytics-shared.js?v=58"></script>
+<script src="analytics-shared.js?v=59"></script>
 <script src="analytics-curves.js?v=57"></script>
-<script src="analytics-cohort.js?v=87"></script>
-<script src="analytics-responses.js?v=59"></script>
-<script src="analytics-author.js?v=57"></script>
+<script src="analytics-cohort.js?v=99"></script>
+<script src="analytics-responses.js?v=70"></script>
+<script src="analytics-author.js?v=58"></script>
 <script src="analytics-init.js?v=57"></script>
 </body>
 </html>

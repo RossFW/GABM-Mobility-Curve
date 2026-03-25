@@ -142,17 +142,30 @@ function renderAgentAnalysis() {
 
       // Initial renders (all models)
       renderFig26ForestPlot(allRegs);
+      renderCohortTraitPowerRatio(allRegs);
       renderLogOddsLandscape(allRegs);
       renderAuthorComparisons();
 
-      // Fig 29 filter pills
+      // Fig 29 filter pills (also drives per-trait power ratio)
       buildFilterPills('fig29-filters', 'fig29', filter => {
         renderFig26ForestPlot(_cohortAllRegs, 'fig26-chart', filter);
+        renderCohortTraitPowerRatio(_cohortAllRegs, 'cohort-trait-power-chart', filter);
+      });
+
+      // Per-trait power ratio filter pills
+      buildFilterPills('cohort-tp-filters', 'cohortTP', filter => {
+        renderCohortTraitPowerRatio(_cohortAllRegs, 'cohort-trait-power-chart', filter);
       });
 
       // Fig 27 filter pills
       buildFilterPills('fig27-lo-filters', 'fig27lo', filter => {
         renderLogOddsLandscape(_cohortAllRegs, 'fig27-lo-chart', filter);
+      });
+
+      // Trait ranking Spearman heatmap + filter pills
+      renderTraitRankSpearman(allRegs);
+      buildFilterPills('trait-rank-filters', 'traitRank', filter => {
+        renderTraitRankSpearman(_cohortAllRegs, 'trait-rank-chart', filter);
       });
 
       // Fig 29 cross-model prediction
@@ -898,7 +911,7 @@ function renderFig24TraitEffects(microRows, cfg) {
     const ty1 = Math.max(toAY(Math.min(y1, maxTP)), plotTop);
     const ty2 = Math.max(toAY(Math.min(y2, maxTP)), plotTop);
     svg += `<line x1="${toAX(x1).toFixed(1)}" y1="${ty1.toFixed(1)}" x2="${toAX(x2).toFixed(1)}" y2="${ty2.toFixed(1)}" stroke="${trendColor}" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7"/>`;
-    const sigLabel = sig ? `slope = ${slope.toFixed(3)}, p < 0.05 (n = ${n})` : `slope = ${slope.toFixed(3)}, n.s. (n = ${n})`;
+    const sigLabel = sig ? `slope = ${slope.toFixed(3)}, p < 0.05 (n = ${n})` : `slope = ${slope.toFixed(3)}, Not Significant (n = ${n})`;
     svg += `<text x="${W - scatterPad.r}" y="${plotTop + 14}" font-size="9" fill="${trendColor}" font-family="${SERIF}" text-anchor="end" font-style="italic">${sigLabel}</text>`;
   }
 
@@ -1313,22 +1326,32 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
       // Tooltip: dot — header uses dimension name, coefficient uses adjective
       let dotTip = `${c.label} \u2014 ${trait.label}\n`;
       dotTip += `${traitSymbol}  ${trait.tipLabel}: ${beta.toFixed(2)}  [${ciLo.toFixed(2)}, ${ciHi.toFixed(2)}]`;
-      if (!sig) dotTip += '  (n.s.)';
+      if (!sig) dotTip += '  (Not Significant)';
       if (trait.key === 'age') dotTip += `\nFull range (47 yrs): ${(beta * 47).toFixed(2)}`;
       svg += `<circle cx="${px.toFixed(1)}" cy="${cy.toFixed(1)}" r="8" fill="transparent" stroke="none" style="cursor:default" data-ftip-id="${ftip(dotTip, c.color)}"/>`;
 
       // Config label (left) — full tooltip: intercept, infection, trait, ratio
+      // Age is per-year β; scale to full range (×47) for fair comparison with binary traits
       const infMag = Math.max(Math.abs(inf.minInfLO), Math.abs(inf.maxInfLO));
-      const traitRatioX = infMag > 0 ? (Math.abs(beta) / infMag) : 0;
+      const effectSize = trait.key === 'age' ? Math.abs(beta) * 47 : Math.abs(beta);
+      const traitRatioX = infMag > 0 ? (effectSize / infMag) : 0;
       const traitRatioText = infMag > 0 ? `${traitRatioX.toFixed(1)}\u00D7` : '\u2014';
       const traitRatioPct = infMag > 0 ? (traitRatioX * 100).toFixed(0) : '\u2014';
-      const labelTip = `${c.label} \u2014 ${trait.label}\n` +
-        `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n` +
+      let labelTip = `${c.label} \u2014 ${trait.label}\n` +
+        `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n` +
         `\u2503  Intercept: ${inf.intercept.toFixed(2)}\n` +
         `\u25CF\u25C6 Infection: [${inf.minInfLO.toFixed(2)}, ${inf.maxInfLO.toFixed(2)}]\n` +
-        `${traitSymbol}  ${trait.tipLabel}: ${beta.toFixed(2)}  [${ciLo.toFixed(2)}, ${ciHi.toFixed(2)}]${sig ? '' : '  (n.s.)'}\n` +
-        `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n` +
+        `${traitSymbol}  ${trait.tipLabel}: ${beta.toFixed(2)}  [${ciLo.toFixed(2)}, ${ciHi.toFixed(2)}]${sig ? '' : '  (Not Significant)'}\n` +
+        `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n` +
         `\u03B2 Trait / Infection: ${traitRatioText}`;
+      if (trait.key === 'age') {
+        labelTip += `\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500` +
+          `\nAge ratio uses full range (18\u201365 = 47 yrs):` +
+          `\n  |${beta.toFixed(3)} \u00D7 47| = ${Math.abs(beta * 47).toFixed(2)}` +
+          `\n  ${Math.abs(beta * 47).toFixed(2)} / ${infMag.toFixed(2)} = ${traitRatioText}` +
+          `\nThis makes age comparable to binary traits` +
+          `\nwhere the full effect is simply |\u03B2|.`;
+      }
       svg += `<text x="${panelPad.l - 6}" y="${(cy + 3.5).toFixed(1)}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="end" style="cursor:default" data-ftip-id="${ftip(labelTip, c.color)}">${esc(c.label)}</text>`;
 
       // Ratio column (right side) — provider-colored
@@ -1337,17 +1360,32 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
       rowIdx++;
     });
 
-    // Ratio column header — fraction layout with tooltip
-    const traitRatioHeaderTip = `\u03B2 Trait / Infection Range\n` +
-      `─────────────────────────\n` +
-      `|\u03B2_trait| divided by the infection\n` +
-      `log-odds range (0\u20137% infection).\n\n` +
-      `> 1\u00D7 = trait \u03B2 exceeds infection range\n` +
-      `< 1\u00D7 = infection range is larger\n` +
-      `= 1\u00D7 = equal magnitude`;
+    // Ratio column header — fraction layout with tooltip (custom for age)
+    let traitRatioHeaderTip;
+    if (trait.key === 'age') {
+      traitRatioHeaderTip = `\u03B2 Age / Infection Range\n` +
+        `─────────────────────────────\n` +
+        `|\u03B2_age \u00D7 47| / max infection effect\n\n` +
+        `The dot shows \u03B2 per year, but the ratio\n` +
+        `uses the full age range (18\u201365 = 47 yrs)\n` +
+        `so it\u2019s comparable to binary traits where\n` +
+        `the full effect is simply |\u03B2|.\n\n` +
+        `> 1\u00D7 = age range exceeds infection range\n` +
+        `< 1\u00D7 = infection range is larger\n` +
+        `= 1\u00D7 = equal magnitude`;
+    } else {
+      traitRatioHeaderTip = `\u03B2 Trait / Infection Range\n` +
+        `─────────────────────────\n` +
+        `|\u03B2_trait| divided by the infection\n` +
+        `log-odds range (0\u20137% infection).\n\n` +
+        `> 1\u00D7 = trait \u03B2 exceeds infection range\n` +
+        `< 1\u00D7 = infection range is larger\n` +
+        `= 1\u00D7 = equal magnitude`;
+    }
     const thX = panelPad.l + plotW + 26;
     svg += `<rect x="${thX - 30}" y="${py - 2}" width="60" height="30" fill="transparent" style="cursor:default" data-ftip-id="${ftip(traitRatioHeaderTip, '#888')}"/>`;
-    svg += `<text x="${thX}" y="${py + 11}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="middle">\u03B2 Trait</text>`;
+    const ratioNumerator = trait.key === 'age' ? '\u03B2 Age\u00D747' : '\u03B2 Trait';
+    svg += `<text x="${thX}" y="${py + 11}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="middle">${ratioNumerator}</text>`;
     svg += `<line x1="${thX - 16}" y1="${py + 13}" x2="${thX + 16}" y2="${py + 13}" stroke="#bbb" stroke-width="0.5"/>`;
     svg += `<text x="${thX}" y="${py + 21}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="middle">Infection</text>`;
 
@@ -1414,6 +1452,391 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
   }
 }
 
+/* ── Cohort Per-Trait Power Ratio (Option B: first-row labels, no mean diamond) ── */
+function renderCohortTraitPowerRatio(allRegs, elId, modelFilter) {
+  const el = document.getElementById(elId || 'cohort-trait-power-chart');
+  if (!el) return;
+
+  const dimColors = {
+    Extraverted: '#E11D48',
+    Agreeable: '#16A34A',
+    Conscientious: '#2563EB',
+    'Emotionally Stable': '#D97706',
+    'Open to Experience': '#7C3AED',
+    Male: '#555',
+    'Age (47yr)': '#999',
+  };
+
+  // Tooltip system (same pattern as Fig 28)
+  const _tips = [];
+  const _tipColors = [];
+  function tip(text, color) { _tips.push(text); _tipColors.push(color || '#888'); return _tips.length - 1; }
+
+  // Shape generators for each trait (colorblind-friendly differentiation)
+  const shapeMap = {
+    extraverted:   (x, y, r, fill, op) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" opacity="${op}"/>`,
+    agreeable:     (x, y, r, fill, op) => { const s = r * 1.6; return `<rect x="${x - s/2}" y="${y - s/2}" width="${s}" height="${s}" fill="${fill}" opacity="${op}"/>`; },
+    conscientious: (x, y, r, fill, op) => { const s = r * 1.3; return `<polygon points="${x},${y - s} ${x + s},${y + s * 0.7} ${x - s},${y + s * 0.7}" fill="${fill}" opacity="${op}"/>`; },
+    emot_stable:   (x, y, r, fill, op) => { const s = r * 1.3; return `<polygon points="${x},${y + s} ${x + s},${y - s * 0.7} ${x - s},${y - s * 0.7}" fill="${fill}" opacity="${op}"/>`; },
+    open_to_exp:   (x, y, r, fill, op) => `<polygon points="${x},${y - r * 1.3} ${x + r * 1.2},${y - r * 0.3} ${x + r * 0.8},${y + r} ${x - r * 0.8},${y + r} ${x - r * 1.2},${y - r * 0.3}" fill="${fill}" opacity="${op}"/>`,
+    male:          (x, y, r, fill, op) => `<polygon points="${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}" fill="${fill}" opacity="${op}"/>`,
+    age:           (x, y, r, fill, op) => `<polygon points="${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}" fill="${fill}" opacity="${op}"/>`,
+  };
+  // Legend shape generators (at fixed size)
+  const legendShape = {
+    extraverted:   (x, y, col) => `<circle cx="${x}" cy="${y}" r="4" fill="${col}" opacity="0.9"/>`,
+    agreeable:     (x, y, col) => `<rect x="${x - 3.5}" y="${y - 3.5}" width="7" height="7" fill="${col}" opacity="0.9"/>`,
+    conscientious: (x, y, col) => `<polygon points="${x},${y - 5} ${x + 5},${y + 3.5} ${x - 5},${y + 3.5}" fill="${col}" opacity="0.9"/>`,
+    emot_stable:   (x, y, col) => `<polygon points="${x},${y + 5} ${x + 5},${y - 3.5} ${x - 5},${y - 3.5}" fill="${col}" opacity="0.9"/>`,
+    open_to_exp:   (x, y, col) => `<polygon points="${x},${y - 5} ${x + 4.7},${y - 1.2} ${x + 3},${y + 4.5} ${x - 3},${y + 4.5} ${x - 4.7},${y - 1.2}" fill="${col}" opacity="0.9"/>`,
+    male:          (x, y, col) => `<polygon points="${x},${y - 4} ${x + 4},${y} ${x},${y + 4} ${x - 4},${y}" fill="${col}" opacity="0.9"/>`,
+    age:           (x, y, col) => `<polygon points="${x},${y - 4} ${x + 4},${y} ${x},${y + 4} ${x - 4},${y}" fill="${col}" opacity="0.9"/>`,
+  };
+
+  // Compute per-trait ratios + age/gender for ALL configs (for stable x-axis)
+  const allItems = [];
+  const seen = new Set();
+  CONFIG.MODELS.forEach(m => {
+    const key = configDirKey(m);
+    if (seen.has(key)) return;
+    seen.add(key);
+    const reg = allRegs[key];
+    if (!reg || !reg.model2) return;
+    const pw = computeTraitPowerRatios(reg);
+    const maleRatio = pw.infPower > 0 ? pw.maleEffect / pw.infPower : 0;
+    const ageRatio = pw.infPower > 0 ? pw.ageEffect / pw.infPower : 0;
+    const coefs = reg.model2.coefficients;
+    const allDots = [
+      ...pw.traitRatios,
+      { trait: 'male', label: 'Male', ratio: maleRatio, significant: coefs.male.p < 0.05 },
+      { trait: 'age', label: 'Age (47yr)', ratio: ageRatio, significant: coefs.age.p < 0.05 },
+    ];
+    const vals = allDots.map(r => r.ratio);
+    allItems.push({
+      key,
+      label: m.label,
+      provider: m.provider,
+      allDots,
+      minRatio: Math.min(...vals),
+      maxRatio: Math.max(...vals),
+    });
+  });
+
+  // Fixed scale from all models (stable across filters), cap at 4.0×
+  const globalMax = Math.max(...allItems.map(d => d.maxRatio));
+  const scaleMax = Math.min(Math.ceil(globalMax * 2 + 0.5) / 2, 4.0);
+
+  // Filter for display
+  const items = modelFilter ? allItems.filter(d => modelFilter.has(d.key)) : allItems;
+
+  // Match Fig 28 width
+  const W = Math.min(el.parentElement?.offsetWidth || 860, 860);
+  const labelW = 160, rowH = 24;
+  const pad = { l: labelW + 10, t: 46, r: 40, b: 40 };
+  const plotW = W - pad.l - pad.r;
+  const nRows = items.length;
+  const H = pad.t + nRows * rowH + pad.b;
+  const xScale = v => pad.l + (v / scaleMax) * plotW;
+
+  let svg = '';
+
+  // Grid lines at 0.5× intervals
+  for (let v = 0; v <= scaleMax; v += 0.5) {
+    const x = xScale(v);
+    svg += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t + nRows * rowH}" stroke="#f0f0f0" stroke-width="0.5"/>`;
+    svg += `<text x="${x}" y="${pad.t + nRows * rowH + 14}" font-size="9" fill="#999" font-family="${SERIF}" text-anchor="middle">${v.toFixed(1)}×</text>`;
+  }
+
+  // 1.0× reference line (trait = infection)
+  const x100 = xScale(1.0);
+  if (x100 >= pad.l && x100 <= pad.l + plotW) {
+    svg += `<line x1="${x100}" y1="${pad.t - 5}" x2="${x100}" y2="${pad.t + nRows * rowH}" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>`;
+    svg += `<text x="${x100}" y="${pad.t - 8}" font-size="8" fill="#EF4444" font-family="${SERIF}" text-anchor="middle">Trait = Infection</text>`;
+  }
+
+  // Rows (no alternating shading — all white)
+  for (let r = 0; r < nRows; r++) {
+    const d = items[r];
+    const y = pad.t + r * rowH;
+    const cy = y + rowH / 2;
+    const provColor = CONFIG.PROVIDER_COLORS[d.provider] || '#999';
+
+    // Row label with full summary tooltip
+    const rowTip = `${d.label}\n${'─'.repeat(28)}\n` +
+      d.allDots.map(tr => {
+        const ns = tr.significant ? '' : '  (Not Significant)';
+        return `${tr.label.padEnd(18)} ${tr.ratio.toFixed(2)}×${ns}`;
+      }).join('\n');
+    svg += `<circle cx="${pad.l - labelW}" cy="${cy}" r="3" fill="${provColor}"/>`;
+    svg += `<rect x="${pad.l - labelW - 4}" y="${cy - rowH / 2}" width="${labelW}" height="${rowH}" fill="transparent" style="cursor:default" data-ftip-id="${tip(rowTip, provColor)}"/>`;
+    svg += `<text x="${pad.l - labelW + 9}" y="${cy + 3}" font-size="9" fill="#333" font-family="${SERIF}" pointer-events="none">${d.label}</text>`;
+
+    // Range bar (min to max)
+    const xMin = xScale(d.minRatio);
+    const xMax = xScale(d.maxRatio);
+    svg += `<line x1="${xMin}" y1="${cy}" x2="${xMax}" y2="${cy}" stroke="#ccc" stroke-width="2"/>`;
+
+    // Individual dots (Big Five + Male + Age) — distinct shapes per trait
+    for (const tr of d.allDots) {
+      const tx = xScale(tr.ratio);
+      const col = dimColors[tr.label] || '#999';
+      const opacity = tr.significant ? 0.9 : 0.3;
+      const r = tr.significant ? 4 : 3;
+      const nsTag = tr.significant ? '' : '\n(Not Significant)';
+      const tipText = `${d.label}\n${tr.label}: ${tr.ratio.toFixed(2)}×${nsTag}`;
+      const tipColor = dimColors[tr.label] || '#888';
+      const shapeFn = shapeMap[tr.trait];
+      if (shapeFn) {
+        svg += shapeFn(tx, cy, r, col, opacity);
+      }
+      // Invisible hover target with tooltip
+      svg += `<circle cx="${tx}" cy="${cy}" r="8" fill="transparent" style="cursor:default" data-ftip-id="${tip(tipText, tipColor)}"/>`;
+    }
+  }
+
+  // X-axis label
+  svg += `<text x="${pad.l + plotW / 2}" y="${pad.t + nRows * rowH + 30}" font-size="10" fill="#666" font-family="${SERIF}" text-anchor="middle">|β| as multiple of max infection effect</text>`;
+
+  // Legend row — distinct shapes matching dots
+  const legY = pad.t - 30;
+  let legX = pad.l;
+  const legendEntries = [
+    ['Extraverted', '#E11D48', 'extraverted'], ['Agreeable', '#16A34A', 'agreeable'],
+    ['Conscientious', '#2563EB', 'conscientious'], ['Emotionally Stable', '#D97706', 'emot_stable'],
+    ['Open to Experience', '#7C3AED', 'open_to_exp'], ['Male', '#555', 'male'], ['Age', '#999', 'age'],
+  ];
+  for (const [dimLabel, col, traitKey] of legendEntries) {
+    svg += legendShape[traitKey](legX, legY, col);
+    svg += `<text x="${legX + 7}" y="${legY + 3}" font-size="9" fill="#555" font-family="${SERIF}">${dimLabel}</text>`;
+    legX += dimLabel.length * 6.5 + 18;
+  }
+  // Non-significant marker
+  svg += `<circle cx="${legX}" cy="${legY}" r="3" fill="#999" opacity="0.3" stroke="#999" stroke-width="0.5"/>`;
+  svg += `<text x="${legX + 7}" y="${legY + 3}" font-size="9" fill="#999" font-family="${SERIF}">Not Significant</text>`;
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+
+  // Wire tooltip events
+  const svgNode = el.querySelector('svg');
+  if (svgNode) {
+    const tipId = 'cohort-tp-tip';
+    const prevTip = document.getElementById(tipId);
+    if (prevTip) prevTip.remove();
+    const tipDiv = document.createElement('div');
+    tipDiv.id = tipId;
+    tipDiv.style.cssText = 'position:fixed;background:#1e1e2e;color:#e0e0e0;font:11px/1.5 "SF Mono","Menlo",monospace;padding:8px 12px;border-radius:5px;pointer-events:none;white-space:pre;display:none;z-index:9999;max-width:500px;box-shadow:0 2px 8px rgba(0,0,0,0.3)';
+    document.body.appendChild(tipDiv);
+    svgNode.addEventListener('mousemove', e => {
+      const target = e.target.closest('[data-ftip-id]');
+      if (target) {
+        const id = +target.getAttribute('data-ftip-id');
+        if (_tips[id] != null) {
+          tipDiv.textContent = _tips[id];
+          tipDiv.style.borderLeft = `3px solid ${_tipColors[id] || '#888'}`;
+          tipDiv.style.display = 'block';
+          let tx = e.clientX + 14, ty = e.clientY + 14;
+          const rect = tipDiv.getBoundingClientRect();
+          if (tx + rect.width > window.innerWidth) tx = e.clientX - 14 - rect.width;
+          if (ty + rect.height > window.innerHeight) ty = e.clientY - 14 - rect.height;
+          tipDiv.style.left = tx + 'px';
+          tipDiv.style.top = ty + 'px';
+        }
+      } else {
+        tipDiv.style.display = 'none';
+      }
+    });
+    svgNode.addEventListener('mouseleave', () => { tipDiv.style.display = 'none'; });
+  }
+}
+
+/* ── Trait Importance Ranking Spearman Heatmap ─────────────── */
+function renderTraitRankSpearman(allRegs, elId, modelFilter) {
+  const el = document.getElementById(elId || 'trait-rank-chart');
+  if (!el) return;
+
+  const predictorLabels = ['Extraverted', 'Agreeable', 'Conscientious', 'Emotionally Stable', 'Open to Experience', 'Male', 'Age (47yr)', 'Infection'];
+
+  // Compute trait ratios for each config → ratio vector (8 predictors including infection at 1.0×)
+  const models = [];
+  const seen = new Set();
+  CONFIG.MODELS.forEach(m => {
+    const key = configDirKey(m);
+    if (seen.has(key)) return;
+    seen.add(key);
+    if (modelFilter && !modelFilter.has(key)) return;
+    const reg = allRegs[key];
+    if (!reg || !reg.model2) return;
+    const pw = computeTraitPowerRatios(reg);
+    const maleRatio = pw.infPower > 0 ? pw.maleEffect / pw.infPower : 0;
+    const ageRatio = pw.infPower > 0 ? pw.ageEffect / pw.infPower : 0;
+    const ratios = [
+      ...pw.traitRatios.map(t => t.ratio),
+      maleRatio,
+      ageRatio,
+      1.0, // Infection Impact — always 1.0× (denominator)
+    ];
+    models.push({ key, label: m.label, provider: m.provider, ratios });
+  });
+
+  const n = models.length;
+  if (n === 0) { el.innerHTML = ''; return; }
+
+  // Compute pairwise Spearman ρ on ratio vectors
+  const rhoMatrix = [];
+  for (let i = 0; i < n; i++) {
+    rhoMatrix[i] = [];
+    for (let j = 0; j < n; j++) {
+      rhoMatrix[i][j] = i === j ? 1.0 : spearmanRho(models[i].ratios, models[j].ratios);
+    }
+  }
+
+  // Layout (match Fig 29 exactly)
+  const cellSize = 32;
+  const labelW = 130;
+  const topLabelH = 130;
+  const pad = 10;
+  const padR = 40;
+  const gridW = n * cellSize;
+  const ox = pad + labelW;
+  const oy = pad + topLabelH;
+  const W = labelW + gridW + pad + padR;
+  const H = topLabelH + gridW + pad * 2 + 50;
+
+  // Provider group separators
+  const provBreaks = [];
+  for (let i = 1; i < n; i++) {
+    if (models[i].provider !== models[i - 1].provider) provBreaks.push(i);
+  }
+
+  // Tooltip system
+  const _trTips = [];
+  const _trTipColors = [];
+  function trTip(text, color) { _trTips.push(text); _trTipColors.push(color || '#888'); return _trTips.length - 1; }
+
+  // Color scale: ρ → color (teal for high, white for mid, gold for low)
+  function rhoColor(rho) {
+    if (rho >= 0) {
+      const t = Math.min(rho, 1);
+      const r = Math.round(255 - t * 200);
+      const g = Math.round(255 - t * 80);
+      const b = Math.round(255 - t * 60);
+      return `rgb(${r},${g},${b})`;
+    } else {
+      const t = Math.min(-rho, 1);
+      const r = Math.round(255 - t * 60);
+      const g = Math.round(255 - t * 80);
+      const b = Math.round(255 - t * 200);
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+
+  let svg = '';
+
+  // Cells
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const rho = rhoMatrix[i][j];
+      const x = ox + j * cellSize;
+      const y = oy + i * cellSize;
+      const fill = i === j ? '#f5f5f5' : rhoColor(rho);
+
+      // Build tooltip: Spearman ρ centered, model names as column headers, ranked lists
+      const mi = models[i], mj = models[j];
+      const ri = mi.ratios.map((r, k) => ({ label: predictorLabels[k], ratio: r })).sort((a, b) => b.ratio - a.ratio);
+      const rj = mj.ratios.map((r, k) => ({ label: predictorLabels[k], ratio: r })).sort((a, b) => b.ratio - a.ratio);
+      const colW = 28;
+      const totalW = colW * 2 + 5;
+      const rhoStr = `ρ = ${rho.toFixed(2)}`;
+      const rhoPad = Math.max(0, Math.floor((totalW - rhoStr.length) / 2));
+      let tipText = ' '.repeat(rhoPad) + rhoStr + '\n';
+      tipText += '─'.repeat(totalW) + '\n';
+      tipText += mi.label.padEnd(colW) + '  │  ' + mj.label + '\n';
+      tipText += '─'.repeat(totalW) + '\n';
+      for (let k = 0; k < ri.length; k++) {
+        tipText += `${(k + 1)}. ${ri[k].label.padEnd(20)} ${ri[k].ratio.toFixed(2)}×  │  ${(k + 1)}. ${rj[k].label.padEnd(20)} ${rj[k].ratio.toFixed(2)}×\n`;
+      }
+
+      svg += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" fill="${fill}" stroke="#fff" stroke-width="1" data-ftip-id="${trTip(tipText, CONFIG.PROVIDER_COLORS[mi.provider])}"/>`;
+
+      // Value in cell
+      if (cellSize >= 28 && i !== j) {
+        const textColor = rho > 0.7 ? '#fff' : '#333';
+        svg += `<text x="${x + cellSize / 2}" y="${y + cellSize / 2 + 3}" font-size="7.5" fill="${textColor}" font-family="${SERIF}" text-anchor="middle" pointer-events="none">${rho.toFixed(2)}</text>`;
+      }
+    }
+  }
+
+  // Row labels (left) — match Fig 29 style: provider-colored, right-aligned
+  for (let i = 0; i < n; i++) {
+    const provColor = CONFIG.PROVIDER_COLORS[models[i].provider] || '#333';
+    svg += `<text x="${ox - 4}" y="${oy + i * cellSize + cellSize / 2 + 3}" font-size="8.5" fill="${provColor}" font-family="${SERIF}" text-anchor="end">${esc(models[i].label)}</text>`;
+  }
+
+  // Column labels (top, rotated -55°) — match Fig 29 style: provider-colored
+  for (let j = 0; j < n; j++) {
+    const provColor = CONFIG.PROVIDER_COLORS[models[j].provider] || '#333';
+    const tx = ox + j * cellSize + cellSize / 2;
+    const ty = oy - 4;
+    svg += `<text x="${tx}" y="${ty}" font-size="8.5" fill="${provColor}" font-family="${SERIF}" text-anchor="start" transform="rotate(-55,${tx},${ty})">${esc(models[j].label)}</text>`;
+  }
+
+  // Provider group separator lines
+  provBreaks.forEach(idx => {
+    const pos = idx * cellSize;
+    svg += `<line x1="${ox + pos}" y1="${oy}" x2="${ox + pos}" y2="${oy + n * cellSize}" stroke="#666" stroke-width="1.5"/>`;
+    svg += `<line x1="${ox}" y1="${oy + pos}" x2="${ox + n * cellSize}" y2="${oy + pos}" stroke="#666" stroke-width="1.5"/>`;
+  });
+
+  // Border around grid
+  svg += `<rect x="${ox}" y="${oy}" width="${n * cellSize}" height="${n * cellSize}" fill="none" stroke="#666" stroke-width="1.5"/>`;
+
+  // Horizontal color legend below grid (match Fig 29 style)
+  const legY = oy + n * cellSize + 14;
+  const legW = Math.min(200, Math.max(100, gridW));
+  const legX = ox + (gridW - legW) / 2;
+  for (let i = 0; i < legW; i++) {
+    const rho = -1 + (i / legW) * 2;
+    svg += `<rect x="${legX + i}" y="${legY}" width="1.5" height="10" fill="${rhoColor(rho)}"/>`;
+  }
+  svg += `<text x="${legX}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="start">−1.0</text>`;
+  svg += `<text x="${legX + legW}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="end">1.0</text>`;
+  svg += `<text x="${legX + legW / 2}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="middle">Spearman ρ</text>`;
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+
+  // Wire tooltip events
+  const svgNode = el.querySelector('svg');
+  if (svgNode) {
+    const tipId = 'trait-rank-tip';
+    const prevTipEl = document.getElementById(tipId);
+    if (prevTipEl) prevTipEl.remove();
+    const tipDiv = document.createElement('div');
+    tipDiv.id = tipId;
+    tipDiv.style.cssText = 'position:fixed;background:#1e1e2e;color:#e0e0e0;font:11px/1.5 "SF Mono","Menlo",monospace;padding:8px 12px;border-radius:5px;pointer-events:none;white-space:pre;display:none;z-index:9999;max-width:700px;box-shadow:0 2px 8px rgba(0,0,0,0.3)';
+    document.body.appendChild(tipDiv);
+    svgNode.addEventListener('mousemove', e => {
+      const target = e.target.closest('[data-ftip-id]');
+      if (target) {
+        const id = +target.getAttribute('data-ftip-id');
+        if (_trTips[id] != null) {
+          tipDiv.textContent = _trTips[id];
+          tipDiv.style.borderLeft = `3px solid ${_trTipColors[id] || '#888'}`;
+          tipDiv.style.display = 'block';
+          let tx = e.clientX + 14, ty = e.clientY + 14;
+          const rect = tipDiv.getBoundingClientRect();
+          if (tx + rect.width > window.innerWidth) tx = e.clientX - 14 - rect.width;
+          if (ty + rect.height > window.innerHeight) ty = e.clientY - 14 - rect.height;
+          tipDiv.style.left = tx + 'px';
+          tipDiv.style.top = ty + 'px';
+        }
+      } else {
+        tipDiv.style.display = 'none';
+      }
+    });
+    svgNode.addEventListener('mouseleave', () => { tipDiv.style.display = 'none'; });
+  }
+}
+
 // ── Fig 26 Interpretation Guide ─────────────────────────────
 
 function renderFig26Guide() {
@@ -1443,13 +1866,15 @@ function renderFig26Guide() {
   html += '</ul>';
 
   html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">\u03B2 Trait / Infection ratio column</h4>';
-  html += '<p style="margin:0 0 8px">The right-hand column shows |<strong>\u03B2<sub>trait</sub></strong>| divided by the infection log-odds range (max effect over 0\u20137%). Values above 1.0\u00D7 mean that trait alone shifts log-odds more than the entire infection range. This makes it easy to scan which traits dominate infection for each model.</p>';
+  html += '<p style="margin:0 0 4px">The right-hand column shows how powerful each trait is relative to infection:</p>';
+  html += `<div style="${mono};margin:6px 0">`;
+  html += 'ratio = |effect size| / max infection log-odds range</div>';
+  html += '<p style="margin:4px 0 4px">For <strong>binary traits</strong> (Big Five, gender), the effect size is simply |&beta;| &mdash; the full swing from having vs. not having the trait.</p>';
+  html += '<p style="margin:4px 0 4px">For <strong>age</strong>, the dot shows &beta; per year, but the ratio uses the <strong>full age range</strong>: |&beta; &times; 47| (the difference between the youngest agent at 18 and the oldest at 65). This makes the ratio comparable to binary traits, which also represent their full possible effect.</p>';
+  html += '<p style="margin:4px 0 8px">Values above 1.0&times; mean that predictor alone shifts log-odds more than the entire infection range. Hover any model name in the Age panel to see the full calculation.</p>';
 
   html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Secondary P(stay home) axis</h4>';
   html += '<p style="margin:0 0 8px">The top axis translates log-odds into <strong>probability of staying home</strong>, assuming all other variables are zero (intercept only). This helps ground the abstract \u03B2 values in a concrete behavioral outcome. Note: the mapping is nonlinear \u2014 equal distances in log-odds correspond to unequal probability changes.</p>';
-
-  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">A note on age</h4>';
-  html += '<p style="margin:0 0 4px">Age is <strong>continuous</strong> (18\u201365). The \u03B2 shown is per year. Multiply by 47 for the full age range effect. Hover for the full-range value.</p>';
 
   html += '</div>';
   el.innerHTML = html;
@@ -5137,13 +5562,21 @@ function renderFig27ConsistencyMatrix(data, elId, modelFilter) {
   const W = labelW + gridW + pad + padR;
   const H = topLabelH + gridW + pad * 2 + 50;
 
-  // Color scale: interpolate from white (rho ~0.4) to blue (rho=1.0)
+  // Color scale: teal scheme (matching trait ranking heatmap)
   function rhoColor(rho) {
-    const t = Math.max(0, Math.min(1, (rho - 0.4) / 0.6));
-    const r = Math.round(255 - t * 200);
-    const g = Math.round(255 - t * 200);
-    const b = Math.round(255 - t * 55);
-    return `rgb(${r},${g},${b})`;
+    if (rho >= 0) {
+      const t = Math.min(rho, 1);
+      const r = Math.round(255 - t * 200);
+      const g = Math.round(255 - t * 80);
+      const b = Math.round(255 - t * 60);
+      return `rgb(${r},${g},${b})`;
+    } else {
+      const t = Math.min(-rho, 1);
+      const r = Math.round(255 - t * 60);
+      const g = Math.round(255 - t * 80);
+      const b = Math.round(255 - t * 200);
+      return `rgb(${r},${g},${b})`;
+    }
   }
 
   let svg = '';
@@ -5167,7 +5600,7 @@ function renderFig27ConsistencyMatrix(data, elId, modelFilter) {
       svg += `</rect>`;
       // Show value in cell if big enough
       if (cellSize >= 28) {
-        const textColor = rho > 0.8 ? '#fff' : '#333';
+        const textColor = rho > 0.7 ? '#fff' : '#333';
         svg += `<text x="${x + cellSize / 2}" y="${y + cellSize / 2 + 3}" font-size="7.5" fill="${textColor}" font-family="${SERIF}" text-anchor="middle">${rho.toFixed(2)}</text>`;
       }
     }
@@ -5202,10 +5635,10 @@ function renderFig27ConsistencyMatrix(data, elId, modelFilter) {
   const legW = Math.min(200, Math.max(100, n * cellSize));
   const legX = ox + (n * cellSize - legW) / 2;
   for (let i = 0; i < legW; i++) {
-    const rho = 0.4 + (i / legW) * 0.6;
+    const rho = -1 + (i / legW) * 2;
     svg += `<rect x="${legX + i}" y="${legY}" width="1.5" height="10" fill="${rhoColor(rho)}"/>`;
   }
-  svg += `<text x="${legX}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="start">0.4</text>`;
+  svg += `<text x="${legX}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="start">−1.0</text>`;
   svg += `<text x="${legX + legW}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="end">1.0</text>`;
   svg += `<text x="${legX + legW / 2}" y="${legY + 22}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="middle">Spearman \u03C1</text>`;
 
