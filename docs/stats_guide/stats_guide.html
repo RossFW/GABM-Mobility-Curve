@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Ross Williams" />
+  <meta name="dcterms.date" content="2026-04-17" />
+  <title>Statistical Foundations for Paper 3</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+  <script defer=""
+  src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Statistical Foundations for Paper 3</h1>
+<p class="subtitle">A Step-by-Step Guide to the Logit Regressions and
+DHARMa Diagnostics</p>
+<p class="author">Ross Williams</p>
+<p class="date">2026-04-17</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#part-1-the-study-as-data"
+id="toc-part-1-the-study-as-data">Part 1 — The Study as Data</a>
+<ul>
+<li><a href="#what-one-row-looks-like"
+id="toc-what-one-row-looks-like">1.1 What one row looks like</a></li>
+<li><a href="#the-20000-per-config" id="toc-the-20000-per-config">1.2
+The 20,000 per config</a></li>
+<li><a href="#clustering" id="toc-clustering">1.3 Clustering</a></li>
+<li><a href="#what-drives-what" id="toc-what-drives-what">1.4 What
+drives what</a></li>
+</ul></li>
+<li><a href="#part-2-stats-refresher"
+id="toc-part-2-stats-refresher">Part 2 — Stats Refresher</a>
+<ul>
+<li><a href="#three-different-ways-to-talk-about-the-same-event"
+id="toc-three-different-ways-to-talk-about-the-same-event">2.1 Three
+different ways to talk about the same event</a></li>
+<li><a href="#bernoulli-trials" id="toc-bernoulli-trials">2.2 Bernoulli
+trials</a></li>
+<li><a href="#what-a-regression-coefficient-β-means-in-logit"
+id="toc-what-a-regression-coefficient-β-means-in-logit">2.3 What a
+regression coefficient β means in logit</a></li>
+<li><a href="#a-worked-micro-example"
+id="toc-a-worked-micro-example">2.4 A worked micro-example</a></li>
+</ul></li>
+<li><a href="#part-3-your-three-regression-models"
+id="toc-part-3-your-three-regression-models">Part 3 — Your Three
+Regression Models</a>
+<ul>
+<li><a href="#model-1-fixed-effects-logit-glm"
+id="toc-model-1-fixed-effects-logit-glm">3.1 Model 1 — Fixed-Effects
+Logit (<code>glm</code>)</a></li>
+<li><a href="#model-2-random-effects-logit-glmer"
+id="toc-model-2-random-effects-logit-glmer">3.2 Model 2 — Random-Effects
+Logit (<code>glmer</code>)</a></li>
+<li><a href="#model-3-with-mention-interactions"
+id="toc-model-3-with-mention-interactions">3.3 Model 3 — With Mention
+Interactions</a></li>
+<li><a href="#worked-example-the-amplification-question"
+id="toc-worked-example-the-amplification-question">3.4 Worked example:
+the amplification question</a></li>
+<li><a href="#when-to-cite-which-model"
+id="toc-when-to-cite-which-model">3.5 When to cite which model</a></li>
+</ul></li>
+<li><a href="#part-4-how-to-read-each-figure"
+id="toc-part-4-how-to-read-each-figure">Part 4 — How to Read Each
+Figure</a>
+<ul>
+<li><a href="#figure-25-coefficient-table-forest"
+id="toc-figure-25-coefficient-table-forest">4.1 Figure 25 — Coefficient
+Table / Forest</a></li>
+<li><a href="#figure-27-log-odds-landscape"
+id="toc-figure-27-log-odds-landscape">4.2 Figure 27 — Log-Odds
+Landscape</a></li>
+<li><a href="#figure-28-forest-plot-with-or-axis"
+id="toc-figure-28-forest-plot-with-or-axis">4.3 Figure 28 — Forest Plot
+with OR axis</a></li>
+<li><a href="#figure-24-personality-ranking-accuracy"
+id="toc-figure-24-personality-ranking-accuracy">4.4 Figure 24 —
+Personality Ranking Accuracy</a></li>
+<li><a href="#figure-24b-calibration-dharma-q-q"
+id="toc-figure-24b-calibration-dharma-q-q">4.5 Figure 24b — Calibration
++ DHARMa Q-Q</a></li>
+<li><a href="#response-analysis-figures-35-36-37"
+id="toc-response-analysis-figures-35-36-37">4.6 Response Analysis
+Figures (35, 36, 37)</a></li>
+</ul></li>
+<li><a href="#part-5-why-standard-residuals-fail-for-your-models"
+id="toc-part-5-why-standard-residuals-fail-for-your-models">Part 5 — Why
+Standard Residuals Fail for Your Models</a>
+<ul>
+<li><a href="#residuals-in-linear-ols-regression-the-simple-case"
+id="toc-residuals-in-linear-ols-regression-the-simple-case">5.1
+Residuals in linear (OLS) regression — the simple case</a></li>
+<li><a href="#why-this-breaks-when-outcomes-are-binary"
+id="toc-why-this-breaks-when-outcomes-are-binary">5.2 Why this breaks
+when outcomes are binary</a></li>
+<li><a href="#old-school-fixes-pearson-deviance-residuals"
+id="toc-old-school-fixes-pearson-deviance-residuals">5.3 Old-school
+fixes (Pearson, Deviance residuals)</a></li>
+<li><a href="#the-clean-alternative-simulate-and-compare"
+id="toc-the-clean-alternative-simulate-and-compare">5.4 The clean
+alternative: simulate and compare</a></li>
+</ul></li>
+<li><a href="#part-6-dharma-from-scratch"
+id="toc-part-6-dharma-from-scratch">Part 6 — DHARMa, From Scratch</a>
+<ul>
+<li><a
+href="#the-probability-integral-transform-pit-the-foundational-trick"
+id="toc-the-probability-integral-transform-pit-the-foundational-trick">6.1
+The Probability Integral Transform (PIT) — the foundational
+trick</a></li>
+<li><a href="#the-discrete-problem" id="toc-the-discrete-problem">6.2
+The discrete problem</a></li>
+<li><a href="#how-dharma-implements-this-via-simulation"
+id="toc-how-dharma-implements-this-via-simulation">6.3 How DHARMa
+implements this via simulation</a></li>
+<li><a href="#what-the-250-simulations-is-doing"
+id="toc-what-the-250-simulations-is-doing">6.4 What the “250
+simulations” is doing</a></li>
+<li><a href="#what-the-stored-quantiles-vector-in-your-jsons-is"
+id="toc-what-the-stored-quantiles-vector-in-your-jsons-is">6.5 What the
+stored <code>quantiles</code> vector in your JSONs is</a></li>
+</ul></li>
+<li><a href="#part-7-interpreting-dharma-output"
+id="toc-part-7-interpreting-dharma-output">Part 7 — Interpreting DHARMa
+Output</a>
+<ul>
+<li><a href="#the-q-q-plot-mechanically"
+id="toc-the-q-q-plot-mechanically">7.1 The Q-Q plot,
+mechanically</a></li>
+<li><a href="#shape-library-what-deviations-mean"
+id="toc-shape-library-what-deviations-mean">7.2 Shape library — what
+deviations mean</a></li>
+<li><a href="#the-kolmogorov-smirnov-test"
+id="toc-the-kolmogorov-smirnov-test">7.3 The Kolmogorov-Smirnov
+test</a></li>
+<li><a href="#the-dispersion-ratio" id="toc-the-dispersion-ratio">7.4
+The dispersion ratio</a></li>
+<li><a href="#how-to-present-the-diagnostics-in-paper-3"
+id="toc-how-to-present-the-diagnostics-in-paper-3">7.5 How to present
+the diagnostics in Paper 3</a></li>
+</ul></li>
+<li><a href="#part-8-putting-it-all-together"
+id="toc-part-8-putting-it-all-together">Part 8 — Putting It All
+Together</a>
+<ul>
+<li><a href="#the-full-statistical-story-in-one-page"
+id="toc-the-full-statistical-story-in-one-page">8.1 The full statistical
+story in one page</a></li>
+<li><a href="#caveats-worth-pre-empting"
+id="toc-caveats-worth-pre-empting">8.2 Caveats worth
+pre-empting</a></li>
+<li><a href="#things-you-can-stop-worrying-about"
+id="toc-things-you-can-stop-worrying-about">8.3 Things you can stop
+worrying about</a></li>
+</ul></li>
+<li><a href="#appendix-a-other-concepts-worth-a-refresher"
+id="toc-appendix-a-other-concepts-worth-a-refresher">Appendix A — Other
+Concepts Worth a Refresher</a>
+<ul>
+<li><a href="#a.1-significance-testing-α-type-iii"
+id="toc-a.1-significance-testing-α-type-iii">A.1 Significance testing
+(α, Type I/II)</a></li>
+<li><a href="#a.2-multiple-comparisons"
+id="toc-a.2-multiple-comparisons">A.2 Multiple comparisons</a></li>
+<li><a href="#a.3-aic-and-bic" id="toc-a.3-aic-and-bic">A.3 AIC and
+BIC</a></li>
+<li><a href="#a.4-confidence-intervals"
+id="toc-a.4-confidence-intervals">A.4 Confidence intervals</a></li>
+<li><a href="#a.5-effect-size-significance"
+id="toc-a.5-effect-size-significance">A.5 Effect size ≠
+significance</a></li>
+<li><a href="#a.6-temperature-thinking-budgets-and-llm-stochasticity"
+id="toc-a.6-temperature-thinking-budgets-and-llm-stochasticity">A.6
+Temperature, thinking budgets, and LLM stochasticity</a></li>
+</ul></li>
+<li><a href="#appendix-b-r-commands-cheat-sheet"
+id="toc-appendix-b-r-commands-cheat-sheet">Appendix B — R Commands Cheat
+Sheet</a>
+<ul>
+<li><a href="#b.1-running-the-full-regression-pipeline"
+id="toc-b.1-running-the-full-regression-pipeline">B.1 Running the full
+regression pipeline</a></li>
+<li><a href="#b.2-running-dharma-only-patching-existing-jsons"
+id="toc-b.2-running-dharma-only-patching-existing-jsons">B.2 Running
+DHARMa only (patching existing JSONs)</a></li>
+<li><a href="#b.3-key-r-snippets" id="toc-b.3-key-r-snippets">B.3 Key R
+snippets</a></li>
+</ul></li>
+<li><a href="#appendix-c-glossary" id="toc-appendix-c-glossary">Appendix
+C — Glossary</a></li>
+</ul>
+</nav>
+<h1 id="part-1-the-study-as-data">Part 1 — The Study as Data</h1>
+<p>Before any statistical machinery, get the shape of what you collected
+fixed in your head. Every modeling choice that follows is driven by this
+shape.</p>
+<h2 id="what-one-row-looks-like">1.1 What one row looks like</h2>
+<p>Each row in your micro-level CSV is <strong>one binary
+decision</strong> from one agent:</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 18%" />
+<col style="width: 5%" />
+<col style="width: 11%" />
+<col style="width: 40%" />
+<col style="width: 5%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr>
+<th>agent_id</th>
+<th>infection_level</th>
+<th>rep</th>
+<th>stay_home</th>
+<th>traits</th>
+<th>age</th>
+<th>gender</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0042</td>
+<td>3.2%</td>
+<td>2</td>
+<td>1</td>
+<td>“extroverted | agreeable | …”</td>
+<td>34</td>
+<td>female</td>
+</tr>
+<tr>
+<td>0042</td>
+<td>3.2%</td>
+<td>3</td>
+<td>0</td>
+<td>“extroverted | agreeable | …”</td>
+<td>34</td>
+<td>female</td>
+</tr>
+<tr>
+<td>0043</td>
+<td>3.2%</td>
+<td>2</td>
+<td>1</td>
+<td>“introverted | antagonistic | …”</td>
+<td>61</td>
+<td>male</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p><code>stay_home</code> is always <strong>0 or 1</strong> — there is
+no middle ground. This is the single most consequential fact about your
+data, because it rules out ordinary linear regression and forces you
+into the logistic family.</p>
+<h2 id="the-20000-per-config">1.2 The 20,000 per config</h2>
+<p>For a single LLM configuration:</p>
+<ul>
+<li>100 agents</li>
+<li>× 40 infection levels (0.175% to 7.0%, roughly)</li>
+<li>× 5 reps per (agent, infection) pair</li>
+<li>= <strong>20,000 rows per config</strong></li>
+</ul>
+<p>Across 21 configurations, that’s <strong>420,000 total
+decisions</strong>.</p>
+<p>Each config is analyzed separately — so when you fit Model 2 for
+Claude Opus 4.5, you’re fitting a logit model to 20,000 binary
+observations from that one LLM.</p>
+<h2 id="clustering">1.3 Clustering</h2>
+<p>The 20,000 rows are <strong>not independent</strong>. Each agent
+contributes 200 rows (40 levels × 5 reps), so rows from the same agent
+are correlated: if agent 42 tends to stay home a lot relative to what
+their traits predict, all 200 of their rows will reflect that.</p>
+<p>This clustering is exactly what the random-effects model (Model 2)
+accounts for — but we’ll get there.</p>
+<h2 id="what-drives-what">1.4 What drives what</h2>
+<p>The structural question: <strong>which features of the agent or the
+situation push them toward staying home?</strong></p>
+<p>Two kinds of predictors:</p>
+<ul>
+<li><strong>Within-agent varying</strong>: <code>infection_level</code>
+(0–7%), and whether certain traits were <code>mentioned</code> in the
+LLM’s response. These change from row to row for a single agent.</li>
+<li><strong>Between-agent fixed</strong>: <code>traits</code>
+(extroverted, agreeable, etc.), <code>age</code>, <code>gender</code>.
+These are constant across all 200 rows from a given agent.</li>
+</ul>
+<p>This split is why Models 1 and 2 differ in what they can estimate
+(Section 3).</p>
+<hr />
+<h1 id="part-2-stats-refresher">Part 2 — Stats Refresher</h1>
+<p>If the last stats class was a while back, this section is to get the
+key ideas back in working memory. Nothing exotic here.</p>
+<h2 id="three-different-ways-to-talk-about-the-same-event">2.1 Three
+different ways to talk about the same event</h2>
+<p>Say an agent has a <strong>30% chance</strong> of staying home. There
+are three equivalent ways to express that number, and you’ll see all
+three in the paper:</p>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Formula</th>
+<th>Value</th>
+<th>Range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Probability</td>
+<td>p</td>
+<td>0.30</td>
+<td>0 to 1</td>
+</tr>
+<tr>
+<td>Odds</td>
+<td>p / (1 − p)</td>
+<td>0.429</td>
+<td>0 to ∞</td>
+</tr>
+<tr>
+<td>Log-odds</td>
+<td>ln( p / (1 − p) )</td>
+<td>−0.847</td>
+<td>−∞ to +∞</td>
+</tr>
+</tbody>
+</table>
+<p>Why three scales?</p>
+<p><strong>Probability</strong> is intuitive but awkward to model
+directly — it’s trapped in [0, 1]. If you run a linear regression on
+probability, your predictions can go negative or exceed 1.
+Meaningless.</p>
+<p><strong>Odds</strong> stretch to infinity on one side but still
+bottom out at 0. Also awkward.</p>
+<p><strong>Log-odds</strong> (a.k.a. the “logit”) run from −∞ to +∞ with
+no boundaries. You can do linear regression on log-odds freely. That’s
+the whole reason logistic regression exists: it regresses predictors on
+the <strong>log-odds</strong> of the outcome, then converts back to a
+probability at the end via the logistic function.</p>
+<p><strong>Key conversions to have in your head:</strong></p>
+<ul>
+<li>Log-odds of <strong>0</strong> ↔︎ probability
+<strong>0.5</strong></li>
+<li>Log-odds of <strong>+1</strong> ↔︎ probability ≈
+<strong>0.73</strong></li>
+<li>Log-odds of <strong>+2</strong> ↔︎ probability ≈
+<strong>0.88</strong></li>
+<li>Log-odds of <strong>+4</strong> ↔︎ probability ≈
+<strong>0.98</strong></li>
+<li>Log-odds of <strong>−2</strong> ↔︎ probability ≈
+<strong>0.12</strong></li>
+</ul>
+<p>This S-curve is the logistic function:</p>
+<p><span class="math display">p = \frac{1}{1 + e^{-\eta}}</span></p>
+<p>where η is the log-odds. As η → ∞, p → 1. As η → −∞, p → 0. At η = 0,
+p = 0.5.</p>
+<p>![S-curve sketch: x-axis is log-odds from -5 to +5, y-axis is
+probability, smooth sigmoid passing through (0, 0.5)]</p>
+<h2 id="bernoulli-trials">2.2 Bernoulli trials</h2>
+<p>Each row’s <code>stay_home</code> is a <strong>Bernoulli
+trial</strong>: a single coin-flip-like event with outcome 0 or 1, and
+some probability p of being 1. The whole job of logistic regression is:
+given the predictors for this row, what is p?</p>
+<p>The model never says “this agent will stay home.” It always says “the
+probability that this agent stays home is 0.47.” Then nature (or the
+LLM) flips a biased coin.</p>
+<p><strong>Why this matters for interpretation</strong>: even a
+well-calibrated model will get plenty of individual predictions “wrong.”
+An agent with p=0.3 who stays home isn’t a model failure — that outcome
+has 30% probability. What we check is whether <strong>across many
+observations</strong> the predicted probabilities match the observed
+rates.</p>
+<h2 id="what-a-regression-coefficient-β-means-in-logit">2.3 What a
+regression coefficient β means in logit</h2>
+<p>In ordinary linear regression, <code>β = 2</code> means “a one-unit
+increase in X raises Y by 2 units.”</p>
+<p>In logistic regression, <code>β = 2</code> means <strong>“a one-unit
+increase in X raises the <em>log-odds</em> of Y=1 by 2”</strong>. That’s
+the scale of the coefficient. Translating to more intuitive
+quantities:</p>
+<ul>
+<li><strong>Odds ratio</strong> = e^β. If β = 2, odds ratio = e² ≈ 7.39,
+meaning the odds of staying home are ~7× higher with one extra unit of
+X.</li>
+<li><strong>Probability change</strong> depends on the baseline — you
+have to apply the logistic function to the new log-odds. A β of 2 moves
+a 50/50 agent to ~88%, but moves an already-90% agent to ~98%.</li>
+</ul>
+<p>This last point matters: <strong>the same β does different things to
+probability depending on where you started</strong>, because the sigmoid
+is steeper in the middle than at the tails. Don’t let a reviewer corner
+you on “what does β = 2 mean in everyday terms” — the answer is “it
+depends on the baseline probability, which is why we always plot the
+combined effect on the original probability scale (Figs 1–21).”</p>
+<h2 id="a-worked-micro-example">2.4 A worked micro-example</h2>
+<p>Imagine a tiny model with two predictors: intercept α = −1, and a
+trait β_extravert = +0.5.</p>
+<ul>
+<li><strong>Introverted agent</strong> (extravert = 0) at intercept:
+log-odds = −1 → p = 0.269</li>
+<li><strong>Extraverted agent</strong> (extravert = 1) at intercept:
+log-odds = −1 + 0.5 = −0.5 → p = 0.378</li>
+</ul>
+<p>So the β = +0.5 “extravert” bump moved staying-home probability from
+27% → 38%. An 11-percentage-point increase, but on the log-odds scale
+it’s just +0.5.</p>
+<p>Express this as an odds ratio: e^0.5 ≈ 1.65. So “extraverted agents
+have 1.65× the odds of staying home.” Fine but note: that’s odds, not
+probability. (Odds of 1.65× isn’t “65% more likely” in the everyday
+sense.)</p>
+<hr />
+<h1 id="part-3-your-three-regression-models">Part 3 — Your Three
+Regression Models</h1>
+<p>You fit three different models per LLM configuration. Each one does a
+different job. Understanding <em>why</em> each exists makes the whole
+analysis legible.</p>
+<h2 id="model-1-fixed-effects-logit-glm">3.1 Model 1 — Fixed-Effects
+Logit (<code>glm</code>)</h2>
+<p><strong>Formula:</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(stay_home <span class="sc">~</span> infection_pct <span class="sc">+</span> <span class="fu">I</span>(infection_pct<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> <span class="fu">factor</span>(agent_id),</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> binomial, <span class="at">data =</span> df)</span></code></pre></div>
+<p><strong>What “fixed effect” means here.</strong>
+<code>factor(agent_id)</code> turns each agent’s ID into a set of 99
+dummy variables (one less than the number of agents; one is the
+reference). Each dummy gets its own coefficient. So you have one
+intercept plus one “agent offset” per agent. This is the <em>most
+flexible</em> way to absorb between-agent variation — each agent gets
+their own personal baseline.</p>
+<p><strong>Why do this.</strong> With 99 agent dummies, the only sources
+of variation left for the infection predictors to explain are
+<em>within-agent</em> variation. Each agent contributes 200 rows at 40
+different infection levels — so the infection coefficient is estimated
+purely from how each agent’s own behavior changes across infection
+levels, not from between-agent differences.</p>
+<p><strong>What you give up.</strong> You cannot estimate the effect of
+anything that’s fixed at the agent level — traits, age, gender — because
+those are perfectly absorbed by the agent dummies. If extraversion
+doesn’t vary within agent, no coefficient on extraversion can exist.</p>
+<p><strong>What you report from Model 1.</strong> Only the infection
+coefficients (main and squared). The 99 agent dummies are statistical
+nuisances you don’t interpret individually.</p>
+<p><strong>Shape of the infection coefficients:</strong></p>
+<ul>
+<li><code>β_infection_pct</code> (linear): positive means “higher
+infection → more stay-home.”</li>
+<li><code>β_infection_pct_sq</code> (squared): captures curvature.
+Negative means the curve plateaus or saturates as infection rises
+(diminishing returns). Positive means the curve steepens.</li>
+</ul>
+<h2 id="model-2-random-effects-logit-glmer">3.2 Model 2 — Random-Effects
+Logit (<code>glmer</code>)</h2>
+<p><strong>Formula:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glmer</span>(stay_home <span class="sc">~</span> infection_pct <span class="sc">+</span> <span class="fu">I</span>(infection_pct<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                  male <span class="sc">+</span> extraverted <span class="sc">+</span> agreeable <span class="sc">+</span> conscientious <span class="sc">+</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                  emot_stable <span class="sc">+</span> open_to_exp <span class="sc">+</span> age_years <span class="sc">+</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                  (<span class="dv">1</span> <span class="sc">|</span> agent_id),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">family =</span> binomial, <span class="at">data =</span> df)</span></code></pre></div>
+<p><strong>The key line is <code>(1 | agent_id)</code>.</strong> This
+says: “fit a separate intercept for each agent, but assume those
+intercepts are drawn from a shared Normal distribution.” This is called
+a <strong>random intercept</strong>.</p>
+<p><strong>Why this is different from Model 1.</strong></p>
+<ul>
+<li>In Model 1, each agent’s intercept is estimated completely
+independently (99 free parameters).</li>
+<li>In Model 2, agent intercepts are “shrunk” toward the overall mean.
+Agents with few observations don’t wander far from the average; agents
+with consistent behavior still drift far. This is called <strong>partial
+pooling</strong> or <strong>shrinkage</strong>.</li>
+</ul>
+<p><strong>What you buy with random effects.</strong> Because the
+agent-specific offsets are <em>constrained</em> (they follow a Normal
+distribution rather than each being totally free), you now have degrees
+of freedom left over to estimate the <strong>between-agent</strong>
+predictors: traits, age, gender. This is why Model 2 gives you the trait
+coefficients that Model 1 cannot.</p>
+<p><strong>Assumptions of Model 2 (these matter for diagnostics
+later):</strong></p>
+<ol type="1">
+<li><strong>The random intercepts are Normally distributed</strong>
+around 0 with some variance σ²_agent. This is the thing
+<code>re_variance</code> reports.</li>
+<li><strong>Given the random effect</strong>, observations within an
+agent are independent Bernoulli trials. (Equivalently: after accounting
+for each agent’s personal baseline, there’s no additional structure like
+time-of-day patterns or response-order effects.)</li>
+<li><strong>The logit link is correct</strong> — the probability depends
+on a linear combination of predictors through the logistic
+function.</li>
+<li><strong>No omitted variables</strong> — there’s no predictor you
+should have measured that would change the conclusions.</li>
+</ol>
+<p><strong>The trait coefficients.</strong> In your coding scheme:</p>
+<ul>
+<li><code>male = 1</code> means male (reference: female). β_male &gt; 0
+means “males more likely to stay home, controlling for everything
+else.”</li>
+<li><code>extraverted = 1</code> means extraverted (reference:
+introverted). β_extraverted &lt; 0 would mean “extraverted agents less
+likely to stay home.” (Though interpret signs carefully — they depend on
+the reference category.)</li>
+<li><code>age_years</code> is continuous (18–65). β_age &gt; 0 means
+“each additional year of age raises stay-home log-odds by β.”</li>
+</ul>
+<h2 id="model-3-with-mention-interactions">3.3 Model 3 — With Mention
+Interactions</h2>
+<p><strong>Formula</strong> (abbreviated — the actual fit has
+interactions for each Big Five dimension plus age and infection):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glmer</span>(stay_home <span class="sc">~</span> infection_pct <span class="sc">+</span> <span class="fu">I</span>(infection_pct<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                  male <span class="sc">+</span> extraverted <span class="sc">+</span> ... <span class="sc">+</span> age_years <span class="sc">+</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                  mentioned_ext <span class="sc">+</span> mentioned_agr <span class="sc">+</span> ...</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                  extraverted<span class="sc">:</span>mentioned_ext <span class="sc">+</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                  agreeable<span class="sc">:</span>mentioned_agr <span class="sc">+</span> ...</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                  (<span class="dv">1</span> <span class="sc">|</span> agent_id),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">family =</span> binomial, <span class="at">data =</span> df)</span></code></pre></div>
+<p><strong>What this adds.</strong> The research question: <em>when the
+LLM explicitly mentions a trait in its reasoning, does that trait’s
+effect on behavior get amplified?</em></p>
+<p><code>mentioned_ext</code> is 1 if the LLM’s free-text response
+contains a keyword indicating extraversion (e.g., “outgoing”, “social”).
+0 otherwise.</p>
+<p><code>extraverted:mentioned_ext</code> is the
+<strong>interaction</strong>: 1 only if the agent is extraverted
+<em>and</em> the LLM mentioned extraversion. 0 otherwise.</p>
+<p><strong>Reading the coefficients:</strong></p>
+<ul>
+<li><code>β_extraverted</code> = effect of being extraverted
+<strong>when the trait is NOT mentioned</strong>.</li>
+<li><code>β_extraverted + β_interaction</code> = effect of being
+extraverted <strong>when the trait IS mentioned</strong>.</li>
+</ul>
+<p><strong>If β_interaction &gt; 0</strong>: mentioning amplifies the
+trait’s effect — extraverts are <em>even more</em> inclined in whichever
+direction they were already going.</p>
+<p><strong>If β_interaction ≈ 0</strong>: mentioning changes nothing.
+The LLM’s prose is decorative; the behavior is the same either way.</p>
+<p><strong>If β_interaction &lt; 0</strong>: mentioning
+<em>reverses</em> or <em>dampens</em> the trait effect. Rare but
+possible.</p>
+<h2 id="worked-example-the-amplification-question">3.4 Worked example:
+the amplification question</h2>
+<p>Suppose for one config you see:</p>
+<ul>
+<li><code>β_extraverted = −0.4</code> (extraverts less likely to stay
+home — they’d rather go out)</li>
+<li><code>β_mentioned_ext = −0.1</code> (mentioning extraversion, on its
+own, slightly nudges <em>everyone</em> toward going out)</li>
+<li><code>β_extraverted:mentioned_ext = −0.6</code> (the
+interaction)</li>
+</ul>
+<p>Then:</p>
+<ul>
+<li><strong>Extravert, trait not mentioned</strong>: log-odds shift =
+−0.4. Modest “I want to go out” push.</li>
+<li><strong>Extravert, trait mentioned</strong>: log-odds shift = −0.4 +
+(−0.1) + (−0.6) = <strong>−1.1</strong>. Massive “I want to go out”
+push.</li>
+<li><strong>Introvert, trait not mentioned</strong>: log-odds shift = 0.
+Baseline.</li>
+<li><strong>Introvert, trait mentioned</strong>: log-odds shift = −0.1.
+The “mention” nudge doesn’t interact because the interaction term
+requires extraverted = 1.</li>
+</ul>
+<p>So mentioning extraversion in the LLM’s response is associated with a
+<em>much</em> stronger “go out” signal among the agents who actually
+have that trait. That’s the amplification finding, quantified.</p>
+<h2 id="when-to-cite-which-model">3.5 When to cite which model</h2>
+<ul>
+<li><strong>Infection dose-response curves (Figs 1–21)</strong>: Model 1
+or Model 2 both work. Model 1 is cleaner if you just want “within-agent”
+infection effects; Model 2 gives you predictions that incorporate
+agent-average effects.</li>
+<li><strong>Trait/demographic effects</strong>: Model 2, always. Model 1
+can’t estimate them.</li>
+<li><strong>Whether mentioning a trait amplifies its effect</strong>:
+Model 3, the interaction term is the answer.</li>
+<li><strong>Whole-model fit / calibration / DHARMa</strong>: Model 2
+(that’s what you’ve been running DHARMa on).</li>
+</ul>
+<hr />
+<h1 id="part-4-how-to-read-each-figure">Part 4 — How to Read Each
+Figure</h1>
+<h2 id="figure-25-coefficient-table-forest">4.1 Figure 25 — Coefficient
+Table / Forest</h2>
+<p><strong>What it shows.</strong> For Model 2, every coefficient
+(intercept, infection linear, infection², traits, age, gender) displayed
+as β ± CI with significance stars.</p>
+<p><strong>How to scan it.</strong></p>
+<ol type="1">
+<li>Sign of the trait coefficients — which direction does each Big Five
+pole push behavior?</li>
+<li>Which coefficients cross zero (the “no effect” line) — those aren’t
+reliably distinguishable from zero.</li>
+<li>Size of <code>β_infection_pct</code> — this is the headline “how
+much does rising infection nudge staying home?”</li>
+</ol>
+<p><strong>Common misreadings.</strong> Don’t compare coefficient sizes
+across predictors with different scales. β_age = 0.01 (continuous years)
+and β_extraverted = 0.4 (0/1 dummy) aren’t directly comparable because a
+“one unit increase” means different things. Multiply β_age by the age
+range (47 years) if you want a comparable quantity.</p>
+<h2 id="figure-27-log-odds-landscape">4.2 Figure 27 — Log-Odds
+Landscape</h2>
+<p><strong>What it shows.</strong> For each of 21 LLMs, two horizontal
+bars: - <strong>Solid bar</strong>: the personality range at 0%
+infection. Circle end = “most go-out-prone agent”; diamond end = “most
+stay-home-prone agent.” - <strong>Dashed bar</strong>: same range, but
+shifted by the log-odds effect of maximum infection. Open markers.</p>
+<p><strong>How to scan it.</strong></p>
+<ul>
+<li>Horizontal position → absolute log-odds. Further right = more
+stay-home-prone.</li>
+<li>Bar length → how much personality variation the LLM encodes. Longer
+bar = personality matters more.</li>
+<li>Distance between solid and dashed bars → how much infection moves
+the needle.</li>
+</ul>
+<p><strong>What to look for.</strong></p>
+<ul>
+<li><strong>Infection-driven models</strong>: solid and dashed bars are
+far apart. The LLM responds strongly to infection rate.</li>
+<li><strong>Personality-driven models</strong>: bars are long.
+Personality variation is big relative to infection shift.</li>
+<li><strong>Flat models</strong>: bars are short and close together. The
+LLM barely differentiates between agents or infection states.</li>
+</ul>
+<h2 id="figure-28-forest-plot-with-or-axis">4.3 Figure 28 — Forest Plot
+with OR axis</h2>
+<p><strong>What it shows.</strong> For each Big Five dimension plus age,
+a panel containing 21 dots (one per model), each at the β value with CI
+whiskers. Dots are filled when significant (p &lt; .05), hollow/faded
+otherwise. Secondary x-axis shows odds ratios (e^β).</p>
+<p><strong>How to scan it.</strong></p>
+<ul>
+<li>Column position → effect direction + magnitude.</li>
+<li>Filled vs. hollow → did this model’s data reliably distinguish the
+effect from zero?</li>
+<li>Whisker width → precision of the estimate.</li>
+</ul>
+<p><strong>Useful framing.</strong> A model where most dots are filled
+and in the same direction is a model that strongly encodes that trait
+dimension. A model where dots are scattered around zero is a model that
+treats that trait as behaviorally irrelevant.</p>
+<h2 id="figure-24-personality-ranking-accuracy">4.4 Figure 24 —
+Personality Ranking Accuracy</h2>
+<p>(You may know this one better than I do — skim but the core idea is
+usually: does the model’s implied agent ordering match the agents’
+objective trait count?)</p>
+<h2 id="figure-24b-calibration-dharma-q-q">4.5 Figure 24b — Calibration
++ DHARMa Q-Q</h2>
+<p><strong>Per-model small multiples (default view).</strong> Each
+panel: - x-axis: model-predicted P(stay-home), 0 to 1 - y-axis: observed
+proportion of stay-home in that bin, 0 to 1 - Diagonal line = perfect
+calibration - Dots = 40 bins (one per infection level) - MAD below =
+mean absolute deviation across bins, in percentage points</p>
+<p><strong>What to look for.</strong> Dots hugging the diagonal =
+well-calibrated. Dots systematically above diagonal at low x = model
+under-predicts stay-home at low infection (rare). Dots systematically
+below diagonal at high x = model over-predicts stay-home at high
+infection.</p>
+<p><strong>DHARMa Q-Q view.</strong> Discussed in Parts 6–7 in
+detail.</p>
+<h2 id="response-analysis-figures-35-36-37">4.6 Response Analysis
+Figures (35, 36, 37)</h2>
+<ul>
+<li><strong>Fig 35 — Amplification forest plot</strong>: for each Big
+Five dimension, panel showing β_mentioned and β_interaction per
+model.</li>
+<li><strong>Fig 36 — Cross-model amplification</strong>: 4-dot-per-panel
+view of the log-odds positions under each (trait × mention)
+combination.</li>
+<li><strong>Fig 37 — Amplification matrix</strong>: dense grid of all 21
+models × all trait-mention combinations. Blue = less stay-home, red =
+more. Opacity = significance.</li>
+</ul>
+<p><strong>How to read them together.</strong> The forest plot (35) is
+the summary statistic; the matrix (37) is the scanning tool for “which
+cell jumps out?”; the cross-model view (36) is for understanding
+<em>absolute</em> positions (where the model actually predicts agents
+end up), not just deltas.</p>
+<hr />
+<h1 id="part-5-why-standard-residuals-fail-for-your-models">Part 5 — Why
+Standard Residuals Fail for Your Models</h1>
+<p>This section motivates why DHARMa exists. Skip it if you’re already
+convinced; dig in if you’d like to understand the mechanics.</p>
+<h2 id="residuals-in-linear-ols-regression-the-simple-case">5.1
+Residuals in linear (OLS) regression — the simple case</h2>
+<p>In ordinary least squares regression on continuous outcomes:</p>
+<p><span class="math display">y_i = \beta_0 + \beta_1 x_i +
+\varepsilon_i</span></p>
+<p>the <strong>residual</strong> is <code>y_i − ŷ_i</code> (observed
+minus predicted). If the model is correct, these residuals should
+be:</p>
+<ol type="1">
+<li>Centered on zero (no bias)</li>
+<li>Normally distributed</li>
+<li>Have constant variance (homoskedastic)</li>
+<li>Uncorrelated with the predictors</li>
+</ol>
+<p>You diagnose the model by plotting residuals against fitted values,
+predictors, or theoretical Normal quantiles (the classic Normal Q-Q
+plot). Systematic shapes indicate something’s off.</p>
+<h2 id="why-this-breaks-when-outcomes-are-binary">5.2 Why this breaks
+when outcomes are binary</h2>
+<p>Now your outcome is 0 or 1, and your prediction <code>ŷ_i</code> is a
+probability between 0 and 1. So your residual <code>y_i − ŷ_i</code> can
+only take two values per observation:</p>
+<ul>
+<li>If <code>y_i = 1</code>: residual is <code>1 − p̂</code></li>
+<li>If <code>y_i = 0</code>: residual is <code>−p̂</code></li>
+</ul>
+<p>These residuals are:</p>
+<ol type="1">
+<li><strong>Not continuous</strong> — only two discrete values per
+row.</li>
+<li><strong>Bounded</strong> — always in [−1, 1].</li>
+<li><strong>Heteroskedastic</strong> — variance depends on
+<code>p̂</code>: Var(residual) = p̂(1 − p̂). Near p̂ = 0 or p̂ = 1, variance
+shrinks to zero; near p̂ = 0.5, it peaks.</li>
+<li><strong>Not Normal</strong> — they can never be Normally
+distributed; they’re Bernoulli-tied.</li>
+</ol>
+<p>You can’t use Normal Q-Q plots directly. The assumptions of the
+residual diagnostic don’t hold.</p>
+<h2 id="old-school-fixes-pearson-deviance-residuals">5.3 Old-school
+fixes (Pearson, Deviance residuals)</h2>
+<p>Statisticians patched this up with <strong>Pearson
+residuals</strong>:</p>
+<p><span class="math display">r_i^{Pearson} = \frac{y_i -
+\hat{p}_i}{\sqrt{\hat{p}_i(1 - \hat{p}_i)}}</span></p>
+<p>This standardizes the residual by its expected standard deviation,
+fixing the heteroskedasticity. At large sample sizes, with enough
+repeated observations in each predictor bin, Pearson residuals become
+approximately Normal and you can Q-Q plot them.</p>
+<p><strong>Deviance residuals</strong> do a similar thing using the
+likelihood-based contribution of each observation; they too become
+roughly Normal in the limit.</p>
+<p><strong>Why this is shaky for your case.</strong></p>
+<ol type="1">
+<li><strong>Binary outcomes without repeated bins don’t aggregate
+nicely.</strong> At the individual-row level, even Pearson residuals are
+still bimodal (one value for <code>y=1</code>, another for
+<code>y=0</code>). You have to aggregate into bins before the Normal
+approximation kicks in — which you did do in the calibration plot (40
+infection bins), but that aggregation throws away information.</li>
+<li><strong>Random effects complicate “prediction.”</strong> With
+<code>(1 | agent_id)</code>, what’s <code>ŷ_i</code>? The prediction
+conditional on the estimated random intercept for agent i? Or the
+marginal prediction averaging over random effects? They’re different
+numbers, and residuals built from each mean different things.</li>
+<li><strong>Mixed-model residuals at the observation level aren’t
+covered by standard theory.</strong> No one really knows what
+distribution they should follow.</li>
+</ol>
+<h2 id="the-clean-alternative-simulate-and-compare">5.4 The clean
+alternative: simulate and compare</h2>
+<p>DHARMa’s insight: <em>forget trying to derive analytic residual
+distributions</em>. Instead, just <strong>simulate</strong>. Ask the
+fitted model to generate data that looks like what the real data would
+look like <em>if the model were correct</em>. Then compare the real data
+to those simulations.</p>
+<p>This is closer to how Bayesian posterior predictive checks work. It’s
+a thoroughly modern, computational approach, and it sidesteps the entire
+Pearson-vs-deviance-vs-whatever debate.</p>
+<hr />
+<h1 id="part-6-dharma-from-scratch">Part 6 — DHARMa, From Scratch</h1>
+<p>Now we build DHARMa’s residual from the ground up.</p>
+<h2
+id="the-probability-integral-transform-pit-the-foundational-trick">6.1
+The Probability Integral Transform (PIT) — the foundational trick</h2>
+<p><strong>Theorem (PIT)</strong>: Let X be a continuous random variable
+with CDF F. Then the random variable U = F(X) is Uniformly distributed
+on [0, 1].</p>
+<p><strong>Intuition.</strong> The CDF maps each possible value of X to
+its quantile position — “what fraction of the distribution is at or
+below this value?” If X actually is drawn from F, then its quantile
+position is uniformly random: it’s equally likely to land in any
+percentile.</p>
+<p><strong>Sketch of why.</strong> Pick any u ∈ [0, 1]. Then:</p>
+<p><span class="math display">P(U \leq u) = P(F(X) \leq u) = P(X \leq
+F^{-1}(u)) = F(F^{-1}(u)) = u</span></p>
+<p>The CDF of U is P(U ≤ u) = u, which is the Uniform(0,1) CDF.
+Done.</p>
+<p><strong>Why this matters.</strong> If you want to check whether a
+model is correct, you can plug observed data into the model’s predicted
+CDF and check that the resulting quantiles are Uniform(0,1). Any
+deviation from uniformity is evidence of model misspecification.</p>
+<h2 id="the-discrete-problem">6.2 The discrete problem</h2>
+<p>The PIT theorem needs <strong>continuous</strong> data. Your outcomes
+are binary. The CDF of a Bernoulli(p) distribution isn’t continuous —
+it’s a step function with jumps at 0 and 1:</p>
+<pre><code>F(x) =  0        if x &lt; 0
+        1 − p    if 0 ≤ x &lt; 1
+        1        if x ≥ 1</code></pre>
+<p>So <code>F(observed)</code> isn’t a well-defined single number — it’s
+an interval (the jump). If <code>observed = 0</code>, the CDF “at” 0 is
+the jump from 0 to (1 − p). If <code>observed = 1</code>, it’s the jump
+from (1 − p) to 1.</p>
+<p><strong>Randomized PIT</strong> fixes this: for each observation,
+sample a uniform value <em>from the jump interval</em>.</p>
+<ul>
+<li><code>observed = 0</code> → residual ~ Uniform(0, 1 − p)</li>
+<li><code>observed = 1</code> → residual ~ Uniform(1 − p, 1)</li>
+</ul>
+<p><strong>Why this works (the density math).</strong></p>
+<p>Take any single observation with true probability p. Its randomized
+residual has:</p>
+<ul>
+<li>Probability p of being observed = 1, contributing Uniform(1 − p, 1)
+with density <code>1/p</code> on that interval.</li>
+<li>Probability (1 − p) of being observed = 0, contributing Uniform(0, 1
+− p) with density <code>1/(1 − p)</code> on that interval.</li>
+</ul>
+<p>Multiply each case by its probability of occurring:</p>
+<ul>
+<li>Density contribution on [1 − p, 1]: <code>p × 1/p = 1</code>.</li>
+<li>Density contribution on [0, 1 − p]:
+<code>(1 − p) × 1/(1 − p) = 1</code>.</li>
+</ul>
+<p><strong>The density is exactly 1 across the full [0, 1] interval —
+Uniform(0, 1).</strong></p>
+<p>This is independent of what p is. Any single observation, correctly
+modeled, produces a Uniform(0,1) residual.</p>
+<p>And across 20,000 independent observations all correctly modeled, you
+get 20,000 independent Uniform(0,1) draws. Their empirical CDF should
+lie on the diagonal of a Q-Q plot against the theoretical Uniform.</p>
+<h2 id="how-dharma-implements-this-via-simulation">6.3 How DHARMa
+implements this via simulation</h2>
+<p>The math in 6.2 assumes you know the true p for each observation. You
+don’t — you know the <em>fitted</em> model’s estimate. DHARMa handles
+this by:</p>
+<ol type="1">
+<li><strong>Simulating 250 datasets</strong> from the fitted model. For
+each row i, draw 250 Bernoulli outcomes using the fitted p_i.</li>
+<li><strong>Building a per-observation empirical CDF</strong> from those
+250 draws. For observation i, the simulated CDF is essentially just:
+<ul>
+<li>P(simulated &lt; observed) and P(simulated ≤ observed)</li>
+<li>For binary data with observed = 0: simulated CDF jumps from 0 to
+<code>(1 − p̂_i)</code> at 0. Equivalently, jump interval is
+<code>[0, 1 − p̂_i]</code>.</li>
+<li>For binary data with observed = 1: jump interval is
+<code>[1 − p̂_i, 1]</code>.</li>
+</ul></li>
+<li><strong>Randomized residual draw.</strong> Sample one Uniform value
+from that jump interval. Call that the scaled residual for observation
+i.</li>
+</ol>
+<p>Under a correct model, the estimated p̂_i converges to the true p_i in
+large samples, so the residuals behave as the theoretical Uniform(0,1)
+analysis predicts.</p>
+<p>DHARMa stores these 20,000 scaled residuals (one per observation) and
+provides them for diagnostic plotting.</p>
+<h2 id="what-the-250-simulations-is-doing">6.4 What the “250
+simulations” is doing</h2>
+<p>You might wonder why 250 and what exactly it does.</p>
+<p>For simple cases like binary outcomes, you don’t strictly need
+simulation — you could just compute the Bernoulli CDF directly. But
+DHARMa is general — it works for Poisson, negative binomial,
+zero-inflated, whatever — and those distributions don’t always have
+simple closed-form CDFs under a GLMM. Simulation sidesteps this by
+treating the model as a black-box generator.</p>
+<p>250 is enough draws to get the per-observation CDF resolved to about
+1/250 = 0.4% granularity, which is plenty for diagnostic-plot purposes.
+More sims = more precision, less is noisier. DHARMa defaults to 250 for
+speed.</p>
+<h2 id="what-the-stored-quantiles-vector-in-your-jsons-is">6.5 What the
+stored <code>quantiles</code> vector in your JSONs is</h2>
+<p>The <code>compute_dharma.R</code> patcher doesn’t store all 20,000
+per-observation residuals (that would bloat the JSONs). Instead it
+stores <strong>99 summary quantiles</strong>: the 1st, 2nd, …, 99th
+percentile of the empirical distribution of residuals. Those 99 numbers,
+plotted at the theoretical Uniform positions [0.01, 0.02, …, 0.99], give
+you the Q-Q curve you see in Fig 24b.</p>
+<p>This is an excellent compression: the Q-Q plot only cares about the
+shape of the empirical CDF, and 99 quantiles capture that shape with
+almost no loss.</p>
+<hr />
+<h1 id="part-7-interpreting-dharma-output">Part 7 — Interpreting DHARMa
+Output</h1>
+<h2 id="the-q-q-plot-mechanically">7.1 The Q-Q plot, mechanically</h2>
+<ul>
+<li><strong>x-axis</strong>: theoretical quantile position, 0 to 1. At x
+= 0.3, you’re asking “what’s the 30th percentile of a Uniform(0,1)?” —
+trivially, 0.3.</li>
+<li><strong>y-axis</strong>: observed quantile position — i.e., the 30th
+percentile of <em>your</em> residuals.</li>
+<li><strong>Diagonal</strong>: perfect Uniform residual
+distribution.</li>
+<li><strong>Your curve</strong>: the empirical CDF of 20,000 residuals,
+summarized by 99 stored percentiles.</li>
+</ul>
+<p>Any departure from the diagonal is a distributional mismatch between
+your observed residuals and Uniform(0,1) — evidence of model
+misspecification.</p>
+<h2 id="shape-library-what-deviations-mean">7.2 Shape library — what
+deviations mean</h2>
+<p><strong>Curve tightly hugs diagonal.</strong> No detectable issue
+with residual distribution. The model is calibrated across the full
+probability range. This is the ideal.</p>
+<p><strong>Curve S-shape</strong> (below diagonal at left, above at
+right).</p>
+<pre><code>  1 ┤       ╭──
+    │    ╭──╯
+0.5 ┤───╯
+    │╭─╯
+  0 ┼────────
+    0  0.5   1</code></pre>
+<p>The empirical CDF is <em>narrower</em> than Uniform — residuals
+cluster toward the middle, avoiding the tails. Interpretation: the model
+is <em>more confident than it should be</em>. Predicted probabilities
+are too close to 0 or 1 when the real outcomes are less certain.
+Underdispersion.</p>
+<p><strong>Inverse S-shape</strong> (above at left, below at right).</p>
+<pre><code>  1 ┤─────╮
+    │     ╰─╮
+0.5 ┤       ╰───
+    │          ╰─
+  0 ┼────────
+    0  0.5    1</code></pre>
+<p>The empirical CDF is <em>wider</em> than Uniform — residuals pile up
+at the extremes. Interpretation: the model’s predictions are
+<em>under-confident</em> or there’s extra variance not captured (e.g.,
+an omitted grouping factor, residual agent heterogeneity).
+Overdispersion.</p>
+<p><strong>Curve consistently above diagonal.</strong> Residuals skewed
+toward larger values (more observations fall near 1 than expected).
+Model is systematically <em>under-predicting</em> the outcome —
+predicting low probabilities when reality is higher.</p>
+<p><strong>Curve consistently below diagonal.</strong> Opposite: model
+is systematically <em>over-predicting</em>.</p>
+<p><strong>Sag/bulge near middle only.</strong> Model is fine at the
+tails but miscalibrated in the middle probability range — could indicate
+missing non-linearity in a key predictor.</p>
+<h2 id="the-kolmogorov-smirnov-test">7.3 The Kolmogorov-Smirnov
+test</h2>
+<p><strong>What it computes.</strong> The KS statistic is the maximum
+vertical distance between your empirical CDF (the Q-Q curve) and the
+diagonal. A small KS stat means the curves are close; large means
+they’re far.</p>
+<p>The <strong>p-value</strong> is the probability, under the null
+hypothesis that the residuals truly are Uniform(0,1), of seeing a KS
+statistic at least as large as what you observed.</p>
+<ul>
+<li><strong>p ≥ .05</strong>: can’t reject uniformity. The curve is
+close enough to the diagonal given the sample size.</li>
+<li><strong>p &lt; .05</strong>: reject uniformity. Some kind of
+systematic deviation exists.</li>
+</ul>
+<p><strong>The over-power problem at N = 20,000.</strong> With 20,000
+observations, the KS test is extraordinarily sensitive. Even tiny
+deviations (e.g., the empirical CDF sitting 0.01 below the diagonal in
+one small region) will push the p-value below 0.05. That doesn’t mean
+the model is <em>meaningfully</em> miscalibrated — just that the
+deviation is detectable with this much data.</p>
+<p>Rule of thumb for your paper: <strong>visual inspection trumps the
+p-value at this sample size</strong>. If the curve is visibly hugging
+the diagonal, that’s good calibration even if KS p = 0.001. Report both;
+lean on the visual.</p>
+<h2 id="the-dispersion-ratio">7.4 The dispersion ratio</h2>
+<p><strong>What it computes.</strong>
+<code>Var(observed residuals) / Var(expected residuals under the fitted model)</code>.
+DHARMa computes this by comparing the variance of the <em>actual</em>
+scaled residuals to what the variance would be under the simulated null
+distribution.</p>
+<ul>
+<li><strong>Ratio = 1.0</strong>: perfect. Model’s variance assumptions
+are correct.</li>
+<li><strong>Ratio &gt; 1.0</strong>: overdispersion. The real data has
+more variance than the model predicts. Usually because:
+<ul>
+<li>Unmeasured heterogeneity at the observation level (e.g., if there’s
+correlation between reps from the same agent that the random intercept
+doesn’t fully absorb).</li>
+<li>Missing nonlinear predictors.</li>
+<li>Outliers.</li>
+</ul></li>
+<li><strong>Ratio &lt; 1.0</strong>: underdispersion. The real data is
+<em>less</em> variable than the model predicts. Usually because:
+<ul>
+<li>Agents are more deterministic than a Bernoulli with the given p
+would predict. For an LLM, this often happens because temperature
+sampling produces high rep-to-rep agreement — the “agent” is essentially
+giving the same answer every time, which is <em>less random</em> than a
+p = 0.5 coin flip would be.</li>
+<li>Response ceilings/floors.</li>
+</ul></li>
+</ul>
+<p><strong>Interpretation ranges (informal).</strong></p>
+<ul>
+<li><strong>0.90 – 1.10</strong>: unremarkable. No real concern.</li>
+<li><strong>0.75 – 0.90</strong> or <strong>1.10 – 1.25</strong>: mild
+dispersion deviation. Worth noting but usually not a problem.</li>
+<li><strong>Outside 0.75 – 1.25</strong>: the model’s variance
+assumptions are visibly off. Consider whether there’s a structural issue
+(missing random slope, correlated reps, etc.).</li>
+</ul>
+<p><strong>Your results in this framing.</strong></p>
+<ul>
+<li>Most configs: 0.9 – 1.1. Fine.</li>
+<li>Claude Opus 4.5 at 1.14: mild overdispersion. Probably residual
+agent heterogeneity the random intercept isn’t fully capturing.</li>
+<li>Claude Sonnet 4.0 at 0.74 and GPT-5.2 off at 0.62: meaningful
+underdispersion. These LLMs are giving <em>highly consistent</em>
+answers across reps — less random than Bernoulli assumes. Worth flagging
+in the paper.</li>
+</ul>
+<h2 id="how-to-present-the-diagnostics-in-paper-3">7.5 How to present
+the diagnostics in Paper 3</h2>
+<p>A suggested paragraph structure:</p>
+<blockquote>
+<p>We diagnosed the random-effects logit specification (Model 2) for
+each of the 21 configurations using DHARMa’s simulated residuals (Hartig
+2022), with 250 simulated datasets per fit. Figure 24b displays the Q-Q
+plot of scaled residuals against the theoretical Uniform(0,1)
+distribution for each configuration, along with Kolmogorov-Smirnov tests
+of uniformity and dispersion ratios.</p>
+<p>Visually, [most / N of 21] configurations track the diagonal closely,
+indicating good calibration across the probability range. Dispersion
+ratios fell in the 0.9–1.1 range for [N] configurations, with mild
+overdispersion in [list] and underdispersion in [list]. The
+underdispersion in [Sonnet 4.0 / GPT-5.2 off] reflects the high
+rep-to-rep agreement these models exhibit (see Figure 39), such that the
+binomial variance assumption slightly overstates observation-level
+variability.</p>
+<p>Kolmogorov-Smirnov p-values were generally small, reflecting the
+statistical power of 20,000 observations per configuration to detect
+even small deviations from perfect uniformity. We emphasize visual
+calibration and dispersion ratios over KS p-values for this reason.</p>
+</blockquote>
+<hr />
+<h1 id="part-8-putting-it-all-together">Part 8 — Putting It All
+Together</h1>
+<h2 id="the-full-statistical-story-in-one-page">8.1 The full statistical
+story in one page</h2>
+<ol type="1">
+<li>You have 420,000 binary decisions across 21 LLM configurations.</li>
+<li>Within each config, you estimate the effect of infection level,
+traits, age, and gender on the probability of staying home using
+<strong>logistic regression</strong> (Model 2, random-effects).</li>
+<li>You also estimate whether <em>explicitly mentioning</em> a trait
+amplifies its behavioral effect, via interaction terms (Model 3).</li>
+<li>You cross-validate the fits using DHARMa simulated residuals — the
+Q-Q plots in Fig 24b, the KS test, and the dispersion ratio tell you
+which configurations are well-calibrated and which have visible
+variance-assumption violations.</li>
+<li>The figures then tell the comparative story: which LLMs encode rich
+personality variation, which are infection-sensitive, which amplify
+mentions, and which are essentially flat.</li>
+</ol>
+<h2 id="caveats-worth-pre-empting">8.2 Caveats worth pre-empting</h2>
+<ul>
+<li><strong>KS p-values over-power at N = 20k</strong>. Reviewers who
+see “KS p &lt; .001” might mistake it for catastrophic misfit. Head it
+off in-text.</li>
+<li><strong>Random-intercept-only specification</strong>. You use
+<code>(1 | agent_id)</code>, not random slopes. If a reviewer asks “why
+not random slopes on infection?”, the answer is that within-agent
+infection responses are already captured by the fixed effects;
+additional random slopes would be over-parameterized given 200
+obs/agent.</li>
+<li><strong>Trait keyword detection noise</strong>.
+<code>mentioned_ext</code> is 1 if certain keywords appear. This is a
+noisy proxy. If keyword lists were too narrow, <code>β_mentioned</code>
+underestimates the real effect; if too broad, it picks up false
+positives. You tightened these in March 2026 per your roadmap; note the
+keyword set in the methods.</li>
+<li><strong>Temperature = 1 for reasoning models; varies
+elsewhere.</strong> Response stochasticity differs across configs, which
+affects the dispersion ratio (mechanically — a low-temperature model
+gives more consistent responses, driving the ratio down).</li>
+</ul>
+<h2 id="things-you-can-stop-worrying-about">8.3 Things you can stop
+worrying about</h2>
+<ul>
+<li>The logit link — standard, well-understood, appropriate for binary
+data with continuous predictors.</li>
+<li>Estimating SEs with <code>glmer</code> — lme4 uses a Laplace
+approximation for the likelihood; at N = 20k with 100 agents, this is
+very accurate.</li>
+<li>Multiple testing within a single model — individual coefficient
+tests are not the main inference; the forest plots show the pattern
+across configurations, which is the actual unit of inference.</li>
+</ul>
+<hr />
+<h1 id="appendix-a-other-concepts-worth-a-refresher">Appendix A — Other
+Concepts Worth a Refresher</h1>
+<h2 id="a.1-significance-testing-α-type-iii">A.1 Significance testing
+(α, Type I/II)</h2>
+<ul>
+<li><strong>Null hypothesis (H₀)</strong>: some specific claim, usually
+“no effect” (β = 0).</li>
+<li><strong>p-value</strong>: probability of seeing data at least this
+extreme if H₀ is true.</li>
+<li><strong>α (significance level)</strong>: the threshold at which you
+reject H₀. Conventionally 0.05.</li>
+<li><strong>Type I error</strong>: rejecting H₀ when it’s actually true.
+Controlled by α.</li>
+<li><strong>Type II error</strong>: failing to reject H₀ when it’s
+actually false. Controlled by sample size and effect size.</li>
+</ul>
+<p>For your data, Type I errors are mostly a non-issue — with N = 20k
+you have enormous statistical power. The opposite problem — declaring
+tiny, meaningless effects “significant” — is the real concern. Always
+pair p-values with effect sizes.</p>
+<h2 id="a.2-multiple-comparisons">A.2 Multiple comparisons</h2>
+<p>If you run 21 configs × ~9 trait/demographic coefficients = ~189
+coefficient tests, you’d expect ~9 to be “significant” at α = 0.05 by
+chance alone. This doesn’t invalidate your analysis because you’re not
+interpreting each coefficient as a separate inferential claim — you’re
+looking at patterns across models.</p>
+<p>If a reviewer insists, you can apply Bonferroni (divide α by the
+number of tests) or use FDR (Benjamini-Hochberg) — but flag in-text that
+the primary inference is at the model level, not per-coefficient.</p>
+<h2 id="a.3-aic-and-bic">A.3 AIC and BIC</h2>
+<ul>
+<li><strong>AIC</strong> (Akaike Information Criterion):
+<code>−2 × log-likelihood + 2 × k</code>, where k is the number of
+parameters. Lower is better. Rewards fit, penalizes complexity.</li>
+<li><strong>BIC</strong> (Bayesian Information Criterion):
+<code>−2 × log-likelihood + ln(n) × k</code>. Lower is better. Same
+spirit but penalizes complexity more harshly at large n.</li>
+</ul>
+<p>Useful for comparing nested or non-nested models on the same data.
+<strong>AIC differences of ~10 are substantial; ~2–6 are suggestive but
+not decisive.</strong> Not useful for absolute model quality — they only
+say “Model A fits the same data better than Model B” in relative
+terms.</p>
+<h2 id="a.4-confidence-intervals">A.4 Confidence intervals</h2>
+<p>A <strong>95% CI</strong> for a coefficient means: “if we repeated
+this study many times under identical conditions and constructed CIs the
+same way, 95% of those intervals would contain the true value.”</p>
+<p>It does <em>not</em> mean “there is a 95% probability that the true β
+is in this particular interval.” That’s the Bayesian credible-interval
+interpretation, which requires a prior.</p>
+<p>A CI that excludes zero is equivalent to rejecting H₀: β = 0 at α =
+0.05.</p>
+<h2 id="a.5-effect-size-significance">A.5 Effect size ≠
+significance</h2>
+<p>At N = 20k, even a β of 0.01 can be “significant” (p &lt; .05). But
+translated to probability: 0.01 log-odds ≈ 0.25 percentage-point change
+in probability at baseline. Vanishingly small.</p>
+<p>Always ask: “is this effect size meaningful in context?” For
+stay-home probability, a β that moves probability by less than ~2
+percentage points is probably not worth calling an “effect” in the
+written paper, even if it’s statistically significant.</p>
+<h2 id="a.6-temperature-thinking-budgets-and-llm-stochasticity">A.6
+Temperature, thinking budgets, and LLM stochasticity</h2>
+<p>Paper-specific: the configurations differ not just in underlying LLM
+but in <strong>temperature settings</strong> and <strong>reasoning
+budgets</strong> (e.g., GPT-5.2 high/medium/low). These mechanically
+affect response variance:</p>
+<ul>
+<li>Higher temperature → more rep-to-rep disagreement → dispersion ratio
+closer to 1 or above</li>
+<li>Lower temperature → more rep-to-rep agreement → dispersion ratio
+below 1</li>
+</ul>
+<p>Keep this in mind when interpreting diagnostic differences across
+configs.</p>
+<hr />
+<h1 id="appendix-b-r-commands-cheat-sheet">Appendix B — R Commands Cheat
+Sheet</h1>
+<h2 id="b.1-running-the-full-regression-pipeline">B.1 Running the full
+regression pipeline</h2>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">&quot;GABM 3rd paper/GABM mobility curve&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> analysis/compute_regressions.R</span></code></pre></div>
+<p>Fits all 3 models for all 21 configs. Writes JSON to
+<code>viz/data/real/regressions/</code>. Takes 30–60 minutes depending
+on configs and lme4 convergence.</p>
+<h2 id="b.2-running-dharma-only-patching-existing-jsons">B.2 Running
+DHARMa only (patching existing JSONs)</h2>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> analysis/compute_dharma.R <span class="at">--cores</span> 4 <span class="at">--force</span></span></code></pre></div>
+<p>Re-fits only Model 2 per config, runs DHARMa, patches the
+<code>model2.dharma</code> field in each JSON. ~5 minutes with 4
+cores.</p>
+<p>Flags:</p>
+<ul>
+<li><code>--only &lt;config_key&gt;</code>: restrict to a single config
+(e.g. <code>anthropic_claude-opus-4-5_off</code>)</li>
+<li><code>--limit N</code>: process only the first N configs</li>
+<li><code>--force</code>: re-run even if <code>dharma</code> field
+already exists</li>
+</ul>
+<h2 id="b.3-key-r-snippets">B.3 Key R snippets</h2>
+<p><strong>Fit a logit GLMM:</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">glmer</span>(stay_home <span class="sc">~</span> infection_pct <span class="sc">+</span> <span class="fu">I</span>(infection_pct<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                       male <span class="sc">+</span> extraverted <span class="sc">+</span> ... <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> agent_id),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">family =</span> binomial, <span class="at">data =</span> df,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">control =</span> <span class="fu">glmerControl</span>(<span class="at">optimizer =</span> <span class="st">&quot;bobyqa&quot;</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">optCtrl =</span> <span class="fu">list</span>(<span class="at">maxfun =</span> <span class="dv">100000</span>)))</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m)</span></code></pre></div>
+<p><strong>Extract coefficients:</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>coef_table <span class="ot">&lt;-</span> <span class="fu">summary</span>(m)<span class="sc">$</span>coefficients</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Each row: Estimate, Std. Error, z value, Pr(&gt;|z|)</span></span></code></pre></div>
+<p><strong>Run DHARMa:</strong></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DHARMa)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>sim <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m, <span class="at">n =</span> <span class="dv">250</span>, <span class="at">plot =</span> <span class="cn">FALSE</span>, <span class="at">seed =</span> <span class="dv">42</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">testUniformity</span>(sim, <span class="at">plot =</span> <span class="cn">FALSE</span>)   <span class="co"># KS test</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">testDispersion</span>(sim, <span class="at">plot =</span> <span class="cn">FALSE</span>)   <span class="co"># dispersion ratio</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(sim)                            <span class="co"># full diagnostic panel</span></span></code></pre></div>
+<hr />
+<h1 id="appendix-c-glossary">Appendix C — Glossary</h1>
+<p><strong>α (alpha)</strong>. Significance threshold, usually 0.05.
+Probability of a Type I error under H₀.</p>
+<p><strong>β (beta)</strong>. A regression coefficient. In logit
+regression, on the log-odds scale.</p>
+<p><strong>Bernoulli trial</strong>. A single binary outcome (0/1) with
+some probability p of being 1.</p>
+<p><strong>Binomial distribution</strong>. The distribution of the count
+of 1s in n independent Bernoulli trials.</p>
+<p><strong>CDF (Cumulative Distribution Function)</strong>. A function
+F(x) giving P(X ≤ x). Always between 0 and 1, monotone
+non-decreasing.</p>
+<p><strong>Confidence interval (CI)</strong>. A range of parameter
+values consistent with the data at a specified confidence level (usually
+95%).</p>
+<p><strong>DHARMa</strong>. An R package for simulated residual
+diagnostics in GLMMs.</p>
+<p><strong>Dispersion ratio</strong>. Observed residual variance /
+expected residual variance. Target 1.0.</p>
+<p><strong>Fixed effect</strong>. A regression coefficient estimated
+independently, with no distributional constraint.</p>
+<p><strong>GLMM (Generalized Linear Mixed Model)</strong>. A regression
+model with a non-identity link function (e.g., logit) plus random
+effects.</p>
+<p><strong>glmer</strong>. The function in R’s <code>lme4</code> package
+for fitting GLMMs with a logit (or other) link.</p>
+<p><strong>Intercept (α or β₀)</strong>. The model’s prediction (on the
+linear scale) when all predictors are at their reference value.</p>
+<p><strong>Interaction</strong>. A term of the form
+<code>X₁ × X₂</code>: the combined effect of two predictors exceeds or
+falls short of the sum of their individual effects.</p>
+<p><strong>Kolmogorov-Smirnov (KS) test</strong>. A test of whether two
+distributions (often empirical vs. theoretical) differ, based on the
+maximum vertical distance between their CDFs.</p>
+<p><strong>Likelihood</strong>. The probability of the observed data
+given a set of parameter values, treated as a function of the
+parameters.</p>
+<p><strong>Link function</strong>. The transformation relating the
+linear predictor (βX) to the expected outcome. Identity in OLS, logit in
+logistic regression.</p>
+<p><strong>Log-odds (logit)</strong>. ln(p / (1 − p)). The natural scale
+for logistic regression.</p>
+<p><strong>Odds</strong>. p / (1 − p). “The odds of staying home are
+X:1.”</p>
+<p><strong>Odds ratio</strong>. e^β. Multiplicative change in odds per
+unit change in predictor.</p>
+<p><strong>PIT (Probability Integral Transform)</strong>. The theorem
+that F(X) is Uniform(0,1) for continuous X with CDF F.</p>
+<p><strong>Pearson residual</strong>. (y − p̂) / sqrt(p̂(1 − p̂)).
+Standardized residual for binary outcomes.</p>
+<p><strong>Random intercept</strong>. An agent-specific offset, modeled
+as drawn from Normal(0, σ²). Shrunk toward 0 via partial pooling.</p>
+<p><strong>Residual</strong>. Observed minus predicted. Various forms
+(raw, Pearson, deviance, scaled) for different model types.</p>
+<p><strong>Scaled residual</strong>. DHARMa’s randomized-PIT residual.
+Should be Uniform(0,1) under a correct model.</p>
+<p><strong>Shrinkage / Partial pooling</strong>. The tendency of
+random-effect estimates to be pulled toward the overall mean, especially
+for groups with few observations.</p>
+<p><strong>σ² (sigma-squared)</strong>. A variance parameter. In your
+case, σ²_agent is the variance of the random intercept distribution.</p>
+<p><strong>Type I error</strong>. False positive: rejecting H₀ when it’s
+true.</p>
+<p><strong>Type II error</strong>. False negative: failing to reject H₀
+when it’s false.</p>
+<p><strong>Uniform(0,1)</strong>. The flat distribution on [0, 1]. Each
+value is equally likely.</p>
+<p><strong>Variance</strong>. Expected squared deviation from the mean.
+E[(X − μ)²].</p>
+<hr />
+<p><em>End of document. Questions, corrections, and additions to:
+rossfw@vt.edu.</em></p>
+</body>
+</html>

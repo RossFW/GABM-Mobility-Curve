@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Figures 24a &amp; 24b — Step-by-Step Walkthrough</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --serif: "Libre Baskerville", "Georgia", "Palatino", "Times New Roman", serif;
+    --mono: "Menlo", "Consolas", "Monaco", monospace;
+    --ink: #222;
+    --muted: #666;
+    --accent: #1a4a8a;
+    --rule: #ccc;
+    --box: #f7f7f2;
+    --code-bg: #eef1f4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--serif);
+    font-size: 15.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: #fafafa;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 30px 100px;
+  }
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 18px;
+    margin-bottom: 30px;
+  }
+  header .eyebrow {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 28px;
+    margin: 0 0 8px 0;
+    font-weight: bold;
+  }
+  header .subtitle {
+    font-style: italic;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  h2 {
+    font-size: 22px;
+    margin-top: 50px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 6px;
+  }
+  h3 {
+    font-size: 17px;
+    margin-top: 34px;
+    color: #111;
+  }
+  h4 {
+    font-size: 15px;
+    margin-top: 22px;
+    color: #333;
+    font-style: italic;
+  }
+  p { margin: 0.6em 0; }
+  .toc {
+    background: var(--box);
+    border: 1px solid var(--rule);
+    padding: 14px 20px;
+    margin-bottom: 30px;
+    font-size: 13px;
+  }
+  .toc h3 { margin-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .toc ul { margin: 0; padding-left: 18px; }
+  .toc li { margin: 2px 0; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  code, .code {
+    font-family: var(--mono);
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 13px;
+    color: #222;
+  }
+  pre {
+    font-family: var(--mono);
+    background: #f2f4f7;
+    border-left: 3px solid #555;
+    padding: 10px 14px;
+    margin: 14px 0;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+  pre code { background: none; padding: 0; }
+
+  details {
+    background: var(--box);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    margin: 12px 0;
+    padding: 0;
+  }
+  details summary {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--accent);
+    font-size: 13px;
+    list-style: none;
+    outline: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "▸ "; color: var(--muted); }
+  details[open] summary::before { content: "▾ "; }
+  details[open] summary { border-bottom: 1px dashed var(--rule); }
+  details .body { padding: 14px 18px; }
+  details .body > :first-child { margin-top: 0; }
+  details .body > :last-child { margin-bottom: 0; }
+
+  .step {
+    border-left: 3px solid #888;
+    padding: 8px 14px;
+    margin: 10px 0;
+    background: white;
+    font-size: 14px;
+  }
+  .step .num {
+    display: inline-block;
+    background: #333;
+    color: white;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: #f0f4fa;
+    padding: 10px 16px;
+    margin: 14px 0;
+    font-size: 14.5px;
+  }
+  .callout-warn {
+    border-left-color: #c00;
+    background: #fff4f4;
+  }
+  .callout .tag {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    text-transform: uppercase;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .callout-warn .tag { background: #c00; }
+
+  table { border-collapse: collapse; margin: 14px auto; font-size: 13px; }
+  th, td { border: 1px solid #bbb; padding: 4px 10px; text-align: left; }
+  th { background: #eee; }
+  tr.alt td { background: #fafafa; }
+  td.num, th.num { text-align: right; font-family: var(--mono); }
+
+  .math {
+    font-family: "Latin Modern Math", "STIX", "Times New Roman", serif;
+    font-style: italic;
+    display: inline-block;
+  }
+  .math-block {
+    text-align: center;
+    font-family: "Latin Modern Math", "STIX", "Times New Roman", serif;
+    font-style: italic;
+    padding: 8px 0;
+    font-size: 16px;
+    overflow-x: auto;
+  }
+
+  .worked-example {
+    background: #f5f8ee;
+    border: 1px solid #bcc9a8;
+    border-radius: 3px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 14.5px;
+  }
+  .worked-example .title {
+    font-weight: bold;
+    font-variant: small-caps;
+    color: #4a5a2b;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  svg.diagram {
+    display: block;
+    margin: 14px auto;
+    max-width: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Paper 3 · Internal walkthrough</div>
+  <h1>Figures 24a &amp; 24b — A Step-by-Step Walkthrough</h1>
+  <div class="subtitle">How each diagnostic is actually calculated — worked examples with Opus 4.5 data</div>
+</header>
+
+<nav class="toc">
+  <h3>Contents</h3>
+  <ul>
+    <li><a href="#part1">Part 1 — The Two Models</a>
+      <ul>
+        <li><a href="#fe-model">Fixed-Effects Logit (quick refresher)</a></li>
+        <li><a href="#re-model">Random-Effects Logit (what is a random intercept?)</a></li>
+        <li><a href="#assumptions">Assumptions of each model</a></li>
+        <li><a href="#fitting">How each model is fit</a></li>
+      </ul>
+    </li>
+    <li><a href="#fig24a">Part 2 — Figure 24a breakdown (Fixed-Effects Logit)</a>
+      <ul>
+        <li><a href="#fig24a-calib">Calibration plot</a></li>
+        <li><a href="#fig24a-qq">DHARMa residual Q-Q</a></li>
+        <li><a href="#fig24a-resids">Residuals vs infection</a></li>
+      </ul>
+    </li>
+    <li><a href="#fig24b">Part 3 — Figure 24b breakdown (Random-Effects Logit)</a>
+      <ul>
+        <li><a href="#fig24b-calib">Calibration plot</a></li>
+        <li><a href="#fig24b-qq">DHARMa residual Q-Q</a></li>
+        <li><a href="#fig24b-reqq">Random-intercept Normal Q-Q</a></li>
+        <li><a href="#fig24b-resids">Residuals vs age / infection</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+<!-- ==================================================================== -->
+<h2 id="part1">Part 1 — The Two Models</h2>
+
+<p>
+Every diagnostic in Figures 24a and 24b is a check on one of two regression models you fit to each LLM config's 20,000 binary rows. This section gives you just enough about each model to make the diagnostics make sense.
+</p>
+
+<h3 id="fe-model">1.1 Fixed-Effects Logit (the simpler one)</h3>
+
+<p>The formula you run in R:</p>
+
+<pre><code>glm(stay_home ~ infection_pct + I(infection_pct^2) + factor(agent_id),
+    family = binomial, data = df)</code></pre>
+
+<p>
+<code>factor(agent_id)</code> expands into <strong>99 dummy variables</strong>, one for each agent except a reference agent. Each of those dummies gets its own freely-estimated coefficient. The model has 3 "shared" parameters (intercept, infection linear, infection squared) plus 99 agent-specific offsets = 102 total parameters.
+</p>
+
+<p>
+The <strong>linear predictor</strong> (what you run through the sigmoid) for agent <span class="math">i</span> at infection level <span class="math">x</span>:
+</p>
+
+<div class="math-block">
+η<sub>i</sub>(x) = β<sub>0</sub> + α<sub>i</sub> + β<sub>inf</sub>·x + β<sub>inf²</sub>·x²
+</div>
+
+<p>where α<sub>i</sub> is agent <span class="math">i</span>'s personal dummy (zero for the reference agent).</p>
+
+<div class="worked-example">
+  <div class="title">Worked example — Opus 4.5, agent 0 (reference agent), at 3.2% infection</div>
+  <p>Say the fitted coefficients are <code>β₀ = -2.1, β<sub>inf</sub> = 0.95, β<sub>inf²</sub> = -0.08, α<sub>0</sub> = 0</code> (reference). Then:</p>
+  <ul>
+    <li>η = -2.1 + 0 + 0.95×3.2 + (-0.08)×3.2² = -2.1 + 3.04 - 0.82 = <strong>+0.12</strong></li>
+    <li>P(stay home) = 1 / (1 + e<sup>-0.12</sup>) ≈ <strong>0.530</strong></li>
+  </ul>
+  <p>For a different agent (say agent 42 with α<sub>42</sub> = +0.8), the same infection level gives η = -2.1 + 0.8 + 3.04 - 0.82 = 0.92 → P ≈ 0.715. Agent 42 is "stay-home prone" and their dummy captures that.</p>
+</div>
+
+<details>
+  <summary>What we can and cannot estimate in this model</summary>
+  <div class="body">
+    <p><strong>Can estimate:</strong> the infection curve shape (β<sub>inf</sub>, β<sub>inf²</sub>) and each agent's personal baseline (α<sub>i</sub>).</p>
+    <p><strong>Cannot estimate:</strong> any effect of <em>between-agent</em> features — traits, age, gender. Why? Because each agent has a fixed trait profile. Putting <code>extraverted</code> in the model alongside <code>factor(agent_id)</code> would create perfect multicollinearity: extraversion is perfectly determined by agent ID. R would drop one or the other.</p>
+    <p>This is why we report only the infection coefficients from Model 1. The 99 agent dummies are statistical bookkeeping you don't interpret.</p>
+  </div>
+</details>
+
+<h3 id="re-model">1.2 Random-Effects Logit (what is a random intercept, really?)</h3>
+
+<p>The formula:</p>
+
+<pre><code>glmer(stay_home ~ infection_pct + I(infection_pct^2) +
+                  male + extraverted + agreeable + conscientious +
+                  emot_stable + open_to_exp + age_years +
+                  (1 | agent_id),
+      family = binomial, data = df)</code></pre>
+
+<p>
+The key piece is <code>(1 | agent_id)</code>. This is saying: <em>"every agent still gets their own intercept offset, but those 100 offsets aren't freely estimated — they're assumed to come from a single Normal distribution."</em>
+</p>
+
+<div class="math-block">
+u<sub>i</sub> ~ Normal(0, σ²<sub>agent</sub>) &nbsp; for i = 1, 2, ..., 100
+</div>
+
+<p>
+So where the fixed-effects model had 99 completely independent α<sub>i</sub> coefficients, the random-effects model treats the u<sub>i</sub> values as 100 draws from a shared bell curve. The model has to simultaneously estimate:
+</p>
+
+<ol>
+  <li>The <strong>shape of the bell curve</strong> — specifically, σ<sub>agent</sub>, the spread of the agent-offset distribution.</li>
+  <li>Each agent's <strong>position</strong> in that bell curve — u<sub>1</sub>, u<sub>2</sub>, ..., u<sub>100</sub>.</li>
+  <li>The <strong>fixed-effect coefficients</strong> — intercept, infection terms, traits, age, gender.</li>
+</ol>
+
+<div class="callout">
+  <span class="tag">Key idea</span>
+  The crucial difference from FE: FE fits agent dummies <em>independently</em> (each agent's α<sub>i</sub> is whatever best fits that one agent's data). RE fits them <em>jointly</em> under a shared distributional constraint. That constraint lets us estimate trait effects.
+</div>
+
+<h4>Why this unlocks trait estimation</h4>
+
+<p>
+In the FE model, putting <code>extraverted</code> alongside agent dummies was impossible because extraversion is constant within agent. In the RE model, the agent-specific u<sub>i</sub> aren't freely estimated — they're shrunk toward zero via the Normal constraint. This leaves statistical "room" for trait coefficients. Now β<sub>extraverted</sub> can capture the <em>average</em> effect of extraversion across the pool of agents, while u<sub>i</sub> captures whatever is left over after accounting for that agent's observable traits.
+</p>
+
+<div class="worked-example">
+  <div class="title">Worked example — Shrinkage / partial pooling, in pictures</div>
+  <p>Suppose agent 42 has 200 observations with 160 "stay home" (so 80%). The agent's observed log-odds = log(160/40) = +1.39.</p>
+  <p>In the <strong>FE model</strong>, α<sub>42</sub> will be fit so that the model's predicted mean equals 80% — independent of other agents. The model has no way to "doubt" this estimate because agent 42 is their own island.</p>
+  <p>In the <strong>RE model</strong>, the estimate for u<sub>42</sub> is "shrunk" toward 0. How much depends on σ<sub>agent</sub>:</p>
+  <ul>
+    <li>If σ<sub>agent</sub> = 0.5 (agents don't vary much in baseline), u<sub>42</sub> might end up at, say, +0.4 (heavy shrinkage).</li>
+    <li>If σ<sub>agent</sub> = 2.0 (agents vary a lot), u<sub>42</sub> might end up at +1.2 (less shrinkage).</li>
+  </ul>
+  <p>This is called <strong>partial pooling</strong>: the model "borrows strength" across agents. Outliers get pulled back, but only partially — the data still dominates when it's strong.</p>
+  <p>For Opus 4.5, the R output gives σ̂<sub>agent</sub> = 1.90, meaning agents vary substantially in baseline stay-home tendency even after controlling for traits.</p>
+</div>
+
+<h4>The linear predictor for the RE model</h4>
+
+<p>For agent <span class="math">i</span> at infection level <span class="math">x</span>, the linear predictor is:</p>
+
+<div class="math-block">
+η<sub>i</sub>(x) = β<sub>0</sub> + β<sub>inf</sub>·x + β<sub>inf²</sub>·x² + β<sub>male</sub>·male<sub>i</sub> + β<sub>ext</sub>·extraverted<sub>i</sub> + ... + β<sub>age</sub>·age<sub>i</sub> + u<sub>i</sub>
+</div>
+
+<p>And as before, P(stay_home) = 1 / (1 + e<sup>−η</sup>).</p>
+
+<div class="worked-example">
+  <div class="title">Worked example — same agent, RE model</div>
+  <p>For Opus 4.5, suppose the coefficients are:</p>
+  <ul>
+    <li>β<sub>0</sub> = −1.50, β<sub>inf</sub> = 0.42, β<sub>inf²</sub> = −0.05</li>
+    <li>β<sub>male</sub> = 0.20, β<sub>extraverted</sub> = −0.30, β<sub>agreeable</sub> = +0.15, β<sub>conscientious</sub> = +0.25, β<sub>emot_stable</sub> = +0.10, β<sub>open</sub> = −0.05, β<sub>age</sub> = 0.01</li>
+    <li>Agent 42: female, extraverted, agreeable, conscientious, emotionally stable, not open, age 34. BLUP u<sub>42</sub> = +0.18.</li>
+  </ul>
+  <p>At infection 3.2%:</p>
+  <pre><code>η = −1.50           (intercept)
+  + 0.42×3.2 + (−0.05)×3.2²   (infection curve = +0.83)
+  + 0.20×0                     (female, no male contribution)
+  + (−0.30)×1                  (extraverted → −0.30)
+  + 0.15×1 + 0.25×1 + 0.10×1   (agreeable, consc., emot. stable = +0.50)
+  + (−0.05)×0                  (not open)
+  + 0.01×34                    (age = +0.34)
+  + 0.18                       (random intercept)
+  = −1.50 + 0.83 − 0.30 + 0.50 + 0.34 + 0.18 = +0.05
+
+P(stay home) = 1 / (1 + e^(−0.05)) ≈ 0.51</code></pre>
+  <p>Agent 42 has ~51% stay-home probability at 3.2% infection under this model.</p>
+</div>
+
+<h4>What it actually means to say &ldquo;u<sub>i</sub> ~ Normal(0, &sigma;²)&rdquo;</h4>
+
+<p>
+This is a claim about the <strong>shape of a histogram you could draw if you could somehow observe the 100 latent u<sub>i</sub> values</strong>. Nothing more, nothing less.
+</p>
+
+<p>
+Each agent has <em>some</em> u<sub>i</sub> &mdash; the leftover stay-home tendency specific to that agent, after the model accounts for their age, gender, and Big Five traits. You can't observe u<sub>i</sub> directly (only 0/1 decisions are observed), but conceptually each agent has one. If you collected all 100 of them into a list and plotted a histogram, the Normal assumption says it should look bell-shaped, centered at 0, with spread &sigma;.
+</p>
+
+<svg class="diagram" viewBox="0 0 320 170" width="320" height="170">
+  <line x1="30" y1="120" x2="310" y2="120" stroke="#333" stroke-width="1"/>
+  <line x1="170" y1="20" x2="170" y2="125" stroke="#bbb" stroke-width="0.5" stroke-dasharray="2,2"/>
+  <!-- x ticks -->
+  <text x="30"  y="135" font-size="9" text-anchor="middle" fill="#555">-4</text>
+  <text x="65"  y="135" font-size="9" text-anchor="middle" fill="#555">-3</text>
+  <text x="100" y="135" font-size="9" text-anchor="middle" fill="#555">-2</text>
+  <text x="135" y="135" font-size="9" text-anchor="middle" fill="#555">-1</text>
+  <text x="170" y="135" font-size="9" text-anchor="middle" fill="#555">0</text>
+  <text x="205" y="135" font-size="9" text-anchor="middle" fill="#555">1</text>
+  <text x="240" y="135" font-size="9" text-anchor="middle" fill="#555">2</text>
+  <text x="275" y="135" font-size="9" text-anchor="middle" fill="#555">3</text>
+  <text x="310" y="135" font-size="9" text-anchor="middle" fill="#555">4</text>
+  <text x="170" y="152" font-size="10" text-anchor="middle" fill="#333">u<tspan font-size="7" baseline-shift="sub">i</tspan> (log-odds scale)</text>
+  <text x="12" y="70" font-size="9" text-anchor="middle" fill="#555" transform="rotate(-90 12 70)"># of agents</text>
+  <!-- histogram bars (100 agents split into 8 bins) -->
+  <rect x="32"  y="113" width="31" height="7"    fill="#2a5a8a" opacity="0.65"/>
+  <rect x="67"  y="102.5" width="31" height="17.5" fill="#2a5a8a" opacity="0.65"/>
+  <rect x="102" y="78"  width="31" height="42"   fill="#2a5a8a" opacity="0.65"/>
+  <rect x="137" y="39.5" width="31" height="80.5" fill="#2a5a8a" opacity="0.65"/>
+  <rect x="172" y="29"  width="31" height="91"   fill="#2a5a8a" opacity="0.65"/>
+  <rect x="207" y="57"  width="31" height="63"   fill="#2a5a8a" opacity="0.65"/>
+  <rect x="242" y="85"  width="31" height="35"   fill="#2a5a8a" opacity="0.65"/>
+  <rect x="277" y="106" width="31" height="14"   fill="#2a5a8a" opacity="0.65"/>
+  <!-- smooth bell overlay -->
+  <path d="M 30,120 Q 100,120 135,60 Q 170,20 205,60 Q 240,120 310,120" stroke="#c00" stroke-width="1.4" fill="none" opacity="0.8"/>
+  <text x="250" y="32" font-size="9" fill="#c00" font-style="italic">Normal(0, &sigma;²)</text>
+</svg>
+
+<p>
+The bars are a hypothetical histogram of 100 u<sub>i</sub> values. The red curve is the Normal(0, &sigma;²) density the model assumes they follow. For Opus 4.5, &sigma;&#770;_agent = 1.90, meaning about 68% of agents have u<sub>i</sub> between &minus;1.9 and +1.9 on the log-odds scale.
+</p>
+
+<div class="callout">
+  <span class="tag">Generative vs. inferential</span>
+  Your intuition &mdash; &ldquo;we're sampling starting points from Normal(0, &sigma;²) and extracting trait impact given those random starts&rdquo; &mdash; is right as a <em>generative</em> description of how the model imagines your data was produced. If nature were rolling dice:
+  <br>(1) draw 100 u<sub>i</sub> values from Normal(0, &sigma;²);
+  <br>(2) compute each agent's log-odds at each infection level using fixed-effect coefficients + u<sub>i</sub>;
+  <br>(3) flip a Bernoulli coin at that probability for each row.
+  <br><br>
+  In practice you're running this backward. You have the 20,000 coin flips. You <em>estimate</em> &sigma;², the trait coefficients, and implied positions of each u<sub>i</sub> all simultaneously from the data. You never actually sample anything during inference &mdash; the sampling language is just the generative story. This distinction matters because it's tempting to picture an "order" (first the u<sub>i</sub>, then the traits) but both are estimated jointly.
+</div>
+
+<h4>Where &sigma;² comes from &mdash; how it's estimated</h4>
+
+<p>
+Your instinct might be: "just compute the variance of the 100 u<sub>i</sub> values &mdash; that's &sigma;²." Problem: <strong>you don't observe the u<sub>i</sub> values</strong>. Only 0/1 outcomes. Each u<sub>i</sub> is latent (unobserved). So &sigma;² has to be estimated some other way.
+</p>
+
+<p>
+<code>glmer</code> estimates it via <strong>maximum likelihood</strong>: it searches for the value of &sigma;² (and all fixed-effect coefficients) that makes your observed binary data most probable under the model. The thing being maximized looks like this:
+</p>
+
+<div class="math-block">
+L(&beta;, &sigma;²) = &prod;<sub>(100 agents)</sub> &int; (likelihood of this agent's 200 rows | u<sub>i</sub>) &times; Normal(u<sub>i</sub> | 0, &sigma;²) du<sub>i</sub>
+</div>
+
+<p>
+In English: for each agent, integrate over every possible value of their u<sub>i</sub>, weighted by (a) how plausible that u<sub>i</sub> is under the Normal(0, &sigma;²) assumption and (b) how well that u<sub>i</sub> would explain their 200 observed rows. Multiply that across all 100 agents. The (&beta;, &sigma;²) pair that maximizes this product is your estimate.
+</p>
+
+<h5>Why the integral is hard (and what &ldquo;Laplace&rdquo; does)</h5>
+
+<p>
+For linear mixed models (Gaussian outcomes) the integral has a closed form &mdash; easy. For logit GLMMs (Bernoulli outcomes), it doesn't. <code>lme4</code> uses a <strong>Laplace approximation</strong>: for each agent, it finds the peak of the integrand, then approximates the full integrand by a Gaussian centered at that peak &mdash; and the Gaussian <em>can</em> be integrated analytically. This turns the intractable integral into an approximate one that's fast to compute. The optimizer (<code>bobyqa</code>) then hill-climbs over (&beta;, &sigma;²) using these approximate log-likelihoods until it finds the joint maximum.
+</p>
+
+<details>
+  <summary>Why var(BLUPs) &ne; &sigma;&#770;² exactly</summary>
+  <div class="body">
+    <p>After <code>glmer</code> finishes, it reports &sigma;&#770; <em>and</em> the 100 BLUPs (estimated u<sub>i</sub> values). It's tempting to compute <code>var(BLUPs)</code> and expect it to equal &sigma;&#770;². It won't &mdash; two reasons:</p>
+    <ol>
+      <li><strong>Circularity:</strong> BLUPs depend on &sigma;² (they're shrunken toward 0 by a factor that itself involves &sigma;²). You can't derive &sigma;² from BLUPs because you need &sigma;² first to compute them.</li>
+      <li><strong>Shrinkage biases var(BLUPs) downward:</strong> BLUPs are shrunken estimates, so their sample variance systematically <em>underestimates</em> the true &sigma;². Maximum likelihood corrects for this by integrating over the uncertainty in each u<sub>i</sub> rather than treating the point estimate as the truth.</li>
+    </ol>
+    <p>For Opus 4.5, &sigma;&#770;_agent = 1.90 while sd(BLUPs) &asymp; 1.80. Close but not equal, with BLUPs slightly shrunken. The gap grows if each agent has fewer observations (because less data per agent = more shrinkage needed).</p>
+  </div>
+</details>
+
+<h4>How we verify the Normal assumption actually holds</h4>
+
+<p>
+After estimation, you end up with &sigma;&#770; plus the 100 BLUPs. The Normal assumption is then testable: does the histogram of BLUPs actually look Normal?
+</p>
+
+<p>Two standard checks:</p>
+
+<ol>
+  <li><strong>Random-intercept Normal Q-Q plot</strong> (the 3rd view in Figure 24b). Sort the 100 BLUPs, standardize by &sigma;&#770;, and plot each against the theoretical Normal quantile for its rank. Points near the diagonal &rarr; Normal shape fits. Systematic curvature &rarr; the shape is wrong (bimodal, skewed, heavy-tailed).</li>
+  <li><strong>Shapiro-Wilk test</strong> (optional). A formal hypothesis test of Normality. Like KS it's over-powered at large N &mdash; visual inspection of the Q-Q plot is the primary diagnostic.</li>
+</ol>
+
+<p>What to do if the assumption visibly fails:</p>
+
+<ul>
+  <li><strong>Mild deviation</strong> (slight curve at tails, small S-shape): usually harmless. Your &beta;&#770; estimates stay unbiased; uncertainty is slightly off.</li>
+  <li><strong>Severe bimodality</strong>: might signal a missing categorical predictor that splits agents into groups. Add it as a fixed effect.</li>
+  <li><strong>Heavy tails</strong>: switch to a t-distribution for the RE (requires a different package like <code>glmmTMB</code>).</li>
+  <li><strong>Skew</strong>: indicates an asymmetric source of agent-level variation. Usually acceptable in practice.</li>
+</ul>
+
+<p>
+For your 21 configs, inspect the Q-Q plots in Figure 24b. Most configs show mild S-shapes at the tails (normal for N=100 agents &mdash; the tail estimates are noisy). No config shows catastrophic non-Normality, so the assumption is fine in practice.
+</p>
+
+<h3 id="assumptions">1.3 Assumptions of each model</h3>
+
+<table>
+  <tr>
+    <th>Assumption</th>
+    <th>Fixed-Effects</th>
+    <th>Random-Effects</th>
+  </tr>
+  <tr>
+    <td>Outcome is Bernoulli given the linear predictor</td>
+    <td>✓ Required</td>
+    <td>✓ Required</td>
+  </tr>
+  <tr class="alt">
+    <td>Logit link correctly specified</td>
+    <td>✓ Required</td>
+    <td>✓ Required</td>
+  </tr>
+  <tr>
+    <td>Continuous predictors enter log-odds linearly</td>
+    <td>✓ Only infection</td>
+    <td>✓ Infection + age</td>
+  </tr>
+  <tr class="alt">
+    <td>Observations independent given the predictors</td>
+    <td>✓ Required</td>
+    <td>✓ Required (given RE)</td>
+  </tr>
+  <tr>
+    <td>Random intercepts follow Normal(0, σ²)</td>
+    <td style="color:#888">— (n/a)</td>
+    <td>✓ <strong>Required</strong></td>
+  </tr>
+  <tr class="alt">
+    <td>Random intercepts uncorrelated with predictors</td>
+    <td style="color:#888">— (n/a)</td>
+    <td>✓ Required</td>
+  </tr>
+</table>
+
+<p>
+The RE model has <strong>all the FE assumptions plus two new ones</strong>: Normality of the random intercepts, and their independence from observed predictors. This is why RE needs more diagnostic work — there's more structure to validate.
+</p>
+
+<h3 id="fitting">1.4 How each model is fit (briefly)</h3>
+
+<h4>Fixed-effects logit (<code>glm</code>)</h4>
+<p>
+R's <code>glm</code> uses <strong>iteratively reweighted least squares (IRLS)</strong> to find coefficients that maximize the likelihood. Starting from an initial guess, it repeatedly refits a weighted linear regression until convergence. For N = 20,000 and 102 parameters this takes a few seconds.
+</p>
+
+<h4>Random-effects logit (<code>glmer</code>)</h4>
+<p>
+The RE model can't be fit with plain IRLS because the likelihood involves integrating over the distribution of u<sub>i</sub>. <code>lme4::glmer</code> uses a <strong>Laplace approximation</strong> (by default) — it approximates the integral via a second-order Taylor expansion around its mode. For each candidate value of the fixed-effect coefficients and σ<sub>agent</sub>, the optimizer evaluates this approximate likelihood; a numerical optimizer (you use "bobyqa") then searches for the maximum. Typical runtime on your data: 10–150 seconds per config, depending on how hard the likelihood surface is to navigate.
+</p>
+
+<details>
+  <summary>Why is glmer sometimes so much slower than glm?</summary>
+  <div class="body">
+    <p>The fixed-effects model has a convex log-likelihood with a unique maximum. Plain IRLS finds it quickly. The random-effects likelihood is not always well-behaved — the variance components can be near zero or near infinity, the optimization surface can have flat regions, and the Laplace approximation itself is more expensive than IRLS. Convergence issues force extra iterations. This is why <code>glmer</code> benefits from warm starts and careful optimizer control (<code>bobyqa</code>, <code>maxfun = 100000</code>, etc.).</p>
+  </div>
+</details>
+
+<!-- ==================================================================== -->
+<h2 id="fig24a">Part 2 — Figure 24a breakdown (Fixed-Effects Logit Validation)</h2>
+
+<p>
+Figure 24a is a 3×7 grid of small panels, one per LLM configuration. The toggle cycles between three views. Each view tests something different.
+</p>
+
+<h3 id="fig24a-calib">2.1 Calibration view — "pred vs obs"</h3>
+
+<p><strong>What it checks:</strong> when the FE model says the average probability of staying home is <em>p</em>, does the actual observed rate come out around <em>p</em>?</p>
+
+<h4>How each panel is built</h4>
+
+<div class="step"><span class="num">1</span>Fit the FE logit for the config. Save the fitted model object.</div>
+<div class="step"><span class="num">2</span>For every one of the 20,000 rows, ask R for the model's predicted probability: <code>predict(m1, type = "response")</code>. Each row now has a <code>p̂<sub>i</sub></code>.</div>
+<div class="step"><span class="num">3</span>Group the 20,000 rows by <code>infection_level</code> (40 bins, 500 rows per bin).</div>
+<div class="step"><span class="num">4</span>Within each bin, compute:<br>
+  &nbsp;&nbsp;• mean predicted P = mean of the 500 <code>p̂<sub>i</sub></code> values<br>
+  &nbsp;&nbsp;• observed rate = fraction of rows with <code>stay_home = 1</code>
+</div>
+<div class="step"><span class="num">5</span>Plot the 40 points: x = mean predicted P, y = observed rate. Add diagonal line (perfect calibration).</div>
+<div class="step"><span class="num">6</span>Summary statistic: MAD = mean of |predicted − observed| across the 40 bins, in percentage points.</div>
+
+<div class="worked-example">
+  <div class="title">Worked example — one bin (infection = 0%, Opus 4.5)</div>
+  <ul>
+    <li>500 rows at infection = 0% (100 agents × 5 reps).</li>
+    <li>Each row has some <code>p̂<sub>i</sub></code> under the FE model. Since the FE model's prediction at infection=0 is <span class="math">β₀ + α<sub>i</sub></span>, this varies across agents.</li>
+    <li>Mean of those 500 <code>p̂<sub>i</sub></code> = 0.045 (4.5%).</li>
+    <li>Observed rate at infection = 0%: 0 / 500 = 0.000 (0%).</li>
+    <li>Point plotted at (0.045, 0.000) — just below the diagonal.</li>
+  </ul>
+  <p>Doing this for all 40 infection bins gives you one panel. A well-calibrated model has all 40 points close to the diagonal.</p>
+</div>
+
+<div class="callout">
+  <span class="tag">Why it works</span>
+  The FE model's per-agent dummies absorb each agent's personal baseline perfectly within-agent, so calibration at the aggregated-bin level is really testing whether the shared <em>quadratic infection curve</em> matches the average infection response. A visible sag or bulge in this panel means the quadratic is wrong — you'd want to try a cubic or a spline.
+</div>
+
+<h3 id="fig24a-qq">2.2 DHARMa residual Q-Q view</h3>
+
+<p><strong>What it checks:</strong> do the model's residuals, after a proper randomization trick, look like draws from Uniform(0,1) — which they should if the model is correctly specified?</p>
+
+<p>This is the conceptually trickiest plot, so let's build it slowly.</p>
+
+<h4>Step 1 — Why "residuals" are weird for binary data</h4>
+
+<p>
+In ordinary least squares, a residual is just <em>observed − predicted</em> and you can plot those against theoretical Normal quantiles to check the Normality assumption. For binary data, residuals can only take two values per row: <code>1 − p̂</code> (if observed = 1) or <code>−p̂</code> (if observed = 0). Those aren't Normal-distributed — they can't be, they're discrete. Standard residual plots don't apply.
+</p>
+
+<h4>Step 2 — The Probability Integral Transform (PIT) idea</h4>
+
+<p>
+There's a classical result: if <em>X</em> is a continuous random variable with CDF <em>F</em>, then <em>F(X)</em> is Uniformly distributed on [0, 1]. In words: "plugging an observation into its own CDF gives a Uniform(0,1) result."
+</p>
+
+<p>
+So <em>if</em> our binary outcomes were continuous and we knew the true model, we could compute F(observed) for each row, check that those values pile up uniformly on [0, 1], and call it a day. But our data is discrete. The CDF of Bernoulli(p̂) is a step function:
+</p>
+
+<svg class="diagram" width="400" height="180" viewBox="0 0 400 180">
+  <!-- axes -->
+  <line x1="40" y1="140" x2="380" y2="140" stroke="#333" stroke-width="1"/>
+  <line x1="40" y1="20" x2="40" y2="140" stroke="#333" stroke-width="1"/>
+  <!-- x-axis labels -->
+  <text x="40" y="158" font-size="10" text-anchor="middle" fill="#555">0</text>
+  <text x="380" y="158" font-size="10" text-anchor="middle" fill="#555">1</text>
+  <text x="210" y="175" font-size="11" text-anchor="middle" fill="#333">observed value</text>
+  <!-- y-axis labels -->
+  <text x="32" y="144" font-size="10" text-anchor="end" fill="#555">0</text>
+  <text x="32" y="82" font-size="10" text-anchor="end" fill="#555">1−p̂</text>
+  <text x="32" y="24" font-size="10" text-anchor="end" fill="#555">1</text>
+  <text x="20" y="80" font-size="11" text-anchor="middle" fill="#333" transform="rotate(-90 20 80)">CDF F(x)</text>
+  <!-- step function: rises at 0 to 1-p (example p=0.3 → 1-p=0.7 → ypos=140-0.7*120=56), then at 1 to 1 -->
+  <line x1="40" y1="140" x2="210" y2="140" stroke="#2a5a8a" stroke-width="2"/>
+  <line x1="210" y1="140" x2="210" y2="56" stroke="#2a5a8a" stroke-width="2" stroke-dasharray="3,2"/>
+  <line x1="210" y1="56" x2="380" y2="56" stroke="#2a5a8a" stroke-width="2"/>
+  <line x1="380" y1="56" x2="380" y2="20" stroke="#2a5a8a" stroke-width="2" stroke-dasharray="3,2"/>
+  <!-- x=0, x=1 markers -->
+  <circle cx="210" cy="56" r="3" fill="#2a5a8a"/>
+  <circle cx="210" cy="140" r="3" fill="white" stroke="#2a5a8a"/>
+  <circle cx="380" cy="20" r="3" fill="#2a5a8a"/>
+  <circle cx="380" cy="56" r="3" fill="white" stroke="#2a5a8a"/>
+  <text x="210" y="12" font-size="10" text-anchor="middle" fill="#555">x=0</text>
+  <text x="380" y="12" font-size="10" text-anchor="middle" fill="#555">x=1</text>
+  <!-- annotations: the "gaps" -->
+  <text x="165" y="108" font-size="10" fill="#c00" text-anchor="middle">gap at x=0:</text>
+  <text x="165" y="122" font-size="10" fill="#c00" text-anchor="middle">[0, 1−p̂]</text>
+  <text x="335" y="42" font-size="10" fill="#c00" text-anchor="middle">gap at x=1:</text>
+  <text x="335" y="56" font-size="10" fill="#c00" text-anchor="middle">[1−p̂, 1]</text>
+</svg>
+
+<p>
+For an observed value of 0, F "jumps through" the interval [0, 1−p̂]. For an observed value of 1, it jumps through [1−p̂, 1]. There's no single number that represents F(observed); it's an entire interval.
+</p>
+
+<h4>Step 3 — The randomized PIT fix</h4>
+
+<p>
+DHARMa's fix: for each observation, sample a Uniform random value from its jump interval. Call that value the <strong>scaled residual</strong> for that row.
+</p>
+
+<ul>
+  <li>Observed = 0, predicted p̂ = 0.3 → residual ~ Uniform(0, 0.7)</li>
+  <li>Observed = 1, predicted p̂ = 0.3 → residual ~ Uniform(0.7, 1.0)</li>
+</ul>
+
+<p>And here's the magic: under a correctly specified model, <em>every single observation</em> contributes a Uniform(0,1) draw to the pooled residual distribution.</p>
+
+<details>
+  <summary>The density-math proof (optional)</summary>
+  <div class="body">
+    <p>Take an observation with true probability p. It contributes:</p>
+    <ul>
+      <li>with probability p, Uniform(1−p, 1) — density <span class="math">1/p</span> on that interval</li>
+      <li>with probability 1−p, Uniform(0, 1−p) — density <span class="math">1/(1−p)</span> on that interval</li>
+    </ul>
+    <p>Multiply each case by its probability of occurring:</p>
+    <ul>
+      <li>density contribution on [1−p, 1]: <code>p × (1/p) = 1</code></li>
+      <li>density contribution on [0, 1−p]: <code>(1−p) × (1/(1−p)) = 1</code></li>
+    </ul>
+    <p>The density stitches to exactly 1 across all of [0, 1]. That's Uniform(0, 1). And this is true no matter what p is.</p>
+  </div>
+</details>
+
+<h4>Step 4 — How DHARMa actually implements it via simulation</h4>
+
+<p>
+The math above assumed we knew the true p for each observation. We don't — we only know the <em>fitted</em> p̂. DHARMa handles this by:
+</p>
+
+<div class="step"><span class="num">1</span>Simulate 250 synthetic datasets from the fitted model. For each original row, draw 250 Bernoulli outcomes using its p̂.</div>
+<div class="step"><span class="num">2</span>For each row, count the proportion of simulated outcomes that are strictly less than the observed value, and the proportion less than or equal. These define the jump interval.</div>
+<div class="step"><span class="num">3</span>Sample one Uniform random value from that jump interval. That's the scaled residual for the row.</div>
+<div class="step"><span class="num">4</span>Repeat for all 20,000 rows. You now have 20,000 scaled residuals.</div>
+
+<div class="worked-example">
+  <div class="title">Worked example — one observation</div>
+  <p>Row: agent 42 at infection 3.2%, observed = 1. FE model predicts p̂ = 0.30.</p>
+  <ul>
+    <li>DHARMa simulates 250 Bernoulli(0.30) draws. Roughly 75 are 1, 175 are 0.</li>
+    <li>P(simulated &lt; 1) = proportion of simulated values strictly less than 1 = 175/250 = <strong>0.700</strong></li>
+    <li>P(simulated ≤ 1) = 1 (everything is ≤ 1).</li>
+    <li>Jump interval for observed = 1: [0.700, 1.000].</li>
+    <li>Draw Uniform(0.700, 1.000) — say this draw = <strong>0.824</strong>. That's the row's scaled residual.</li>
+  </ul>
+  <p>The residual lands in the "upper tail" because the row had an outcome the model thought was unlikely. That's fine — under a correct model, this happens about 30% of the time (= p̂), which is exactly enough to keep the pooled distribution uniform.</p>
+</div>
+
+<h4>Step 5 — Building the Q-Q plot</h4>
+
+<div class="step"><span class="num">1</span>Sort the 20,000 scaled residuals from smallest to largest.</div>
+<div class="step"><span class="num">2</span>Compute 99 summary quantiles: the 1st, 2nd, ..., 99th percentiles of the sorted residuals.</div>
+<div class="step"><span class="num">3</span>Plot each quantile at its theoretical Uniform position: the 30th percentile should be around 0.30 if the model is correct.</div>
+<div class="step"><span class="num">4</span>Add the diagonal y = x. Departures from this line = model misspecification.</div>
+
+<div class="callout">
+  <span class="tag">Interpretation</span>
+  A tight hug of the diagonal = well-specified model. Any systematic curve indicates a distributional mismatch, which is a fingerprint of what's wrong. An S-curve usually means dispersion issues. A consistent sag or bulge means the model is systematically over- or under-predicting at some probability range.
+</div>
+
+<h3 id="fig24a-resids">2.3 Residuals vs infection view</h3>
+
+<p><strong>What it checks:</strong> is there a systematic pattern in residuals across infection levels? (If so, the quadratic curve is missing something.)</p>
+
+<div class="step"><span class="num">1</span>Start from the 20,000 scaled residuals computed in 2.2 (DHARMa output).</div>
+<div class="step"><span class="num">2</span>Group them by <code>infection_level</code> (40 bins, 500 residuals per bin).</div>
+<div class="step"><span class="num">3</span>For each bin, compute the mean residual and its standard error.</div>
+<div class="step"><span class="num">4</span>Plot bin mean vs infection level. Add a horizontal reference line at 0.5 (the expected value under a correct model).</div>
+
+<p>
+Under a correctly specified model, DHARMa scaled residuals are Uniform(0, 1), so their expected mean is 0.5. Any systematic deviation of the bin means from 0.5 — a tilt, a curve, a bowl — is evidence that the infection effect isn't captured right.
+</p>
+
+<div class="worked-example">
+  <div class="title">What a "bad" plot would look like</div>
+  <p>If the true infection response is cubic but you fit only a quadratic, your residuals at the middle infection levels would have a positive bias (model under-predicts), while residuals at the ends would have a negative bias. You'd see a gentle arch — high in the middle, low at the edges. That shape is a red flag that you need higher-order polynomial terms.</p>
+</div>
+
+<!-- ==================================================================== -->
+<h2 id="fig24b">Part 3 — Figure 24b breakdown (Random-Effects Logit Validation)</h2>
+
+<p>
+Figure 24b has all the Figure 24a views plus two new ones (Random-Intercept Normal Q-Q, Residuals vs Age) because the RE model has additional assumptions to validate. The same-named views (Calibration, DHARMa Q-Q, Residuals vs Infection) work identically but with Model 2's predictions.
+</p>
+
+<h3 id="fig24b-calib">3.1 Calibration view (Model 2)</h3>
+
+<p>
+Mechanically identical to 2.1, but the predicted probability per row uses the full random-effects model: fixed-effect coefficients + the agent's BLUP u<sub>i</sub>. The in-browser computation uses the fixed effects averaged across the 100 agent profiles at each infection level, which approximates the per-row average within a bin. The result for well-calibrated configs looks near-identical to Model 1's — aggregation at the bin level averages out most of the between-model differences.
+</p>
+
+<h3 id="fig24b-qq">3.2 DHARMa Q-Q view (Model 2)</h3>
+
+<p>
+Identical recipe to 2.2, but the simulations incorporate the fitted σ<sub>agent</sub> and the estimated fixed effects, so the null distribution DHARMa compares against is the richer RE model. Under a correct RE specification, residuals still pool to Uniform(0, 1).
+</p>
+
+<p>
+One subtlety: DHARMa can simulate residuals in several modes for GLMMs. The default ("conditional") conditions on the estimated random intercepts — so it's checking whether residuals are uniform <em>given</em> those BLUPs. Any systematic misfit in this view points to problems in the <em>fixed-effect part</em> of the model (infection curve, trait effects, etc.), not the random-effects part.
+</p>
+
+<h3 id="fig24b-reqq">3.3 Random-Intercept Normal Q-Q view (unique to Model 2)</h3>
+
+<p><strong>What it checks:</strong> are the 100 estimated agent random intercepts actually Normally distributed, as the model assumes?</p>
+
+<h4>How the panel is built</h4>
+
+<div class="step"><span class="num">1</span>After fitting the RE model, extract the 100 BLUPs: <code>u = ranef(m2)$agent_id</code>. These are the point estimates of u<sub>1</sub>, ..., u<sub>100</sub>.</div>
+<div class="step"><span class="num">2</span>Also extract the model's estimated σ̂<sub>agent</sub> (the RE standard deviation). For Opus 4.5 this is σ̂ = 1.90.</div>
+<div class="step"><span class="num">3</span>Standardize: z<sub>i</sub> = u<sub>i</sub> / σ̂<sub>agent</sub>. Now the z<sub>i</sub> values should be roughly Standard Normal (mean 0, variance 1) if the assumption holds.</div>
+<div class="step"><span class="num">4</span>Sort the z values from smallest to largest.</div>
+<div class="step"><span class="num">5</span>Compute theoretical Standard Normal quantiles at positions (i − 0.5)/n for i = 1, ..., 100. Each agent's theoretical quantile is Φ⁻¹((i − 0.5)/100).</div>
+<div class="step"><span class="num">6</span>Plot pairs (theoretical z, observed z). Add the diagonal. Straight line along diagonal = Normal assumption holds.</div>
+
+<div class="worked-example">
+  <div class="title">Worked example — first few rows for Opus 4.5</div>
+  <p>The first five BLUPs (sorted order, standardized by σ̂ = 1.90):</p>
+  <table>
+    <tr><th>Rank (i)</th><th class="num">u<sub>i</sub> (BLUP)</th><th class="num">z<sub>i</sub> = u<sub>i</sub>/σ̂</th><th class="num">theoretical: Φ⁻¹((i−0.5)/100)</th></tr>
+    <tr><td>1 (lowest)</td><td class="num">−4.50</td><td class="num">−2.37</td><td class="num">−2.58</td></tr>
+    <tr class="alt"><td>2</td><td class="num">−3.82</td><td class="num">−2.01</td><td class="num">−2.17</td></tr>
+    <tr><td>3</td><td class="num">−3.15</td><td class="num">−1.66</td><td class="num">−1.96</td></tr>
+    <tr class="alt"><td>...</td><td class="num">...</td><td class="num">...</td><td class="num">...</td></tr>
+    <tr><td>50 (median)</td><td class="num">0.0</td><td class="num">0.00</td><td class="num">−0.01</td></tr>
+    <tr class="alt"><td>...</td><td class="num">...</td><td class="num">...</td><td class="num">...</td></tr>
+    <tr><td>99</td><td class="num">3.82</td><td class="num">2.01</td><td class="num">2.17</td></tr>
+    <tr class="alt"><td>100 (highest)</td><td class="num">4.50</td><td class="num">2.37</td><td class="num">2.58</td></tr>
+  </table>
+  <p>(Values illustrative; actual numbers depend on the config.) Plotting (theoretical, observed) for all 100 pairs — if they fall near the diagonal, the Normal assumption is fine. A curve that bends away from the diagonal at the extremes means heavy tails (observed more extreme values than Normal predicts) or light tails (less extreme than Normal).</p>
+</div>
+
+<h4>What deviations mean</h4>
+
+<ul>
+  <li><strong>S-shape with tails above diagonal on both ends:</strong> observed BLUPs have heavier tails than Normal. Some agents have very extreme baselines the Normal assumption misses. This could bias σ̂ upward.</li>
+  <li><strong>S-shape with tails below diagonal:</strong> observed BLUPs are lighter-tailed than Normal — less extreme than the model expects. This is harmless in practice.</li>
+  <li><strong>One-sided skew (most points above or below diagonal):</strong> the RE distribution is skewed rather than symmetric. The mean-zero assumption is still respected (BLUPs sum to zero by construction), but the shape is asymmetric.</li>
+</ul>
+
+<div class="callout">
+  <span class="tag">Practical note</span>
+  With 100 agents (your sample size), the Normal Q-Q plot has decent resolution for detecting gross misspecifications but can look noisy at the tails. Don't over-interpret a single outlier dot — look for <em>systematic</em> curvature. The Shapiro-Wilk test is another option, but like KS, it's over-powered at this N; visual inspection is primary.
+</div>
+
+<h3 id="fig24b-resids">3.4 Residuals vs Age / Residuals vs Infection</h3>
+
+<p><strong>What they check:</strong> do residuals vary systematically with age or infection? (If so, the linear/quadratic form for that predictor is inadequate.)</p>
+
+<div class="step"><span class="num">1</span>Take the 20,000 DHARMa scaled residuals from the RE model (3.2).</div>
+<div class="step"><span class="num">2</span>For the <strong>Age</strong> view: bin by 5-year age groups (18–22, 23–27, ..., 63–67 → 10 bins). For the <strong>Infection</strong> view: bin by infection level (40 bins).</div>
+<div class="step"><span class="num">3</span>Compute mean and standard error of residuals within each bin.</div>
+<div class="step"><span class="num">4</span>Plot bin mean vs predictor. Reference line at 0.5.</div>
+
+<p>
+The interpretation is the same as 2.3 — a flat line at 0.5 means the predictor's functional form is adequate. For Age: a linear β<sub>age</sub> is assumed, so a tilt would suggest non-linearity. For Infection: a quadratic is assumed, so a systematic pattern would suggest higher-order curvature.
+</p>
+
+<div class="worked-example">
+  <div class="title">Practical example — what "max |Δ|" tells you</div>
+  <p>The footer of each panel shows <code>max |Δ|</code> — the largest deviation of any bin's mean from 0.5. If this number is:</p>
+  <ul>
+    <li><strong>&lt; 0.03:</strong> well within noise. Residuals are flat.</li>
+    <li><strong>0.03–0.05:</strong> mild departure. Usually fine, but worth glancing at the panel shape.</li>
+    <li><strong>&gt; 0.05 (shown in red):</strong> one or more bins deviate meaningfully. If these are at the edge of the x-range (small n) it's often noise; if they're consistent across a range, that's real misspecification.</li>
+  </ul>
+  <p>For your current output, most configs land under 0.05. Red flags concentrate in specific LLMs with underdispersion (Sonnet 4.0, GPT-5.2 off) and reflect residual-variance violations rather than missing curvature per se.</p>
+</div>
+
+<!-- ==================================================================== -->
+
+<footer>
+  Companion document to the Paper 3 analytics dashboard &middot; generated 2026-04-17<br>
+  Questions: rossfw@vt.edu
+</footer>
+
+</body>
+</html>

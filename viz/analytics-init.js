@@ -46,12 +46,19 @@ function initSectionNavs() {
       filterSectionTab('tab-author', 'author-section-nav', link.dataset.filter);
     });
   });
+  document.querySelectorAll('#appendix-section-nav .section-link').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      filterSectionTab('tab-appendix', 'appendix-section-nav', link.dataset.filter);
+    });
+  });
 
   // Initialize all tabs to "all" view so display:none sections become visible
   filterSectionTab('tab-curves', 'curves-section-nav', 'all');
   filterSectionTab('tab-agents', 'agents-section-nav', 'all');
   filterSectionTab('tab-responses', 'responses-section-nav', 'all');
   filterSectionTab('tab-author', 'author-section-nav', 'all');
+  filterSectionTab('tab-appendix', 'appendix-section-nav', 'all');
 }
 
 function initTabs() {
@@ -65,9 +72,16 @@ function initTabs() {
       const pane = document.getElementById('tab-' + tab);
       if (pane) pane.classList.add('active');
       // Lazy-render Cohort Analysis on first visit
-      if (tab === 'agents' && !tab3Rendered) {
+      // (Also triggers Appendix validation figures — they live in tab-appendix
+      // DOM but share the same data-load + render path as Cohort.)
+      if ((tab === 'agents' || tab === 'appendix') && !tab3Rendered) {
         renderAgentAnalysis();
         tab3Rendered = true;
+      }
+      // Lazy-render Appendix A mobility-curve regressions on first Appendix visit
+      if (tab === 'appendix' && !appendixRegressionsRendered) {
+        renderAppendixARegressions();
+        appendixRegressionsRendered = true;
       }
       // Lazy-render Response Analysis on first visit
       if (tab === 'responses' && !agentTabRendered) {
@@ -172,6 +186,43 @@ const regToggleConfigs = {
     baseline: 'Claude Sonnet 4.5',
   },
 };
+
+// Appendix A panel aliases — same configs, distinct IDs for pre-rendered
+// Appendix A mirror of the Mobility Curves regression panels.
+[
+  'reg-gpt52', 'reg-gemini3flash', 'reg-figAnthro', 'reg-figGeminiLite',
+  'reg-figD', 'reg-figAnthroGen', 'reg-figC', 'reg-figFlagship',
+  'reg-figCutPre24', 'reg-figCutMid24', 'reg-figCutEarly25', 'reg-figCutLate25',
+  'reg-figRelLegacy', 'reg-figRelSpring', 'reg-figRelLate',
+].forEach(baseId => {
+  if (regToggleConfigs[baseId]) {
+    regToggleConfigs[baseId + '-app'] = regToggleConfigs[baseId];
+  }
+});
+
+// Render the Appendix A mobility-curve regression tables (pre-rendered,
+// not behind a toggle). Mirrors the logic inside initRegToggles.
+function renderAppendixARegressions() {
+  const appendixIds = [
+    'reg-gpt52-app', 'reg-gemini3flash-app',
+    'reg-figAnthro-app', 'reg-figGeminiLite-app',
+    'reg-figD-app', 'reg-figAnthroGen-app', 'reg-figC-app',
+    'reg-figFlagship-app',
+    'reg-figCutPre24-app', 'reg-figCutMid24-app',
+    'reg-figCutEarly25-app', 'reg-figCutLate25-app',
+    'reg-figRelLegacy-app', 'reg-figRelSpring-app', 'reg-figRelLate-app',
+  ];
+  for (const id of appendixIds) {
+    const cfg = regToggleConfigs[id];
+    const el = document.getElementById(id);
+    if (!cfg || !el) continue;
+    if (Array.isArray(cfg)) {
+      renderReasoningRegTable(id, cfg);
+    } else {
+      renderModelDummyRegTable(id, cfg.configs, cfg.labels, cfg.baseline);
+    }
+  }
+}
 
 function initRegToggles() {
   document.querySelectorAll('.reg-toggle-btn').forEach(btn => {

@@ -1,0 +1,397 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Pole Filter Grid — Two-Layer Check</title>
+<style>
+body { font-family: Georgia, serif; max-width: 1500px; margin: 0 auto; padding: 24px; color: #222; }
+h1 { border-bottom: 2px solid #333; padding-bottom: 8px; }
+table { border-collapse: collapse; font-size: 11px; margin: 16px 0; }
+th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: center; }
+th.dim-header { background: #333; color: white; font-size: 12px; }
+th.pole-header { background: #eee; font-size: 10px; font-weight: normal; font-style: italic; }
+th.config-label { background: #f5f5f5; text-align: left; padding: 4px 10px; font-weight: normal; }
+th.ctx-header { background: #555; color: white; font-size: 12px; }
+td.cell-in { background: #c8e6c9; color: #1b5e20; font-weight: bold; }
+td.cell-out-dim { background: #ffcdd2; color: #b71c1c; }
+td.cell-out-pole { background: #fff3e0; color: #e65100; }
+.legend { margin: 12px 0; font-size: 12px; }
+.legend span { display: inline-block; padding: 3px 10px; border-radius: 3px; margin: 0 6px; font-weight: bold; font-size: 11px; }
+.note { background: #e3f2fd; border-left: 3px solid #1a4a8a; padding: 10px 16px; margin: 10px 0; font-size: 12px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+</style></head><body>
+<h1>Pole Filter Grid — Two-Layer Check</h1>
+<div class="note">
+  <strong>Rule:</strong> A pole is included in Model 3 iff BOTH<br>
+  &nbsp;&nbsp;1. its <em>dimension</em> passes the <strong>either-rate gate</strong>: P(pos OR neg mentioned) ∈ [15%, 85%]<br>
+  &nbsp;&nbsp;2. the <em>pole itself</em> passes: its individual mention rate ∈ [15%, 85%]<br>
+  If the dimension gate fails (saturation or starvation), BOTH poles are excluded — no contrast baseline available.
+</div>
+<div class="legend">
+  <span class="cell-in">INCLUDED ✓</span>
+  <span class="cell-out-pole">excluded (pole rate outside 15–85%)</span>
+  <span class="cell-out-dim">excluded (dimension saturated/starved)</span>
+</div>
+
+<table>
+<tr><th class="config-label" rowspan="2">Config</th><th class="dim-header" colspan="2">Extraversion</th><th class="dim-header" colspan="2">Agreeableness</th><th class="dim-header" colspan="2">Conscientiousness</th><th class="dim-header" colspan="2">Neuroticism</th><th class="dim-header" colspan="2">Openness</th><th class="ctx-header" rowspan="2">Infection</th><th class="ctx-header" rowspan="2">Age</th></tr>
+<tr><th class="pole-header">Extraverted</th><th class="pole-header">Introverted</th><th class="pole-header">Agreeable</th><th class="pole-header">Antagonistic</th><th class="pole-header">Conscientious</th><th class="pole-header">Unconscientious</th><th class="pole-header">Neurotic</th><th class="pole-header">Emot. Stable</th><th class="pole-header">Open</th><th class="pole-header">Closed</th></tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#d97706"></span>claude-3-haiku-20240307_off</th>
+<td class="cell-in" title="rate 29.8% · dim either 63.2%">30%</td>
+<td class="cell-in" title="rate 33.3% · dim either 63.2%">33%</td>
+<td class="cell-in" title="rate 21.2% · dim either 36.2%">21%</td>
+<td class="cell-in" title="rate 15.0% · dim either 36.2%">15%</td>
+<td class="cell-in" title="rate 25.8% · dim either 26.6%">26%</td>
+<td class="cell-out-pole" title="rate 0.8% · dim either 26.6%">1%</td>
+<td class="cell-out-pole" title="rate 9.4% · dim either 20.9%">9%</td>
+<td class="cell-out-pole" title="rate 11.5% · dim either 20.9%">12%</td>
+<td class="cell-out-dim" title="rate 0.9% · dim either 2.5%">1%</td>
+<td class="cell-out-dim" title="rate 1.6% · dim either 2.5%">2%</td>
+<td class="cell-out-pole" title="rate 99.5%">99%</td>
+<td class="cell-out-pole" title="rate 1.7%">2%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#d97706"></span>claude-haiku-4-5_off</th>
+<td class="cell-in" title="rate 48.7% · dim either 56.4%">49%</td>
+<td class="cell-out-pole" title="rate 7.7% · dim either 56.4%">8%</td>
+<td class="cell-in" title="rate 42.4% · dim either 64.4%">42%</td>
+<td class="cell-in" title="rate 22.0% · dim either 64.4%">22%</td>
+<td class="cell-out-dim" title="rate 61.3% · dim either 90.3%">61%</td>
+<td class="cell-out-dim" title="rate 31.1% · dim either 90.3%">31%</td>
+<td class="cell-in" title="rate 30.2% · dim either 83.8%">30%</td>
+<td class="cell-in" title="rate 53.6% · dim either 83.8%">54%</td>
+<td class="cell-in" title="rate 25.1% · dim either 32.7%">25%</td>
+<td class="cell-out-pole" title="rate 7.6% · dim either 32.7%">8%</td>
+<td class="cell-out-pole" title="rate 100.0%">100%</td>
+<td class="cell-out-pole" title="rate 9.4%">9%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#d97706"></span>claude-opus-4-5_off</th>
+<td class="cell-in" title="rate 46.6% · dim either 78.0%">47%</td>
+<td class="cell-in" title="rate 31.4% · dim either 78.0%">31%</td>
+<td class="cell-in" title="rate 34.4% · dim either 70.8%">34%</td>
+<td class="cell-in" title="rate 36.6% · dim either 70.8%">37%</td>
+<td class="cell-out-dim" title="rate 61.3% · dim either 99.8%">61%</td>
+<td class="cell-out-dim" title="rate 46.8% · dim either 99.8%">47%</td>
+<td class="cell-out-dim" title="rate 35.6% · dim either 94.0%">36%</td>
+<td class="cell-out-dim" title="rate 58.5% · dim either 94.0%">58%</td>
+<td class="cell-in" title="rate 21.4% · dim either 64.7%">21%</td>
+<td class="cell-in" title="rate 43.3% · dim either 64.7%">43%</td>
+<td class="cell-out-pole" title="rate 100.0%">100%</td>
+<td class="cell-out-pole" title="rate 6.1%">6%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#d97706"></span>claude-sonnet-4-0_off</th>
+<td class="cell-in" title="rate 20.8% · dim either 32.5%">21%</td>
+<td class="cell-out-pole" title="rate 11.7% · dim either 32.5%">12%</td>
+<td class="cell-in" title="rate 23.5% · dim either 37.1%">23%</td>
+<td class="cell-out-pole" title="rate 13.6% · dim either 37.1%">14%</td>
+<td class="cell-in" title="rate 43.5% · dim either 60.1%">43%</td>
+<td class="cell-in" title="rate 16.9% · dim either 60.1%">17%</td>
+<td class="cell-in" title="rate 19.4% · dim either 62.1%">19%</td>
+<td class="cell-in" title="rate 42.7% · dim either 62.1%">43%</td>
+<td class="cell-in" title="rate 15.6% · dim either 15.8%">16%</td>
+<td class="cell-out-pole" title="rate 0.2% · dim either 15.8%">0%</td>
+<td class="cell-out-pole" title="rate 100.0%">100%</td>
+<td class="cell-out-pole" title="rate 7.0%">7%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#d97706"></span>claude-sonnet-4-5_off</th>
+<td class="cell-in" title="rate 42.0% · dim either 68.2%">42%</td>
+<td class="cell-in" title="rate 26.3% · dim either 68.2%">26%</td>
+<td class="cell-in" title="rate 24.2% · dim either 54.5%">24%</td>
+<td class="cell-in" title="rate 30.3% · dim either 54.5%">30%</td>
+<td class="cell-out-dim" title="rate 52.5% · dim either 95.3%">52%</td>
+<td class="cell-out-dim" title="rate 47.0% · dim either 95.3%">47%</td>
+<td class="cell-out-dim" title="rate 38.3% · dim either 94.5%">38%</td>
+<td class="cell-out-dim" title="rate 56.3% · dim either 94.5%">56%</td>
+<td class="cell-in" title="rate 20.5% · dim either 38.0%">20%</td>
+<td class="cell-in" title="rate 17.5% · dim either 38.0%">18%</td>
+<td class="cell-out-pole" title="rate 100.0%">100%</td>
+<td class="cell-out-pole" title="rate 2.4%">2%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>gpt-3_5-turbo_off</th>
+<td class="cell-out-dim" title="rate 0.1% · dim either 8.0%">0%</td>
+<td class="cell-out-dim" title="rate 7.8% · dim either 8.0%">8%</td>
+<td class="cell-out-dim" title="rate 0.0% · dim either 0.3%">0%</td>
+<td class="cell-out-dim" title="rate 0.3% · dim either 0.3%">0%</td>
+<td class="cell-out-dim" title="rate 0.1% · dim either 0.2%">0%</td>
+<td class="cell-out-dim" title="rate 0.1% · dim either 0.2%">0%</td>
+<td class="cell-out-dim" title="rate 0.1% · dim either 0.1%">0%</td>
+<td class="cell-out-dim" title="rate 0.0% · dim either 0.1%">0%</td>
+<td class="cell-out-dim" title="rate 0.0% · dim either 0.9%">0%</td>
+<td class="cell-out-dim" title="rate 0.9% · dim either 0.9%">1%</td>
+<td class="cell-out-pole" title="rate 0.2%">0%</td>
+<td class="cell-out-pole" title="rate 0.0%">0%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>gpt-4_1_off</th>
+<td class="cell-in" title="rate 39.9% · dim either 44.5%">40%</td>
+<td class="cell-out-pole" title="rate 4.6% · dim either 44.5%">5%</td>
+<td class="cell-out-pole" title="rate 8.1% · dim either 20.6%">8%</td>
+<td class="cell-out-pole" title="rate 12.5% · dim either 20.6%">12%</td>
+<td class="cell-in" title="rate 52.9% · dim either 82.6%">53%</td>
+<td class="cell-in" title="rate 30.7% · dim either 82.6%">31%</td>
+<td class="cell-in" title="rate 17.9% · dim either 57.6%">18%</td>
+<td class="cell-in" title="rate 39.8% · dim either 57.6%">40%</td>
+<td class="cell-in" title="rate 16.1% · dim either 19.4%">16%</td>
+<td class="cell-out-pole" title="rate 3.3% · dim either 19.4%">3%</td>
+<td class="cell-out-pole" title="rate 95.1%">95%</td>
+<td class="cell-out-pole" title="rate 0.0%">0%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>gpt-4o_off</th>
+<td class="cell-in" title="rate 51.7% · dim either 62.9%">52%</td>
+<td class="cell-out-pole" title="rate 11.3% · dim either 62.9%">11%</td>
+<td class="cell-out-dim" title="rate 11.5% · dim either 12.4%">11%</td>
+<td class="cell-out-dim" title="rate 0.9% · dim either 12.4%">1%</td>
+<td class="cell-in" title="rate 38.9% · dim either 49.1%">39%</td>
+<td class="cell-out-pole" title="rate 10.2% · dim either 49.1%">10%</td>
+<td class="cell-out-pole" title="rate 6.2% · dim either 44.9%">6%</td>
+<td class="cell-in" title="rate 38.6% · dim either 44.9%">39%</td>
+<td class="cell-out-dim" title="rate 7.8% · dim either 9.1%">8%</td>
+<td class="cell-out-dim" title="rate 1.3% · dim either 9.1%">1%</td>
+<td class="cell-out-pole" title="rate 85.3%">85%</td>
+<td class="cell-out-pole" title="rate 0.0%">0%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>gpt-5_1_off</th>
+<td class="cell-in" title="rate 22.4% · dim either 29.3%">22%</td>
+<td class="cell-out-pole" title="rate 6.9% · dim either 29.3%">7%</td>
+<td class="cell-out-dim" title="rate 4.5% · dim either 12.1%">4%</td>
+<td class="cell-out-dim" title="rate 7.6% · dim either 12.1%">8%</td>
+<td class="cell-in" title="rate 38.0% · dim either 46.6%">38%</td>
+<td class="cell-out-pole" title="rate 8.9% · dim either 46.6%">9%</td>
+<td class="cell-out-pole" title="rate 4.8% · dim either 19.6%">5%</td>
+<td class="cell-out-pole" title="rate 14.9% · dim either 19.6%">15%</td>
+<td class="cell-out-dim" title="rate 3.4% · dim either 5.1%">3%</td>
+<td class="cell-out-dim" title="rate 1.7% · dim either 5.1%">2%</td>
+<td class="cell-out-pole" title="rate 100.0%">100%</td>
+<td class="cell-out-pole" title="rate 1.3%">1%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>gpt-5_2_high</th>
+<td class="cell-out-dim" title="rate 1.4% · dim either 3.2%">1%</td>
+<td class="cell-out-dim" title="rate 1.8% · dim either 3.2%">2%</td>
+<td class="cell-out-dim" title="rate 0.5% · dim either 1.1%">1%</td>
+<td class="cell-out-dim" title="rate 0.6% · dim either 1.1%">1%</td>
+<td class="cell-out-dim" title="rate 13.4% · dim either 14.6%">13%</td>
+<td class="cell-out-dim" title="rate 1.3% · dim either 14.6%">1%</td>
+<td class="cell-out-dim" title="rate 3.0% · dim either 3.6%">3%</td>
+<td class="cell-out-dim" title="rate 0.6% · dim either 3.6%">1%</td>
+<td class="cell-out-dim" title="rate 0.0% · dim either 0.1%">0%</td>
+<td class="cell-out-dim" title="rate 0.1% · dim either 0.1%">0%</td>
+<td class="cell-out-pole" title="rate 99.2%">99%</td>
+<td class="cell-out-pole" title="rate 4.8%">5%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>gpt-5_2_low</th>
+<td class="cell-out-dim" title="rate 1.8% · dim either 3.8%">2%</td>
+<td class="cell-out-dim" title="rate 2.0% · dim either 3.8%">2%</td>
+<td class="cell-out-dim" title="rate 0.2% · dim either 0.8%">0%</td>
+<td class="cell-out-dim" title="rate 0.7% · dim either 0.8%">1%</td>
+<td class="cell-in" title="rate 16.3% · dim either 18.1%">16%</td>
+<td class="cell-out-pole" title="rate 1.8% · dim either 18.1%">2%</td>
+<td class="cell-out-dim" title="rate 5.3% · dim either 6.0%">5%</td>
+<td class="cell-out-dim" title="rate 0.8% · dim either 6.0%">1%</td>
+<td class="cell-out-dim" title="rate 0.0% · dim either 0.1%">0%</td>
+<td class="cell-out-dim" title="rate 0.1% · dim either 0.1%">0%</td>
+<td class="cell-out-pole" title="rate 99.7%">100%</td>
+<td class="cell-out-pole" title="rate 1.8%">2%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>gpt-5_2_medium</th>
+<td class="cell-out-dim" title="rate 1.5% · dim either 3.5%">2%</td>
+<td class="cell-out-dim" title="rate 2.0% · dim either 3.5%">2%</td>
+<td class="cell-out-dim" title="rate 0.4% · dim either 1.0%">0%</td>
+<td class="cell-out-dim" title="rate 0.6% · dim either 1.0%">1%</td>
+<td class="cell-in" title="rate 17.1% · dim either 18.6%">17%</td>
+<td class="cell-out-pole" title="rate 1.5% · dim either 18.6%">2%</td>
+<td class="cell-out-dim" title="rate 4.8% · dim either 5.4%">5%</td>
+<td class="cell-out-dim" title="rate 0.7% · dim either 5.4%">1%</td>
+<td class="cell-out-dim" title="rate 0.0% · dim either 0.1%">0%</td>
+<td class="cell-out-dim" title="rate 0.1% · dim either 0.1%">0%</td>
+<td class="cell-out-pole" title="rate 99.4%">99%</td>
+<td class="cell-out-pole" title="rate 3.3%">3%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>gpt-5_2_off</th>
+<td class="cell-out-dim" title="rate 0.6% · dim either 3.0%">1%</td>
+<td class="cell-out-dim" title="rate 2.4% · dim either 3.0%">2%</td>
+<td class="cell-out-dim" title="rate 0.2% · dim either 0.3%">0%</td>
+<td class="cell-out-dim" title="rate 0.1% · dim either 0.3%">0%</td>
+<td class="cell-out-dim" title="rate 9.6% · dim either 9.7%">10%</td>
+<td class="cell-out-dim" title="rate 0.1% · dim either 9.7%">0%</td>
+<td class="cell-out-dim" title="rate 1.9% · dim either 2.3%">2%</td>
+<td class="cell-out-dim" title="rate 0.4% · dim either 2.3%">0%</td>
+<td class="cell-out-dim" title="rate 0.0% · dim either 0.0%">0%</td>
+<td class="cell-out-dim" title="rate 0.0% · dim either 0.0%">0%</td>
+<td class="cell-out-pole" title="rate 100.0%">100%</td>
+<td class="cell-out-pole" title="rate 0.7%">1%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#10a37f"></span>o3_required</th>
+<td class="cell-in" title="rate 25.6% · dim either 50.0%">26%</td>
+<td class="cell-in" title="rate 24.3% · dim either 50.0%">24%</td>
+<td class="cell-out-dim" title="rate 4.7% · dim either 9.3%">5%</td>
+<td class="cell-out-dim" title="rate 4.6% · dim either 9.3%">5%</td>
+<td class="cell-in" title="rate 46.6% · dim either 63.0%">47%</td>
+<td class="cell-in" title="rate 16.4% · dim either 63.0%">16%</td>
+<td class="cell-in" title="rate 18.1% · dim either 24.5%">18%</td>
+<td class="cell-out-pole" title="rate 6.5% · dim either 24.5%">6%</td>
+<td class="cell-out-dim" title="rate 0.9% · dim either 2.1%">1%</td>
+<td class="cell-out-dim" title="rate 1.3% · dim either 2.1%">1%</td>
+<td class="cell-out-pole" title="rate 98.4%">98%</td>
+<td class="cell-out-pole" title="rate 9.0%">9%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#4285f4"></span>gemini-2_0-flash_off</th>
+<td class="cell-out-dim" title="rate 51.1% · dim either 97.6%">51%</td>
+<td class="cell-out-dim" title="rate 46.5% · dim either 97.6%">46%</td>
+<td class="cell-in" title="rate 23.6% · dim either 39.8%">24%</td>
+<td class="cell-in" title="rate 16.2% · dim either 39.8%">16%</td>
+<td class="cell-out-dim" title="rate 51.9% · dim either 87.4%">52%</td>
+<td class="cell-out-dim" title="rate 36.0% · dim either 87.4%">36%</td>
+<td class="cell-in" title="rate 39.7% · dim either 81.4%">40%</td>
+<td class="cell-in" title="rate 41.7% · dim either 81.4%">42%</td>
+<td class="cell-in" title="rate 22.9% · dim either 32.9%">23%</td>
+<td class="cell-out-pole" title="rate 10.0% · dim either 32.9%">10%</td>
+<td class="cell-out-pole" title="rate 99.7%">100%</td>
+<td class="cell-out-pole" title="rate 1.9%">2%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#4285f4"></span>gemini-2_5-flash-lite_off</th>
+<td class="cell-out-dim" title="rate 51.7% · dim either 98.3%">52%</td>
+<td class="cell-out-dim" title="rate 46.6% · dim either 98.3%">47%</td>
+<td class="cell-out-pole" title="rate 14.2% · dim either 17.0%">14%</td>
+<td class="cell-out-pole" title="rate 2.8% · dim either 17.0%">3%</td>
+<td class="cell-in" title="rate 47.9% · dim either 74.6%">48%</td>
+<td class="cell-in" title="rate 27.1% · dim either 74.6%">27%</td>
+<td class="cell-in" title="rate 15.4% · dim either 47.4%">15%</td>
+<td class="cell-in" title="rate 32.0% · dim either 47.4%">32%</td>
+<td class="cell-in" title="rate 28.0% · dim either 32.6%">28%</td>
+<td class="cell-out-pole" title="rate 4.7% · dim either 32.6%">5%</td>
+<td class="cell-out-pole" title="rate 99.2%">99%</td>
+<td class="cell-out-pole" title="rate 2.2%">2%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#4285f4"></span>gemini-2_5-flash_off</th>
+<td class="cell-in" title="rate 18.3% · dim either 45.0%">18%</td>
+<td class="cell-in" title="rate 26.8% · dim either 45.0%">27%</td>
+<td class="cell-in" title="rate 29.8% · dim either 34.2%">30%</td>
+<td class="cell-out-pole" title="rate 4.4% · dim either 34.2%">4%</td>
+<td class="cell-in" title="rate 38.4% · dim either 48.4%">38%</td>
+<td class="cell-out-pole" title="rate 10.3% · dim either 48.4%">10%</td>
+<td class="cell-out-pole" title="rate 12.8% · dim either 40.2%">13%</td>
+<td class="cell-in" title="rate 27.4% · dim either 40.2%">27%</td>
+<td class="cell-out-pole" title="rate 13.9% · dim either 16.5%">14%</td>
+<td class="cell-out-pole" title="rate 2.6% · dim either 16.5%">3%</td>
+<td class="cell-out-pole" title="rate 98.4%">98%</td>
+<td class="cell-in" title="rate 21.8%">22%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#4285f4"></span>gemini-3-flash-preview_high</th>
+<td class="cell-in" title="rate 42.0% · dim either 57.5%">42%</td>
+<td class="cell-in" title="rate 15.5% · dim either 57.5%">16%</td>
+<td class="cell-out-pole" title="rate 4.9% · dim either 31.7%">5%</td>
+<td class="cell-in" title="rate 27.0% · dim either 31.7%">27%</td>
+<td class="cell-in" title="rate 50.1% · dim either 79.0%">50%</td>
+<td class="cell-in" title="rate 29.1% · dim either 79.0%">29%</td>
+<td class="cell-in" title="rate 27.0% · dim either 69.2%">27%</td>
+<td class="cell-in" title="rate 42.3% · dim either 69.2%">42%</td>
+<td class="cell-out-pole" title="rate 1.5% · dim either 18.2%">1%</td>
+<td class="cell-in" title="rate 16.8% · dim either 18.2%">17%</td>
+<td class="cell-in" title="rate 64.3%">64%</td>
+<td class="cell-out-pole" title="rate 3.2%">3%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#4285f4"></span>gemini-3-flash-preview_low</th>
+<td class="cell-in" title="rate 41.1% · dim either 58.0%">41%</td>
+<td class="cell-in" title="rate 16.9% · dim either 58.0%">17%</td>
+<td class="cell-out-pole" title="rate 4.2% · dim either 28.6%">4%</td>
+<td class="cell-in" title="rate 24.6% · dim either 28.6%">25%</td>
+<td class="cell-in" title="rate 49.7% · dim either 77.5%">50%</td>
+<td class="cell-in" title="rate 28.3% · dim either 77.5%">28%</td>
+<td class="cell-in" title="rate 27.1% · dim either 66.7%">27%</td>
+<td class="cell-in" title="rate 39.6% · dim either 66.7%">40%</td>
+<td class="cell-out-pole" title="rate 1.2% · dim either 18.2%">1%</td>
+<td class="cell-in" title="rate 17.0% · dim either 18.2%">17%</td>
+<td class="cell-in" title="rate 65.1%">65%</td>
+<td class="cell-out-pole" title="rate 3.4%">3%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#4285f4"></span>gemini-3-flash-preview_medium</th>
+<td class="cell-in" title="rate 43.6% · dim either 60.4%">44%</td>
+<td class="cell-in" title="rate 16.8% · dim either 60.4%">17%</td>
+<td class="cell-out-pole" title="rate 5.0% · dim either 33.1%">5%</td>
+<td class="cell-in" title="rate 28.1% · dim either 33.1%">28%</td>
+<td class="cell-in" title="rate 50.9% · dim either 81.8%">51%</td>
+<td class="cell-in" title="rate 31.2% · dim either 81.8%">31%</td>
+<td class="cell-in" title="rate 28.0% · dim either 71.2%">28%</td>
+<td class="cell-in" title="rate 43.2% · dim either 71.2%">43%</td>
+<td class="cell-out-pole" title="rate 1.4% · dim either 19.1%">1%</td>
+<td class="cell-in" title="rate 17.7% · dim either 19.1%">18%</td>
+<td class="cell-in" title="rate 63.6%">64%</td>
+<td class="cell-out-pole" title="rate 3.3%">3%</td>
+</tr>
+<tr>
+<th class="config-label"><span class="dot" style="background:#4285f4"></span>gemini-3-flash-preview_off</th>
+<td class="cell-in" title="rate 19.6% · dim either 24.0%">20%</td>
+<td class="cell-out-pole" title="rate 4.4% · dim either 24.0%">4%</td>
+<td class="cell-out-pole" title="rate 10.8% · dim either 17.0%">11%</td>
+<td class="cell-out-pole" title="rate 6.2% · dim either 17.0%">6%</td>
+<td class="cell-in" title="rate 42.2% · dim either 48.7%">42%</td>
+<td class="cell-out-pole" title="rate 6.6% · dim either 48.7%">7%</td>
+<td class="cell-out-pole" title="rate 11.3% · dim either 33.5%">11%</td>
+<td class="cell-in" title="rate 22.2% · dim either 33.5%">22%</td>
+<td class="cell-out-pole" title="rate 12.6% · dim either 19.6%">13%</td>
+<td class="cell-out-pole" title="rate 7.0% · dim either 19.6%">7%</td>
+<td class="cell-in" title="rate 76.3%">76%</td>
+<td class="cell-out-pole" title="rate 0.8%">1%</td>
+</tr>
+</table>
+<h2 style="margin-top:40px">Summary per config</h2>
+<table><thead><tr><th>Config</th><th># dims included</th><th># poles included</th><th># context included</th><th>Total mention mains in Model 3</th></tr></thead><tbody>
+<tr><td style="text-align:left">claude-3-haiku-20240307_off</td>
+<td>4/5</td><td>5/10</td><td>0/2</td><td><strong>5</strong></td></tr>
+<tr><td style="text-align:left">claude-haiku-4-5_off</td>
+<td>4/5</td><td>6/10</td><td>0/2</td><td><strong>6</strong></td></tr>
+<tr><td style="text-align:left">claude-opus-4-5_off</td>
+<td>3/5</td><td>6/10</td><td>0/2</td><td><strong>6</strong></td></tr>
+<tr><td style="text-align:left">claude-sonnet-4-0_off</td>
+<td>5/5</td><td>7/10</td><td>0/2</td><td><strong>7</strong></td></tr>
+<tr><td style="text-align:left">claude-sonnet-4-5_off</td>
+<td>3/5</td><td>6/10</td><td>0/2</td><td><strong>6</strong></td></tr>
+<tr><td style="text-align:left">gpt-3_5-turbo_off</td>
+<td>0/5</td><td>0/10</td><td>0/2</td><td><strong>0</strong></td></tr>
+<tr><td style="text-align:left">gpt-4_1_off</td>
+<td>5/5</td><td>6/10</td><td>0/2</td><td><strong>6</strong></td></tr>
+<tr><td style="text-align:left">gpt-4o_off</td>
+<td>3/5</td><td>3/10</td><td>0/2</td><td><strong>3</strong></td></tr>
+<tr><td style="text-align:left">gpt-5_1_off</td>
+<td>3/5</td><td>2/10</td><td>0/2</td><td><strong>2</strong></td></tr>
+<tr><td style="text-align:left">gpt-5_2_high</td>
+<td>0/5</td><td>0/10</td><td>0/2</td><td><strong>0</strong></td></tr>
+<tr><td style="text-align:left">gpt-5_2_low</td>
+<td>1/5</td><td>1/10</td><td>0/2</td><td><strong>1</strong></td></tr>
+<tr><td style="text-align:left">gpt-5_2_medium</td>
+<td>1/5</td><td>1/10</td><td>0/2</td><td><strong>1</strong></td></tr>
+<tr><td style="text-align:left">gpt-5_2_off</td>
+<td>0/5</td><td>0/10</td><td>0/2</td><td><strong>0</strong></td></tr>
+<tr><td style="text-align:left">o3_required</td>
+<td>3/5</td><td>5/10</td><td>0/2</td><td><strong>5</strong></td></tr>
+<tr><td style="text-align:left">gemini-2_0-flash_off</td>
+<td>3/5</td><td>5/10</td><td>0/2</td><td><strong>5</strong></td></tr>
+<tr><td style="text-align:left">gemini-2_5-flash-lite_off</td>
+<td>4/5</td><td>5/10</td><td>0/2</td><td><strong>5</strong></td></tr>
+<tr><td style="text-align:left">gemini-2_5-flash_off</td>
+<td>5/5</td><td>5/10</td><td>1/2</td><td><strong>6</strong></td></tr>
+<tr><td style="text-align:left">gemini-3-flash-preview_high</td>
+<td>5/5</td><td>8/10</td><td>1/2</td><td><strong>9</strong></td></tr>
+<tr><td style="text-align:left">gemini-3-flash-preview_low</td>
+<td>5/5</td><td>8/10</td><td>1/2</td><td><strong>9</strong></td></tr>
+<tr><td style="text-align:left">gemini-3-flash-preview_medium</td>
+<td>5/5</td><td>8/10</td><td>1/2</td><td><strong>9</strong></td></tr>
+<tr><td style="text-align:left">gemini-3-flash-preview_off</td>
+<td>5/5</td><td>3/10</td><td>1/2</td><td><strong>4</strong></td></tr>
+</tbody></table>
+</body></html>

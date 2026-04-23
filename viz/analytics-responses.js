@@ -9,38 +9,82 @@
 function initResponseAnalysisFigures() {
   if (raFigsRendered) return;
   raFigsRendered = true;
+  const cb = Date.now();
   Promise.all([
-    fetch('data/real/trait_mentions.json').then(r => r.json()),
-    fetch('data/real/verbosity_stats.json').then(r => r.json()),
-    fetch('data/real/response_text_similarity.json').then(r => r.json()),
-  ]).then(([t, v, s]) => {
+    fetch('data/real/trait_mentions.json?_=' + cb).then(r => r.json()),
+    fetch('data/real/verbosity_stats.json?_=' + cb).then(r => r.json()),
+    fetch('data/real/response_text_similarity.json?_=' + cb).then(r => r.json()),
+    fetch('data/real/response_persona_similarity.json?_=' + cb).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('data/real/response_diversity.json?_=' + cb).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('data/real/decision_drivers.json?_=' + cb).then(r => r.ok ? r.json() : null).catch(() => null),
+  ]).then(([t, v, s, personaSim, diversity, drivers]) => {
     raTraitData = t;
     raVerbosityData = v;
     raTextSimData = s;
+
+    // Fig 32: Trait Heatmap
+    buildFilterPills('ra-heatmap-filters', 'raHeatmap', f => renderRATraitHeatmap(t, f));
     renderRATraitHeatmap(t);
+
+    // Fig 35: Verbosity box
+    buildFilterPills('ra-verbosity-filters', 'raVerbosity', f => renderRAVerbosityBox(v, f));
     renderRAVerbosityBox(v);
+
+    // Fig 36: Verbosity by level (own filter)
+    buildFilterPills('ra-verbosity-bl-filters', 'raVerbosityBL', f => renderRAVerbosityByLevel(v, f));
     renderRAVerbosityByLevel(v);
+
+    // Fig 37: Rep Agreement
+    buildFilterPills('ra-agreement-filters', 'raAgreement', f => renderRARepAgreement(s, f));
     renderRARepAgreement(s);
+
+    // Fig 38: Text Similarity
+    buildFilterPills('ra-textsim-filters', 'raTextsim', f => renderRATextSimilarity(s, f));
     renderRATextSimilarity(s);
+
+    // Fig 39: Persona Individuation
+    if (personaSim) {
+      buildFilterPills('ra-persona-filters', 'raPersona', f => renderRAPersonaSimilarity(personaSim, 'ra-persona-sim-chart', f));
+      renderRAPersonaSimilarity(personaSim);
+      renderRAPersonaSimilarityAuthor(personaSim);  // Author Notes archive copy (no filter)
+    }
+
+    if (diversity)  renderRAReasoningDiversityAuthor(diversity);  // Author Notes only
+
+    // Fig 40: Decision Drivers
+    if (drivers) {
+      buildFilterPills('ra-drivers-filters', 'raDrivers', f => renderRADecisionDrivers(drivers, f));
+      renderRADecisionDrivers(drivers);
+    }
+
     // Trait power + amplification figures need regression data
     loadAllRegressions(function(allRegs) {
       renderRATraitPowerCombined(t, allRegs);
-      renderRATraitPowerRange(t, allRegs);
+      // renderRATraitPowerRange removed — Figure 33 was a duplicate of Cohort Fig 28
       renderRAModel3Table(allRegs, t);
-      renderRAAmplificationForestPlot(allRegs, t);
+
+      // Fig 34: Cross-Model Amplification
+      buildFilterPills('ra-xmodel-filters', 'raXmodel', f => renderRACrossModelAmplification(allRegs, t, f));
       renderRACrossModelAmplification(allRegs, t);
-      renderRAAmplificationMatrix(allRegs, t);
+      // Fig 36 (renderRAAmplificationMatrix) removed — superseded by Fig 35.
     });
   });
 }
 
 /* ── Figure 33: Trait Mention Heatmap (10 poles + 2 context) ── */
-function renderRATraitHeatmap(data) {
+function renderRATraitHeatmap(data, modelFilter = null) {
   const el = document.getElementById('ra-fig33-chart');
   if (!el) return;
-  const configs = data.configs;
-  const labels = data.labels;
-  const providers = data.providers;
+  let configs = data.configs.slice();
+  let labels = data.labels.slice();
+  let providers = data.providers.slice();
+
+  if (modelFilter) {
+    const keep = configs.map((c, i) => i).filter(i => modelFilter.has(configs[i]));
+    configs = keep.map(i => configs[i]);
+    labels = keep.map(i => labels[i]);
+    providers = keep.map(i => providers[i]);
+  }
 
   // 10 Big Five poles + 2 context columns (Infection, Age)
   const poles = [
@@ -183,12 +227,19 @@ function renderRATraitHeatmap(data) {
 }
 
 /* ── Figure 35: Output Token Landscape (box plots) ─────────── */
-function renderRAVerbosityBox(data) {
+function renderRAVerbosityBox(data, modelFilter = null) {
   const el = document.getElementById('ra-fig34-chart');
   if (!el) return;
-  const configs = data.configs;
-  const labels = data.labels;
-  const providers = data.providers;
+  let configs = data.configs.slice();
+  let labels = data.labels.slice();
+  let providers = data.providers.slice();
+
+  if (modelFilter) {
+    const keep = configs.map((c, i) => i).filter(i => modelFilter.has(configs[i]));
+    configs = keep.map(i => configs[i]);
+    labels = keep.map(i => labels[i]);
+    providers = keep.map(i => providers[i]);
+  }
 
   const labelW = 160, rowH = 24;
   const pad = { l: labelW + 10, t: 30, r: 40, b: 30 };
@@ -255,12 +306,19 @@ function renderRAVerbosityBox(data) {
 }
 
 /* ── Figure 36: Verbosity × Infection Level ────────────────── */
-function renderRAVerbosityByLevel(data) {
+function renderRAVerbosityByLevel(data, modelFilter = null) {
   const el = document.getElementById('ra-fig35-chart');
   if (!el) return;
-  const configs = data.configs;
-  const labels = data.labels;
-  const providers = data.providers;
+  let configs = data.configs.slice();
+  let labels = data.labels.slice();
+  let providers = data.providers.slice();
+
+  if (modelFilter) {
+    const keep = configs.map((c, i) => i).filter(i => modelFilter.has(configs[i]));
+    configs = keep.map(i => configs[i]);
+    labels = keep.map(i => labels[i]);
+    providers = keep.map(i => providers[i]);
+  }
 
   const pad = { l: 60, t: 20, r: 160, b: 40 };
   const plotW = 600, plotH = 350;
@@ -297,10 +355,24 @@ function renderRAVerbosityByLevel(data) {
   }
   svg += `<text x="${pad.l - 40}" y="${pad.t + plotH / 2}" font-size="10" fill="#666" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,${pad.l - 40},${pad.t + plotH / 2})">Mean output tokens</text>`;
 
-  // X axis labels
-  for (let i = 0; i < allLevels.length; i += 5) {
-    const x = xScale(allLevels[i]);
-    svg += `<text x="${x}" y="${pad.t + plotH + 16}" font-size="9" fill="#999" font-family="${SERIF}" text-anchor="middle">${allLevels[i].toFixed(1)}%</text>`;
+  // X axis labels — integer %-points plus the critical 4% and 7% markers.
+  // Use nearest available infection level for each target %.
+  function nearestLevel(target) {
+    let best = allLevels[0], bd = Infinity;
+    for (const lv of allLevels) {
+      const d = Math.abs(lv - target);
+      if (d < bd) { bd = d; best = lv; }
+    }
+    return best;
+  }
+  // 0.5% increments up to 4%, then 1% increments to 7% (narrower sampling in
+  // the low-infection region where behavior changes fastest).
+  const tickTargets = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7];
+  const tickLevels = Array.from(new Set(tickTargets.map(nearestLevel))).sort((a, b) => a - b);
+  for (const lv of tickLevels) {
+    const x = xScale(lv);
+    svg += `<line x1="${x}" y1="${pad.t + plotH}" x2="${x}" y2="${pad.t + plotH + 4}" stroke="#bbb" stroke-width="0.5"/>`;
+    svg += `<text x="${x}" y="${pad.t + plotH + 16}" font-size="9" fill="#999" font-family="${SERIF}" text-anchor="middle">${lv.toFixed(1)}%</text>`;
   }
   svg += `<text x="${pad.l + plotW / 2}" y="${pad.t + plotH + 34}" font-size="10" fill="#666" font-family="${SERIF}" text-anchor="middle">Infection level</text>`;
 
@@ -319,20 +391,21 @@ function renderRAVerbosityByLevel(data) {
       pathD += (i === 0 ? 'M' : 'L') + `${x},${y}`;
     }
     svg += `<path d="${pathD}" fill="none" stroke="${provColor}" stroke-width="1.5" opacity="${opacity}"/>`;
-    // Hover dots with tooltips
+    // Hover dots with tooltips (invisible but large hit target)
     for (let i = 0; i < lvKeys.length; i++) {
       const lv = parseFloat(lvKeys[i]);
       const v = byLevel[lvKeys[i]];
       const x = xScale(lv);
       const y = yScale(v.mean_output);
-      svg += `<circle cx="${x}" cy="${y}" r="4" fill="${provColor}" opacity="0" style="cursor:default"><title>${labels[ci]} @ ${lv.toFixed(1)}% infection\nMean: ${Math.round(v.mean_output)} tokens</title></circle>`;
+      const tt = `${esc(labels[ci])} @ ${lv.toFixed(1)}% infection<br>Mean output: ${Math.round(v.mean_output)} tokens`;
+      svg += `<circle cx="${x}" cy="${y}" r="7" fill="${provColor}" opacity="0" class="hit-target" data-label="${esc(labels[ci])}" data-color="${provColor}" data-extra="${tt}" style="cursor:default"/>`;
     }
 
-    // Legend entry
+    // Legend entry — colored to match line
     const legX = pad.l + plotW + 10;
     const legY = pad.t + ci * 16;
     svg += `<line x1="${legX}" y1="${legY}" x2="${legX + 14}" y2="${legY}" stroke="${provColor}" stroke-width="1.5" opacity="${opacity}"/>`;
-    svg += `<text x="${legX + 18}" y="${legY + 3}" font-size="8" fill="#555" font-family="${SERIF}">${labels[ci]}</text>`;
+    svg += `<text x="${legX + 18}" y="${legY + 3}" font-size="8" fill="${provColor}" font-family="${SERIF}">${labels[ci]}</text>`;
   }
 
   // Axes
@@ -340,18 +413,20 @@ function renderRAVerbosityByLevel(data) {
   svg += `<line x1="${pad.l}" y1="${pad.t + plotH}" x2="${pad.l + plotW}" y2="${pad.t + plotH}" stroke="#ccc" stroke-width="1"/>`;
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+  wireTooltips(el);
 }
 
 /* ── Figure 37: Rep-to-Rep Decision Agreement ──────────────── */
-function renderRARepAgreement(data) {
+function renderRARepAgreement(data, modelFilter = null) {
   const el = document.getElementById('ra-fig37-chart');
   if (!el) return;
 
   // Sort by agreement rate (descending)
-  const items = data.configs.map((cfg, i) => ({
+  let items = data.configs.map((cfg, i) => ({
     cfg, label: data.labels[i], provider: data.providers[i],
     temp: data.temperature[i], agreement: data.decision_agreement[cfg]
   }));
+  if (modelFilter) items = items.filter(item => modelFilter.has(item.cfg));
   items.sort((a, b) => b.agreement - a.agreement);
 
   const labelW = 160, barMaxW = 400, rowH = 24;
@@ -393,18 +468,18 @@ function renderRARepAgreement(data) {
 }
 
 /* ── Figure 38: Response Text Similarity ───────────────────── */
-function renderRATextSimilarity(data) {
+function renderRATextSimilarity(data, modelFilter = null) {
   const el = document.getElementById('ra-fig38-chart');
   if (!el) return;
 
-  const items = data.configs.map((cfg, i) => ({
+  let items = data.configs.map((cfg, i) => ({
     cfg, label: data.labels[i], provider: data.providers[i],
     temp: data.temperature[i],
     exactMatch: data.exact_text_match[cfg],
     jaccard: data.mean_jaccard[cfg],
     agreement: data.decision_agreement[cfg],
   }));
-  // Sort by Jaccard descending
+  if (modelFilter) items = items.filter(item => modelFilter.has(item.cfg));
   items.sort((a, b) => b.jaccard - a.jaccard);
 
   const labelW = 160, plotW = 400, rowH = 24;
@@ -435,21 +510,15 @@ function renderRATextSimilarity(data) {
     const item = items[r];
     const provColor = CONFIG.PROVIDER_COLORS[item.provider] || '#999';
 
-    // Label with temp indicator
     const tempTag = item.temp === '0' ? '' : ' \u2738';
     svg += `<circle cx="${pad.l - labelW}" cy="${cy}" r="3" fill="${provColor}"/>`;
     svg += `<text x="${pad.l - labelW + 9}" y="${cy + 3}" font-size="9" fill="#333" font-family="${SERIF}">${item.label}${tempTag}</text>`;
 
     const xExact = xScale(item.exactMatch);
-    const xJac = xScale(item.jaccard);
-
-    // Connecting line
+    const xJac   = xScale(item.jaccard);
     svg += `<line x1="${Math.min(xExact, xJac)}" y1="${cy}" x2="${Math.max(xExact, xJac)}" y2="${cy}" stroke="#ddd" stroke-width="1"/>`;
-
-    // Exact match dot
-    svg += `<circle cx="${xExact}" cy="${cy}" r="4" fill="#8B5CF6" opacity="0.8"><title>Exact: ${(item.exactMatch * 100).toFixed(1)}%</title></circle>`;
-    // Jaccard dot
-    svg += `<circle cx="${xJac}" cy="${cy}" r="4" fill="#F97316" opacity="0.8"><title>Jaccard: ${(item.jaccard * 100).toFixed(1)}%</title></circle>`;
+    svg += `<circle cx="${xExact}" cy="${cy}" r="4" fill="#8B5CF6" opacity="0.8" class="hit-target" data-label="${esc(item.label)}" data-color="#8B5CF6" data-extra="Exact match: ${(item.exactMatch*100).toFixed(1)}%" style="cursor:default"/>`;
+    svg += `<circle cx="${xJac}"   cy="${cy}" r="4" fill="#F97316" opacity="0.8" class="hit-target" data-label="${esc(item.label)}" data-color="#F97316" data-extra="Jaccard: ${(item.jaccard*100).toFixed(1)}%" style="cursor:default"/>`;
   }
 
   svg += `<text x="${pad.l + plotW / 2}" y="${pad.t + items.length * rowH + 26}" font-size="10" fill="#666" font-family="${SERIF}" text-anchor="middle">Similarity rate (among unanimous-decision groups)</text>`;
@@ -673,23 +742,21 @@ function renderRAModel3Table(allRegs, traitData) {
     { key: 'open_to_exp',      label: 'Open to Experience' },
     { key: 'age',              label: 'Age (years)' },
   ];
+  // 10 Big Five poles + 2 context. fig32Key lets us look up the within-group
+  // rate that gated inclusion (from trait_mentions.json pole_rates).
   const MENTION = [
-    { key: 'mentioned_ext',       label: 'Mentioned Extraversion',       dimKey: 'ext' },
-    { key: 'mentioned_agr',       label: 'Mentioned Agreeableness',      dimKey: 'agr' },
-    { key: 'mentioned_con',       label: 'Mentioned Conscientiousness',  dimKey: 'con' },
-    { key: 'mentioned_neu',       label: 'Mentioned Neuroticism',        dimKey: 'neu' },
-    { key: 'mentioned_ope',       label: 'Mentioned Openness',           dimKey: 'ope' },
-    { key: 'mentioned_infection', label: 'Mentioned Infection',           dimKey: 'infection' },
-    { key: 'mentioned_age',       label: 'Mentioned Age',                dimKey: 'age' },
-  ];
-  const INTERACTION = [
-    { key: 'extraverted_mentioned_ext',        label: 'Extraverted × Mentioned Ext',   dimKey: 'ext' },
-    { key: 'agreeable_mentioned_agr',          label: 'Agreeable × Mentioned Agr',     dimKey: 'agr' },
-    { key: 'conscientious_mentioned_con',      label: 'Conscientious × Mentioned Con', dimKey: 'con' },
-    { key: 'emot_stable_mentioned_neu',        label: 'Emot. Stable × Mentioned Neu',  dimKey: 'neu' },
-    { key: 'open_to_exp_mentioned_ope',        label: 'Open to Exp × Mentioned Ope',   dimKey: 'ope' },
-    { key: 'infection_pct_mentioned_infection', label: 'Infection % × Mentioned Inf',   dimKey: 'infection' },
-    { key: 'age_years_mentioned_age',          label: 'Age × Mentioned Age',           dimKey: 'age' },
+    { key: 'mentioned_extroverted',     label: 'Mentioned Extroverted',     fig32Key: 'extraversion_positive'   },
+    { key: 'mentioned_introverted',     label: 'Mentioned Introverted',     fig32Key: 'extraversion_negative'   },
+    { key: 'mentioned_agreeable',       label: 'Mentioned Agreeable',       fig32Key: 'agreeableness_positive'  },
+    { key: 'mentioned_antagonistic',    label: 'Mentioned Antagonistic',    fig32Key: 'agreeableness_negative'  },
+    { key: 'mentioned_conscientious',   label: 'Mentioned Conscientious',   fig32Key: 'conscientiousness_positive' },
+    { key: 'mentioned_unconscientious', label: 'Mentioned Unconscientious', fig32Key: 'conscientiousness_negative' },
+    { key: 'mentioned_neurotic',        label: 'Mentioned Neurotic',        fig32Key: 'neuroticism_positive'    },
+    { key: 'mentioned_emot_stable',     label: 'Mentioned Emotionally Stable', fig32Key: 'neuroticism_negative' },
+    { key: 'mentioned_open',            label: 'Mentioned Open to Experience', fig32Key: 'openness_positive'    },
+    { key: 'mentioned_closed',          label: 'Mentioned Closed to Experience', fig32Key: 'openness_negative'  },
+    { key: 'mentioned_infection',       label: 'Mentioned Infection',       fig32Key: null, dimKey: 'infection' },
+    { key: 'mentioned_age',             label: 'Mentioned Age',             fig32Key: null, dimKey: 'age' },
   ];
 
   function render(modelIdx) {
@@ -703,7 +770,9 @@ function renderRAModel3Table(allRegs, traitData) {
 
     const m3 = regData.model3;
     const coefs = m3.coefficients;
-    const contrast = m3.contrast_flags || {};
+    const poleFlags = m3.pole_flags || {};
+    const contextFlags = m3.context_flags || {};
+    const poleRates = (traitData.pole_rates && traitData.pole_rates[key]) || {};
     const mentionRates = traitData.mention_rates ? (traitData.mention_rates[key] || {}) : {};
 
     let html = '';
@@ -711,10 +780,10 @@ function renderRAModel3Table(allRegs, traitData) {
 
     // Banner
     html += '<div style="background:#f0f7ff;border:1px solid #b3d4fc;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:12px">';
-    html += '<strong>Model 3: Random-effects logit with mention interactions.</strong> ';
+    html += '<strong>Random-effects logit with pole-level mention flags (main effects only).</strong> ';
     html += 'DV: <code style="background:#e8e8e8;padding:1px 4px;border-radius:2px">stay_home</code> (1 = stay home, 0 = go out). ';
     html += 'Positive coefficients (OR > 1) → higher odds of staying home. ';
-    html += '<strong>' + (m3.n_interactions || 0) + '</strong> interaction terms included (sufficient contrast).';
+    html += '<strong>' + (m3.n_mention_main || 0) + '</strong> mention flag(s) included (Fig-32 within-group rate in 15–85%).';
     html += '</div>';
 
     // Table header
@@ -753,37 +822,34 @@ function renderRAModel3Table(allRegs, traitData) {
     html += '<tr><td colspan="7" style="padding:6px 6px 2px;font-size:10px;color:#666;font-style:italic;border-bottom:1px solid #ddd">Base Predictors</td></tr>';
     BASE.forEach(p => addRow(p.label, coefs[p.key], ''));
 
-    // Section: Mention flags
-    html += '<tr><td colspan="7" style="padding:10px 6px 2px;font-size:10px;color:#666;font-style:italic;border-bottom:1px solid #ddd">Mention Flags (0/1: did the response text mention this dimension?)</td></tr>';
+    // Section: Mention flags — pole-level (10 poles) + 2 context.
+    // "Rate" shown is the Fig-32 within-group rate that gated inclusion.
+    html += '<tr><td colspan="7" style="padding:10px 6px 2px;font-size:10px;color:#666;font-style:italic;border-bottom:1px solid #ddd">Mention Flags (pole-level; rate = Fig 32 within-group rate that gated inclusion)</td></tr>';
     rowIdx = 0;
     MENTION.forEach(p => {
-      const cf = contrast[p.dimKey];
-      const rate = cf ? (cf.mention_rate * 100).toFixed(1) + '%' : '';
-      addRow(p.label, coefs[p.key], rate);
-    });
-
-    // Section: Interaction terms
-    html += '<tr><td colspan="7" style="padding:10px 6px 2px;font-size:10px;color:#666;font-style:italic;border-bottom:1px solid #ddd">Interaction Terms (trait × mentioned trait)</td></tr>';
-    rowIdx = 0;
-    INTERACTION.forEach(p => {
-      const cf = contrast[p.dimKey];
-      const sufficient = cf ? cf.sufficient : false;
-      const rate = cf ? (cf.mention_rate * 100).toFixed(1) + '%' : '?';
+      let rate = '';
+      let sufficient = null;
+      if (p.fig32Key) {
+        const r = poleRates[p.fig32Key];
+        if (r != null) rate = (r * 100).toFixed(1) + '%';
+        sufficient = r != null && r >= 0.15 && r <= 0.85;
+      } else if (p.dimKey) {
+        const r = mentionRates[p.dimKey];
+        if (r != null) rate = (r * 100).toFixed(1) + '%';
+        sufficient = r != null && r >= 0.15 && r <= 0.85;
+      }
       const c = coefs[p.key];
       if (c) {
-        addRow(p.label, c, '');
-      } else if (!sufficient) {
-        // Excluded — explain why
+        addRow(p.label, c, rate);
+      } else {
         const bg = rowIdx % 2 === 0 ? '#fafafa' : '#fff';
         html += '<tr style="background:' + bg + '">';
         html += '<td style="font-weight:600;padding:3px 6px;color:#bbb">' + p.label + '</td>';
         html += '<td colspan="5" style="text-align:center;padding:3px 6px;color:#c77;font-size:10px">';
-        html += 'Excluded — mention rate ' + rate + ' (outside 5–95% contrast window)';
+        html += 'Excluded — ' + (rate || 'rate n/a') + ' (outside 15–85% window)';
         html += '</td>';
-        html += '<td></td></tr>';
+        html += '<td style="text-align:right;padding:3px 6px;font-size:10px;color:#888">' + rate + '</td></tr>';
         rowIdx++;
-      } else {
-        addRow(p.label, null, '');
       }
     });
 
@@ -799,20 +865,26 @@ function renderRAModel3Table(allRegs, traitData) {
     html += '<span><strong>σ²<sub>u</sub>:</strong> ' + (fit.re_variance != null ? fit.re_variance.toFixed(3) : '—') + '</span>';
     html += '</div>';
 
-    // Contrast flag summary
+    // Contrast flag summary — pole-level
     html += '<div style="margin-top:8px;padding:8px 12px;background:#fff8f0;border:1px solid #f0d0a0;border-radius:4px;font-size:11px">';
-    html += '<strong>Contrast flags</strong> — interaction terms require the mention flag to have enough variance (5–95% mention rate). ';
-    html += 'Dimensions outside this range have near-constant mention flags, making the interaction unidentifiable.';
-    html += '<div style="margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">';
-    for (const dk of ['ext','agr','con','neu','ope','infection','age']) {
-      const cf = contrast[dk];
-      if (!cf) continue;
-      const rate = (cf.mention_rate * 100).toFixed(1);
-      const ok = cf.sufficient;
+    html += '<strong>Inclusion gate (Fig 32 within-group rates).</strong> ';
+    html += 'Each mention flag enters only when the corresponding Fig-32 cell is in 15–85%. ';
+    html += 'Outside this window the mention is saturated (everyone says it) or starved (no one says it) — not identifiable as a regressor.';
+    html += '<div style="margin-top:4px;display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:4px 12px">';
+    MENTION.forEach(p => {
+      let rate = null, ok = false;
+      if (p.fig32Key) {
+        const r = poleRates[p.fig32Key];
+        if (r != null) { rate = r * 100; ok = r >= 0.15 && r <= 0.85; }
+      } else if (p.dimKey) {
+        const r = mentionRates[p.dimKey];
+        if (r != null) { rate = r * 100; ok = r >= 0.15 && r <= 0.85; }
+      }
+      if (rate == null) return;
       html += '<span style="color:' + (ok ? '#4a4' : '#c44') + '">';
-      html += (ok ? '✓' : '✗') + ' ' + dk + ': ' + rate + '%';
+      html += (ok ? '✓' : '✗') + ' ' + p.label.replace('Mentioned ', '') + ': ' + rate.toFixed(1) + '%';
       html += '</span>';
-    }
+    });
     html += '</div></div>';
 
     chartEl.innerHTML = html;
@@ -824,761 +896,792 @@ function renderRAModel3Table(allRegs, traitData) {
   render(currentIdx);
 }
 
-/* ── Figure 36: Amplification Forest Plot (paired effects) ──── */
-/* Shows the mention effect for BOTH poles of each Big Five trait:
-   - Negative-pole agents (reference group): effect = β_mentioned
-   - Positive-pole agents: effect = β_mentioned + β_interaction (conservative CI)
-   If the two dots diverge across zero, that's true bidirectional amplification.
-   Context dimensions (infection, age) show the interaction as a slope change. */
-function renderRAAmplificationForestPlot(allRegs, traitData) {
-  const pickerEl = document.getElementById('ra-amp35-picker');
-  const chartEl = document.getElementById('ra-amp35-chart');
-  if (!chartEl) return;
-
-  const B5_DIMS = [
-    { dim: 'Extraversion',        mentionKey: 'mentioned_ext', interKey: 'extraverted_mentioned_ext',   dimKey: 'ext', negPole: 'Introverted',     posPole: 'Extraverted',   rateDim: 'extraversion' },
-    { dim: 'Agreeableness',       mentionKey: 'mentioned_agr', interKey: 'agreeable_mentioned_agr',     dimKey: 'agr', negPole: 'Antagonistic',    posPole: 'Agreeable',     rateDim: 'agreeableness' },
-    { dim: 'Conscientiousness',   mentionKey: 'mentioned_con', interKey: 'conscientious_mentioned_con', dimKey: 'con', negPole: 'Unconscientious', posPole: 'Conscientious', rateDim: 'conscientiousness' },
-    { dim: 'Emotional Stability', mentionKey: 'mentioned_neu', interKey: 'emot_stable_mentioned_neu',   dimKey: 'neu', negPole: 'Neurotic',        posPole: 'Emot. stable',  rateDim: 'neuroticism' },
-    { dim: 'Openness',            mentionKey: 'mentioned_ope', interKey: 'open_to_exp_mentioned_ope',   dimKey: 'ope', negPole: 'Closed',          posPole: 'Open',          rateDim: 'openness' },
-  ];
-  const CTX_DIMS = [
-    { dim: 'Infection', interKey: 'infection_pct_mentioned_infection', dimKey: 'infection', rateDim: 'infection' },
-    { dim: 'Age',       interKey: 'age_years_mentioned_age',          dimKey: 'age',       rateDim: 'age' },
-  ];
-
-  let currentIdx = 0;
-
-  function render(modelIdx) {
-    const m = CONFIG.MODELS[modelIdx];
-    const key = configDirKey(m);
-    const regData = allRegs[key];
-    if (!regData || !regData.model3 || regData.model3.error || !regData.model3.coefficients) {
-      chartEl.innerHTML = '<p style="color:#999;font-style:italic">Model 3 not available for this configuration.</p>';
-      return;
-    }
-
-    const coefs = regData.model3.coefficients;
-    const contrast = regData.model3.contrast_flags || {};
-    const mentionRates = traitData.mention_rates[key] || {};
-    const provColor = CONFIG.PROVIDER_COLORS[m.provider] || '#999';
-
-    // Build rows
-    const rows = [];
-
-    for (const b5 of B5_DIMS) {
-      const mentionCoef = coefs[b5.mentionKey];
-      const interCoef = coefs[b5.interKey];
-      const cf = contrast[b5.dimKey];
-      const insuff = cf ? !cf.sufficient : true;
-      const rate = mentionRates[b5.rateDim] || 0;
-
-      rows.push({ type: 'group', label: b5.dim, mentionRate: rate, insufficient: insuff });
-
-      // Negative-pole row: mention effect = β_mentioned
-      if (mentionCoef) {
-        const est = mentionCoef.estimate, se = mentionCoef.se;
-        rows.push({ type: 'pole', label: b5.negPole, estimate: est, se,
-          ci_lo: est - 1.96 * se, ci_hi: est + 1.96 * se,
-          p: mentionCoef.p, sig: mentionCoef.p < 0.05,
-          insufficient: insuff, mentionRate: rate, isDerived: false, pole: 'neg' });
-      } else {
-        rows.push({ type: 'pole', label: b5.negPole, available: false, insufficient: true, mentionRate: rate, pole: 'neg' });
-      }
-
-      // Positive-pole row: mention effect = β_mentioned + β_interaction (conservative CI)
-      if (mentionCoef && interCoef) {
-        const est = mentionCoef.estimate + interCoef.estimate;
-        const se = Math.sqrt(mentionCoef.se ** 2 + interCoef.se ** 2);
-        const ci_lo = est - 1.96 * se, ci_hi = est + 1.96 * se;
-        rows.push({ type: 'pole', label: b5.posPole, estimate: est, se, ci_lo, ci_hi,
-          p: null, sig: ci_lo > 0 || ci_hi < 0,
-          insufficient: insuff, mentionRate: rate, isDerived: true, pole: 'pos' });
-      } else if (mentionCoef) {
-        rows.push({ type: 'pole', label: b5.posPole, available: false, insufficient: true,
-          mentionRate: rate, pole: 'pos', note: 'Interaction excluded' });
-      }
-    }
-
-    rows.push({ type: 'sep', label: 'Context' });
-
-    for (const ctx of CTX_DIMS) {
-      const interCoef = coefs[ctx.interKey];
-      const cf = contrast[ctx.dimKey];
-      const insuff = cf ? !cf.sufficient : true;
-      const rate = mentionRates[ctx.rateDim] || 0;
-
-      if (interCoef) {
-        const est = interCoef.estimate, se = interCoef.se;
-        rows.push({ type: 'ctx', label: ctx.dim, estimate: est, se,
-          ci_lo: est - 1.96 * se, ci_hi: est + 1.96 * se,
-          p: interCoef.p, sig: interCoef.p < 0.05,
-          insufficient: insuff, mentionRate: rate });
-      } else {
-        rows.push({ type: 'ctx', label: ctx.dim, available: false, insufficient: true, mentionRate: rate });
-      }
-    }
-
-    // --- Layout ---
-    const groupH = 18, poleH = 26, ctxH = 32, sepH = 18;
-    let totalH = 0;
-    for (const r of rows) {
-      totalH += r.type === 'group' ? groupH : r.type === 'pole' ? poleH : r.type === 'ctx' ? ctxH : sepH;
-    }
-
-    const pad = { l: 185, t: 50, r: 60, b: 65 };
-    const plotW = 520;
-    const W = pad.l + plotW + pad.r;
-    const H = pad.t + totalH + pad.b;
-
-    // Fixed axis: ±6 log-odds across all models for comparability
-    const axisMax = 6;
-    const scale = plotW / (2 * axisMax);
-    const cx = pad.l + plotW / 2;
-
-    let svg = '';
-
-    // Title
-    svg += `<text x="${W / 2}" y="18" font-size="12" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Trait Mention Effects — ${esc(m.label)}</text>`;
-    svg += `<text x="${W / 2}" y="33" font-size="9" fill="#777" font-family="${SERIF}" text-anchor="middle">How mentioning each dimension changes stay-home probability, by agent trait pole</text>`;
-
-    // Zero line
-    svg += `<line x1="${cx}" y1="${pad.t}" x2="${cx}" y2="${pad.t + totalH}" stroke="#999" stroke-width="1" stroke-dasharray="4,3"/>`;
-
-    // Log-odds ticks (primary)
-    for (let v = -axisMax; v <= axisMax + 0.01; v += 1) {
-      const x = cx + v * scale;
-      svg += `<line x1="${x}" y1="${pad.t + totalH}" x2="${x}" y2="${pad.t + totalH + 5}" stroke="#bbb" stroke-width="0.5"/>`;
-      svg += `<text x="${x}" y="${pad.t + totalH + 16}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${v.toFixed(0)}</text>`;
-    }
-    svg += `<text x="${cx}" y="${pad.t + totalH + 30}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle">Mention effect (log-odds)</text>`;
-    svg += `<text x="${pad.l + 4}" y="${pad.t + totalH + 30}" font-size="8" fill="#2196F3" font-family="${SERIF}">← Less stay-home</text>`;
-    svg += `<text x="${pad.l + plotW - 4}" y="${pad.t + totalH + 30}" font-size="8" fill="#E53935" font-family="${SERIF}" text-anchor="end">More stay-home →</text>`;
-
-    // OR ticks (secondary scale below)
-    const orTicks = [-6, -4, -3, -2, -1, 0, 1, 2, 3, 4, 6];
-    for (const v of orTicks) {
-      const x = cx + v * scale;
-      const or = Math.exp(v);
-      const lbl = or >= 100 ? or.toFixed(0) : or >= 10 ? or.toFixed(0) : or >= 1 ? or.toFixed(1) : or >= 0.01 ? or.toFixed(2) : or.toFixed(3);
-      svg += `<text x="${x}" y="${pad.t + totalH + 44}" font-size="7" fill="#aaa" font-family="${SERIF}" text-anchor="middle">${lbl}</text>`;
-    }
-    svg += `<text x="${cx}" y="${pad.t + totalH + 56}" font-size="8" fill="#aaa" font-family="${SERIF}" text-anchor="middle">Odds Ratio (OR)</text>`;
-
-    // Render rows
-    let yPos = pad.t;
-    let poleIdx = 0;
-
-    for (const row of rows) {
-      const rH = row.type === 'group' ? groupH : row.type === 'pole' ? poleH : row.type === 'ctx' ? ctxH : sepH;
-      const y = yPos + rH / 2;
-
-      if (row.type === 'group') {
-        // Dimension group header
-        const col = row.insufficient ? '#bbb' : '#333';
-        svg += `<text x="${pad.l - 14}" y="${y + 4}" font-size="10" fill="${col}" font-family="${SERIF}" text-anchor="end" font-weight="bold">${row.label}</text>`;
-        const rPct = Math.round(row.mentionRate * 100);
-        svg += `<text x="${pad.l + plotW + 6}" y="${y + 4}" font-size="8" fill="${row.insufficient ? '#ccc' : '#888'}" font-family="${SERIF}">${rPct}%</text>`;
-
-      } else if (row.type === 'pole') {
-        // Sub-row: indented pole label + dot
-        const col = row.insufficient ? '#ccc' : '#555';
-        svg += `<text x="${pad.l - 18}" y="${y + 3}" font-size="9" fill="${col}" font-family="${SERIF}" text-anchor="end">${row.label}</text>`;
-        // Small indicator: triangle for derived, circle for direct
-        if (row.isDerived) {
-          svg += `<polygon points="${pad.l - 12},${y - 3} ${pad.l - 8},${y + 3} ${pad.l - 16},${y + 3}" fill="${provColor}" opacity="0.4"/>`;
-        } else {
-          svg += `<circle cx="${pad.l - 12}" cy="${y}" r="2" fill="#888" opacity="0.4"/>`;
-        }
-
-        if (row.available === false) {
-          svg += `<line x1="${pad.l}" y1="${y}" x2="${pad.l + plotW}" y2="${y}" stroke="#eee" stroke-width="0.5" stroke-dasharray="2,2"/>`;
-          svg += `<text x="${cx}" y="${y + 3}" font-size="7" fill="#ddd" font-family="${SERIF}" text-anchor="middle">${row.note || 'insufficient contrast'}</text>`;
-        } else {
-          if (poleIdx % 2 === 0) svg += `<rect x="${pad.l}" y="${yPos}" width="${plotW}" height="${rH}" fill="#fafafa"/>`;
-
-          const opacity = row.insufficient ? 0.2 : (row.sig ? 0.85 : 0.3);
-          const clr = row.insufficient ? '#ccc' : provColor;
-          const rawLo = cx + row.ci_lo * scale, rawHi = cx + row.ci_hi * scale;
-          const xLo = Math.max(rawLo, pad.l);
-          const xHi = Math.min(rawHi, pad.l + plotW);
-          const xEst = Math.max(pad.l + 3, Math.min(cx + row.estimate * scale, pad.l + plotW - 3));
-
-          svg += `<line x1="${xLo}" y1="${y}" x2="${xHi}" y2="${y}" stroke="${clr}" stroke-width="1.5" opacity="${opacity}"/>`;
-          // Arrow indicators if CI extends beyond axis
-          if (rawLo < pad.l) svg += `<polygon points="${pad.l},${y} ${pad.l + 5},${y - 3} ${pad.l + 5},${y + 3}" fill="${clr}" opacity="${opacity}"/>`;
-          if (rawHi > pad.l + plotW) svg += `<polygon points="${pad.l + plotW},${y} ${pad.l + plotW - 5},${y - 3} ${pad.l + plotW - 5},${y + 3}" fill="${clr}" opacity="${opacity}"/>`;
-          if (row.sig && !row.insufficient) {
-            svg += `<circle cx="${xEst}" cy="${y}" r="4.5" fill="${provColor}" opacity="0.9"/>`;
-          } else {
-            svg += `<circle cx="${xEst}" cy="${y}" r="3.5" fill="white" stroke="${clr}" stroke-width="1.5" opacity="${row.insufficient ? 0.3 : 0.6}"/>`;
-          }
-
-          // Tooltip (hit-target for wireTooltips)
-          const pStr = row.p != null ? `p = ${row.p < 0.001 ? '&lt; .001' : row.p.toFixed(3)}` : `Sig by CI: ${row.sig ? 'Yes' : 'No'}`;
-          const derivNote = row.isDerived ? 'β<sub>mentioned</sub> + β<sub>interaction</sub> (conservative CI)' : 'β<sub>mentioned</sub> — direct effect';
-          const direction = row.sig ? (row.estimate > 0 ? '→ Mentioning increases stay-home' : '→ Mentioning decreases stay-home') : '(Not significant)';
-          const warnTxt = row.insufficient ? '<br>⚠ Insufficient contrast (&lt;5% or &gt;95% mention rate)' : '';
-          const extra = `β = ${row.estimate.toFixed(3)} &nbsp;[${row.ci_lo.toFixed(3)}, ${row.ci_hi.toFixed(3)}]<br>${derivNote}<br>${pStr}<br>${direction}${warnTxt}`;
-          svg += `<rect x="${pad.l}" y="${yPos}" width="${plotW}" height="${rH}" fill="transparent" class="hit-target" data-label="${esc(row.label)} agents" data-color="${provColor}" data-extra="${extra}" style="cursor:default"/>`;
-        }
-        poleIdx++;
-
-      } else if (row.type === 'sep') {
-        svg += `<line x1="${pad.l - 170}" y1="${y}" x2="${pad.l + plotW}" y2="${y}" stroke="#ddd" stroke-width="0.5"/>`;
-        svg += `<text x="${pad.l - 170}" y="${y - 3}" font-size="8" fill="#aaa" font-family="${SERIF}" font-style="italic">${row.label}</text>`;
-
-      } else if (row.type === 'ctx') {
-        const col = row.insufficient ? '#bbb' : '#333';
-        svg += `<text x="${pad.l - 14}" y="${y + 4}" font-size="10" fill="${col}" font-family="${SERIF}" text-anchor="end" font-weight="bold">${row.label}</text>`;
-        svg += `<text x="${pad.l - 14}" y="${y + 13}" font-size="7" fill="#aaa" font-family="${SERIF}" text-anchor="end">slope Δ</text>`;
-        const rPct = Math.round(row.mentionRate * 100);
-        svg += `<text x="${pad.l + plotW + 6}" y="${y + 4}" font-size="8" fill="${row.insufficient ? '#ccc' : '#888'}" font-family="${SERIF}">${rPct}%</text>`;
-
-        if (row.available === false) {
-          svg += `<line x1="${pad.l}" y1="${y}" x2="${pad.l + plotW}" y2="${y}" stroke="#eee" stroke-width="0.5" stroke-dasharray="2,2"/>`;
-          svg += `<text x="${cx}" y="${y + 3}" font-size="7" fill="#ddd" font-family="${SERIF}" text-anchor="middle">insufficient contrast</text>`;
-        } else {
-          if (poleIdx % 2 === 0) svg += `<rect x="${pad.l}" y="${yPos}" width="${plotW}" height="${rH}" fill="#fafafa"/>`;
-
-          const opacity = row.insufficient ? 0.2 : (row.sig ? 0.85 : 0.3);
-          const clr = row.insufficient ? '#ccc' : provColor;
-          const rawLoC = cx + row.ci_lo * scale, rawHiC = cx + row.ci_hi * scale;
-          const xLo = Math.max(rawLoC, pad.l);
-          const xHi = Math.min(rawHiC, pad.l + plotW);
-          const xEst = Math.max(pad.l + 3, Math.min(cx + row.estimate * scale, pad.l + plotW - 3));
-
-          svg += `<line x1="${xLo}" y1="${y}" x2="${xHi}" y2="${y}" stroke="${clr}" stroke-width="2" opacity="${opacity}"/>`;
-          if (rawLoC < pad.l) svg += `<polygon points="${pad.l},${y} ${pad.l + 5},${y - 3} ${pad.l + 5},${y + 3}" fill="${clr}" opacity="${opacity}"/>`;
-          if (rawHiC > pad.l + plotW) svg += `<polygon points="${pad.l + plotW},${y} ${pad.l + plotW - 5},${y - 3} ${pad.l + plotW - 5},${y + 3}" fill="${clr}" opacity="${opacity}"/>`;
-          if (row.sig && !row.insufficient) {
-            svg += `<circle cx="${xEst}" cy="${y}" r="5" fill="${provColor}" opacity="0.9"/>`;
-          } else {
-            svg += `<circle cx="${xEst}" cy="${y}" r="4" fill="white" stroke="${clr}" stroke-width="1.5" opacity="${row.insufficient ? 0.3 : 0.6}"/>`;
-          }
-
-          // Tooltip (hit-target for wireTooltips)
-          const ctxDirection = row.sig ? (row.estimate > 0 ? '→ Mentioning strengthens this effect' : '→ Mentioning weakens this effect') : '(Not significant)';
-          const ctxWarn = row.insufficient ? '<br>⚠ Insufficient contrast' : '';
-          const ctxExtra = `β = ${row.estimate.toFixed(3)} &nbsp;[${row.ci_lo.toFixed(3)}, ${row.ci_hi.toFixed(3)}]<br>p = ${row.p < 0.001 ? '&lt; .001' : row.p.toFixed(3)}<br>Mention rate: ${rPct}%<br>${ctxDirection}${ctxWarn}`;
-          svg += `<rect x="${pad.l}" y="${yPos}" width="${plotW}" height="${rH}" fill="transparent" class="hit-target" data-label="${esc(row.label)} — slope change" data-color="${provColor}" data-extra="${ctxExtra}" style="cursor:default"/>`;
-        }
-        poleIdx++;
-      }
-      yPos += rH;
-    }
-
-    // Legend
-    const legY = pad.t - 10;
-    svg += `<circle cx="${pad.l}" cy="${legY}" r="4" fill="${provColor}" opacity="0.9"/>`;
-    svg += `<text x="${pad.l + 8}" y="${legY + 3}" font-size="8" fill="#555" font-family="${SERIF}">Significant</text>`;
-    svg += `<circle cx="${pad.l + 80}" cy="${legY}" r="3.5" fill="white" stroke="${provColor}" stroke-width="1.5" opacity="0.6"/>`;
-    svg += `<text x="${pad.l + 88}" y="${legY + 3}" font-size="8" fill="#555" font-family="${SERIF}">Not Significant</text>`;
-    svg += `<circle cx="${pad.l + 190}" cy="${legY}" r="2" fill="#888" opacity="0.4"/>`;
-    svg += `<text x="${pad.l + 198}" y="${legY + 3}" font-size="8" fill="#555" font-family="${SERIF}">Direct (β<tspan font-size="6" baseline-shift="sub">mention</tspan>)</text>`;
-    svg += `<polygon points="${pad.l + 298},${legY - 3} ${pad.l + 302},${legY + 3} ${pad.l + 294},${legY + 3}" fill="${provColor}" opacity="0.4"/>`;
-    svg += `<text x="${pad.l + 308}" y="${legY + 3}" font-size="8" fill="#555" font-family="${SERIF}">Derived (β<tspan font-size="6" baseline-shift="sub">mention</tspan> + β<tspan font-size="6" baseline-shift="sub">interaction</tspan>)</text>`;
-
-    chartEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
-    wireTooltips(chartEl);
-  }
-
-  if (pickerEl) {
-    buildModelPicker('ra-amp35-picker', currentIdx, idx => { currentIdx = idx; render(idx); });
-  }
-  render(currentIdx);
-}
-
-/* \u2500\u2500 Figure 36b: Cross-Model Trait \u00d7 Mention Combinations (all models, all dimensions) \u2500\u2500 */
-/* Shows 4 predicted log-odds positions per model per dimension:
-   \u25cb low-end (no mention), \u25cf low-end (mentioned),
-   \u25b3 high-end (no mention), \u25b2 high-end (mentioned).
-   All 7 panels stacked (5 Big Five + Age + Infection). */
-function renderRACrossModelAmplification(allRegs, traitData) {
+/* ── Figure 35: Cross-Model Pole Positions (4 markers per model per dim) ── */
+/* For each of the 5 Big Five dimensions, a panel shows one row per model
+   with up to 4 markers measured in log-odds relative to the reference agent:
+     ○ low-pole agent, no mention           (position = 0)
+     ● low-pole agent, mentioned low pole  (position = β_mention_low)
+     △ high-pole agent, no mention         (position = β_trait)
+     ▲ high-pole agent, mentioned high pole (position = β_trait + β_mention_high)
+   Rows where neither pole mention flag was included (both failed the
+   Fig-32 15–85% gate) are omitted from the panel. Filled markers are
+   omitted individually when their pole's mention flag is not in the model. */
+function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null) {
   const chartEl = document.getElementById('ra-xmodel-chart');
   if (!chartEl) return;
 
   const PANELS = [
-    { dim: 'Extraversion',        type: 'b5',  traitKey: 'extraverted',   mentionKey: 'mentioned_ext', interKey: 'extraverted_mentioned_ext',       dimKey: 'ext',       lowLabel: 'Introverted',     highLabel: 'Extraverted',   rateDim: 'extraversion' },
-    { dim: 'Agreeableness',       type: 'b5',  traitKey: 'agreeable',     mentionKey: 'mentioned_agr', interKey: 'agreeable_mentioned_agr',         dimKey: 'agr',       lowLabel: 'Antagonistic',    highLabel: 'Agreeable',     rateDim: 'agreeableness' },
-    { dim: 'Conscientiousness',   type: 'b5',  traitKey: 'conscientious', mentionKey: 'mentioned_con', interKey: 'conscientious_mentioned_con',     dimKey: 'con',       lowLabel: 'Unconscientious', highLabel: 'Conscientious', rateDim: 'conscientiousness' },
-    { dim: 'Emotional Stability', type: 'b5',  traitKey: 'emot_stable',   mentionKey: 'mentioned_neu', interKey: 'emot_stable_mentioned_neu',       dimKey: 'neu',       lowLabel: 'Neurotic',        highLabel: 'Emot. Stable',  rateDim: 'neuroticism' },
-    { dim: 'Openness',            type: 'b5',  traitKey: 'open_to_exp',   mentionKey: 'mentioned_ope', interKey: 'open_to_exp_mentioned_ope',       dimKey: 'ope',       lowLabel: 'Closed',          highLabel: 'Open',          rateDim: 'openness' },
-    { dim: 'Age',                 type: 'ctx', scaleKey: 'age',           mentionKey: 'mentioned_age', interKey: 'age_years_mentioned_age',         dimKey: 'age',       lowLabel: 'Age 18',          highLabel: 'Age 65',        lowVal: 18, highVal: 65, rateDim: 'age' },
-    { dim: 'Infection',           type: 'ctx', scaleKey: 'infection_pct', mentionKey: 'mentioned_infection', interKey: 'infection_pct_mentioned_infection', dimKey: 'infection', lowLabel: '0% Infection',    highLabel: '7% Infection',  lowVal: 0,  highVal: 7,  scaleKey2: 'infection_pct_sq', rateDim: 'infection' },
+    { type: 'b5', dim: 'Extraversion',        traitKey: 'extraverted',   lowLabel: 'Introverted',     highLabel: 'Extraverted',
+      lowMention:  'mentioned_introverted',    highMention: 'mentioned_extroverted' },
+    { type: 'b5', dim: 'Agreeableness',       traitKey: 'agreeable',     lowLabel: 'Antagonistic',    highLabel: 'Agreeable',
+      lowMention:  'mentioned_antagonistic',   highMention: 'mentioned_agreeable' },
+    { type: 'b5', dim: 'Conscientiousness',   traitKey: 'conscientious', lowLabel: 'Unconscientious', highLabel: 'Conscientious',
+      lowMention:  'mentioned_unconscientious',highMention: 'mentioned_conscientious' },
+    { type: 'b5', dim: 'Emotional Stability', traitKey: 'emot_stable',   lowLabel: 'Neurotic',        highLabel: 'Emot. Stable',
+      lowMention:  'mentioned_neurotic',       highMention: 'mentioned_emot_stable' },
+    { type: 'b5', dim: 'Openness',            traitKey: 'open_to_exp',   lowLabel: 'Closed',          highLabel: 'Open',
+      lowMention:  'mentioned_closed',         highMention: 'mentioned_open' },
+    // Context panels — continuous trait, no pole dichotomy. Single plot area,
+    // 2 ratio columns: β Mentioned / Infection and β Trait / Infection.
+    { type: 'ctx', dim: 'Infection',
+      mentionKey: 'mentioned_infection',
+      // Trait numerator = max-min of (β_inf·lv + β_inf_sq·lv²) over 0..7%.
+      // This equals the infection range itself → ratio will be 1.0× always.
+      // Skipping the denom-matches-numerator column to avoid trivial output.
+      traitSpan: config => {
+        const c = allRegs[config.key].model3.coefficients;
+        const b1 = c.infection_pct ? c.infection_pct.estimate : 0;
+        const b2 = c.infection_pct_sq ? c.infection_pct_sq.estimate : 0;
+        let mn = Infinity, mx = -Infinity;
+        for (let lv = 0; lv <= 7; lv++) {
+          const lo = b1 * lv + b2 * lv * lv;
+          if (lo < mn) mn = lo;
+          if (lo > mx) mx = lo;
+        }
+        return mx - mn;
+      },
+      traitLabel: 'Infection range' },
+    { type: 'ctx', dim: 'Age',
+      mentionKey: 'mentioned_age',
+      // Trait numerator = β_age · 47 (log-odds swing from age 18 to 65)
+      traitSpan: config => {
+        const c = allRegs[config.key].model3.coefficients;
+        return c.age ? c.age.estimate * 47 : 0;
+      },
+      traitLabel: 'Age 18→65' },
   ];
 
-  // Collect configs in CONFIG.MODELS display order
+  // Collect all configs with a valid Model 3 fit
   const configs = [];
   const seen = new Set();
   CONFIG.MODELS.forEach(m => {
     const key = configDirKey(m);
     if (seen.has(key)) return;
     seen.add(key);
-    const regData = allRegs[key];
-    if (regData && regData.model3 && !regData.model3.error) {
-      configs.push({ key, label: m.label, provider: m.provider, color: CONFIG.PROVIDER_COLORS[m.provider] || '#999' });
+    if (modelFilter && !modelFilter.has(key)) return;
+    const reg = allRegs[key];
+    if (reg && reg.model3 && !reg.model3.error && reg.model3.coefficients) {
+      configs.push({ key, label: m.label, provider: m.provider,
+        color: CONFIG.PROVIDER_COLORS[m.provider] || '#999' });
     }
   });
   if (configs.length === 0) {
     chartEl.innerHTML = '<div style="color:#999;padding:20px">No Model 3 data available.</div>';
     return;
   }
-  const nConfigs = configs.length;
 
-  // Compute 4 predicted log-odds positions for a panel
-  function comboPositions(coefs, panel) {
-    const intercept = coefs.intercept ? coefs.intercept.estimate : null;
-    if (intercept == null) return null;
-    if (panel.type === 'b5') {
-      const bT = coefs[panel.traitKey], bM = coefs[panel.mentionKey], bI = coefs[panel.interKey];
-      if (!bT || !bM || !bI) return null;
+  // Compute positions for a given panel (relative to reference agent)
+  function positions(coefs, panel, config) {
+    if (panel.type === 'ctx') {
+      const bM = coefs[panel.mentionKey];
+      if (!bM) return null;  // mention excluded → skip row entirely
       return {
-        lowNo:  intercept,
-        lowYes: intercept + bM.estimate,
-        hiNo:   intercept + bT.estimate,
-        hiYes:  intercept + bT.estimate + bM.estimate + bI.estimate,
-      };
-    } else {
-      const bS = coefs[panel.scaleKey], bM = coefs[panel.mentionKey], bI = coefs[panel.interKey];
-      if (!bS || !bM || !bI) return null;
-      const bS2 = panel.scaleKey2 && coefs[panel.scaleKey2] ? coefs[panel.scaleKey2].estimate : 0;
-      const lo = panel.lowVal, hi = panel.highVal;
-      return {
-        lowNo:  intercept + bS.estimate * lo + bS2 * lo * lo,
-        lowYes: intercept + bS.estimate * lo + bS2 * lo * lo + bM.estimate + bI.estimate * lo,
-        hiNo:   intercept + bS.estimate * hi + bS2 * hi * hi,
-        hiYes:  intercept + bS.estimate * hi + bS2 * hi * hi + bM.estimate + bI.estimate * hi,
+        type: 'ctx',
+        mention: bM.estimate,
+        pMention: bM.p,
+        traitSpan: panel.traitSpan(config),
       };
     }
+    const bT = coefs[panel.traitKey];
+    if (!bT) return null;
+    const bLow  = coefs[panel.lowMention];   // β_mention_low
+    const bHigh = coefs[panel.highMention];  // β_mention_high
+    if (!bLow && !bHigh) return null;        // no mention signal for this dim → skip row
+    return {
+      type: 'b5',
+      lowNo:  0,
+      lowYes: bLow  ? bLow.estimate  : null,
+      hiNo:   bT.estimate,
+      hiYes:  bHigh ? bT.estimate + bHigh.estimate : null,
+      betaTrait: bT.estimate,
+      betaLow:   bLow  ? bLow.estimate  : null,
+      betaHigh:  bHigh ? bHigh.estimate : null,
+      pLow:      bLow  ? bLow.p  : null,
+      pHigh:     bHigh ? bHigh.p : null,
+    };
   }
 
-  // Pre-compute infection range per config (for amber markers)
-  const infData = {};
+  // Infection log-odds range per config (for ratio columns).
+  //   range = max_{lv ∈ 0..7}(β1·lv + β2·lv²) − min_{lv ∈ 0..7}(β1·lv + β2·lv²)
+  // Anchors each config to its own "full infection effect" so mention / trait
+  // effects are reported as multiples of how much infection alone moves behavior.
+  const infRange = {};
   configs.forEach(c => {
     const coefs = allRegs[c.key].model3.coefficients;
     const b1 = coefs.infection_pct ? coefs.infection_pct.estimate : 0;
     const b2 = coefs.infection_pct_sq ? coefs.infection_pct_sq.estimate : 0;
-    const intercept = coefs.intercept ? coefs.intercept.estimate : 0;
-    const xPeak = b2 !== 0 ? Math.min(7, Math.max(0, -b1 / (2 * b2))) : 0;
-    const infVals = [0, b1 * 7 + b2 * 49, b1 * xPeak + b2 * xPeak * xPeak];
-    infData[c.key] = { intercept, minInfLO: Math.min(...infVals), maxInfLO: Math.max(...infVals) };
+    let mn = Infinity, mx = -Infinity;
+    for (let lv = 0; lv <= 7; lv++) {
+      const lo = b1 * lv + b2 * lv * lv;
+      if (lo < mn) mn = lo;
+      if (lo > mx) mx = lo;
+    }
+    infRange[c.key] = Math.max(1e-6, mx - mn);
   });
 
-  // Auto-scale axis: scan ALL configs x ALL panels
-  let gMin = Infinity, gMax = -Infinity;
-  const expand = v => { if (isFinite(v)) { if (v < gMin) gMin = v; if (v > gMax) gMax = v; } };
-  configs.forEach(c => {
-    const coefs = allRegs[c.key].model3.coefficients;
-    PANELS.forEach(p => {
-      const pos = comboPositions(coefs, p);
-      if (pos) { expand(pos.lowNo); expand(pos.lowYes); expand(pos.hiNo); expand(pos.hiYes); }
+  // Pre-compute per-panel row set.
+  //   B5 panels: include any config with at least one pole-mention coefficient.
+  //   Ctx panels: include only configs whose mention coef is significant (p<0.05),
+  //     per the spec "don't include if not significant". This avoids blank rows.
+  const panelRows = PANELS.map(panel => {
+    return configs
+      .map(c => ({ c, pos: positions(allRegs[c.key].model3.coefficients, panel, c) }))
+      .filter(r => {
+        if (r.pos === null) return false;
+        if (r.pos.type === 'ctx') return r.pos.pMention != null && r.pos.pMention < 0.05;
+        return true;
+      });
+  });
+
+  // Auto-scale x-axis: symmetric around 0, pulled from all positions across panels
+  let absMax = 0;
+  panelRows.forEach(rows => {
+    rows.forEach(({ pos }) => {
+      const vals = pos.type === 'ctx'
+        ? [0, pos.mention]
+        : [pos.lowNo, pos.lowYes, pos.hiNo, pos.hiYes];
+      vals.forEach(v => {
+        if (v != null && isFinite(v)) absMax = Math.max(absMax, Math.abs(v));
+      });
     });
-    const inf = infData[c.key];
-    expand(inf.intercept + inf.minInfLO);
-    expand(inf.intercept + inf.maxInfLO);
   });
-  if (!isFinite(gMin)) { gMin = -5; gMax = 5; }
-  const dRange = gMax - gMin;
-  gMin -= dRange * 0.05;
-  gMax += dRange * 0.05;
+  absMax = Math.max(1, absMax * 1.1);
+  const gMin = -absMax, gMax = absMax;
 
-  // Layout
-  const rowH = 18;
-  const gapProv = 6;
-  const panelPad = { t: 28, b: 50, l: 160, r: 50 };
-  const panelGap = 14;
-  const plotW = 540;
-  const W = panelPad.l + plotW + panelPad.r;
+  // Layout — two side-by-side sub-panels per dim (low-pole | high-pole)
+  // Plus three right-side ratio columns (mention_low / inf, mention_high+trait / inf, trait / inf).
+  const W = Math.min(chartEl.parentElement?.offsetWidth || 980, 980);
+  const rowH = 14;
+  const labelW = 150;
+  const ratioColW = 56;           // each ratio column width
+  const ratioColsTotal = ratioColW * 3;
+  const panelPad = { t: 40, b: 40, l: labelW + 10, r: ratioColsTotal + 16 };
+  const subGap = 30;  // gap between low/high sub-panels
+  const subPlotW = (W - panelPad.l - panelPad.r - subGap) / 2;
+  const panelGap = 24;
+  const ratioX0 = W - panelPad.r + 8;  // x-origin of ratio columns
 
-  let prevP = '', provGaps = 0;
-  configs.forEach(c => { if (c.provider !== prevP) { if (prevP) provGaps++; prevP = c.provider; } });
-  const panelInnerH = nConfigs * rowH + provGaps * gapProv;
-  const panelH = panelPad.t + panelInnerH + panelPad.b;
-  const totalH = PANELS.length * (panelH + panelGap) - panelGap;
+  // Each panel's own inner height depends on how many rows it has (plus provider gaps)
+  const gapProv = 5;
+  function providerGapCount(rows) {
+    let prev = '', gaps = 0;
+    rows.forEach(r => { if (prev && r.c.provider !== prev) gaps++; prev = r.c.provider; });
+    return gaps;
+  }
+  const panelSizes = panelRows.map(rows => rows.length * rowH + providerGapCount(rows) * gapProv);
+  const panelHs = panelSizes.map(s => panelPad.t + s + panelPad.b);
+  const headerLegendH = 42;
+  const totalH = headerLegendH + panelHs.reduce((a, b) => a + b + panelGap, 0) - panelGap + 16;
 
-  function xScale(v) { return panelPad.l + ((v - gMin) / (gMax - gMin)) * plotW; }
+  // Each sub-panel has its own local X scale (same value range, different origin x)
+  function xScaleLow(v)  { return panelPad.l + ((v - gMin) / (gMax - gMin)) * subPlotW; }
+  function xScaleHigh(v) { return panelPad.l + subPlotW + subGap + ((v - gMin) / (gMax - gMin)) * subPlotW; }
+  // Full-width scale used by ctx panels (continuous predictors, no pole split).
+  const ctxPlotW = subPlotW * 2 + subGap;
+  function xScaleCtx(v) { return panelPad.l + ((v - gMin) / (gMax - gMin)) * ctxPlotW; }
   const clampV = v => Math.max(gMin, Math.min(gMax, v));
-
   const range = gMax - gMin;
-  const step = range > 40 ? 10 : range > 20 ? 5 : range > 10 ? 2 : 1;
+  const step = range > 20 ? 5 : range > 10 ? 2 : range > 4 ? 1 : 0.5;
   const gridStart = Math.ceil(gMin / step) * step;
   function loToProb(lo) { return 1 / (1 + Math.exp(-lo)); }
   function fmtProb(p) {
-    if (p < 0.0005) return '<0.1%';
-    if (p > 0.9995) return '>99.9%';
-    if (p < 0.01) return (p * 100).toFixed(1) + '%';
-    if (p > 0.99) return (p * 100).toFixed(1) + '%';
+    if (p < 0.005) return '<1%';
+    if (p > 0.995) return '>99%';
     if (p > 0.095 && p < 0.995) return Math.round(p * 100) + '%';
     return (p * 100).toFixed(1) + '%';
   }
 
   let svg = '';
 
+  // ── Top-of-figure legend strip ──
+  // Explains marker semantics + significance fading, since the convention is
+  // non-obvious and the per-panel headers are just the dim name.
+  const legY = 16;
+  const legItemGap = 170;
+  let lx = panelPad.l;
+  const legColor = '#666';
+  // ○ baseline
+  svg += `<circle cx="${lx}" cy="${legY}" r="3.5" fill="white" stroke="${legColor}" stroke-width="1.4"/>`;
+  svg += `<text x="${lx + 9}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Without mention (baseline)</text>`;
+  lx += legItemGap;
+  // ● solid = significant mention effect
+  svg += `<circle cx="${lx}" cy="${legY}" r="3.5" fill="${legColor}"/>`;
+  svg += `<text x="${lx + 9}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">With mention, <tspan font-weight="bold">p &lt; 0.05</tspan> only</text>`;
+  // Row-below: positional semantics
+  svg += `<text x="${panelPad.l}" y="${legY + 22}" font-size="8.5" fill="#888" font-family="${SERIF}" font-style="italic">Each row = one LLM. Left panel = low-pole agents (○ at 0). Right panel = high-pole agents (○ at &#946;<tspan font-size="6" baseline-shift="sub">trait</tspan>). Filled dot = shift from mentioning that pole (significant only).</text>`;
+
+  let py = headerLegendH;
+
   PANELS.forEach((panel, pi) => {
-    const py = pi * (panelH + panelGap);
+    const rows = panelRows[pi];
+    const panelH = panelHs[pi];
     const panelTop = py + panelPad.t;
-    const panelBot = panelTop + panelInnerH;
+    const panelBot = panelTop + panelSizes[pi];
 
-    // Panel background + title
-    svg += `<rect x="0" y="${py}" width="${W}" height="${panelH}" fill="${SVG_BG}" rx="3"/>`;
-    svg += `<text x="${W / 2}" y="${py + 16}" font-size="11" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">${panel.dim}</text>`;
+    // Panel title
+    svg += `<text x="${W / 2}" y="${py + 18}" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">${panel.dim}</text>`;
 
-    // Sub-header: shape legend per panel
-    const lx = panelPad.l;
-    const ly = py + 24;
-    svg += `<circle cx="${lx}" cy="${ly}" r="3" fill="white" stroke="#666" stroke-width="1"/>`;
-    svg += `<text x="${lx + 6}" y="${ly + 3}" font-size="7" fill="#777" font-family="${SERIF}">${panel.lowLabel}</text>`;
-    const lx2 = lx + 100;
-    svg += `<circle cx="${lx2}" cy="${ly}" r="3" fill="#666"/>`;
-    svg += `<text x="${lx2 + 6}" y="${ly + 3}" font-size="7" fill="#777" font-family="${SERIF}">${panel.lowLabel} +mention</text>`;
-    const lx3 = lx + 230;
-    const td2 = 3.5;
-    svg += `<polygon points="${lx3},${ly - td2} ${lx3 + td2},${ly + td2} ${lx3 - td2},${ly + td2}" fill="white" stroke="#666" stroke-width="1"/>`;
-    svg += `<text x="${lx3 + 6}" y="${ly + 3}" font-size="7" fill="#777" font-family="${SERIF}">${panel.highLabel}</text>`;
-    const lx4 = lx + 330;
-    svg += `<polygon points="${lx4},${ly - td2} ${lx4 + td2},${ly + td2} ${lx4 - td2},${ly + td2}" fill="#666"/>`;
-    svg += `<text x="${lx4 + 6}" y="${ly + 3}" font-size="7" fill="#777" font-family="${SERIF}">${panel.highLabel} +mention</text>`;
+    // Sub-panel column headers (B5) OR single centered header (ctx)
+    if (panel.type === 'b5') {
+      const lowMidX = panelPad.l + subPlotW / 2;
+      const highMidX = panelPad.l + subPlotW + subGap + subPlotW / 2;
+      svg += `<text x="${lowMidX}" y="${py + 34}" font-size="10" fill="#333" font-family="${SERIF}" font-style="italic" text-anchor="middle">${panel.lowLabel} agents</text>`;
+      svg += `<text x="${highMidX}" y="${py + 34}" font-size="10" fill="#333" font-family="${SERIF}" font-style="italic" text-anchor="middle">${panel.highLabel} agents</text>`;
+    } else {
+      // ctx panel: single centered subheader
+      const ctxMidX = panelPad.l + ctxPlotW / 2;
+      svg += `<text x="${ctxMidX}" y="${py + 34}" font-size="10" fill="#333" font-family="${SERIF}" font-style="italic" text-anchor="middle">All agents · ${panel.dim.toLowerCase()} mention shift</text>`;
+    }
 
-    // Zero line
-    const x0 = xScale(0);
-    if (x0 >= panelPad.l && x0 <= panelPad.l + plotW) {
+    // Ratio column headers — Fig 26/27 style: "β [label]" / "Infection" stacked
+    // with a horizontal dividing line (visual fraction). Columns:
+    //   col 1: |β mention_low| / inf_range  — mention effect for the low-pole agent
+    //   col 2: |β trait + β mention_high| / inf_range  — total position for the high-pole mentioner
+    //   col 3: |β trait| / inf_range  — trait alone (always shown)
+    const rc1 = ratioX0 + ratioColW * 0.5;
+    const rc2 = ratioX0 + ratioColW * 1.5;
+    const rc3 = ratioX0 + ratioColW * 2.5;
+    // Multi-line numerator stacked above a fraction bar, with "Infection" below.
+    // Two numerator lines = room for "β <Pole>" on top and "+ Mention" below.
+    const hLine1Y = py + 8;
+    const hLine2Y = py + 18;
+    const hBarY   = py + 22;
+    const hDenY   = py + 32;
+    function ratioHeader(cx, line1, line2) {
+      // Shrink font when the label is too long to fit in the column width.
+      const maxChars = Math.max(line1.length, (line2 || '').length);
+      const fs = maxChars > 12 ? 7.5 : maxChars > 10 ? 8 : 8.5;
+      if (line2) {
+        svg += `<text x="${cx}" y="${hLine1Y}" font-size="${fs}" fill="#555" font-family="${SERIF}" text-anchor="middle">${line1}</text>`;
+        svg += `<text x="${cx}" y="${hLine2Y}" font-size="${fs}" fill="#555" font-family="${SERIF}" text-anchor="middle">${line2}</text>`;
+      } else {
+        const midY = (hLine1Y + hLine2Y) / 2 + 4;
+        svg += `<text x="${cx}" y="${midY}" font-size="${fs}" fill="#555" font-family="${SERIF}" text-anchor="middle">${line1}</text>`;
+      }
+      svg += `<line x1="${cx - ratioColW / 2 + 4}" y1="${hBarY}" x2="${cx + ratioColW / 2 - 4}" y2="${hBarY}" stroke="#888" stroke-width="0.7"/>`;
+      svg += `<text x="${cx}" y="${hDenY}" font-size="8.5" fill="#555" font-family="${SERIF}" text-anchor="middle">Infection</text>`;
+    }
+    if (panel.type === 'b5') {
+      ratioHeader(rc1, `&#946; Mentioned`, esc(panel.lowLabel));
+      ratioHeader(rc2, `&#946; Mentioned`, esc(panel.highLabel));
+      ratioHeader(rc3, `&#946; Trait`, '');
+    } else {
+      // ctx: always show col 1 (mention). Skip col 3 for Infection panel since
+      // its trait span equals the denominator (trivially 1.0×).
+      ratioHeader(rc1, `&#946; Mentioned`, esc(panel.dim));
+      if (panel.dim !== 'Infection') ratioHeader(rc3, `&#946; Trait`, '');
+    }
+
+    // Per sub-panel: zero line (at v=0), grid + ticks.
+    // Axis styled like Fig 26/27: numeric ticks at each integer on the log-odds
+    // scale, with a "Log-odds" label, and directional arrows at the ends.
+    function drawSubAxis(xScale, xStart, width) {
+      width = width || subPlotW;
+      const x0 = xScale(0);
       svg += `<line x1="${x0}" y1="${panelTop}" x2="${x0}" y2="${panelBot}" stroke="#999" stroke-width="1" stroke-dasharray="4,3"/>`;
+      for (let v = gridStart; v <= gMax + 1e-6; v += step) {
+        const tx = xScale(v);
+        if (Math.abs(v) > 1e-9) {
+          svg += `<line x1="${tx}" y1="${panelTop}" x2="${tx}" y2="${panelBot}" stroke="#eee" stroke-width="0.5"/>`;
+        }
+        svg += `<line x1="${tx}" y1="${panelBot}" x2="${tx}" y2="${panelBot + 4}" stroke="#bbb" stroke-width="0.5"/>`;
+        svg += `<text x="${tx}" y="${panelBot + 13}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${v % 1 === 0 ? v : v.toFixed(1)}</text>`;
+      }
+      svg += `<line x1="${xStart}" y1="${panelBot}" x2="${xStart + width}" y2="${panelBot}" stroke="#bbb" stroke-width="0.5"/>`;
+      svg += `<text x="${xStart + 4}" y="${panelBot + 26}" font-size="8" fill="#999" font-family="${SERIF}" font-style="italic">← Go out more</text>`;
+      svg += `<text x="${xStart + width - 4}" y="${panelBot + 26}" font-size="8" fill="#999" font-family="${SERIF}" font-style="italic" text-anchor="end">Stay home more →</text>`;
+      svg += `<text x="${xStart + width / 2}" y="${panelBot + 26}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">Log-odds</text>`;
+    }
+    if (panel.type === 'b5') {
+      drawSubAxis(xScaleLow,  panelPad.l);
+      drawSubAxis(xScaleHigh, panelPad.l + subPlotW + subGap);
+      // Vertical divider between sub-panels
+      const dividerX = panelPad.l + subPlotW + subGap / 2;
+      svg += `<line x1="${dividerX}" y1="${panelTop - 6}" x2="${dividerX}" y2="${panelBot + 4}" stroke="#bbb" stroke-width="0.5" stroke-dasharray="2,3"/>`;
+    } else {
+      // ctx: single wide axis spanning full plot width
+      drawSubAxis(xScaleCtx, panelPad.l, ctxPlotW);
     }
 
-    // Grid lines + log-odds ticks
-    for (let v = gridStart; v <= gMax; v += step) {
-      const tx = xScale(v);
-      svg += `<line x1="${tx}" y1="${panelTop}" x2="${tx}" y2="${panelBot}" stroke="#eee" stroke-width="0.5"/>`;
-      svg += `<line x1="${tx}" y1="${panelBot}" x2="${tx}" y2="${panelBot + 4}" stroke="#bbb" stroke-width="0.5"/>`;
-      svg += `<text x="${tx}" y="${panelBot + 13}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
-    }
-    svg += `<text x="${panelPad.l - 8}" y="${panelBot + 13}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="end">Log-odds</text>`;
-
-    // Secondary axis: P(stay home)
-    const probY = panelBot + 22;
-    svg += `<text x="${panelPad.l - 8}" y="${probY + 10}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="end">P(stay)</text>`;
-    svg += `<line x1="${panelPad.l}" y1="${probY}" x2="${panelPad.l + plotW}" y2="${probY}" stroke="#ddd" stroke-width="0.5"/>`;
-    for (let v = gridStart; v <= gMax; v += step) {
-      const px = xScale(v);
-      svg += `<line x1="${px}" y1="${probY}" x2="${px}" y2="${probY + 3}" stroke="#bbb" stroke-width="0.5"/>`;
-      svg += `<text x="${px}" y="${probY + 12}" font-size="6.5" fill="#999" font-family="${SERIF}" text-anchor="middle">${fmtProb(loToProb(v))}</text>`;
-    }
-    [{p:0.05,l:'5%'},{p:0.25,l:'25%'},{p:0.50,l:'50%'},{p:0.75,l:'75%'},{p:0.95,l:'95%'}].forEach(m => {
-      const lo = Math.log(m.p / (1 - m.p));
-      if (lo < gMin || lo > gMax) return;
-      const px = xScale(lo);
-      let close = false;
-      for (let v = gridStart; v <= gMax; v += step) { if (Math.abs(px - xScale(v)) < 18) { close = true; break; } }
-      if (close) return;
-      svg += `<line x1="${px}" y1="${probY}" x2="${px}" y2="${probY + 3}" stroke="#bbb" stroke-width="0.5"/>`;
-      svg += `<text x="${px}" y="${probY + 12}" font-size="6.5" fill="#999" font-family="${SERIF}" text-anchor="middle">${m.l}</text>`;
-    });
-
-    // Direction labels
-    svg += `<text x="${panelPad.l + 4}" y="${py + panelH - 2}" font-size="8" fill="#999" font-family="${SERIF}" font-style="italic">\u2190 More go-out</text>`;
-    svg += `<text x="${W - panelPad.r - 4}" y="${py + panelH - 2}" font-size="8" fill="#999" font-family="${SERIF}" font-style="italic" text-anchor="end">More stay-home \u2192</text>`;
-
-    // Plot each config row
+    // Plot rows
     let rowIdx = 0;
     let lastProv = '';
-    configs.forEach(c => {
+    rows.forEach(({ c, pos }) => {
       if (c.provider !== lastProv && lastProv !== '') rowIdx += gapProv / rowH;
       lastProv = c.provider;
-
       const cy = panelTop + rowIdx * rowH + rowH / 2;
-      const coefs = allRegs[c.key].model3.coefficients;
-      const contrast = allRegs[c.key].model3.contrast_flags || {};
-      const cf = contrast[panel.dimKey];
-      const insuff = cf ? !cf.sufficient : true;
-      const mentionRates = traitData.mention_rates ? (traitData.mention_rates[c.key] || {}) : {};
-      const rate = mentionRates[panel.rateDim] || 0;
 
-      // Model label
+      // Model label (left margin)
       svg += `<text x="${panelPad.l - 6}" y="${(cy + 3.5).toFixed(1)}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="end">${esc(c.label)}</text>`;
 
-      const combos = insuff ? null : comboPositions(coefs, panel);
-      if (!combos) {
-        // Blank row for insufficient contrast
+      // ── CTX panel branch: simple 2-marker shift per row ──
+      if (pos.type === 'ctx') {
+        // Row-level filter (panelRows) already excludes non-sig ctx; always render.
+        const px0 = xScaleCtx(clampV(0));
+        const pxM = xScaleCtx(clampV(pos.mention));
+        // Connecting line
+        svg += `<line x1="${px0}" y1="${cy}" x2="${pxM}" y2="${cy}" stroke="${c.color}" stroke-width="1.2" opacity="0.35"/>`;
+        // ○ baseline (no mention)
+        svg += `<circle cx="${px0}" cy="${cy}" r="3.3" fill="white" stroke="${c.color}" stroke-width="1.4"/>`;
+        // ● mention
+        svg += `<circle cx="${pxM}" cy="${cy}" r="3.3" fill="${c.color}"/>`;
+
+        // Ratios: col 1 = |β_mentioned|/inf_range; col 3 = |β_trait_span|/inf_range
+        const range = infRange[c.key];
+        const r1 = Math.abs(pos.mention) / range;
+        const r3 = Math.abs(pos.traitSpan) / range;
+        function fmtRatioCtx(v) {
+          if (v == null || !isFinite(v)) return '';
+          if (v < 0.05) return v.toFixed(2) + '×';
+          return v.toFixed(v < 1 ? 2 : 1) + '×';
+        }
+        svg += `<text x="${rc1}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatioCtx(r1)}</text>`;
+        if (panel.dim !== 'Infection') {
+          svg += `<text x="${rc3}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatioCtx(r3)}</text>`;
+        }
+
+        // Tooltip
+        const tt = `○ no mention: 0.00<br>● + mention: ${pos.mention.toFixed(2)}<br>β<sub>mention</sub> = ${pos.mention.toFixed(3)}<br>${esc(panel.traitLabel)} span = ${pos.traitSpan.toFixed(2)}`;
+        svg += `<rect x="${panelPad.l}" y="${(cy - rowH / 2).toFixed(1)}" width="${ctxPlotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(c.label)} — ${panel.dim}" data-color="${c.color}" data-extra="${tt}" style="cursor:default"/>`;
         rowIdx++;
         return;
       }
 
-      const inf = infData[c.key];
+      // ── B5 panel branch (existing logic) ──
+      const px1 = xScaleLow(clampV(pos.lowNo));
+      const px2 = pos.lowYes != null ? xScaleLow(clampV(pos.lowYes)) : null;
+      const px3 = xScaleHigh(clampV(pos.hiNo));
+      const px4 = pos.hiYes != null ? xScaleHigh(clampV(pos.hiYes)) : null;
 
-      // Infection range (amber) — skip for Infection panel
-      if (panel.dim !== 'Infection') {
-        const iMinX = xScale(clampV(inf.intercept + inf.minInfLO));
-        const iMaxX = xScale(clampV(inf.intercept + inf.maxInfLO));
-        svg += `<line x1="${iMinX}" y1="${cy}" x2="${iMaxX}" y2="${cy}" stroke="#D97706" stroke-width="1.5" opacity="0.5"/>`;
-        svg += `<circle cx="${iMinX}" cy="${cy}" r="2.5" fill="#D97706" stroke="white" stroke-width="0.5" opacity="0.5"/>`;
-        const dd = 3.5;
-        svg += `<polygon points="${iMaxX},${cy - dd} ${iMaxX + dd},${cy} ${iMaxX},${cy + dd} ${iMaxX - dd},${cy}" fill="#D97706" stroke="white" stroke-width="0.5" opacity="0.5"/>`;
+      // A sub-panel is rendered iff its matching pole's mention flag was included.
+      //   - LEFT rendered iff β_mention_low is in the model (pos.lowYes != null).
+      //   - RIGHT rendered iff β_mention_high is in the model (pos.hiYes != null).
+      const showLow  = pos.lowYes != null;
+      const showHigh = pos.hiYes != null;
+      // Significance on the MENTION effect (solid filled marker iff p < 0.05; faded otherwise).
+      const sigLow  = pos.pLow  != null && pos.pLow  < 0.05;
+      const sigHigh = pos.pHigh != null && pos.pHigh < 0.05;
+      const fadedOp = 0.28;
+
+      // Connecting lines — only for significant mention effects
+      if (showLow && sigLow) {
+        svg += `<line x1="${px1}" y1="${cy}" x2="${px2}" y2="${cy}" stroke="${c.color}" stroke-width="1.2" opacity="0.35"/>`;
+      }
+      if (showHigh && sigHigh) {
+        svg += `<line x1="${px3}" y1="${cy}" x2="${px4}" y2="${cy}" stroke="${c.color}" stroke-width="1.2" opacity="0.35"/>`;
       }
 
-      // Intercept (red I-beam)
-      const intX = xScale(clampV(inf.intercept));
-      svg += `<line x1="${intX}" y1="${cy - 6}" x2="${intX}" y2="${cy + 6}" stroke="#e11d48" stroke-width="1.5" opacity="0.5"/>`;
-      svg += `<line x1="${intX - 3}" y1="${cy - 6}" x2="${intX + 3}" y2="${cy - 6}" stroke="#e11d48" stroke-width="1" opacity="0.5"/>`;
-      svg += `<line x1="${intX - 3}" y1="${cy + 6}" x2="${intX + 3}" y2="${cy + 6}" stroke="#e11d48" stroke-width="1" opacity="0.5"/>`;
+      const r = 3.3;
+      if (showLow) {
+        // ○ baseline low-pole agent (always shown — reference point)
+        svg += `<circle cx="${px1}" cy="${cy}" r="${r}" fill="white" stroke="${c.color}" stroke-width="1.4"/>`;
+        // ● low + mention — only draw if significant
+        if (sigLow) {
+          svg += `<circle cx="${px2}" cy="${cy}" r="${r}" fill="${c.color}"/>`;
+        }
+      }
+      if (showHigh) {
+        // ○ baseline high-pole agent (hollow circle, always shown)
+        svg += `<circle cx="${px3}" cy="${cy}" r="${r}" fill="white" stroke="${c.color}" stroke-width="1.4"/>`;
+        // ● high + mention — only draw if significant
+        if (sigHigh) {
+          svg += `<circle cx="${px4}" cy="${cy}" r="${r}" fill="${c.color}"/>`;
+        }
+      }
 
-      // 4 combo positions
-      const px1 = xScale(clampV(combos.lowNo));
-      const px2 = xScale(clampV(combos.lowYes));
-      const px3 = xScale(clampV(combos.hiNo));
-      const px4 = xScale(clampV(combos.hiYes));
+      // Tooltip — one hit area per sub-panel, only where there's data
+      const f = v => v != null ? v.toFixed(2) : '—';
+      if (showLow) {
+        let ttLow = `○ ${panel.lowLabel}, no mention: 0.00 (reference)`;
+        ttLow += `<br>● ${panel.lowLabel} + mention: ${f(pos.lowYes)}`;
+        ttLow += `<br>β<sub>mention ${esc(panel.lowLabel.toLowerCase())}</sub> = ${f(pos.betaLow)}`;
+        svg += `<rect x="${panelPad.l}" y="${(cy - rowH / 2).toFixed(1)}" width="${subPlotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(c.label)} — ${panel.dim} / ${esc(panel.lowLabel)}" data-color="${c.color}" data-extra="${ttLow}" style="cursor:default"/>`;
+      }
+      if (showHigh) {
+        let ttHigh = `△ ${panel.highLabel}, no mention: ${f(pos.hiNo)} &nbsp;(= β<sub>${esc(panel.traitKey)}</sub>)`;
+        ttHigh += `<br>▲ ${panel.highLabel} + mention: ${f(pos.hiYes)} &nbsp;(= β<sub>${esc(panel.traitKey)}</sub> + β<sub>mention ${esc(panel.highLabel.toLowerCase())}</sub>)`;
+        ttHigh += `<br>β<sub>${esc(panel.traitKey)}</sub> = ${f(pos.betaTrait)}`;
+        ttHigh += `<br>β<sub>mention ${esc(panel.highLabel.toLowerCase())}</sub> = ${f(pos.betaHigh)}`;
+        svg += `<rect x="${panelPad.l + subPlotW + subGap}" y="${(cy - rowH / 2).toFixed(1)}" width="${subPlotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(c.label)} — ${panel.dim} / ${esc(panel.highLabel)}" data-color="${c.color}" data-extra="${ttHigh}" style="cursor:default"/>`;
+      }
 
-      // Connecting lines between mention pairs
-      svg += `<line x1="${px1}" y1="${cy}" x2="${px2}" y2="${cy}" stroke="${c.color}" stroke-width="1.5" opacity="0.25"/>`;
-      svg += `<line x1="${px3}" y1="${cy}" x2="${px4}" y2="${cy}" stroke="${c.color}" stroke-width="1.5" opacity="0.25"/>`;
-
-      const r = 3.5, td = 4;
-
-      // \u25cb low, no mention (hollow circle)
-      svg += `<circle cx="${px1}" cy="${cy}" r="${r}" fill="white" stroke="${c.color}" stroke-width="1.5"/>`;
-      // \u25cf low, mentioned (filled circle)
-      svg += `<circle cx="${px2}" cy="${cy}" r="${r}" fill="${c.color}"/>`;
-      // \u25b3 high, no mention (hollow triangle)
-      svg += `<polygon points="${px3},${cy - td} ${px3 + td},${cy + td} ${px3 - td},${cy + td}" fill="white" stroke="${c.color}" stroke-width="1.5"/>`;
-      // \u25b2 high, mentioned (filled triangle)
-      svg += `<polygon points="${px4},${cy - td} ${px4 + td},${cy + td} ${px4 - td},${cy + td}" fill="${c.color}"/>`;
-
-      // Hit-target tooltip
-      const rPct = Math.round(rate * 100);
-      const f = v => v.toFixed(2);
-      const fp = v => fmtProb(loToProb(v));
-      let ttExtra = `\u25cb ${panel.lowLabel}, no mention: ${f(combos.lowNo)} (${fp(combos.lowNo)})`;
-      ttExtra += `<br>\u25cf ${panel.lowLabel}, mentioned: ${f(combos.lowYes)} (${fp(combos.lowYes)})`;
-      ttExtra += `<br>\u25b3 ${panel.highLabel}, no mention: ${f(combos.hiNo)} (${fp(combos.hiNo)})`;
-      ttExtra += `<br>\u25b2 ${panel.highLabel}, mentioned: ${f(combos.hiYes)} (${fp(combos.hiYes)})`;
-      ttExtra += `<br>\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500`;
-      const gapNo = combos.hiNo - combos.lowNo;
-      const gapYes = combos.hiYes - combos.lowYes;
-      ttExtra += `<br>Trait gap (no mention): ${f(gapNo)}`;
-      ttExtra += `<br>Trait gap (mentioned): ${f(gapYes)}`;
-      const ampDelta = Math.abs(gapYes) - Math.abs(gapNo);
-      ttExtra += `<br>Amplification \u0394: ${ampDelta > 0 ? '+' : ''}${f(ampDelta)}`;
-      ttExtra += `<br>Mention rate: ${rPct}%`;
-      svg += `<rect x="${panelPad.l}" y="${(cy - rowH / 2).toFixed(1)}" width="${plotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(c.label)} \u2014 ${panel.dim}" data-color="${c.color}" data-extra="${ttExtra}" style="cursor:default"/>`;
+      // ── Ratio columns (right of the plot) ──
+      // All ratios are absolute values (|x|) divided by this config's infection
+      // log-odds range. Cells are only rendered when the underlying coefficient
+      // exists and (for mention columns) is significant at p < 0.05.
+      const range = infRange[c.key];
+      function fmtRatio(v) {
+        if (v == null || !isFinite(v)) return '';
+        const av = Math.abs(v);
+        if (av < 0.05) return av.toFixed(2) + '×';
+        return av.toFixed(av < 1 ? 2 : 1) + '×';
+      }
+      // Col 1: |β_mention_low| / inf_range — pure mention effect for the low pole.
+      // Not the combined low-pole baseline + mention position — just the shift.
+      if (showLow && sigLow) {
+        svg += `<text x="${rc1}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatio(pos.betaLow / range)}</text>`;
+      }
+      // Col 2: |β_mention_high| / inf_range — pure mention effect for the high pole.
+      if (showHigh && sigHigh) {
+        svg += `<text x="${rc2}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatio(pos.betaHigh / range)}</text>`;
+      }
+      // Col 3: |β_trait| / inf_range — trait effect alone (always shown).
+      svg += `<text x="${rc3}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatio(pos.betaTrait / range)}</text>`;
 
       rowIdx++;
     });
 
-    // Provider group separator lines (second pass)
-    rowIdx = 0;
-    lastProv = '';
-    configs.forEach(c => {
+    // Provider separators (span both sub-panels)
+    let sepIdx = 0; lastProv = '';
+    rows.forEach(({ c }) => {
       if (c.provider !== lastProv && lastProv !== '') {
-        const sepY = panelTop + rowIdx * rowH;
+        const sepY = panelTop + sepIdx * rowH;
         svg += `<line x1="${panelPad.l}" y1="${sepY.toFixed(1)}" x2="${W - panelPad.r}" y2="${sepY.toFixed(1)}" stroke="#ddd" stroke-width="0.5"/>`;
-        rowIdx += gapProv / rowH;
+        sepIdx += gapProv / rowH;
       }
       lastProv = c.provider;
-      rowIdx++;
+      sepIdx++;
     });
+
+    py += panelH + panelGap;
   });
 
-  // Footnotes
-  const footY = totalH + 16;
-  const footnotes = [
-    '\u25cb Low-end, not mentioned  |  \u25cf Low-end, mentioned  |  \u25b3 High-end, not mentioned  |  \u25b2 High-end, mentioned',
-    'Red I-beam = intercept (baseline). Amber markers = infection log-odds range (0\u20137%). Blank rows = insufficient mention-rate contrast (<5% or >95%).',
-    'Source: Model 3 random-effects logit with trait \u00d7 mention interactions. Positions = predicted log-odds at infection = 0%, other traits at reference level.',
-  ];
-  footnotes.forEach((f, i) => {
-    svg += `<text x="10" y="${footY + i * 12}" font-size="7.5" fill="#aaa" font-family="${SERIF}">${f}</text>`;
-  });
-
-  const svgH = footY + footnotes.length * 12 + 8;
-  chartEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${svgH}" viewBox="0 0 ${W} ${svgH}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+  chartEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
   wireTooltips(chartEl);
 }
 
 
-/* ── Figure 36: Cross-Model Amplification Matrix ──────────── */
-function renderRAAmplificationMatrix(allRegs, traitData) {
-  const chartEl = document.getElementById('ra-amp36-chart');
-  if (!chartEl) return;
+/* ── Figure 41: Persona Individuation (within vs across agent similarity) ── */
+/* Research Q: does the model produce genuinely agent-specific reasoning,
+   or write the same template regardless of persona?
+   Method: cosine similarity on OpenAI text-embedding-3-large vectors.
+     within  = mean pairwise cosine across 5 reps per (agent, infection_level)
+     across  = mean cosine of random pairs of DIFFERENT agents at same level
+     delta   = within − across.  Large positive delta = strong individuation. */
+function renderRAPersonaSimilarityAuthor(data) { renderRAPersonaSimilarity(data, 'ra-persona-sim-author-chart'); }
+function renderRAReasoningDiversityAuthor(data)  { renderRAReasoningDiversity(data,  'ra-diversity-author-chart');  }
 
-  // Paired columns: 2 per Big Five (neg pole, pos pole) + 2 context
-  const B5_COLS = [
-    { dim: 'Extraversion',        mentionKey: 'mentioned_ext', interKey: 'extraverted_mentioned_ext',   dimKey: 'ext', negLabel: 'Intro-\nverted', posLabel: 'Extra-\nverted', rateDim: 'extraversion' },
-    { dim: 'Agreeableness',       mentionKey: 'mentioned_agr', interKey: 'agreeable_mentioned_agr',     dimKey: 'agr', negLabel: 'Antag-\nonistic', posLabel: 'Agree-\nable',    rateDim: 'agreeableness' },
-    { dim: 'Conscientiousness',   mentionKey: 'mentioned_con', interKey: 'conscientious_mentioned_con', dimKey: 'con', negLabel: 'Uncon-\nscient.', posLabel: 'Consci-\nentious', rateDim: 'conscientiousness' },
-    { dim: 'Emotional Stability', mentionKey: 'mentioned_neu', interKey: 'emot_stable_mentioned_neu',   dimKey: 'neu', negLabel: 'Neur-\notic',    posLabel: 'Emot.\nstable',   rateDim: 'neuroticism' },
-    { dim: 'Openness',            mentionKey: 'mentioned_ope', interKey: 'open_to_exp_mentioned_ope',   dimKey: 'ope', negLabel: 'Closed',          posLabel: 'Open',            rateDim: 'openness' },
-  ];
-  const CTX_COLS = [
-    { dim: 'Infection', interKey: 'infection_pct_mentioned_infection', dimKey: 'infection', label: 'Infection\nslope Δ', rateDim: 'infection' },
-    { dim: 'Age',       interKey: 'age_years_mentioned_age',          dimKey: 'age',       label: 'Age\nslope Δ',       rateDim: 'age' },
-  ];
+function renderRAPersonaSimilarity(data, elId = 'ra-persona-sim-chart', modelFilter = null) {
+  const el = document.getElementById(elId);
+  if (!el) return;
 
-  // Total columns: 10 (B5 pairs) + 2 (context) = 12
-  const nCols = B5_COLS.length * 2 + CTX_COLS.length;
-  const models = CONFIG.MODELS;
-  const nModels = models.length;
+  // Sort configs by delta (descending = most individuating first).
+  const rows = [];
+  const cfgKeys = Object.keys(data);
+  CONFIG.MODELS.forEach(m => {
+    const key = configDirKey(m);
+    if (!data[key]) return;
+    if (modelFilter && !modelFilter.has(key)) return;
+    const r = data[key];
+    rows.push({
+      key, label: m.label, provider: m.provider,
+      color: CONFIG.PROVIDER_COLORS[m.provider] || '#999',
+      within: r.within_mean, across: r.across_mean, delta: r.delta,
+    });
+  });
+  // Keep CONFIG.MODELS order (provider-grouped) rather than sorting by delta
 
-  const cellW = 52, cellH = 30;
-  const labelW = 170;
-  const topLabelH = 80;
-  const pad = { l: labelW + 10, t: topLabelH, r: 20, b: 50 };
-  const gridW = nCols * cellW;
-  const W = pad.l + gridW + pad.r;
-  const H = pad.t + nModels * cellH + pad.b;
+  const W = Math.min(el.parentElement?.offsetWidth || 900, 900);
+  const rowH = 20;
+  const pad = { l: 170, t: 72, r: 80, b: 50 };
+  const plotW = W - pad.l - pad.r;
+  const H = pad.t + rows.length * rowH + pad.b;
 
-  // Build column metadata
-  const cols = [];
-  for (const b5 of B5_COLS) {
-    cols.push({ type: 'neg', dim: b5.dim, label: b5.negLabel, dimKey: b5.dimKey, mentionKey: b5.mentionKey, interKey: b5.interKey, rateDim: b5.rateDim });
-    cols.push({ type: 'pos', dim: b5.dim, label: b5.posLabel, dimKey: b5.dimKey, mentionKey: b5.mentionKey, interKey: b5.interKey, rateDim: b5.rateDim });
-  }
-  for (const ctx of CTX_COLS) {
-    cols.push({ type: 'ctx', dim: ctx.dim, label: ctx.label, dimKey: ctx.dimKey, interKey: ctx.interKey, rateDim: ctx.rateDim });
-  }
-
-  // Scale: fixed ±6 like forest plot
-  const maxCoef = 6;
+  // X scale: cosine similarity (0..1). Zoom in a bit since values cluster above 0.5.
+  let xMin = 0.5, xMax = 1.0;
+  rows.forEach(r => {
+    if (r.across < xMin) xMin = Math.max(0, r.across - 0.05);
+  });
+  const xScale = v => pad.l + (v - xMin) / (xMax - xMin) * plotW;
 
   let svg = '';
 
-  // Column headers — dimension group labels above pole labels
-  let colIdx = 0;
-  for (const b5 of B5_COLS) {
-    const xMid = pad.l + colIdx * cellW + cellW;  // center of 2-column group
-    svg += `<text x="${xMid}" y="${pad.t - 52}" font-size="9" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${b5.dim}</text>`;
-    colIdx += 2;
-  }
-  // Context group label
-  const ctxXMid = pad.l + 10 * cellW + CTX_COLS.length * cellW / 2;
-  svg += `<text x="${ctxXMid}" y="${pad.t - 52}" font-size="9" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold" font-style="italic">Context</text>`;
+  // Title
+  svg += `<text x="${W / 2}" y="20" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">Persona Individuation — Cosine Similarity of Reasoning Embeddings</text>`;
+  svg += `<text x="${W / 2}" y="36" font-size="9" fill="#777" font-family="${SERIF}" text-anchor="middle" font-style="italic">Same-decision pairs only. Within-agent (5 reps, same agent) vs across-agent (different agents, same level). Larger gap = more individuation.</text>`;
 
-  // Individual pole labels
-  for (let c = 0; c < nCols; c++) {
-    const col = cols[c];
-    const x = pad.l + c * cellW + cellW / 2;
-    const lines = col.label.split('\n');
-    for (let li = 0; li < lines.length; li++) {
-      svg += `<text x="${x}" y="${pad.t - 32 + li * 12}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="middle">${lines[li]}</text>`;
-    }
+  // X axis
+  const axisY = pad.t + rows.length * rowH;
+  for (let v = Math.ceil(xMin * 20) / 20; v <= xMax + 1e-9; v += 0.05) {
+    const x = xScale(v);
+    svg += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${axisY}" stroke="#eee" stroke-width="0.5"/>`;
+    svg += `<line x1="${x}" y1="${axisY}" x2="${x}" y2="${axisY + 4}" stroke="#bbb" stroke-width="0.5"/>`;
+    svg += `<text x="${x}" y="${axisY + 14}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${v.toFixed(2)}</text>`;
   }
+  svg += `<text x="${pad.l + plotW / 2}" y="${axisY + 30}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle">Mean cosine similarity</text>`;
 
   // Rows
-  for (let r = 0; r < nModels; r++) {
-    const m = models[r];
+  rows.forEach((r, i) => {
+    const y = pad.t + i * rowH + rowH / 2;
+    // Label
+    svg += `<circle cx="${pad.l - 8}" cy="${y}" r="3" fill="${r.color}"/>`;
+    svg += `<text x="${pad.l - 14}" y="${y + 3}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="end">${esc(r.label)}</text>`;
+
+    // Across dot (hollow)
+    svg += `<circle cx="${xScale(r.across)}" cy="${y}" r="3.5" fill="white" stroke="${r.color}" stroke-width="1.5"/>`;
+
+    // Within dot (filled)
+    svg += `<circle cx="${xScale(r.within)}" cy="${y}" r="3.5" fill="${r.color}"/>`;
+
+    // Connecting line + Δ label on the right
+    svg += `<line x1="${xScale(r.across)}" y1="${y}" x2="${xScale(r.within)}" y2="${y}" stroke="${r.color}" stroke-width="0.8" opacity="0.35" stroke-dasharray="2,2"/>`;
+    svg += `<text x="${pad.l + plotW + 6}" y="${y + 3}" font-size="9" fill="${r.color}" font-family="${SERIF}">Δ=${r.delta.toFixed(2)}</text>`;
+
+    // Tooltip hit target
+    const tt = `within = ${r.within.toFixed(3)}<br>across = ${r.across.toFixed(3)}<br>Δ = ${r.delta.toFixed(3)}`;
+    svg += `<rect x="${pad.l}" y="${pad.t + i * rowH}" width="${plotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(r.label)} — persona individuation" data-color="${r.color}" data-extra="${tt}" style="cursor:default"/>`;
+  });
+
+  // Legend — positioned on its own row between subtitle and plot
+  const legY = pad.t - 16;
+  svg += `<circle cx="${pad.l}" cy="${legY}" r="3.5" fill="white" stroke="#666" stroke-width="1.5"/>`;
+  svg += `<text x="${pad.l + 8}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Across agents (different persona)</text>`;
+  svg += `<circle cx="${pad.l + 220}" cy="${legY}" r="3.5" fill="#666"/>`;
+  svg += `<text x="${pad.l + 228}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Within agent (same persona, 5 reps)</text>`;
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+  wireTooltips(el);
+}
+
+
+/* ── Figure 42: Effective Reasoning Modes — K-Means by Decision ── */
+/* For each model: best K chosen by silhouette score run separately on
+   yes-only and no-only embeddings (K ∈ [2, 20], PCA-128, n=3000 subsample).
+   Paired dots per row: yes-decision K (triangle up) and no-decision K (triangle down).
+   Models sorted by overall best_k descending.
+   Key question: do models have different reasoning template repertoires for
+   "stay home" vs "go out" decisions? */
+function renderRAReasoningDiversity(data, elId = 'ra-diversity-chart') {
+  const el = document.getElementById(elId);
+  if (!el) return;
+
+  const rows = [];
+  CONFIG.MODELS.forEach(m => {
     const key = configDirKey(m);
-    const y = pad.t + r * cellH;
-    const provColor = CONFIG.PROVIDER_COLORS[m.provider] || '#999';
+    const r = data[key];
+    if (!r) return;
+    rows.push({
+      key, label: m.label, provider: m.provider,
+      color: CONFIG.PROVIDER_COLORS[m.provider] || '#999',
+      kOverall: r.overall?.best_k ?? null,
+      kYes:     r.yes_only?.best_k ?? null,
+      kNo:      r.no_only?.best_k ?? null,
+      silYes:   r.yes_only?.best_silhouette ?? null,
+      silNo:    r.no_only?.best_silhouette ?? null,
+      nYes:     r.n_yes ?? null,
+      nNo:      r.n_no ?? null,
+    });
+  });
+  if (rows.length === 0) return;
 
-    // Row label
-    svg += `<circle cx="${pad.l - labelW}" cy="${y + cellH / 2}" r="4" fill="${provColor}"/>`;
-    svg += `<text x="${pad.l - labelW + 10}" y="${y + cellH / 2 + 3}" font-size="9" fill="#333" font-family="${SERIF}">${esc(m.label)}</text>`;
+  rows.sort((a, b) => (b.kOverall ?? 0) - (a.kOverall ?? 0));
 
-    const regData = allRegs[key];
-    const m3 = regData && regData.model3 && !regData.model3.error ? regData.model3 : null;
-    const coefs = m3 ? m3.coefficients : {};
-    const contrast = m3 ? (m3.contrast_flags || {}) : {};
-    const mentionRates = traitData.mention_rates ? (traitData.mention_rates[key] || {}) : {};
+  const labelW = 160, rowH = 22;
+  const pad = { l: labelW + 10, t: 60, r: 60, b: 40 };
+  const plotW = 420;
+  const W = pad.l + plotW + pad.r;
+  const H = pad.t + rows.length * rowH + pad.b;
 
-    for (let c = 0; c < nCols; c++) {
-      const col = cols[c];
-      const x = pad.l + c * cellW;
-      const cf = contrast[col.dimKey];
-      const insuff = cf ? !cf.sufficient : true;
-      const rate = mentionRates[col.rateDim] || 0;
+  const kMin = 1, kMax = 21;
+  const xScale = v => pad.l + (v - kMin) / (kMax - kMin) * plotW;
 
-      let est = null, se = null, p = null, sig = false, isDerived = false, available = false, isInterExcluded = false;
-
-      if (col.type === 'neg') {
-        // Negative-pole: β_mentioned
-        const mc = coefs[col.mentionKey];
-        if (mc) { est = mc.estimate; se = mc.se; p = mc.p; sig = mc.p < 0.05; available = true; }
-      } else if (col.type === 'pos') {
-        // Positive-pole: β_mentioned + β_interaction (or just β_mentioned if interaction excluded)
-        const mc = coefs[col.mentionKey];
-        const ic = coefs[col.interKey];
-        if (mc && ic) {
-          est = mc.estimate + ic.estimate;
-          se = Math.sqrt(mc.se ** 2 + ic.se ** 2);
-          const ci_lo = est - 1.96 * se, ci_hi = est + 1.96 * se;
-          sig = ci_lo > 0 || ci_hi < 0;
-          isDerived = true; available = true;
-        } else if (mc) {
-          // Interaction excluded → both poles share β_mentioned
-          est = mc.estimate; se = mc.se; p = mc.p; sig = mc.p < 0.05;
-          available = true; isInterExcluded = true;
-        }
-      } else {
-        // Context: interaction coefficient
-        const ic = coefs[col.interKey];
-        if (ic) { est = ic.estimate; se = ic.se; p = ic.p; sig = ic.p < 0.05; available = true; }
-      }
-
-      // Background
-      svg += `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" fill="white" stroke="#eee" stroke-width="0.5"/>`;
-
-      if (!available || !m3) {
-        svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 3}" font-size="7" fill="#ddd" font-family="${SERIF}" text-anchor="middle">—</text>`;
-        continue;
-      }
-
-      const dotCx = x + cellW / 2;
-      const dotCy = y + cellH / 2;
-      const absEst = Math.min(Math.abs(est), maxCoef);
-      const dotR = 3 + (absEst / maxCoef) * 10;
-      const dotColor = est > 0 ? '#E53935' : '#2196F3';
-      const opacity = sig ? 0.85 : 0.2;
-
-      if (insuff) {
-        svg += `<circle cx="${dotCx}" cy="${dotCy}" r="${Math.max(dotR, 4)}" fill="none" stroke="#ccc" stroke-width="1" stroke-dasharray="2,1"/>`;
-      } else if (isInterExcluded) {
-        svg += `<circle cx="${dotCx}" cy="${dotCy}" r="${dotR}" fill="${dotColor}" opacity="${opacity * 0.5}" stroke="${dotColor}" stroke-width="1" stroke-dasharray="2,1"/>`;
-      } else {
-        svg += `<circle cx="${dotCx}" cy="${dotCy}" r="${dotR}" fill="${dotColor}" opacity="${opacity}"/>`;
-      }
-
-      // Tooltip
-      const pStr = p != null ? (p < 0.001 ? '&lt; .001' : p.toFixed(3)) : (sig ? 'CI excl. 0' : 'CI incl. 0');
-      const derivStr = isDerived ? 'β<sub>mentioned</sub> + β<sub>interaction</sub>' : isInterExcluded ? 'β<sub>mentioned</sub> (interaction excluded)' : col.type === 'ctx' ? 'interaction coef' : 'β<sub>mentioned</sub>';
-      const ttExtra = `β = ${est.toFixed(3)}<br>${derivStr}<br>p = ${pStr}<br>Mention rate: ${Math.round(rate * 100)}%${insuff ? '<br>⚠ Insufficient contrast' : ''}`;
-      const ttLabel = col.type === 'ctx' ? `${col.dim}` : `${col.dim} → ${col.label.replace('\n', ' ')}`;
-      svg += `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" fill="transparent" class="hit-target" data-label="${esc(m.label)}: ${esc(ttLabel)}" data-color="${provColor}" data-extra="${ttExtra}" style="cursor:default"/>`;
-    }
-  }
-
-  // Grid border
-  svg += `<rect x="${pad.l}" y="${pad.t}" width="${gridW}" height="${nModels * cellH}" fill="none" stroke="#999" stroke-width="1"/>`;
-
-  // Provider group separators
-  let prevProvider = '';
-  for (let r = 0; r < nModels; r++) {
-    if (r > 0 && models[r].provider !== prevProvider) {
-      const y = pad.t + r * cellH;
-      svg += `<line x1="${pad.l}" y1="${y}" x2="${pad.l + gridW}" y2="${y}" stroke="#999" stroke-width="1"/>`;
-    }
-    prevProvider = models[r].provider;
-  }
-
-  // Vertical separators between dimension groups (every 2 cols for B5)
-  for (let i = 1; i < B5_COLS.length; i++) {
-    const sx = pad.l + i * 2 * cellW;
-    svg += `<line x1="${sx}" y1="${pad.t}" x2="${sx}" y2="${pad.t + nModels * cellH}" stroke="#e0e0e0" stroke-width="0.5"/>`;
-  }
-  // Stronger separator before context columns
-  const sepX = pad.l + B5_COLS.length * 2 * cellW;
-  svg += `<line x1="${sepX}" y1="${pad.t}" x2="${sepX}" y2="${pad.t + nModels * cellH}" stroke="#999" stroke-width="1"/>`;
+  let svg = '';
+  svg += `<text x="${W / 2}" y="18" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">Effective Reasoning Modes — K-Means by Decision Type</text>`;
+  svg += `<text x="${W / 2}" y="34" font-size="9" fill="#777" font-family="${SERIF}" text-anchor="middle" font-style="italic">Best K by silhouette score (Rousseeuw 1987), run separately on stay-home and go-out response embeddings.</text>`;
 
   // Legend
-  const legY = pad.t + nModels * cellH + 12;
-  svg += `<circle cx="${pad.l + 8}" cy="${legY}" r="6" fill="#E53935" opacity="0.85"/>`;
-  svg += `<text x="${pad.l + 18}" y="${legY + 4}" font-size="8" fill="#555" font-family="${SERIF}">More stay-home (β > 0)</text>`;
-  svg += `<circle cx="${pad.l + 148}" cy="${legY}" r="6" fill="#2196F3" opacity="0.85"/>`;
-  svg += `<text x="${pad.l + 158}" y="${legY + 4}" font-size="8" fill="#555" font-family="${SERIF}">Less stay-home (β < 0)</text>`;
-  svg += `<circle cx="${pad.l + 288}" cy="${legY}" r="4" fill="#E53935" opacity="0.2"/>`;
-  svg += `<text x="${pad.l + 298}" y="${legY + 4}" font-size="8" fill="#555" font-family="${SERIF}">Not Significant</text>`;
-  svg += `<circle cx="${pad.l + 398}" cy="${legY}" r="4" fill="none" stroke="#ccc" stroke-dasharray="2,1"/>`;
-  svg += `<text x="${pad.l + 408}" y="${legY + 4}" font-size="8" fill="#bbb" font-family="${SERIF}">Insufficient Contrast</text>`;
-  svg += `<text x="${pad.l}" y="${legY + 18}" font-size="7" fill="#aaa" font-family="${SERIF}">Dot size ∝ |β|, capped at ±6. Negative-pole = β_mentioned; Positive-pole = β_mentioned + β_interaction (conservative). Context = interaction coefficient.</text>`;
+  const legY = 50;
+  svg += `<polygon points="${pad.l},${legY - 5} ${pad.l - 5},${legY + 4} ${pad.l + 5},${legY + 4}" fill="#2563EB"/>`;
+  svg += `<text x="${pad.l + 10}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Stay home (yes) K</text>`;
+  svg += `<polygon points="${pad.l + 160},${legY + 4} ${pad.l + 155},${legY - 5} ${pad.l + 165},${legY - 5}" fill="#DC2626"/>`;
+  svg += `<text x="${pad.l + 173}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Go out (no) K</text>`;
+  svg += `<line x1="${pad.l + 300}" y1="${legY}" x2="${pad.l + 318}" y2="${legY}" stroke="#aaa" stroke-width="1" stroke-dasharray="3,2"/>`;
+  svg += `<text x="${pad.l + 322}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Overall K</text>`;
 
-  chartEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
-  wireTooltips(chartEl);
+  // Grid
+  for (let k = 2; k <= 20; k += 2) {
+    const x = xScale(k);
+    svg += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t + rows.length * rowH}" stroke="#f0f0f0" stroke-width="0.5"/>`;
+    svg += `<text x="${x}" y="${pad.t + rows.length * rowH + 14}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">${k}</text>`;
+  }
+  svg += `<text x="${pad.l + plotW / 2}" y="${pad.t + rows.length * rowH + 30}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle">Best K (effective reasoning modes)</text>`;
+
+  // Triangle helpers
+  const triUp   = (cx, cy, r) => `${cx},${cy - r} ${cx - r},${cy + r} ${cx + r},${cy + r}`;
+  const triDown = (cx, cy, r) => `${cx},${cy + r} ${cx - r},${cy - r} ${cx + r},${cy - r}`;
+
+  rows.forEach((r, i) => {
+    const y = pad.t + i * rowH + rowH / 2;
+
+    // Label
+    svg += `<circle cx="${pad.l - labelW}" cy="${y}" r="3" fill="${r.color}"/>`;
+    svg += `<text x="${pad.l - labelW + 9}" y="${y + 3}" font-size="9" fill="#333" font-family="${SERIF}">${esc(r.label)}</text>`;
+
+    // Overall K as dashed vertical tick
+    if (r.kOverall != null) {
+      const xO = xScale(r.kOverall);
+      svg += `<line x1="${xO}" y1="${y - 7}" x2="${xO}" y2="${y + 7}" stroke="#bbb" stroke-width="1" stroke-dasharray="2,2"/>`;
+    }
+
+    // Connecting line between yes and no dots
+    if (r.kYes != null && r.kNo != null) {
+      svg += `<line x1="${xScale(r.kYes)}" y1="${y}" x2="${xScale(r.kNo)}" y2="${y}" stroke="#ddd" stroke-width="1"/>`;
+    }
+
+    // Yes triangle (up, blue)
+    if (r.kYes != null) {
+      const cx = xScale(r.kYes);
+      const tt = `${esc(r.label)}<br>Stay-home K = ${r.kYes} &nbsp;(sil=${r.silYes != null ? r.silYes.toFixed(3) : 'n/a'}, n=${r.nYes?.toLocaleString()})`;
+      svg += `<polygon points="${triUp(cx, y, 5)}" fill="#2563EB" opacity="0.85" class="hit-target" data-label="${esc(r.label)}" data-color="#2563EB" data-extra="${tt}" style="cursor:default"/>`;
+      svg += `<text x="${pad.l + plotW + 6}" y="${y + 3}" font-size="8" fill="#2563EB" font-family="${SERIF}">${r.kYes}</text>`;
+    }
+
+    // No triangle (down, red)
+    if (r.kNo != null) {
+      const cx = xScale(r.kNo);
+      const tt = `${esc(r.label)}<br>Go-out K = ${r.kNo} &nbsp;(sil=${r.silNo != null ? r.silNo.toFixed(3) : 'n/a'}, n=${r.nNo?.toLocaleString()})`;
+      svg += `<polygon points="${triDown(cx, y, 5)}" fill="#DC2626" opacity="0.85" class="hit-target" data-label="${esc(r.label)}" data-color="#DC2626" data-extra="${tt}" style="cursor:default"/>`;
+      svg += `<text x="${pad.l + plotW + 20}" y="${y + 3}" font-size="8" fill="#DC2626" font-family="${SERIF}">${r.kNo}</text>`;
+    }
+  });
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+  wireTooltips(el);
+}
+
+
+/* ── Figure 43: Decision Drivers Heatmap (concepts × configs) ── */
+/* Term-frequency style content analysis. Each cell = P(concept appears in
+   reasoning) for one (model, concept). Darker = more frequent. A toggle
+   (radio) lets the reader split by decision (yes vs no) to see which
+   concepts differentiate "stay home" from "go out" reasoning. */
+function renderRADecisionDrivers(data, modelFilter = null) {
+  const el = document.getElementById('ra-drivers-chart');
+  if (!el) return;
+
+  const concepts = data.concepts;
+  const byConfig = data.by_config;
+  const keywords = data.keywords || {};
+
+  // Rows = models (in CONFIG.MODELS order), Cols = concepts
+  const rows = [];
+  CONFIG.MODELS.forEach(m => {
+    const key = configDirKey(m);
+    if (!byConfig[key]) return;
+    if (modelFilter && !modelFilter.has(key)) return;
+    rows.push({ key, label: m.label, provider: m.provider,
+      color: CONFIG.PROVIDER_COLORS[m.provider] || '#999',
+      data: byConfig[key] });
+  });
+
+  function draw(mode) {
+    // mode: "overall" | "yes" | "no" | "diff" (yes - no)
+    const W = Math.min(el.parentElement?.offsetWidth || 1200, 1200);
+    const labelW = 170;
+    const cellW = Math.floor((W - labelW - 40) / concepts.length);
+    const cellH = 22;
+    // Header stack (top → bottom):
+    //   title (y=16) → subtitle (y=32) → concept names (2 lines) → keyword stack → grid
+    const KW_LINES = 6;
+    const kwLineH = 9;
+    const nameLineH = 12;
+    const titleBlockH = 40;  // reserves vertical room for title + subtitle
+    const headerH = titleBlockH + 2 * nameLineH + 8 + KW_LINES * kwLineH + 8;
+    const pad = { l: labelW, t: headerH, r: 16, b: 56 };
+    const H = pad.t + rows.length * cellH + pad.b;
+
+    let svg = '';
+
+    // Title + mode toggle
+    svg += `<text x="${W / 2}" y="18" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">Decision Drivers — Concept Frequency in Reasoning Text</text>`;
+    const subtitle = mode === "yes" ? "Among STAY HOME decisions" :
+                     mode === "no"  ? "Among GO OUT decisions" :
+                     mode === "diff"? "Difference: stay home − go out (red = more in stay-home reasoning)" :
+                                      "Across all decisions";
+    svg += `<text x="${W / 2}" y="34" font-size="9" fill="#777" font-family="${SERIF}" text-anchor="middle" font-style="italic">${subtitle}</text>`;
+
+    // Column headers — two-line wrapped concept name (top) + keyword stack
+    // below. Wrapping at "/" or whitespace avoids narrow-cell overlap problems
+    // when labels like "Quantitative frame" or "Community/others" exceed cellW.
+    function splitConceptName(name) {
+      // Split on "/" or whitespace into at most 2 parts.
+      const parts = name.split(/\s*\/\s*|\s+/);
+      if (parts.length === 1) return [name, ''];
+      // If 2+ parts, join such that both lines are as balanced as possible
+      const half = Math.ceil(parts.length / 2);
+      return [parts.slice(0, half).join(' '), parts.slice(half).join(' ')];
+    }
+    const nameLine1Y = titleBlockH + nameLineH;       // below subtitle
+    const nameLine2Y = nameLine1Y + nameLineH;
+    const kwStartY = nameLine2Y + 10;
+    concepts.forEach((c, ci) => {
+      const x = pad.l + ci * cellW + cellW / 2;
+      const [l1, l2] = splitConceptName(c);
+      // Concept name: bold italic (Fig 32 style). Line 1 at nameLine1Y;
+      // if there's a second word, put it on nameLine2Y.
+      svg += `<text x="${x}" y="${nameLine1Y}" font-size="10" fill="#333" font-family="${SERIF}" font-style="italic" font-weight="bold" text-anchor="middle">${esc(l1)}</text>`;
+      if (l2) svg += `<text x="${x}" y="${nameLine2Y}" font-size="10" fill="#333" font-family="${SERIF}" font-style="italic" font-weight="bold" text-anchor="middle">${esc(l2)}</text>`;
+      // Keywords stacked below, small gray.
+      // "Traits" uses a compact summary + dagger ref instead of raw regex keywords.
+      const displayKws = c === 'Traits'
+        ? ['Big Five categories', '+ Age', '† see Fig 32']
+        : (keywords[c] || []);
+      displayKws.slice(0, KW_LINES).forEach((kw, ki) => {
+        const ky = kwStartY + ki * kwLineH;
+        svg += `<text x="${x}" y="${ky}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">${esc(kw)}</text>`;
+      });
+    });
+
+    // Rows
+    rows.forEach((r, ri) => {
+      const y = pad.t + ri * cellH;
+      svg += `<circle cx="${pad.l - 14}" cy="${y + cellH / 2}" r="3" fill="${r.color}"/>`;
+      svg += `<text x="${pad.l - 20}" y="${y + cellH / 2 + 3}" font-size="9" fill="#333" font-family="${SERIF}" text-anchor="end">${esc(r.label)}</text>`;
+
+      concepts.forEach((c, ci) => {
+        const x = pad.l + ci * cellW;
+        let val;
+        if (mode === "overall") val = r.data.overall[c];
+        else if (mode === "yes") val = r.data.by_decision.yes[c];
+        else if (mode === "no") val = r.data.by_decision.no[c];
+        else val = r.data.by_decision.yes[c] - r.data.by_decision.no[c];  // diff
+
+        // Color map
+        let fill;
+        if (mode === "diff") {
+          // diverging red-blue around 0
+          const t = Math.max(-1, Math.min(1, val));
+          if (t > 0) {
+            const a = Math.min(1, Math.abs(t) * 2);
+            fill = `rgba(229, 57, 53, ${a})`;
+          } else {
+            const a = Math.min(1, Math.abs(t) * 2);
+            fill = `rgba(33, 150, 243, ${a})`;
+          }
+        } else {
+          const a = Math.max(0, Math.min(1, val));
+          fill = `rgba(60, 64, 177, ${a})`;
+        }
+        svg += `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" fill="${fill}" stroke="#eee" stroke-width="0.5"/>`;
+        const display = mode === "diff"
+          ? (val >= 0 ? '+' : '') + Math.round(val * 100) + '%'
+          : Math.round(val * 100) + '%';
+        const textColor = mode === "diff"
+          ? (Math.abs(val) > 0.4 ? '#fff' : '#333')
+          : (val > 0.6 ? '#fff' : '#333');
+        svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 3}" font-size="8" fill="${textColor}" font-family="${SERIF}" text-anchor="middle">${display}</text>`;
+      });
+    });
+
+    el.innerHTML = `<div style="margin-bottom:8px">
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="overall" ${mode==='overall'?'checked':''}> Overall</label>
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="yes" ${mode==='yes'?'checked':''}> Stay home only</label>
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="no" ${mode==='no'?'checked':''}> Go out only</label>
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="diff" ${mode==='diff'?'checked':''}> Δ (stay − go)</label>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+    el.querySelectorAll('input[name="drv-mode"]').forEach(r => r.addEventListener('change', e => draw(e.target.value)));
+  }
+
+  draw('overall');
 }

@@ -1,0 +1,2423 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Pole-Model Diagnostic — 21 Configs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { font-family: Georgia, serif; max-width: 1200px; margin: 0 auto; padding: 24px; color: #222; background: #fafafa; }
+h1 { border-bottom: 2px solid #333; padding-bottom: 8px; }
+h2 { margin-top: 36px; border-bottom: 1px solid #ccc; padding-bottom: 4px; color: #1a4a8a; }
+h3 { font-size: 14px; margin: 14px 0 4px; color: #333; }
+table { border-collapse: collapse; margin: 10px 0; font-size: 11.5px; }
+th, td { border: 1px solid #ddd; padding: 4px 8px; }
+th { background: #eee; text-align: left; }
+td.num { text-align: right; font-family: monospace; }
+.pole-row { font-size: 11px; }
+.pole-in { color: #1b5e20; font-weight: bold; }
+.pole-out { color: #b71c1c; }
+.sev-severe { background: #ffebee !important; }
+.sev-marginal { background: #fff8e1 !important; }
+.sev-clean { background: #e8f5e9 !important; }
+.coef-pair { border: 2px solid #c00; }
+details { margin: 14px 0; }
+details summary { cursor: pointer; font-weight: bold; font-size: 15px; color: #1a4a8a; padding: 6px 0; }
+details summary::-webkit-details-marker { display: none; }
+details summary::before { content: '▸'; margin-right: 8px; color: #888; }
+details[open] summary::before { content: '▾'; }
+.tag { display: inline-block; padding: 2px 6px; border-radius: 2px; font-size: 10px; font-weight: bold; margin-right: 4px; }
+.tag-clean { background: #e8f5e9; color: #1b5e20; }
+.tag-severe { background: #ffebee; color: #b71c1c; }
+.tag-marginal { background: #fff8e1; color: #e65100; }
+.note { background: #e3f2fd; border-left: 3px solid #1a4a8a; padding: 8px 14px; margin: 8px 0; font-size: 12px; font-style: italic; }
+</style></head><body>
+<h1>Pole-Model Diagnostic</h1>
+<p style="font-style:italic;color:#666">For each LLM config: Figure 32-style pole mention rates, then the resulting Model 3 (pole-level, 15% threshold) coefficients with stability highlighting.</p>
+<div class="note">
+  <strong>How to read:</strong> Rows marked <span class="pole-in">✓ IN</span> had mention rate in [15%, 85%] and were included in the model. Rows marked <span class="pole-out">✗ OUT</span> were excluded.
+  Coefficient SEs are color-coded: <span class="tag tag-clean">clean</span> SE&lt;5, <span class="tag tag-marginal">marginal</span> 5-100, <span class="tag tag-severe">severe</span> SE≥100.
+  Coefficient pairs with IDENTICAL huge SE indicate perfect collinearity (main effect ⟷ interaction).
+</div>
+
+<h2>Summary — config-level stability</h2>
+<table><thead><tr><th>Config</th><th>Type</th><th>Threshold</th><th># poles IN</th><th># main</th><th># interactions</th><th>Max SE</th><th>Status</th><th>Disp</th></tr></thead><tbody>
+<tr style="background:#fafafa"><td>Anthropic claude-3-haiku-20240307</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">5/10 + 0/2 ctx</td>
+<td class="num">5</td><td class="num">5</td>
+<td class="num sev-clean">0.73</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">1.00</td>
+</tr>
+<tr style="background:white"><td>Anthropic claude-haiku-4-5</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">8/10 + 0/2 ctx</td>
+<td class="num">8</td><td class="num">8</td>
+<td class="num sev-severe">916.83</td>
+<td><span class="tag tag-severe">SEVERE</span></td>
+<td class="num">1.03</td>
+</tr>
+<tr style="background:#fafafa"><td>Anthropic claude-opus-4-5</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">10/10 + 0/2 ctx</td>
+<td class="num">10</td><td class="num">10</td>
+<td class="num sev-severe">2638.79</td>
+<td><span class="tag tag-severe">SEVERE</span></td>
+<td class="num">1.08</td>
+</tr>
+<tr style="background:white"><td>Anthropic claude-sonnet-4-0</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">7/10 + 0/2 ctx</td>
+<td class="num">7</td><td class="num">7</td>
+<td class="num sev-clean">1.30</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.72</td>
+</tr>
+<tr style="background:#fafafa"><td>Anthropic claude-sonnet-4-5</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">10/10 + 0/2 ctx</td>
+<td class="num">10</td><td class="num">10</td>
+<td class="num sev-severe">31760.51</td>
+<td><span class="tag tag-severe">SEVERE</span></td>
+<td class="num">0.90</td>
+</tr>
+<tr style="background:white"><td>Gemini gemini-2.0-flash</td><td style="font-size:10px">mention_interaction_logit_strict</td>
+<td class="num">0.15</td>
+<td class="num">0/10 + 0/2 ctx</td>
+<td class="num">3</td><td class="num">3</td>
+<td class="num sev-clean">0.77</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.94</td>
+</tr>
+<tr style="background:#fafafa"><td>Gemini gemini-2.5-flash-lite</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">7/10 + 0/2 ctx</td>
+<td class="num">7</td><td class="num">7</td>
+<td class="num sev-clean">1.16</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">1.01</td>
+</tr>
+<tr style="background:white"><td>Gemini gemini-2.5-flash</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">5/10 + 1/2 ctx</td>
+<td class="num">6</td><td class="num">6</td>
+<td class="num sev-severe">530.90</td>
+<td><span class="tag tag-severe">SEVERE</span></td>
+<td class="num">0.96</td>
+</tr>
+<tr style="background:#fafafa"><td>Gemini gemini-3-flash-preview (high)</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">8/10 + 1/2 ctx</td>
+<td class="num">9</td><td class="num">9</td>
+<td class="num sev-severe">2868.31</td>
+<td><span class="tag tag-severe">SEVERE</span></td>
+<td class="num">0.83</td>
+</tr>
+<tr style="background:white"><td>Gemini gemini-3-flash-preview (low)</td><td style="font-size:10px">mention_interaction_logit_strict</td>
+<td class="num">0.1</td>
+<td class="num">0/10 + 0/2 ctx</td>
+<td class="num">6</td><td class="num">6</td>
+<td class="num sev-clean">1.32</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.74</td>
+</tr>
+<tr style="background:#fafafa"><td>Gemini gemini-3-flash-preview (medium)</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">8/10 + 1/2 ctx</td>
+<td class="num">9</td><td class="num">9</td>
+<td class="num sev-severe">2375.05</td>
+<td><span class="tag tag-severe">SEVERE</span></td>
+<td class="num">0.64</td>
+</tr>
+<tr style="background:white"><td>Gemini gemini-3-flash-preview</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">3/10 + 1/2 ctx</td>
+<td class="num">4</td><td class="num">4</td>
+<td class="num sev-clean">1.43</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.96</td>
+</tr>
+<tr style="background:#fafafa"><td>Openai gpt-3.5-turbo</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">0/10 + 0/2 ctx</td>
+<td class="num">0</td><td class="num">0</td>
+<td class="num sev-clean">0.80</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.88</td>
+</tr>
+<tr style="background:white"><td>Openai gpt-4.1</td><td style="font-size:10px">mention_interaction_logit_strict</td>
+<td class="num">0.1</td>
+<td class="num">0/10 + 0/2 ctx</td>
+<td class="num">5</td><td class="num">5</td>
+<td class="num sev-clean">0.94</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.90</td>
+</tr>
+<tr style="background:#fafafa"><td>Openai gpt-4o</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">3/10 + 0/2 ctx</td>
+<td class="num">3</td><td class="num">3</td>
+<td class="num sev-severe">2258.57</td>
+<td><span class="tag tag-severe">SEVERE</span></td>
+<td class="num">0.90</td>
+</tr>
+<tr style="background:white"><td>Openai gpt-5.1</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">2/10 + 0/2 ctx</td>
+<td class="num">2</td><td class="num">2</td>
+<td class="num sev-clean">0.69</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.95</td>
+</tr>
+<tr style="background:#fafafa"><td>Openai gpt-5.2 (high)</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">0/10 + 0/2 ctx</td>
+<td class="num">0</td><td class="num">0</td>
+<td class="num sev-clean">0.45</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.97</td>
+</tr>
+<tr style="background:white"><td>Openai gpt-5.2 (low)</td><td style="font-size:10px">mention_interaction_logit_strict</td>
+<td class="num">0.1</td>
+<td class="num">0/10 + 0/2 ctx</td>
+<td class="num">1</td><td class="num">1</td>
+<td class="num sev-clean">0.52</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.90</td>
+</tr>
+<tr style="background:#fafafa"><td>Openai gpt-5.2 (medium)</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">1/10 + 0/2 ctx</td>
+<td class="num">1</td><td class="num">1</td>
+<td class="num sev-clean">0.61</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.98</td>
+</tr>
+<tr style="background:white"><td>Openai gpt-5.2</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">0/10 + 0/2 ctx</td>
+<td class="num">0</td><td class="num">0</td>
+<td class="num sev-clean">0.81</td>
+<td><span class="tag tag-clean">Clean</span></td>
+<td class="num">0.62</td>
+</tr>
+<tr style="background:#fafafa"><td>Openai o3 (required)</td><td style="font-size:10px">mention_interaction_logit_pole</td>
+<td class="num">0.15</td>
+<td class="num">5/10 + 0/2 ctx</td>
+<td class="num">5</td><td class="num">5</td>
+<td class="num sev-severe">524.06</td>
+<td><span class="tag tag-severe">SEVERE</span></td>
+<td class="num">0.95</td>
+</tr>
+</tbody></table>
+<h2>Per-config detail (worst first)</h2>
+<details open><summary>Anthropic claude-sonnet-4-5  <span class="tag tag-severe">severe</span>  max SE = 31760.51</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">42.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">26.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">24.2%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">30.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">52.5%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">47.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">38.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">56.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">20.5%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">17.5%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">100.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">2.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3 style="color:#b71c1c">⚠ Collinear coefficient groups (identical SE — model cannot distinguish these)</h3>
+<ul style="font-size:12px">
+<li><strong>SE = 31760.508</strong>: <code>conscientious</code>, <code>conscientious_mentioned_conscientious</code></li>
+<li><strong>SE = 13141.994</strong>: <code>mentioned_agreeable</code>, <code>agreeable_mentioned_agreeable</code></li>
+<li><strong>SE = 5141.561</strong>: <code>mentioned_extroverted</code>, <code>extraverted_mentioned_extroverted</code></li>
+<li><strong>SE = 944.915</strong>: <code>intercept</code>, <code>emot_stable</code>, <code>mentioned_neurotic</code></li>
+</ul>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">-6.182</td>
+<td class="num">31761</td>
+<td class="num" style="font-size:10px">[-62256.78, +62244.41]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+12.528</td>
+<td class="num">31761</td>
+<td class="num" style="font-size:10px">[-62238.07, +62263.12]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">mentioned_agreeable</td>
+<td class="num">+18.968</td>
+<td class="num">13142</td>
+<td class="num" style="font-size:10px">[-25739.34, +25777.28]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">agreeable_mentioned_agreeable</td>
+<td class="num">-19.713</td>
+<td class="num">13142</td>
+<td class="num" style="font-size:10px">[-25778.02, +25738.60]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">extraverted_mentioned_extroverted</td>
+<td class="num">-18.627</td>
+<td class="num">5142</td>
+<td class="num" style="font-size:10px">[-10096.09, +10058.83]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">+18.204</td>
+<td class="num">5142</td>
+<td class="num" style="font-size:10px">[-10059.26, +10095.66]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">emot_stable_mentioned_neurotic</td>
+<td class="num">-36.894</td>
+<td class="num">4985</td>
+<td class="num" style="font-size:10px">[-9807.83, +9734.04]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-21.344</td>
+<td class="num">945</td>
+<td class="num" style="font-size:10px">[-1873.38, +1830.69]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">+14.142</td>
+<td class="num">945</td>
+<td class="num" style="font-size:10px">[-1837.89, +1866.17]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">mentioned_neurotic</td>
+<td class="num">+18.257</td>
+<td class="num">945</td>
+<td class="num" style="font-size:10px">[-1833.78, +1870.29]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp_mentioned_open</td>
+<td class="num">+2.411</td>
+<td class="num">+3.784</td>
+<td class="num" style="font-size:10px">[-5.01, +9.83]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_open</td>
+<td class="num">-2.027</td>
+<td class="num">+3.783</td>
+<td class="num" style="font-size:10px">[-9.44, +5.39]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable_mentioned_antagonistic</td>
+<td class="num">+6.870</td>
+<td class="num">+3.056</td>
+<td class="num" style="font-size:10px">[+0.88, +12.86]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_unconscientious</td>
+<td class="num">-2.078</td>
+<td class="num">+1.053</td>
+<td class="num" style="font-size:10px">[-4.14, -0.01]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-1.635</td>
+<td class="num">+0.696</td>
+<td class="num" style="font-size:10px">[-3.00, -0.27]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-5.249</td>
+<td class="num">+0.577</td>
+<td class="num" style="font-size:10px">[-6.38, -4.12]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+2.180</td>
+<td class="num">+0.552</td>
+<td class="num" style="font-size:10px">[+1.10, +3.26]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">-0.871</td>
+<td class="num">+0.540</td>
+<td class="num" style="font-size:10px">[-1.93, +0.19]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.395</td>
+<td class="num">+0.536</td>
+<td class="num" style="font-size:10px">[-1.45, +0.66]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-1.121</td>
+<td class="num">+0.311</td>
+<td class="num" style="font-size:10px">[-1.73, -0.51]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_antagonistic</td>
+<td class="num">-1.762</td>
+<td class="num">+0.142</td>
+<td class="num" style="font-size:10px">[-2.04, -1.48]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_closed</td>
+<td class="num">-2.641</td>
+<td class="num">+0.132</td>
+<td class="num" style="font-size:10px">[-2.90, -2.38]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_introverted</td>
+<td class="num">-0.111</td>
+<td class="num">+0.106</td>
+<td class="num" style="font-size:10px">[-0.32, +0.10]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+3.276</td>
+<td class="num">+0.096</td>
+<td class="num" style="font-size:10px">[+3.09, +3.46]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">-0.002</td>
+<td class="num">+0.020</td>
+<td class="num" style="font-size:10px">[-0.04, +0.04]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.326</td>
+<td class="num">+0.013</td>
+<td class="num" style="font-size:10px">[-0.35, -0.30]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details open><summary>Gemini gemini-3-flash-preview (high)  <span class="tag tag-severe">severe</span>  max SE = 2868.31</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">42.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">15.5%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">4.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">27.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">50.1%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">29.1%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">27.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">42.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">1.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">16.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">64.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">3.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">emot_stable_mentioned_neurotic</td>
+<td class="num">-13.402</td>
+<td class="num">2868</td>
+<td class="num" style="font-size:10px">[-5635.29, +5608.49]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-8.372</td>
+<td class="num">+1.402</td>
+<td class="num" style="font-size:10px">[-11.12, -5.62]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-3.880</td>
+<td class="num">+0.690</td>
+<td class="num" style="font-size:10px">[-5.23, -2.53]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+3.856</td>
+<td class="num">+0.662</td>
+<td class="num" style="font-size:10px">[+2.56, +5.15]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-4.233</td>
+<td class="num">+0.650</td>
+<td class="num" style="font-size:10px">[-5.51, -2.96]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+3.594</td>
+<td class="num">+0.627</td>
+<td class="num" style="font-size:10px">[+2.37, +4.82]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+2.877</td>
+<td class="num">+0.610</td>
+<td class="num" style="font-size:10px">[+1.68, +4.07]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-1.022</td>
+<td class="num">+0.595</td>
+<td class="num" style="font-size:10px">[-2.19, +0.14]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_introverted</td>
+<td class="num">+10.050</td>
+<td class="num">+0.535</td>
+<td class="num" style="font-size:10px">[+9.00, +11.10]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+4.016</td>
+<td class="num">+0.451</td>
+<td class="num" style="font-size:10px">[+3.13, +4.90]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_unconscientious</td>
+<td class="num">-4.791</td>
+<td class="num">+0.424</td>
+<td class="num" style="font-size:10px">[-5.62, -3.96]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-4.133</td>
+<td class="num">+0.411</td>
+<td class="num" style="font-size:10px">[-4.94, -3.33]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-5.086</td>
+<td class="num">+0.357</td>
+<td class="num" style="font-size:10px">[-5.78, -4.39]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_infection</td>
+<td class="num">+0.865</td>
+<td class="num">+0.315</td>
+<td class="num" style="font-size:10px">[+0.25, +1.48]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_antagonistic</td>
+<td class="num">-4.525</td>
+<td class="num">+0.287</td>
+<td class="num" style="font-size:10px">[-5.09, -3.96]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-1.075</td>
+<td class="num">+0.279</td>
+<td class="num" style="font-size:10px">[-1.62, -0.53]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neurotic</td>
+<td class="num">+3.492</td>
+<td class="num">+0.277</td>
+<td class="num" style="font-size:10px">[+2.95, +4.03]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_closed</td>
+<td class="num">-2.192</td>
+<td class="num">+0.270</td>
+<td class="num" style="font-size:10px">[-2.72, -1.66]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+0.694</td>
+<td class="num">+0.156</td>
+<td class="num" style="font-size:10px">[+0.39, +1.00]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_mentioned_infection</td>
+<td class="num">+1.378</td>
+<td class="num">+0.150</td>
+<td class="num" style="font-size:10px">[+1.08, +1.67]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.050</td>
+<td class="num">+0.023</td>
+<td class="num" style="font-size:10px">[+0.01, +0.09]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.217</td>
+<td class="num">+0.019</td>
+<td class="num" style="font-size:10px">[-0.25, -0.18]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details open><summary>Anthropic claude-opus-4-5  <span class="tag tag-severe">severe</span>  max SE = 2638.79</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">46.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">31.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">34.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">36.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">61.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">46.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">35.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">58.5%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">21.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">43.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">100.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">6.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-0.837</td>
+<td class="num">2639</td>
+<td class="num" style="font-size:10px">[-5172.87, +5171.20]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">+11.941</td>
+<td class="num">2419</td>
+<td class="num" style="font-size:10px">[-4730.25, +4754.13]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-30.540</td>
+<td class="num">1053</td>
+<td class="num" style="font-size:10px">[-2094.95, +2033.87]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">mentioned_neurotic</td>
+<td class="num">+16.406</td>
+<td class="num">1053</td>
+<td class="num" style="font-size:10px">[-2047.94, +2080.76]</td>
+<td></td></tr>
+<tr class="sev-marginal"><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+10.777</td>
+<td class="num">+7.702</td>
+<td class="num" style="font-size:10px">[-4.32, +25.87]</td>
+<td></td></tr>
+<tr class="sev-marginal"><td style="font-family:monospace;font-size:10.5px">mentioned_unconscientious</td>
+<td class="num">+0.039</td>
+<td class="num">+7.677</td>
+<td class="num" style="font-size:10px">[-15.01, +15.09]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable_mentioned_agreeable</td>
+<td class="num">+1.378</td>
+<td class="num">+1.121</td>
+<td class="num" style="font-size:10px">[-0.82, +3.57]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_agreeable</td>
+<td class="num">-1.664</td>
+<td class="num">+1.113</td>
+<td class="num" style="font-size:10px">[-3.84, +0.52]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-3.503</td>
+<td class="num">+0.619</td>
+<td class="num" style="font-size:10px">[-4.72, -2.29]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+4.851</td>
+<td class="num">+0.610</td>
+<td class="num" style="font-size:10px">[+3.66, +6.05]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+1.563</td>
+<td class="num">+0.610</td>
+<td class="num" style="font-size:10px">[+0.37, +2.76]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-1.830</td>
+<td class="num">+0.553</td>
+<td class="num" style="font-size:10px">[-2.92, -0.75]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-1.941</td>
+<td class="num">+0.375</td>
+<td class="num" style="font-size:10px">[-2.68, -1.21]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_antagonistic</td>
+<td class="num">-1.142</td>
+<td class="num">+0.203</td>
+<td class="num" style="font-size:10px">[-1.54, -0.74]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_closed</td>
+<td class="num">-1.035</td>
+<td class="num">+0.192</td>
+<td class="num" style="font-size:10px">[-1.41, -0.66]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-1.519</td>
+<td class="num">+0.178</td>
+<td class="num" style="font-size:10px">[-1.87, -1.17]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_introverted</td>
+<td class="num">+0.731</td>
+<td class="num">+0.157</td>
+<td class="num" style="font-size:10px">[+0.42, +1.04]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_open</td>
+<td class="num">+0.560</td>
+<td class="num">+0.125</td>
+<td class="num" style="font-size:10px">[+0.32, +0.81]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+2.543</td>
+<td class="num">+0.102</td>
+<td class="num" style="font-size:10px">[+2.34, +2.74]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.035</td>
+<td class="num">+0.021</td>
+<td class="num" style="font-size:10px">[-0.01, +0.08]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.187</td>
+<td class="num">+0.013</td>
+<td class="num" style="font-size:10px">[-0.21, -0.16]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details open><summary>Gemini gemini-3-flash-preview (medium)  <span class="tag tag-severe">severe</span>  max SE = 2375.05</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">43.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">16.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">5.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">28.1%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">50.9%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">31.2%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">28.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">43.2%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">1.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">17.7%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">63.5%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">3.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3 style="color:#b71c1c">⚠ Collinear coefficient groups (identical SE — model cannot distinguish these)</h3>
+<ul style="font-size:12px">
+<li><strong>SE = 2375.05</strong>: <code>mentioned_extroverted</code>, <code>extraverted_mentioned_extroverted</code></li>
+</ul>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">extraverted_mentioned_extroverted</td>
+<td class="num">-2.306</td>
+<td class="num">2375</td>
+<td class="num" style="font-size:10px">[-4657.40, +4652.79]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">+0.770</td>
+<td class="num">2375</td>
+<td class="num" style="font-size:10px">[-4654.33, +4655.87]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-8.009</td>
+<td class="num">+1.329</td>
+<td class="num" style="font-size:10px">[-10.61, -5.40]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-2.454</td>
+<td class="num">+0.644</td>
+<td class="num" style="font-size:10px">[-3.72, -1.19]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-3.950</td>
+<td class="num">+0.636</td>
+<td class="num" style="font-size:10px">[-5.20, -2.70]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+3.507</td>
+<td class="num">+0.628</td>
+<td class="num" style="font-size:10px">[+2.28, +4.74]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+3.278</td>
+<td class="num">+0.587</td>
+<td class="num" style="font-size:10px">[+2.13, +4.43]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+2.723</td>
+<td class="num">+0.585</td>
+<td class="num" style="font-size:10px">[+1.58, +3.87]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_introverted</td>
+<td class="num">+10.489</td>
+<td class="num">+0.575</td>
+<td class="num" style="font-size:10px">[+9.36, +11.62]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.834</td>
+<td class="num">+0.568</td>
+<td class="num" style="font-size:10px">[-1.95, +0.28]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+4.015</td>
+<td class="num">+0.479</td>
+<td class="num" style="font-size:10px">[+3.08, +4.95]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_unconscientious</td>
+<td class="num">-4.931</td>
+<td class="num">+0.464</td>
+<td class="num" style="font-size:10px">[-5.84, -4.02]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-6.163</td>
+<td class="num">+0.455</td>
+<td class="num" style="font-size:10px">[-7.05, -5.27]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-4.287</td>
+<td class="num">+0.441</td>
+<td class="num" style="font-size:10px">[-5.15, -3.42]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_infection</td>
+<td class="num">+1.051</td>
+<td class="num">+0.353</td>
+<td class="num" style="font-size:10px">[+0.36, +1.74]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neurotic</td>
+<td class="num">+4.274</td>
+<td class="num">+0.350</td>
+<td class="num" style="font-size:10px">[+3.59, +4.96]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_antagonistic</td>
+<td class="num">-4.690</td>
+<td class="num">+0.322</td>
+<td class="num" style="font-size:10px">[-5.32, -4.06]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_closed</td>
+<td class="num">-2.347</td>
+<td class="num">+0.266</td>
+<td class="num" style="font-size:10px">[-2.87, -1.83]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+0.580</td>
+<td class="num">+0.184</td>
+<td class="num" style="font-size:10px">[+0.22, +0.94]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_mentioned_infection</td>
+<td class="num">+1.325</td>
+<td class="num">+0.169</td>
+<td class="num" style="font-size:10px">[+0.99, +1.66]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.041</td>
+<td class="num">+0.021</td>
+<td class="num" style="font-size:10px">[-0.00, +0.08]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.189</td>
+<td class="num">+0.020</td>
+<td class="num" style="font-size:10px">[-0.23, -0.15]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details open><summary>Openai gpt-4o  <span class="tag tag-severe">severe</span>  max SE = 2258.57</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">51.7%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">11.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">11.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">38.9%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">10.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">6.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">38.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">7.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">1.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">85.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3 style="color:#b71c1c">⚠ Collinear coefficient groups (identical SE — model cannot distinguish these)</h3>
+<ul style="font-size:12px">
+<li><strong>SE = 2258.567</strong>: <code>mentioned_conscientious</code>, <code>conscientious_mentioned_conscientious</code></li>
+</ul>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+15.484</td>
+<td class="num">2259</td>
+<td class="num" style="font-size:10px">[-4411.31, +4442.28]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-15.441</td>
+<td class="num">2259</td>
+<td class="num" style="font-size:10px">[-4442.23, +4411.35]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-8.752</td>
+<td class="num">+1.817</td>
+<td class="num" style="font-size:10px">[-12.31, -5.19]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">+0.439</td>
+<td class="num">+1.076</td>
+<td class="num" style="font-size:10px">[-1.67, +2.55]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+1.752</td>
+<td class="num">+0.871</td>
+<td class="num" style="font-size:10px">[+0.05, +3.46]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">-0.131</td>
+<td class="num">+0.860</td>
+<td class="num" style="font-size:10px">[-1.82, +1.56]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+0.993</td>
+<td class="num">+0.848</td>
+<td class="num" style="font-size:10px">[-0.67, +2.66]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.812</td>
+<td class="num">+0.843</td>
+<td class="num" style="font-size:10px">[-0.84, +2.46]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-0.034</td>
+<td class="num">+0.835</td>
+<td class="num" style="font-size:10px">[-1.67, +1.60]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-5.401</td>
+<td class="num">+0.773</td>
+<td class="num" style="font-size:10px">[-6.92, -3.89]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-3.690</td>
+<td class="num">+0.387</td>
+<td class="num" style="font-size:10px">[-4.45, -2.93]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+1.536</td>
+<td class="num">+0.133</td>
+<td class="num" style="font-size:10px">[+1.27, +1.80]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">-0.034</td>
+<td class="num">+0.031</td>
+<td class="num" style="font-size:10px">[-0.10, +0.03]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.039</td>
+<td class="num">+0.017</td>
+<td class="num" style="font-size:10px">[-0.07, -0.01]</td>
+<td>*</td></tr>
+</tbody></table>
+</details>
+<details open><summary>Anthropic claude-haiku-4-5  <span class="tag tag-severe">severe</span>  max SE = 916.83</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">48.7%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">7.7%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">42.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">22.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">61.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">31.1%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">30.2%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">53.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">25.1%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">7.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">100.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">9.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3 style="color:#b71c1c">⚠ Collinear coefficient groups (identical SE — model cannot distinguish these)</h3>
+<ul style="font-size:12px">
+<li><strong>SE = 916.828</strong>: <code>mentioned_extroverted</code>, <code>extraverted_mentioned_extroverted</code></li>
+</ul>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">extraverted_mentioned_extroverted</td>
+<td class="num">-11.750</td>
+<td class="num">917</td>
+<td class="num" style="font-size:10px">[-1808.73, +1785.23]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">+11.231</td>
+<td class="num">917</td>
+<td class="num" style="font-size:10px">[-1785.75, +1808.22]</td>
+<td></td></tr>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">emot_stable_mentioned_neurotic</td>
+<td class="num">-4.464</td>
+<td class="num">458</td>
+<td class="num" style="font-size:10px">[-901.30, +892.38]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp_mentioned_open</td>
+<td class="num">+0.787</td>
+<td class="num">+1.214</td>
+<td class="num" style="font-size:10px">[-1.59, +3.17]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_open</td>
+<td class="num">-1.394</td>
+<td class="num">+1.209</td>
+<td class="num" style="font-size:10px">[-3.76, +0.98]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-8.620</td>
+<td class="num">+0.822</td>
+<td class="num" style="font-size:10px">[-10.23, -7.01]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">+0.949</td>
+<td class="num">+0.519</td>
+<td class="num" style="font-size:10px">[-0.07, +1.97]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-3.915</td>
+<td class="num">+0.426</td>
+<td class="num" style="font-size:10px">[-4.75, -3.08]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neurotic</td>
+<td class="num">+1.878</td>
+<td class="num">+0.387</td>
+<td class="num" style="font-size:10px">[+1.12, +2.64]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+3.785</td>
+<td class="num">+0.377</td>
+<td class="num" style="font-size:10px">[+3.05, +4.52]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+1.418</td>
+<td class="num">+0.335</td>
+<td class="num" style="font-size:10px">[+0.76, +2.08]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">-0.197</td>
+<td class="num">+0.326</td>
+<td class="num" style="font-size:10px">[-0.84, +0.44]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.544</td>
+<td class="num">+0.319</td>
+<td class="num" style="font-size:10px">[-0.08, +1.17]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-0.549</td>
+<td class="num">+0.211</td>
+<td class="num" style="font-size:10px">[-0.96, -0.14]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_unconscientious</td>
+<td class="num">-0.929</td>
+<td class="num">+0.205</td>
+<td class="num" style="font-size:10px">[-1.33, -0.53]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-0.288</td>
+<td class="num">+0.175</td>
+<td class="num" style="font-size:10px">[-0.63, +0.05]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_antagonistic</td>
+<td class="num">-0.728</td>
+<td class="num">+0.159</td>
+<td class="num" style="font-size:10px">[-1.04, -0.42]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_agreeable</td>
+<td class="num">-0.344</td>
+<td class="num">+0.095</td>
+<td class="num" style="font-size:10px">[-0.53, -0.16]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+1.706</td>
+<td class="num">+0.070</td>
+<td class="num" style="font-size:10px">[+1.57, +1.84]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.007</td>
+<td class="num">+0.012</td>
+<td class="num" style="font-size:10px">[-0.02, +0.03]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.102</td>
+<td class="num">+0.010</td>
+<td class="num" style="font-size:10px">[-0.12, -0.08]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details open><summary>Gemini gemini-2.5-flash  <span class="tag tag-severe">severe</span>  max SE = 530.90</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">18.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">26.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">29.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">4.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">38.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">10.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">12.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">27.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">13.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">2.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">98.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">21.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">extraverted_mentioned_introverted</td>
+<td class="num">-10.648</td>
+<td class="num">531</td>
+<td class="num" style="font-size:10px">[-1051.22, +1029.92]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-4.628</td>
+<td class="num">+0.972</td>
+<td class="num" style="font-size:10px">[-6.53, -2.72]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">-1.336</td>
+<td class="num">+0.959</td>
+<td class="num" style="font-size:10px">[-3.22, +0.54]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+4.171</td>
+<td class="num">+0.911</td>
+<td class="num" style="font-size:10px">[+2.39, +5.96]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_age</td>
+<td class="num">-2.099</td>
+<td class="num">+0.872</td>
+<td class="num" style="font-size:10px">[-3.81, -0.39]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-4.242</td>
+<td class="num">+0.572</td>
+<td class="num" style="font-size:10px">[-5.36, -3.12]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">-0.489</td>
+<td class="num">+0.491</td>
+<td class="num" style="font-size:10px">[-1.45, +0.47]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-2.206</td>
+<td class="num">+0.469</td>
+<td class="num" style="font-size:10px">[-3.13, -1.29]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+2.318</td>
+<td class="num">+0.458</td>
+<td class="num" style="font-size:10px">[+1.42, +3.22]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.250</td>
+<td class="num">+0.439</td>
+<td class="num" style="font-size:10px">[-0.61, +1.11]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-1.522</td>
+<td class="num">+0.366</td>
+<td class="num" style="font-size:10px">[-2.24, -0.80]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-0.643</td>
+<td class="num">+0.276</td>
+<td class="num" style="font-size:10px">[-1.18, -0.10]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_agreeable</td>
+<td class="num">+1.897</td>
+<td class="num">+0.268</td>
+<td class="num" style="font-size:10px">[+1.37, +2.42]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-0.741</td>
+<td class="num">+0.139</td>
+<td class="num" style="font-size:10px">[-1.01, -0.47]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_introverted</td>
+<td class="num">+2.278</td>
+<td class="num">+0.105</td>
+<td class="num" style="font-size:10px">[+2.07, +2.48]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+0.526</td>
+<td class="num">+0.060</td>
+<td class="num" style="font-size:10px">[+0.41, +0.64]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">-0.000</td>
+<td class="num">+0.017</td>
+<td class="num" style="font-size:10px">[-0.03, +0.03]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age_years_mentioned_age</td>
+<td class="num">+0.029</td>
+<td class="num">+0.017</td>
+<td class="num" style="font-size:10px">[-0.00, +0.06]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.030</td>
+<td class="num">+0.009</td>
+<td class="num" style="font-size:10px">[-0.05, -0.01]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details open><summary>Openai o3 (required)  <span class="tag tag-severe">severe</span>  max SE = 524.06</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">25.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">24.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">4.7%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">4.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">46.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">16.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">18.1%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">6.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">1.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">98.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">9.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class="sev-severe"><td style="font-family:monospace;font-size:10.5px">emot_stable_mentioned_neurotic</td>
+<td class="num">-13.960</td>
+<td class="num">524</td>
+<td class="num" style="font-size:10px">[-1041.11, +1013.19]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-4.638</td>
+<td class="num">+0.380</td>
+<td class="num" style="font-size:10px">[-5.38, -3.89]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_introverted</td>
+<td class="num">+6.238</td>
+<td class="num">+0.232</td>
+<td class="num" style="font-size:10px">[+5.78, +6.69]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+0.897</td>
+<td class="num">+0.180</td>
+<td class="num" style="font-size:10px">[+0.54, +1.25]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-1.433</td>
+<td class="num">+0.175</td>
+<td class="num" style="font-size:10px">[-1.78, -1.09]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-0.894</td>
+<td class="num">+0.174</td>
+<td class="num" style="font-size:10px">[-1.23, -0.55]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+2.142</td>
+<td class="num">+0.169</td>
+<td class="num" style="font-size:10px">[+1.81, +2.47]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.558</td>
+<td class="num">+0.165</td>
+<td class="num" style="font-size:10px">[+0.23, +0.88]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+0.976</td>
+<td class="num">+0.164</td>
+<td class="num" style="font-size:10px">[+0.66, +1.30]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+1.319</td>
+<td class="num">+0.163</td>
+<td class="num" style="font-size:10px">[+1.00, +1.64]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-1.452</td>
+<td class="num">+0.146</td>
+<td class="num" style="font-size:10px">[-1.74, -1.17]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_unconscientious</td>
+<td class="num">-1.067</td>
+<td class="num">+0.119</td>
+<td class="num" style="font-size:10px">[-1.30, -0.83]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neurotic</td>
+<td class="num">+3.542</td>
+<td class="num">+0.115</td>
+<td class="num" style="font-size:10px">[+3.32, +3.77]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-2.750</td>
+<td class="num">+0.085</td>
+<td class="num" style="font-size:10px">[-2.92, -2.58]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+2.284</td>
+<td class="num">+0.054</td>
+<td class="num" style="font-size:10px">[+2.18, +2.39]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.242</td>
+<td class="num">+0.008</td>
+<td class="num" style="font-size:10px">[-0.26, -0.23]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.017</td>
+<td class="num">+0.006</td>
+<td class="num" style="font-size:10px">[+0.01, +0.03]</td>
+<td>**</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Gemini gemini-3-flash-preview  <span class="tag tag-clean">clean</span>  max SE = 1.43</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">19.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">4.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">10.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">6.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">42.2%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">6.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">11.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">22.2%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">12.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">7.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">76.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">0.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-6.754</td>
+<td class="num">+1.433</td>
+<td class="num" style="font-size:10px">[-9.56, -3.94]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-5.980</td>
+<td class="num">+0.730</td>
+<td class="num" style="font-size:10px">[-7.41, -4.55]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-4.494</td>
+<td class="num">+0.715</td>
+<td class="num" style="font-size:10px">[-5.90, -3.09]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+5.619</td>
+<td class="num">+0.701</td>
+<td class="num" style="font-size:10px">[+4.24, +6.99]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+4.528</td>
+<td class="num">+0.697</td>
+<td class="num" style="font-size:10px">[+3.16, +5.89]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+3.697</td>
+<td class="num">+0.652</td>
+<td class="num" style="font-size:10px">[+2.42, +4.97]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.869</td>
+<td class="num">+0.646</td>
+<td class="num" style="font-size:10px">[-2.14, +0.40]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+1.530</td>
+<td class="num">+0.496</td>
+<td class="num" style="font-size:10px">[+0.56, +2.50]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-2.111</td>
+<td class="num">+0.462</td>
+<td class="num" style="font-size:10px">[-3.02, -1.20]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_infection</td>
+<td class="num">-0.064</td>
+<td class="num">+0.191</td>
+<td class="num" style="font-size:10px">[-0.44, +0.31]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-1.405</td>
+<td class="num">+0.163</td>
+<td class="num" style="font-size:10px">[-1.72, -1.09]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-1.732</td>
+<td class="num">+0.119</td>
+<td class="num" style="font-size:10px">[-1.97, -1.50]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+0.830</td>
+<td class="num">+0.088</td>
+<td class="num" style="font-size:10px">[+0.66, +1.00]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_mentioned_infection</td>
+<td class="num">+0.215</td>
+<td class="num">+0.060</td>
+<td class="num" style="font-size:10px">[+0.10, +0.33]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">-0.024</td>
+<td class="num">+0.024</td>
+<td class="num" style="font-size:10px">[-0.07, +0.02]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.071</td>
+<td class="num">+0.010</td>
+<td class="num" style="font-size:10px">[-0.09, -0.05]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Gemini gemini-3-flash-preview (low)  <span class="tag tag-clean">clean</span>  max SE = 1.32</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp_mentioned_ope</td>
+<td class="num">+1.373</td>
+<td class="num">+1.319</td>
+<td class="num" style="font-size:10px">[-1.21, +3.96]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-6.474</td>
+<td class="num">+1.206</td>
+<td class="num" style="font-size:10px">[-8.84, -4.11]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-3.087</td>
+<td class="num">+0.595</td>
+<td class="num" style="font-size:10px">[-4.25, -1.92]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-4.610</td>
+<td class="num">+0.591</td>
+<td class="num" style="font-size:10px">[-5.77, -3.45]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+3.035</td>
+<td class="num">+0.571</td>
+<td class="num" style="font-size:10px">[+1.92, +4.16]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+2.653</td>
+<td class="num">+0.535</td>
+<td class="num" style="font-size:10px">[+1.60, +3.70]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+2.691</td>
+<td class="num">+0.531</td>
+<td class="num" style="font-size:10px">[+1.65, +3.73]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.612</td>
+<td class="num">+0.514</td>
+<td class="num" style="font-size:10px">[-1.62, +0.39]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted_mentioned_ext</td>
+<td class="num">-9.192</td>
+<td class="num">+0.474</td>
+<td class="num" style="font-size:10px">[-10.12, -8.26]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_con</td>
+<td class="num">+4.924</td>
+<td class="num">+0.436</td>
+<td class="num" style="font-size:10px">[+4.07, +5.78]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_con</td>
+<td class="num">-5.395</td>
+<td class="num">+0.423</td>
+<td class="num" style="font-size:10px">[-6.22, -4.57]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable_mentioned_neu</td>
+<td class="num">-7.648</td>
+<td class="num">+0.417</td>
+<td class="num" style="font-size:10px">[-8.47, -6.83]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable_mentioned_agr</td>
+<td class="num">+6.635</td>
+<td class="num">+0.405</td>
+<td class="num" style="font-size:10px">[+5.84, +7.43]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_ext</td>
+<td class="num">+8.270</td>
+<td class="num">+0.404</td>
+<td class="num" style="font-size:10px">[+7.48, +9.06]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_infection</td>
+<td class="num">+0.598</td>
+<td class="num">+0.377</td>
+<td class="num" style="font-size:10px">[-0.14, +1.34]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neu</td>
+<td class="num">+3.945</td>
+<td class="num">+0.322</td>
+<td class="num" style="font-size:10px">[+3.31, +4.58]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_agr</td>
+<td class="num">-3.811</td>
+<td class="num">+0.278</td>
+<td class="num" style="font-size:10px">[-4.36, -3.27]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_ope</td>
+<td class="num">-3.105</td>
+<td class="num">+0.251</td>
+<td class="num" style="font-size:10px">[-3.60, -2.61]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_mentioned_infection</td>
+<td class="num">+1.628</td>
+<td class="num">+0.204</td>
+<td class="num" style="font-size:10px">[+1.23, +2.03]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+0.188</td>
+<td class="num">+0.201</td>
+<td class="num" style="font-size:10px">[-0.21, +0.58]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.032</td>
+<td class="num">+0.019</td>
+<td class="num" style="font-size:10px">[-0.01, +0.07]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.182</td>
+<td class="num">+0.019</td>
+<td class="num" style="font-size:10px">[-0.22, -0.14]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Anthropic claude-sonnet-4-0  <span class="tag tag-clean">clean</span>  max SE = 1.30</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">20.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">11.7%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">23.5%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">13.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">43.5%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">16.9%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">19.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">42.7%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">15.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">100.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">7.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-0.525</td>
+<td class="num">+1.299</td>
+<td class="num" style="font-size:10px">[-3.07, +2.02]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-4.865</td>
+<td class="num">+0.603</td>
+<td class="num" style="font-size:10px">[-6.05, -3.68]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+5.369</td>
+<td class="num">+0.593</td>
+<td class="num" style="font-size:10px">[+4.21, +6.53]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-4.911</td>
+<td class="num">+0.588</td>
+<td class="num" style="font-size:10px">[-6.06, -3.76]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">-0.106</td>
+<td class="num">+0.567</td>
+<td class="num" style="font-size:10px">[-1.22, +1.01]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.663</td>
+<td class="num">+0.562</td>
+<td class="num" style="font-size:10px">[-1.76, +0.44]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+1.913</td>
+<td class="num">+0.559</td>
+<td class="num" style="font-size:10px">[+0.82, +3.01]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+1.226</td>
+<td class="num">+0.417</td>
+<td class="num" style="font-size:10px">[+0.41, +2.04]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-0.997</td>
+<td class="num">+0.366</td>
+<td class="num" style="font-size:10px">[-1.71, -0.28]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_unconscientious</td>
+<td class="num">-0.417</td>
+<td class="num">+0.212</td>
+<td class="num" style="font-size:10px">[-0.83, -0.00]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neurotic</td>
+<td class="num">+2.207</td>
+<td class="num">+0.182</td>
+<td class="num" style="font-size:10px">[+1.85, +2.56]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-1.200</td>
+<td class="num">+0.174</td>
+<td class="num" style="font-size:10px">[-1.54, -0.86]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-1.902</td>
+<td class="num">+0.168</td>
+<td class="num" style="font-size:10px">[-2.23, -1.57]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_agreeable</td>
+<td class="num">+0.810</td>
+<td class="num">+0.129</td>
+<td class="num" style="font-size:10px">[+0.56, +1.06]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_open</td>
+<td class="num">+0.028</td>
+<td class="num">+0.091</td>
+<td class="num" style="font-size:10px">[-0.15, +0.21]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+0.757</td>
+<td class="num">+0.065</td>
+<td class="num" style="font-size:10px">[+0.63, +0.88]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.014</td>
+<td class="num">+0.021</td>
+<td class="num" style="font-size:10px">[-0.03, +0.06]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">+0.044</td>
+<td class="num">+0.011</td>
+<td class="num" style="font-size:10px">[+0.02, +0.07]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Gemini gemini-2.5-flash-lite  <span class="tag tag-clean">clean</span>  max SE = 1.16</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">51.7%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">46.6%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">14.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">2.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">47.9%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">27.1%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">15.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">32.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">28.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">4.7%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">99.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">2.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">+2.803</td>
+<td class="num">+1.162</td>
+<td class="num" style="font-size:10px">[+0.53, +5.08]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-0.907</td>
+<td class="num">+0.790</td>
+<td class="num" style="font-size:10px">[-2.45, +0.64]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_introverted</td>
+<td class="num">+3.915</td>
+<td class="num">+0.630</td>
+<td class="num" style="font-size:10px">[+2.68, +5.15]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+1.673</td>
+<td class="num">+0.487</td>
+<td class="num" style="font-size:10px">[+0.72, +2.63]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp_mentioned_open</td>
+<td class="num">-2.615</td>
+<td class="num">+0.454</td>
+<td class="num" style="font-size:10px">[-3.50, -1.72]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_open</td>
+<td class="num">+2.119</td>
+<td class="num">+0.449</td>
+<td class="num" style="font-size:10px">[+1.24, +3.00]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">+0.472</td>
+<td class="num">+0.440</td>
+<td class="num" style="font-size:10px">[-0.39, +1.33]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">-1.289</td>
+<td class="num">+0.432</td>
+<td class="num" style="font-size:10px">[-2.14, -0.44]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.125</td>
+<td class="num">+0.425</td>
+<td class="num" style="font-size:10px">[-0.96, +0.71]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+0.815</td>
+<td class="num">+0.421</td>
+<td class="num" style="font-size:10px">[-0.01, +1.64]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">-1.657</td>
+<td class="num">+0.343</td>
+<td class="num" style="font-size:10px">[-2.33, -0.99]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">+0.633</td>
+<td class="num">+0.252</td>
+<td class="num" style="font-size:10px">[+0.14, +1.13]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-0.509</td>
+<td class="num">+0.201</td>
+<td class="num" style="font-size:10px">[-0.90, -0.12]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neurotic</td>
+<td class="num">+2.866</td>
+<td class="num">+0.100</td>
+<td class="num" style="font-size:10px">[+2.67, +3.06]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_unconscientious</td>
+<td class="num">+1.027</td>
+<td class="num">+0.084</td>
+<td class="num" style="font-size:10px">[+0.86, +1.19]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_emot_stable</td>
+<td class="num">-1.235</td>
+<td class="num">+0.071</td>
+<td class="num" style="font-size:10px">[-1.38, -1.10]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">-1.660</td>
+<td class="num">+0.046</td>
+<td class="num" style="font-size:10px">[-1.75, -1.57]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">-0.045</td>
+<td class="num">+0.016</td>
+<td class="num" style="font-size:10px">[-0.08, -0.01]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">+0.193</td>
+<td class="num">+0.007</td>
+<td class="num" style="font-size:10px">[+0.18, +0.21]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Openai gpt-4.1  <span class="tag tag-clean">clean</span>  max SE = 0.94</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-10.018</td>
+<td class="num">+0.940</td>
+<td class="num" style="font-size:10px">[-11.86, -8.18]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp_mentioned_ope</td>
+<td class="num">+5.748</td>
+<td class="num">+0.881</td>
+<td class="num" style="font-size:10px">[+4.02, +7.48]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_ope</td>
+<td class="num">-5.487</td>
+<td class="num">+0.870</td>
+<td class="num" style="font-size:10px">[-7.19, -3.78]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+4.667</td>
+<td class="num">+0.514</td>
+<td class="num" style="font-size:10px">[+3.66, +5.68]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-4.199</td>
+<td class="num">+0.474</td>
+<td class="num" style="font-size:10px">[-5.13, -3.27]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-1.793</td>
+<td class="num">+0.462</td>
+<td class="num" style="font-size:10px">[-2.70, -0.89]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+2.606</td>
+<td class="num">+0.424</td>
+<td class="num" style="font-size:10px">[+1.77, +3.44]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+1.743</td>
+<td class="num">+0.408</td>
+<td class="num" style="font-size:10px">[+0.94, +2.54]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.039</td>
+<td class="num">+0.405</td>
+<td class="num" style="font-size:10px">[-0.76, +0.83]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted_mentioned_ext</td>
+<td class="num">-3.286</td>
+<td class="num">+0.328</td>
+<td class="num" style="font-size:10px">[-3.93, -2.64]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable_mentioned_agr</td>
+<td class="num">+2.710</td>
+<td class="num">+0.309</td>
+<td class="num" style="font-size:10px">[+2.11, +3.32]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_con</td>
+<td class="num">-0.023</td>
+<td class="num">+0.307</td>
+<td class="num" style="font-size:10px">[-0.62, +0.58]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_agr</td>
+<td class="num">-2.409</td>
+<td class="num">+0.281</td>
+<td class="num" style="font-size:10px">[-2.96, -1.86]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_con</td>
+<td class="num">-1.375</td>
+<td class="num">+0.230</td>
+<td class="num" style="font-size:10px">[-1.83, -0.92]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable_mentioned_neu</td>
+<td class="num">-3.432</td>
+<td class="num">+0.224</td>
+<td class="num" style="font-size:10px">[-3.87, -2.99]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_ext</td>
+<td class="num">+3.165</td>
+<td class="num">+0.202</td>
+<td class="num" style="font-size:10px">[+2.77, +3.56]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neu</td>
+<td class="num">+1.856</td>
+<td class="num">+0.172</td>
+<td class="num" style="font-size:10px">[+1.52, +2.19]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+2.230</td>
+<td class="num">+0.090</td>
+<td class="num" style="font-size:10px">[+2.05, +2.41]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.017</td>
+<td class="num">+0.015</td>
+<td class="num" style="font-size:10px">[-0.01, +0.05]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.184</td>
+<td class="num">+0.012</td>
+<td class="num" style="font-size:10px">[-0.21, -0.16]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Openai gpt-5.2  <span class="tag tag-clean">clean</span>  max SE = 0.81</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">0.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">2.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">0.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">9.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">0.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">1.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">0.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">100.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">0.7%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+19.070</td>
+<td class="num">+0.809</td>
+<td class="num" style="font-size:10px">[+17.48, +20.66]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-2.365</td>
+<td class="num">+0.387</td>
+<td class="num" style="font-size:10px">[-3.12, -1.61]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-0.440</td>
+<td class="num">+0.172</td>
+<td class="num" style="font-size:10px">[-0.78, -0.10]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+0.569</td>
+<td class="num">+0.172</td>
+<td class="num" style="font-size:10px">[+0.23, +0.91]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-0.042</td>
+<td class="num">+0.171</td>
+<td class="num" style="font-size:10px">[-0.38, +0.29]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+0.584</td>
+<td class="num">+0.171</td>
+<td class="num" style="font-size:10px">[+0.25, +0.92]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.295</td>
+<td class="num">+0.169</td>
+<td class="num" style="font-size:10px">[-0.04, +0.63]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+0.517</td>
+<td class="num">+0.167</td>
+<td class="num" style="font-size:10px">[+0.19, +0.85]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-2.548</td>
+<td class="num">+0.118</td>
+<td class="num" style="font-size:10px">[-2.78, -2.32]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.010</td>
+<td class="num">+0.006</td>
+<td class="num" style="font-size:10px">[-0.00, +0.02]</td>
+<td></td></tr>
+</tbody></table>
+</details>
+<details ><summary>Openai gpt-3.5-turbo  <span class="tag tag-clean">clean</span>  max SE = 0.80</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">0.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">7.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">0.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">0.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">0.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">0.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">+2.650</td>
+<td class="num">+0.802</td>
+<td class="num" style="font-size:10px">[+1.08, +4.22]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-4.173</td>
+<td class="num">+0.475</td>
+<td class="num" style="font-size:10px">[-5.11, -3.24]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+0.789</td>
+<td class="num">+0.347</td>
+<td class="num" style="font-size:10px">[+0.11, +1.47]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">-0.484</td>
+<td class="num">+0.346</td>
+<td class="num" style="font-size:10px">[-1.16, +0.20]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+1.493</td>
+<td class="num">+0.345</td>
+<td class="num" style="font-size:10px">[+0.82, +2.17]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.361</td>
+<td class="num">+0.340</td>
+<td class="num" style="font-size:10px">[-1.03, +0.30]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">+0.260</td>
+<td class="num">+0.338</td>
+<td class="num" style="font-size:10px">[-0.40, +0.92]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+4.331</td>
+<td class="num">+0.175</td>
+<td class="num" style="font-size:10px">[+3.99, +4.67]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.541</td>
+<td class="num">+0.025</td>
+<td class="num" style="font-size:10px">[-0.59, -0.49]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.032</td>
+<td class="num">+0.012</td>
+<td class="num" style="font-size:10px">[+0.01, +0.06]</td>
+<td>**</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Gemini gemini-2.0-flash  <span class="tag tag-clean">clean</span>  max SE = 0.77</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-2.493</td>
+<td class="num">+0.767</td>
+<td class="num" style="font-size:10px">[-4.00, -0.99]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-0.450</td>
+<td class="num">+0.402</td>
+<td class="num" style="font-size:10px">[-1.24, +0.34]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+0.684</td>
+<td class="num">+0.333</td>
+<td class="num" style="font-size:10px">[+0.03, +1.34]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-3.497</td>
+<td class="num">+0.333</td>
+<td class="num" style="font-size:10px">[-4.15, -2.84]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+1.259</td>
+<td class="num">+0.332</td>
+<td class="num" style="font-size:10px">[+0.61, +1.91]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+2.866</td>
+<td class="num">+0.331</td>
+<td class="num" style="font-size:10px">[+2.22, +3.51]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.301</td>
+<td class="num">+0.328</td>
+<td class="num" style="font-size:10px">[-0.94, +0.34]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable_mentioned_neu</td>
+<td class="num">-3.931</td>
+<td class="num">+0.243</td>
+<td class="num" style="font-size:10px">[-4.41, -3.45]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_neu</td>
+<td class="num">+2.165</td>
+<td class="num">+0.225</td>
+<td class="num" style="font-size:10px">[+1.72, +2.61]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable_mentioned_agr</td>
+<td class="num">+1.269</td>
+<td class="num">+0.143</td>
+<td class="num" style="font-size:10px">[+0.99, +1.55]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp_mentioned_ope</td>
+<td class="num">-0.388</td>
+<td class="num">+0.116</td>
+<td class="num" style="font-size:10px">[-0.62, -0.16]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_agr</td>
+<td class="num">-1.208</td>
+<td class="num">+0.099</td>
+<td class="num" style="font-size:10px">[-1.40, -1.01]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_ope</td>
+<td class="num">-0.708</td>
+<td class="num">+0.085</td>
+<td class="num" style="font-size:10px">[-0.87, -0.54]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+2.099</td>
+<td class="num">+0.052</td>
+<td class="num" style="font-size:10px">[+2.00, +2.20]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">-0.002</td>
+<td class="num">+0.012</td>
+<td class="num" style="font-size:10px">[-0.03, +0.02]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.237</td>
+<td class="num">+0.008</td>
+<td class="num" style="font-size:10px">[-0.25, -0.22]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Anthropic claude-3-haiku-20240307  <span class="tag tag-clean">clean</span>  max SE = 0.73</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">29.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">33.3%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">21.2%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">15.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">25.8%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">0.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">9.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">11.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">1.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">99.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">1.7%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">+0.667</td>
+<td class="num">+0.725</td>
+<td class="num" style="font-size:10px">[-0.75, +2.09]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">+1.877</td>
+<td class="num">+0.366</td>
+<td class="num" style="font-size:10px">[+1.16, +2.59]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+1.812</td>
+<td class="num">+0.349</td>
+<td class="num" style="font-size:10px">[+1.13, +2.50]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">-0.135</td>
+<td class="num">+0.332</td>
+<td class="num" style="font-size:10px">[-0.79, +0.52]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">-0.797</td>
+<td class="num">+0.326</td>
+<td class="num" style="font-size:10px">[-1.44, -0.16]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-0.819</td>
+<td class="num">+0.321</td>
+<td class="num" style="font-size:10px">[-1.45, -0.19]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">-0.100</td>
+<td class="num">+0.317</td>
+<td class="num" style="font-size:10px">[-0.72, +0.52]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.760</td>
+<td class="num">+0.312</td>
+<td class="num" style="font-size:10px">[+0.15, +1.37]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">+0.273</td>
+<td class="num">+0.258</td>
+<td class="num" style="font-size:10px">[-0.23, +0.78]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_introverted</td>
+<td class="num">+0.283</td>
+<td class="num">+0.227</td>
+<td class="num" style="font-size:10px">[-0.16, +0.73]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_agreeable</td>
+<td class="num">+1.212</td>
+<td class="num">+0.226</td>
+<td class="num" style="font-size:10px">[+0.77, +1.66]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-4.924</td>
+<td class="num">+0.226</td>
+<td class="num" style="font-size:10px">[-5.37, -4.48]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_antagonistic</td>
+<td class="num">+2.473</td>
+<td class="num">+0.213</td>
+<td class="num" style="font-size:10px">[+2.06, +2.89]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+1.899</td>
+<td class="num">+0.071</td>
+<td class="num" style="font-size:10px">[+1.76, +2.04]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.004</td>
+<td class="num">+0.011</td>
+<td class="num" style="font-size:10px">[-0.02, +0.03]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.218</td>
+<td class="num">+0.011</td>
+<td class="num" style="font-size:10px">[-0.24, -0.20]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Openai gpt-5.1  <span class="tag tag-clean">clean</span>  max SE = 0.69</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">22.4%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">6.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">4.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">7.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">38.0%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">8.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">4.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">14.9%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">3.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">1.7%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">100.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">1.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-0.924</td>
+<td class="num">+0.694</td>
+<td class="num" style="font-size:10px">[-2.29, +0.44]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+1.047</td>
+<td class="num">+0.322</td>
+<td class="num" style="font-size:10px">[+0.42, +1.68]</td>
+<td>**</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-1.778</td>
+<td class="num">+0.320</td>
+<td class="num" style="font-size:10px">[-2.40, -1.15]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-1.604</td>
+<td class="num">+0.319</td>
+<td class="num" style="font-size:10px">[-2.23, -0.98]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+2.306</td>
+<td class="num">+0.317</td>
+<td class="num" style="font-size:10px">[+1.68, +2.93]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">-0.555</td>
+<td class="num">+0.312</td>
+<td class="num" style="font-size:10px">[-1.17, +0.06]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+0.692</td>
+<td class="num">+0.309</td>
+<td class="num" style="font-size:10px">[+0.09, +1.30]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+1.918</td>
+<td class="num">+0.191</td>
+<td class="num" style="font-size:10px">[+1.54, +2.29]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-3.468</td>
+<td class="num">+0.173</td>
+<td class="num" style="font-size:10px">[-3.81, -3.13]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_extroverted</td>
+<td class="num">-1.735</td>
+<td class="num">+0.075</td>
+<td class="num" style="font-size:10px">[-1.88, -1.59]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+2.086</td>
+<td class="num">+0.050</td>
+<td class="num" style="font-size:10px">[+1.99, +2.18]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">-0.014</td>
+<td class="num">+0.011</td>
+<td class="num" style="font-size:10px">[-0.04, +0.01]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.163</td>
+<td class="num">+0.009</td>
+<td class="num" style="font-size:10px">[-0.18, -0.15]</td>
+<td>***</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Openai gpt-5.2 (medium)  <span class="tag tag-clean">clean</span>  max SE = 0.61</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">1.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">2.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">0.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">17.1%</td><td><span class="pole-in">✓ IN</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">1.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">4.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">0.7%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">99.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">3.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_conscientious</td>
+<td class="num">+4.096</td>
+<td class="num">+0.610</td>
+<td class="num" style="font-size:10px">[+2.90, +5.29]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_conscientious</td>
+<td class="num">-4.207</td>
+<td class="num">+0.596</td>
+<td class="num" style="font-size:10px">[-5.38, -3.04]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-0.607</td>
+<td class="num">+0.421</td>
+<td class="num" style="font-size:10px">[-1.43, +0.22]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+1.414</td>
+<td class="num">+0.197</td>
+<td class="num" style="font-size:10px">[+1.03, +1.80]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-1.584</td>
+<td class="num">+0.195</td>
+<td class="num" style="font-size:10px">[-1.97, -1.20]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-0.697</td>
+<td class="num">+0.193</td>
+<td class="num" style="font-size:10px">[-1.07, -0.32]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+0.878</td>
+<td class="num">+0.189</td>
+<td class="num" style="font-size:10px">[+0.51, +1.25]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.282</td>
+<td class="num">+0.187</td>
+<td class="num" style="font-size:10px">[-0.08, +0.65]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+1.101</td>
+<td class="num">+0.186</td>
+<td class="num" style="font-size:10px">[+0.74, +1.46]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+2.692</td>
+<td class="num">+0.072</td>
+<td class="num" style="font-size:10px">[+2.55, +2.83]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.316</td>
+<td class="num">+0.011</td>
+<td class="num" style="font-size:10px">[-0.34, -0.29]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.013</td>
+<td class="num">+0.007</td>
+<td class="num" style="font-size:10px">[+0.00, +0.03]</td>
+<td>*</td></tr>
+</tbody></table>
+</details>
+<details ><summary>Openai gpt-5.2 (low)  <span class="tag tag-clean">clean</span>  max SE = 0.52</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious_mentioned_con</td>
+<td class="num">+9.435</td>
+<td class="num">+0.518</td>
+<td class="num" style="font-size:10px">[+8.42, +10.45]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">mentioned_con</td>
+<td class="num">-9.185</td>
+<td class="num">+0.497</td>
+<td class="num" style="font-size:10px">[-10.16, -8.21]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-0.341</td>
+<td class="num">+0.363</td>
+<td class="num" style="font-size:10px">[-1.05, +0.37]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+0.781</td>
+<td class="num">+0.170</td>
+<td class="num" style="font-size:10px">[+0.45, +1.12]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-1.189</td>
+<td class="num">+0.168</td>
+<td class="num" style="font-size:10px">[-1.52, -0.86]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-0.386</td>
+<td class="num">+0.165</td>
+<td class="num" style="font-size:10px">[-0.71, -0.06]</td>
+<td>*</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+0.589</td>
+<td class="num">+0.163</td>
+<td class="num" style="font-size:10px">[+0.27, +0.91]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.282</td>
+<td class="num">+0.161</td>
+<td class="num" style="font-size:10px">[-0.03, +0.60]</td>
+<td>.</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+0.683</td>
+<td class="num">+0.160</td>
+<td class="num" style="font-size:10px">[+0.37, +1.00]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+3.983</td>
+<td class="num">+0.122</td>
+<td class="num" style="font-size:10px">[+3.74, +4.22]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.488</td>
+<td class="num">+0.018</td>
+<td class="num" style="font-size:10px">[-0.52, -0.45]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.009</td>
+<td class="num">+0.006</td>
+<td class="num" style="font-size:10px">[-0.00, +0.02]</td>
+<td></td></tr>
+</tbody></table>
+</details>
+<details ><summary>Openai gpt-5.2 (high)  <span class="tag tag-clean">clean</span>  max SE = 0.45</summary>
+<h3>Pole mention rates (Fig 32)</h3>
+<table><thead><tr><th>Pole</th><th>Paired trait</th><th class="num">Rate</th><th>Status (15% threshold)</th></tr></thead><tbody>
+<tr class="pole-row"><td>extroverted</td><td>extraverted</td><td class="num">1.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>introverted</td><td>extraverted</td><td class="num">1.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>agreeable</td><td>agreeable</td><td class="num">0.5%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>antagonistic</td><td>agreeable</td><td class="num">0.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>conscientious</td><td>conscientious</td><td class="num">13.4%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>unconscientious</td><td>conscientious</td><td class="num">1.3%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>neurotic</td><td>emot_stable</td><td class="num">3.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>emot_stable</td><td>emot_stable</td><td class="num">0.6%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>open</td><td>open_to_exp</td><td class="num">0.0%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>closed</td><td>open_to_exp</td><td class="num">0.1%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>infection <em>(context)</em></td><td>infection_pct</td><td class="num">99.2%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+<tr class="pole-row"><td>age <em>(context)</em></td><td>age_years</td><td class="num">4.8%</td><td><span class="pole-out">✗ OUT</span></td></tr>
+</tbody></table>
+<h3>Coefficients (sorted by SE desc)</h3>
+<table><thead><tr><th>Coefficient</th><th class="num">β</th><th class="num">SE</th><th class="num">95% CI</th><th>Sig</th></tr></thead><tbody>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">intercept</td>
+<td class="num">-0.648</td>
+<td class="num">+0.445</td>
+<td class="num" style="font-size:10px">[-1.52, +0.23]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">emot_stable</td>
+<td class="num">-1.760</td>
+<td class="num">+0.206</td>
+<td class="num" style="font-size:10px">[-2.16, -1.36]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">extraverted</td>
+<td class="num">-0.878</td>
+<td class="num">+0.204</td>
+<td class="num" style="font-size:10px">[-1.28, -0.48]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">conscientious</td>
+<td class="num">+1.459</td>
+<td class="num">+0.203</td>
+<td class="num" style="font-size:10px">[+1.06, +1.86]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">open_to_exp</td>
+<td class="num">+0.838</td>
+<td class="num">+0.201</td>
+<td class="num" style="font-size:10px">[+0.44, +1.23]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">male</td>
+<td class="num">+0.247</td>
+<td class="num">+0.199</td>
+<td class="num" style="font-size:10px">[-0.14, +0.64]</td>
+<td></td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">agreeable</td>
+<td class="num">+1.318</td>
+<td class="num">+0.197</td>
+<td class="num" style="font-size:10px">[+0.93, +1.70]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct</td>
+<td class="num">+2.321</td>
+<td class="num">+0.063</td>
+<td class="num" style="font-size:10px">[+2.20, +2.44]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">infection_pct_sq</td>
+<td class="num">-0.272</td>
+<td class="num">+0.010</td>
+<td class="num" style="font-size:10px">[-0.29, -0.25]</td>
+<td>***</td></tr>
+<tr class=""><td style="font-family:monospace;font-size:10.5px">age</td>
+<td class="num">+0.016</td>
+<td class="num">+0.007</td>
+<td class="num" style="font-size:10px">[+0.00, +0.03]</td>
+<td>*</td></tr>
+</tbody></table>
+</details>
+<footer style="margin-top:60px;font-size:11px;color:#888;text-align:center;border-top:1px solid #ccc;padding-top:14px;font-style:italic">Generated by pole_diagnostic_report.py · 2026-04-21</footer>
+</body></html>

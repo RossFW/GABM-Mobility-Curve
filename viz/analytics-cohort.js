@@ -146,6 +146,10 @@ function renderAgentAnalysis() {
       renderLogOddsLandscape(allRegs);
       renderAuthorComparisons();
 
+      // Fig 24b: Calibration (overlay + small multiples + DHARMa-style Q-Q)
+      renderFigCalibration(allRegs);
+      initFigCalibrationToggle(allRegs);
+
       // Fig 29 filter pills (also drives per-trait power ratio)
       buildFilterPills('fig29-filters', 'fig29', filter => {
         renderFig26ForestPlot(_cohortAllRegs, 'fig26-chart', filter);
@@ -182,21 +186,9 @@ function renderAgentAnalysis() {
     });
   });
 
-  // Fig 23: Transition Point Prediction Error (delta histogram)
-  loadAgentsJSON(() => {
-    buildModelPicker('figDelta-model-select', 0, idx => {
-      loadMicro(idx, (rows, cfg) => {
-        loadRegression(idx, (regData) => {
-          renderFigDeltaStrip(rows, cfg, regData);
-        });
-      });
-    });
-    loadMicro(0, (rows, cfg) => {
-      loadRegression(0, (regData) => {
-        renderFigDeltaStrip(rows, cfg, regData);
-      });
-    });
-  });
+  // (Transition Point Prediction Error figure deleted 2026-04-17 — threshold-based summary
+  //  was redundant with the calibration plot in the new Figure 24 and threw away 97% of the
+  //  curve information. See git history if you need to restore it.)
 
   // Fig 37: Decision Anatomy: Traits & Infection Level Impact (now "Figure 26" in Cohort Analysis)
   loadAgentsJSON(() => {
@@ -930,6 +922,895 @@ function renderFig24TraitEffects(microRows, cfg) {
   el.innerHTML = `<svg width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">${svg}</svg>`;
 }
 
+// ── Fig 24b: Logit Regression Calibration ─────────────────────────
+// Three views: (A) overlay, (B) small multiples, (C) DHARMa-style Q-Q
+// Uses mobility-curve macro data (observed) + Model 2 fixed-effects (predicted)
+let _calibDataCache = null;
+let _calibView = 'multiples';
+
+function computeCalibrationData(allRegs) {
+  if (_calibDataCache) return _calibDataCache;
+  if (typeof macroData === 'undefined' || !macroData.length) return null;
+  if (!agentsData) return null;
+
+  // Group macro rows by config key
+  const macroByKey = {};
+  macroData.forEach(r => {
+    if (!r || r.infection_level == null) return;
+    const key = `${r.provider}_${String(r.model).replace(/\./g, '_')}_${r.reasoning}`;
+    if (!macroByKey[key]) macroByKey[key] = [];
+    macroByKey[key].push(r);
+  });
+
+  const results = [];
+  CONFIG.MODELS.forEach(m => {
+    const key = configDirKey(m);
+    const reg = allRegs[key];
+    if (!reg || !reg.model2 || !reg.model2.coefficients) return;
+    const rows = macroByKey[key];
+    if (!rows || rows.length === 0) return;
+
+    const coefs = reg.model2.coefficients;
+    const intercept = coefs.intercept ? coefs.intercept.estimate : 0;
+    const bInf = coefs.infection_pct ? coefs.infection_pct.estimate : 0;
+    const bInfSq = coefs.infection_pct_sq ? coefs.infection_pct_sq.estimate : 0;
+
+    // Per-agent personality log-odds (static across infection levels)
+    const perAgentPers = computeAgentCombinedORs(agentsData, coefs).map(p => p.logCombinedOR);
+
+    // Per-infection-level: predicted = mean of logistic(intercept + pers_i + bInf*x + bInfSq*x²) over agents
+    const bins = rows.map(r => {
+      const x = +r.infection_level;
+      const infLO = bInf * x + bInfSq * x * x;
+      let sumP = 0;
+      for (const persLO of perAgentPers) {
+        const lo = intercept + persLO + infLO;
+        sumP += 1 / (1 + Math.exp(-lo));
+      }
+      const predP = sumP / perAgentPers.length;
+      const observedP = (+r.pct_stay_home) / 100;
+      const n = +r.n_total;
+      const k = +r.n_yes;
+      // Pearson standardized residual: (k - n*predP) / sqrt(n*predP*(1-predP))
+      const expected = n * predP;
+      const variance = Math.max(1e-9, n * predP * (1 - predP));
+      const pearsonZ = (k - expected) / Math.sqrt(variance);
+      return { x, predP, observedP, n, k, pearsonZ };
+    }).sort((a, b) => a.x - b.x);
+
+    results.push({
+      key, label: m.label, provider: m.provider,
+      color: CONFIG.PROVIDER_COLORS[m.provider] || '#999',
+      bins,
+      dharma: reg.model2.dharma || null,
+      blups: reg.model2.blups || null,
+      residsByInf: reg.model2.resids_by_infection || null,
+      residsByAge: reg.model2.resids_by_age || null,
+      m1Dharma: reg.model1 && reg.model1.dharma ? reg.model1.dharma : null,
+      m1ResidsByInf: reg.model1 && reg.model1.resids_by_infection ? reg.model1.resids_by_infection : null,
+      m1Calib: reg.model1 && reg.model1.calibration_bins ? reg.model1.calibration_bins : null,
+      blupsPred: reg.model2.blups_vs_predictors || null,
+      m3Dharma: reg.model3 && reg.model3.dharma ? reg.model3.dharma : null,
+      m3Blups: reg.model3 && reg.model3.blups ? reg.model3.blups : null,
+      m3ResidsByInf: reg.model3 && reg.model3.resids_by_infection ? reg.model3.resids_by_infection : null,
+      m3ResidsByAge: reg.model3 && reg.model3.resids_by_age ? reg.model3.resids_by_age : null,
+      m3Calib: reg.model3 && reg.model3.calibration_bins ? reg.model3.calibration_bins : null,
+      m3BlupsPred: reg.model3 && reg.model3.blups_vs_predictors ? reg.model3.blups_vs_predictors : null,
+      calibByAge: reg.model2 && reg.model2.calibration_by_age ? reg.model2.calibration_by_age : null,
+      m3CalibByAge: reg.model3 && reg.model3.calibration_by_age ? reg.model3.calibration_by_age : null,
+    });
+  });
+
+  // Sort by CONFIG.MODELS order
+  const modelIdx = {};
+  CONFIG.MODELS.forEach((m, i) => { modelIdx[m.label] = i; });
+  results.sort((a, b) => (modelIdx[a.label] ?? 999) - (modelIdx[b.label] ?? 999));
+
+  _calibDataCache = results;
+  return results;
+}
+
+function renderFigCalibration(allRegs) {
+  const el = document.getElementById('figCalib-chart');
+  if (!el) return;
+  const data = computeCalibrationData(allRegs);
+  if (!data) { el.innerHTML = '<div style="color:#999;padding:20px">Waiting for macro data to load…</div>'; return; }
+
+  if (_calibView === 'overlay') renderCalibOverlay(data, el);
+  else if (_calibView === 'multiples') renderCalibMultiples(data, el);
+  else if (_calibView === 'qq') renderCalibQQ(data, el);
+  else if (_calibView === 'reqq') renderM2RENormalQQ(data, el);
+  else if (_calibView === 'blups_pred') renderM2BLUPsVsPredictors(data, el);
+  else if (_calibView === 'rate_diff_age') renderM2RateDiffByAge(data, el);
+  else if (_calibView === 'rate_diff') renderM2RateDiffByInfection(data, el);
+}
+
+// ── View A: Overlay ────────────────────────────────────────────────
+function renderCalibOverlay(data, el) {
+  const W = Math.min(el.parentElement?.offsetWidth || 700, 700);
+  const H = W;
+  const pad = { t: 30, r: 20, b: 58, l: 58 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+
+  const xS = v => pad.l + v * plotW;
+  const yS = v => pad.t + (1 - v) * plotH;
+
+  let svg = '';
+  // Title
+  svg += `<text x="${W / 2}" y="${pad.t - 14}" font-size="12" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Calibration — predicted vs. observed P(stay home)</text>`;
+
+  // Grid + axes
+  svg += `<rect x="${pad.l}" y="${pad.t}" width="${plotW}" height="${plotH}" fill="white" stroke="#ccc" stroke-width="0.5"/>`;
+  for (let v = 0; v <= 1.001; v += 0.1) {
+    const gx = xS(v), gy = yS(v);
+    svg += `<line x1="${gx}" y1="${pad.t}" x2="${gx}" y2="${pad.t + plotH}" stroke="#eee" stroke-width="0.5"/>`;
+    svg += `<line x1="${pad.l}" y1="${gy}" x2="${pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+    svg += `<text x="${gx}" y="${pad.t + plotH + 14}" font-size="10" fill="#777" font-family="${SERIF}" text-anchor="middle">${Math.round(v * 100)}%</text>`;
+    svg += `<text x="${pad.l - 6}" y="${gy + 3}" font-size="10" fill="#777" font-family="${SERIF}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+  }
+
+  // Diagonal reference
+  svg += `<line x1="${xS(0)}" y1="${yS(0)}" x2="${xS(1)}" y2="${yS(1)}" stroke="#888" stroke-width="1" stroke-dasharray="4,3"/>`;
+
+  // Axis labels
+  svg += `<text x="${pad.l + plotW / 2}" y="${H - 20}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle">Predicted P(stay home)</text>`;
+  svg += `<text x="${16}" y="${pad.t + plotH / 2}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 16 ${pad.t + plotH / 2})">Observed stay rate</text>`;
+
+  // Lines per config
+  data.forEach(cfg => {
+    if (!cfg.bins.length) return;
+    let path = '';
+    cfg.bins.forEach((b, i) => {
+      const px = xS(b.predP), py = yS(b.observedP);
+      path += `${i === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)} `;
+    });
+    svg += `<path d="${path}" stroke="${cfg.color}" stroke-width="1.2" fill="none" opacity="0.55"/>`;
+    // End marker for label anchor
+    const last = cfg.bins[cfg.bins.length - 1];
+    svg += `<circle cx="${xS(last.predP)}" cy="${yS(last.observedP)}" r="2" fill="${cfg.color}" opacity="0.8"/>`;
+  });
+
+  // Legend — provider colors only (21 lines would be too many)
+  const provs = [...new Set(data.map(d => d.provider))];
+  const legXStart = pad.l + plotW - 150;
+  const legY = pad.t + 8;
+  provs.forEach((p, i) => {
+    const c = CONFIG.PROVIDER_COLORS[p] || '#999';
+    svg += `<line x1="${legXStart}" y1="${legY + i * 14}" x2="${legXStart + 18}" y2="${legY + i * 14}" stroke="${c}" stroke-width="1.6" opacity="0.7"/>`;
+    svg += `<text x="${legXStart + 22}" y="${legY + i * 14 + 3}" font-size="9" fill="#333" font-family="${SERIF}">${p}</text>`;
+  });
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%">${svg}</svg>`;
+}
+
+// ── View B: Small Multiples ───────────────────────────────────────
+function renderCalibMultiples(data, el) {
+  const cols = 3;
+  const rows = Math.ceil(data.length / cols);
+  const W = Math.min(el.parentElement?.offsetWidth || 860, 860);
+  const cellW = (W - 20) / cols;
+  const cellH = cellW * 0.92;
+  const H = rows * cellH + 40;
+
+  const pad = { t: 22, r: 10, b: 42, l: 46 };
+
+  let svg = '';
+  data.forEach((cfg, i) => {
+    const col = i % cols, row = Math.floor(i / cols);
+    const x0 = 10 + col * cellW;
+    const y0 = 10 + row * cellH;
+    const plotW = cellW - pad.l - pad.r;
+    const plotH = cellH - pad.t - pad.b;
+    const xS = v => x0 + pad.l + v * plotW;
+    const yS = v => y0 + pad.t + (1 - v) * plotH;
+    const plotBot = y0 + pad.t + plotH;
+    const plotLeft = x0 + pad.l;
+
+    // Title (model label)
+    svg += `<text x="${x0 + cellW / 2}" y="${y0 + 13}" font-size="10" fill="${cfg.color}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${esc(cfg.label)}</text>`;
+
+    // Background + frame
+    svg += `<rect x="${plotLeft}" y="${y0 + pad.t}" width="${plotW}" height="${plotH}" fill="white" stroke="#ccc" stroke-width="0.5"/>`;
+
+    // Diagonal
+    svg += `<line x1="${xS(0)}" y1="${yS(0)}" x2="${xS(1)}" y2="${yS(1)}" stroke="#888" stroke-width="0.7" stroke-dasharray="3,2"/>`;
+
+    // Ticks + labels
+    [0, 0.25, 0.5, 0.75, 1].forEach(v => {
+      const tx = xS(v), ty = yS(v);
+      svg += `<line x1="${tx}" y1="${plotBot}" x2="${tx}" y2="${plotBot + 2.5}" stroke="#aaa" stroke-width="0.5"/>`;
+      svg += `<line x1="${plotLeft}" y1="${ty}" x2="${plotLeft - 2.5}" y2="${ty}" stroke="#aaa" stroke-width="0.5"/>`;
+      if (v === 0 || v === 0.5 || v === 1) {
+        svg += `<text x="${tx}" y="${plotBot + 11}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${Math.round(v * 100)}%</text>`;
+        svg += `<text x="${plotLeft - 5}" y="${ty + 3}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+      }
+    });
+
+    // Axis labels
+    svg += `<text x="${x0 + pad.l + plotW / 2}" y="${plotBot + 24}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle">Predicted P(stay)</text>`;
+    svg += `<text x="${plotLeft - 34}" y="${y0 + pad.t + plotH / 2}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${plotLeft - 34} ${y0 + pad.t + plotH / 2})">Observed P(stay)</text>`;
+
+    // Path
+    let path = '';
+    cfg.bins.forEach((b, j) => {
+      const px = xS(Math.max(0, Math.min(1, b.predP))), py = yS(Math.max(0, Math.min(1, b.observedP)));
+      path += `${j === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)} `;
+    });
+    svg += `<path d="${path}" stroke="${cfg.color}" stroke-width="1.3" fill="none" opacity="0.85"/>`;
+
+    // Dots at each bin
+    cfg.bins.forEach(b => {
+      svg += `<circle cx="${xS(Math.max(0, Math.min(1, b.predP)))}" cy="${yS(Math.max(0, Math.min(1, b.observedP)))}" r="1.5" fill="${cfg.color}" opacity="0.75"/>`;
+    });
+
+    // Mean absolute deviation summary (|predicted - observed| averaged across bins, in %)
+    const mad = cfg.bins.reduce((s, b) => s + Math.abs(b.predP - b.observedP), 0) / cfg.bins.length;
+    svg += `<text x="${x0 + pad.l + plotW - 3}" y="${y0 + pad.t + 10}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="end">MAD: ${(mad * 100).toFixed(1)}%</text>`;
+  });
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%">${svg}</svg>`;
+}
+
+// ── View C: DHARMa residual Q-Q (uses real data from R if present) ─
+// DHARMa scaled residuals are Uniform(0,1) under a correctly specified GLMM.
+// We plot the empirical CDF of scaled residuals (per config) vs. the theoretical
+// Uniform CDF. Points on the diagonal = good fit.
+// If R output isn't present, falls back to Pearson-Z Normal Q-Q from aggregated bins.
+function renderCalibQQ(data, el) {
+  // 21 small multiples (3 cols × 7 rows), one per config.
+  // Models with real DHARMa data show empirical CDF vs Uniform diagonal.
+  // Models still pending show a placeholder until compute_dharma.R is run.
+  const nCols = 3, nRows = 7;
+  const containerW = Math.min(el.parentElement?.offsetWidth || 900, 960);
+  const cellW = Math.floor(containerW / nCols);
+  const cellH = Math.round(cellW * 0.88);
+  const pad = { t: 20, r: 8, b: 28, l: 36 };
+  const plotW = cellW - pad.l - pad.r;
+  const plotH = cellH - pad.t - pad.b;
+  const W = nCols * cellW;
+  const H = nRows * cellH + 18;  // +18 for shared x-axis label at bottom
+
+  let svg = '';
+  svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="${SVG_BG}"/>`;
+
+  data.forEach((cfg, idx) => {
+    const col = idx % nCols;
+    const row = Math.floor(idx / nCols);
+    const ox = col * cellW;
+    const oy = row * cellH;
+
+    const hasDharma = cfg.dharma && Array.isArray(cfg.dharma.quantiles) && cfg.dharma.quantiles.length > 0;
+
+    // Panel background
+    svg += `<rect x="${ox}" y="${oy}" width="${cellW}" height="${cellH}" fill="white" stroke="#ddd" stroke-width="0.5"/>`;
+
+    // Title — short label in provider color
+    const shortLabel = cfg.label.replace(/^(Anthropic|OpenAI|Google)\s+/i, '');
+    svg += `<text x="${ox + pad.l + plotW / 2}" y="${oy + 13}" font-size="7.5" fill="${cfg.color}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${esc(shortLabel)}</text>`;
+
+    // Plot area background
+    svg += `<rect x="${ox + pad.l}" y="${oy + pad.t}" width="${plotW}" height="${plotH}" fill="#fafafa" stroke="#ccc" stroke-width="0.5"/>`;
+
+    // Grid lines at 0, 0.5, 1
+    for (const v of [0, 0.5, 1]) {
+      const gx = ox + pad.l + v * plotW;
+      const gy = oy + pad.t + (1 - v) * plotH;
+      svg += `<line x1="${gx}" y1="${oy + pad.t}" x2="${gx}" y2="${oy + pad.t + plotH}" stroke="#eee" stroke-width="0.5"/>`;
+      svg += `<line x1="${ox + pad.l}" y1="${gy}" x2="${ox + pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+      // x ticks + labels
+      svg += `<line x1="${gx}" y1="${oy + pad.t + plotH}" x2="${gx}" y2="${oy + pad.t + plotH + 3}" stroke="#aaa" stroke-width="0.5"/>`;
+      svg += `<text x="${gx}" y="${oy + pad.t + plotH + 10}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+      // y ticks + labels
+      svg += `<line x1="${ox + pad.l - 3}" y1="${gy}" x2="${ox + pad.l}" y2="${gy}" stroke="#aaa" stroke-width="0.5"/>`;
+      svg += `<text x="${ox + pad.l - 5}" y="${gy + 2.5}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">${v}</text>`;
+    }
+
+    // Diagonal — theoretical Uniform(0,1)
+    svg += `<line x1="${ox + pad.l}" y1="${oy + pad.t + plotH}" x2="${ox + pad.l + plotW}" y2="${oy + pad.t}" stroke="#bbb" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+
+    // Per-panel axis labels
+    svg += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 19}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle">Theoretical quantile (Uniform)</text>`;
+    svg += `<text x="${ox + 10}" y="${oy + pad.t + plotH / 2}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${ox + 10} ${oy + pad.t + plotH / 2})">Observed quantile</text>`;
+
+    if (hasDharma) {
+      const d = cfg.dharma;
+      // Empirical Q-Q curve
+      let path = '';
+      for (let i = 0; i < d.probs.length; i++) {
+        const px = ox + pad.l + d.probs[i] * plotW;
+        const py = oy + pad.t + (1 - Math.max(0, Math.min(1, d.quantiles[i]))) * plotH;
+        path += `${i === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)} `;
+      }
+      svg += `<path d="${path.trim()}" stroke="${cfg.color}" stroke-width="1.3" fill="none"/>`;
+
+      // Dispersion ratio (top-right corner to avoid crowding the X axis title area)
+      const dispStr = `disp = ${d.dispersion_ratio.toFixed(2)}`;
+      svg += `<text x="${ox + pad.l + plotW - 3}" y="${oy + pad.t + 10}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="end">${dispStr}</text>`;
+    } else {
+      // Pending placeholder
+      svg += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2 - 4}" font-size="10" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+      svg += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2 + 8}" font-size="7.5" fill="#ccc" font-family="${SERIF}" text-anchor="middle">run compute_dharma.R</text>`;
+    }
+  });
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;border:1px solid #ccc;max-width:100%">${svg}</svg>`;
+}
+
+// ── Shared helper: approximate inverse Normal CDF (for Q-Q theoretical positions) ──
+function _normQuantile(p) {
+  const a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+  const b2 = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01];
+  const c0 = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+  const d0 = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00];
+  const pLow = 0.02425, pHigh = 1 - pLow;
+  let q, r;
+  if (p < pLow) { q = Math.sqrt(-2 * Math.log(p)); return (((((c0[0] * q + c0[1]) * q + c0[2]) * q + c0[3]) * q + c0[4]) * q + c0[5]) / ((((d0[0] * q + d0[1]) * q + d0[2]) * q + d0[3]) * q + 1); }
+  if (p <= pHigh) { q = p - 0.5; r = q * q; return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b2[0] * r + b2[1]) * r + b2[2]) * r + b2[3]) * r + b2[4]) * r + 1); }
+  q = Math.sqrt(-2 * Math.log(1 - p));
+  return -(((((c0[0] * q + c0[1]) * q + c0[2]) * q + c0[3]) * q + c0[4]) * q + c0[5]) / ((((d0[0] * q + d0[1]) * q + d0[2]) * q + d0[3]) * q + 1);
+}
+
+// ── Shared helper: small-multiples grid layout ──
+// Dimensions synced with renderCalibMultiples so all appendix small multiples
+// (DHARMa Q-Q, RE Normal Q-Q, residuals-vs-X, BLUPs-vs-predictors) share one look.
+function _smallMultiplesGrid(data, el, nCols, nRows, panelRenderer, xAxisLabel) {
+  const W = Math.min(el.parentElement?.offsetWidth || 860, 860);
+  const cellW = (W - 20) / nCols;                           // 10px outer margin each side
+  const cellH = Math.round(cellW * 0.92);
+  const pad = { t: 22, r: 10, b: 56, l: 46 };               // b=56 fits ticks + axis title + footer stat
+  const plotW = cellW - pad.l - pad.r;
+  const plotH = cellH - pad.t - pad.b;
+  const H = nRows * cellH + 40;                             // +40 bottom margin
+
+  let svg = `<rect x="0" y="0" width="${W}" height="${H}" fill="${SVG_BG}"/>`;
+  data.forEach((cfg, idx) => {
+    const col = idx % nCols;
+    const row = Math.floor(idx / nCols);
+    const ox = 10 + col * cellW;
+    const oy = 10 + row * cellH;
+    svg += `<rect x="${ox}" y="${oy}" width="${cellW}" height="${cellH}" fill="white" stroke="#ddd" stroke-width="0.5"/>`;
+    const shortLabel = cfg.label.replace(/^(Anthropic|OpenAI|Google)\s+/i, '');
+    svg += `<text x="${ox + cellW / 2}" y="${oy + 16}" font-size="10" fill="${cfg.color}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${esc(shortLabel)}</text>`;
+    svg += `<rect x="${ox + pad.l}" y="${oy + pad.t}" width="${plotW}" height="${plotH}" fill="white" stroke="#ccc" stroke-width="0.5"/>`;
+    svg += panelRenderer(cfg, { ox, oy, pad, plotW, plotH, cellH, cellW });
+  });
+  if (xAxisLabel) {
+    svg += `<text x="${W / 2}" y="${H - 8}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle">${esc(xAxisLabel)}</text>`;
+  }
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;border:1px solid #ccc;max-width:100%">${svg}</svg>`;
+}
+
+// ── Fig 24b view: Random-Intercept Normal Q-Q (Model 2) ──
+// Checks assumption that the 100 agent-level random intercepts follow Normal(0, σ²).
+function renderM2RENormalQQ(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const { ox, oy, pad, plotW, plotH, cellH } = g;
+    const blups = cfg.blups && Array.isArray(cfg.blups.intercepts) ? cfg.blups.intercepts : null;
+    if (!blups || blups.length < 10) {
+      return `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2}" font-size="8" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    const sorted = blups.slice().sort((a, b) => a - b);
+    const n = sorted.length;
+    // Standardize by the estimated RE SD so x-axis is always interpretable
+    const sdEst = cfg.blups.sd_estimated || 1;
+    const standardized = sorted.map(v => v / sdEst);
+    const minZ = Math.min(-3, Math.floor(standardized[0] - 0.5));
+    const maxZ = Math.max(3, Math.ceil(standardized[n - 1] + 0.5));
+    const span = maxZ - minZ;
+    const xS = v => ox + pad.l + ((v - minZ) / span) * plotW;
+    const yS = v => oy + pad.t + (1 - (v - minZ) / span) * plotH;
+
+    let s = '';
+    // Tick grid
+    for (const v of [minZ, 0, maxZ]) {
+      const gx = xS(v), gy = yS(v);
+      s += `<line x1="${gx}" y1="${oy + pad.t}" x2="${gx}" y2="${oy + pad.t + plotH}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<line x1="${ox + pad.l}" y1="${gy}" x2="${ox + pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<text x="${gx}" y="${oy + pad.t + plotH + 10}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+    }
+    s += `<text x="${ox + pad.l - 5}" y="${yS(0) + 2.5}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">0</text>`;
+
+    // Diagonal
+    s += `<line x1="${xS(minZ)}" y1="${yS(minZ)}" x2="${xS(maxZ)}" y2="${yS(maxZ)}" stroke="#bbb" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+
+    // Per-panel axis labels
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 19}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle">Theoretical Normal quantile</text>`;
+    s += `<text x="${ox + 10}" y="${oy + pad.t + plotH / 2}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${ox + 10} ${oy + pad.t + plotH / 2})">Observed BLUP (z)</text>`;
+
+    // Points: theoretical quantile vs. observed standardized intercept
+    for (let i = 0; i < n; i++) {
+      const theoQ = _normQuantile((i + 0.5) / n);
+      const px = xS(Math.max(minZ, Math.min(maxZ, theoQ)));
+      const py = yS(Math.max(minZ, Math.min(maxZ, standardized[i])));
+      s += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.3" fill="${cfg.color}" opacity="0.85"/>`;
+    }
+    // Footer: SD of the RE + sample size
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + cellH - 6}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle">n=${n} agents · σ̂=${sdEst.toFixed(2)}</text>`;
+    return s;
+  }, '');
+}
+
+// ── Shared: residual-vs-predictor panel (mean scaled residual per bin, 0.5 target) ──
+function _renderResidVsPanel(cfg, g, xs, means, sds, counts, xLabel, xRange) {
+  const { ox, oy, pad, plotW, plotH, cellH } = g;
+  if (!xs || xs.length === 0) {
+    return `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2}" font-size="8" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+  }
+  const [xMin, xMax] = xRange;
+  // y range: 0.3 to 0.7 (scaled residuals should sit at 0.5)
+  const yMin = 0.30, yMax = 0.70;
+  const xS = v => ox + pad.l + ((v - xMin) / (xMax - xMin)) * plotW;
+  const yS = v => oy + pad.t + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+  let s = '';
+  // Y gridlines + tick labels (0.3, 0.5, 0.7)
+  for (const v of [0.3, 0.5, 0.7]) {
+    const gy = yS(v);
+    s += `<line x1="${ox + pad.l}" y1="${gy}" x2="${ox + pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+    s += `<text x="${ox + pad.l - 5}" y="${gy + 2.5}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">${v}</text>`;
+  }
+  // Target reference line at 0.5
+  s += `<line x1="${ox + pad.l}" y1="${yS(0.5)}" x2="${ox + pad.l + plotW}" y2="${yS(0.5)}" stroke="#bbb" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+  // X ticks + labels
+  const xTicks = [xMin, (xMin + xMax) / 2, xMax];
+  for (const v of xTicks) {
+    const gx = xS(v);
+    s += `<line x1="${gx}" y1="${oy + pad.t + plotH}" x2="${gx}" y2="${oy + pad.t + plotH + 3}" stroke="#aaa" stroke-width="0.5"/>`;
+    s += `<text x="${gx}" y="${oy + pad.t + plotH + 10}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${(+v).toFixed(xMax > 10 ? 0 : 1)}</text>`;
+  }
+  // Axis labels (per panel, matching the calibration plot style)
+  s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 19}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle">${esc(xLabel)}</text>`;
+  s += `<text x="${ox + 10}" y="${oy + pad.t + plotH / 2}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${ox + 10} ${oy + pad.t + plotH / 2})">Mean residual</text>`;
+  // Error bar + point per bin
+  for (let i = 0; i < xs.length; i++) {
+    const x = xs[i];
+    const m = means[i];
+    const sd = sds ? sds[i] : 0;
+    const nB = counts ? counts[i] : 0;
+    const se = nB > 0 ? sd / Math.sqrt(nB) : 0;
+    const px = xS(x);
+    const py = yS(Math.max(yMin, Math.min(yMax, m)));
+    if (se > 0) {
+      const py_lo = yS(Math.max(yMin, Math.min(yMax, m - 1.96 * se)));
+      const py_hi = yS(Math.max(yMin, Math.min(yMax, m + 1.96 * se)));
+      s += `<line x1="${px}" y1="${py_lo}" x2="${px}" y2="${py_hi}" stroke="${cfg.color}" stroke-width="0.7" opacity="0.4"/>`;
+    }
+    s += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.6" fill="${cfg.color}" opacity="0.85"/>`;
+  }
+  return s;
+}
+
+// ── Fig 24a view: Calibration — Fixed-Effects Logit ──
+// Mean predicted P (averaged across all 100 agent dummies) vs observed rate,
+// binned by infection level (40 bins). Pre-computed server-side in R.
+function renderM1Calibration(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const { ox, oy, pad, plotW, plotH, cellH } = g;
+    const cb = cfg.m1Calib;
+    if (!cb || !cb.inf) {
+      return `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2}" font-size="8" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    const xS = v => ox + pad.l + v * plotW;
+    const yS = v => oy + pad.t + (1 - v) * plotH;
+    let s = '';
+    // Gridlines + tick labels
+    for (const v of [0, 0.5, 1]) {
+      const gx = xS(v), gy = yS(v);
+      s += `<line x1="${gx}" y1="${oy + pad.t}" x2="${gx}" y2="${oy + pad.t + plotH}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<line x1="${ox + pad.l}" y1="${gy}" x2="${ox + pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<text x="${gx}" y="${oy + pad.t + plotH + 10}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+      s += `<text x="${ox + pad.l - 5}" y="${gy + 2.5}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">${v}</text>`;
+    }
+    // Diagonal (perfect calibration)
+    s += `<line x1="${xS(0)}" y1="${yS(0)}" x2="${xS(1)}" y2="${yS(1)}" stroke="#bbb" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+    // Axis labels
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 19}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle">Predicted P(stay)</text>`;
+    s += `<text x="${ox + 10}" y="${oy + pad.t + plotH / 2}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${ox + 10} ${oy + pad.t + plotH / 2})">Observed P(stay)</text>`;
+    // Points (per infection bin)
+    let sumAbs = 0, nP = 0;
+    for (let i = 0; i < cb.inf.length; i++) {
+      const p = cb.predicted[i];
+      const o = cb.observed[i];
+      if (!isFinite(p) || !isFinite(o)) continue;
+      sumAbs += Math.abs(p - o);
+      nP += 1;
+      s += `<circle cx="${xS(p).toFixed(1)}" cy="${yS(o).toFixed(1)}" r="1.6" fill="${cfg.color}" opacity="0.85"/>`;
+    }
+    const mad = nP > 0 ? sumAbs / nP : 0;
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + cellH - 6}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle">MAD=${(mad * 100).toFixed(1)}%</text>`;
+    return s;
+  }, '');
+}
+
+// ── Fig 24b view: Residuals vs Age (Model 2) ──
+// ── Fig 24b view: BLUPs vs fixed-effect predictors ──
+// Tests Assumption 6 for the RE model: the random intercepts should be
+// uncorrelated with observed predictors. If they correlate, the
+// fixed-effect coefficient for that predictor is absorbing something
+// the RE is also absorbing — i.e., biased β̂.
+function renderM2BLUPsVsPredictors(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const { ox, oy, pad, plotW, plotH, cellH } = g;
+    const assoc = cfg.blupsPred;
+    if (!assoc) {
+      return `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2}" font-size="8" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    const predictors = [
+      { key: 'age',           label: 'Age (range)' },
+      { key: 'male',          label: 'Male vs F' },
+      { key: 'extraverted',   label: 'Extra vs I' },
+      { key: 'agreeable',     label: 'Agree vs A' },
+      { key: 'conscientious', label: 'Con vs Un' },
+      { key: 'emot_stable',   label: 'Emot vs N' },
+      { key: 'open_to_exp',   label: 'Open vs C' },
+    ];
+    const vals = predictors.map(p => (assoc[p.key] && isFinite(assoc[p.key].estimate) ? assoc[p.key].estimate : 0));
+    const maxAbs = Math.max(1.0, ...vals.map(v => Math.abs(v)), ...predictors.map(p => {
+      const a = assoc[p.key]; return a && isFinite(a.se) ? Math.abs(a.estimate) + 1.96 * a.se : 0;
+    })) * 1.15;
+    const xMin = -maxAbs, xMax = maxAbs;
+    const xS = v => ox + pad.l + ((v - xMin) / (xMax - xMin)) * plotW;
+    // Compact row spacing — don't stretch to fill plotH; center a compact stack instead
+    const rowH = Math.min(plotH / predictors.length, 20);
+    const totalRowsH = rowH * predictors.length;
+    const yStart = oy + pad.t + Math.max(4, (plotH - totalRowsH) / 2);
+    const yS = i => yStart + (i + 0.5) * rowH;
+
+    let s = '';
+    // 0 reference line
+    s += `<line x1="${xS(0)}" y1="${oy + pad.t}" x2="${xS(0)}" y2="${oy + pad.t + plotH}" stroke="#bbb" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+    // X-axis at bottom of the plot area with tick labels
+    s += `<line x1="${ox + pad.l}" y1="${oy + pad.t + plotH}" x2="${ox + pad.l + plotW}" y2="${oy + pad.t + plotH}" stroke="#aaa" stroke-width="0.6"/>`;
+    const xTicks = [-maxAbs, 0, maxAbs];
+    for (const v of xTicks) {
+      const gx = xS(v);
+      s += `<line x1="${gx}" y1="${oy + pad.t + plotH}" x2="${gx}" y2="${oy + pad.t + plotH + 3}" stroke="#aaa" stroke-width="0.5"/>`;
+      s += `<text x="${gx}" y="${oy + pad.t + plotH + 10}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${v.toFixed(1)}</text>`;
+    }
+    // Per-panel axis labels — row labels serve as implicit Y axis, so only X title needed
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 19}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle">BLUP &Delta; (log-odds)</text>`;
+
+    // Rows: one per predictor
+    predictors.forEach((p, i) => {
+      const yR = yS(i);
+      const a = assoc[p.key];
+      if (!a || !isFinite(a.estimate) || !isFinite(a.se)) return;
+      // Row label (inside the plot-left margin)
+      s += `<text x="${ox + pad.l - 3}" y="${yR + 2}" font-size="6" fill="#555" font-family="${SERIF}" text-anchor="end">${p.label}</text>`;
+      // CI whisker
+      const x_est = xS(a.estimate);
+      const x_lo = xS(a.estimate - 1.96 * a.se);
+      const x_hi = xS(a.estimate + 1.96 * a.se);
+      const sig = Math.abs(a.estimate) > 1.96 * a.se;
+      const color = sig ? '#c62828' : cfg.color;
+      s += `<line x1="${x_lo}" y1="${yR}" x2="${x_hi}" y2="${yR}" stroke="${color}" stroke-width="0.8" opacity="0.45"/>`;
+      s += `<circle cx="${x_est.toFixed(1)}" cy="${yR.toFixed(1)}" r="1.8" fill="${color}" opacity="0.9"/>`;
+    });
+
+    // Footer: count of "significant" associations
+    const nSig = predictors.filter(p => {
+      const a = assoc[p.key];
+      return a && isFinite(a.estimate) && isFinite(a.se) && Math.abs(a.estimate) > 1.96 * a.se;
+    }).length;
+    const footColor = nSig === 0 ? '#2e7d32' : nSig >= 2 ? '#c62828' : '#e65100';
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + cellH - 6}" font-size="7.5" fill="${footColor}" font-family="${SERIF}" text-anchor="middle">${nSig} of 7 ≠ 0</text>`;
+    return s;
+  }, '');
+}
+
+function renderM2ResidsByAge(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const r = cfg.residsByAge;
+    if (!r || !r.age_mid) {
+      return `<text x="${g.ox + g.pad.l + g.plotW / 2}" y="${g.oy + g.pad.t + g.plotH / 2}" font-size="8" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    return _renderResidVsPanel(cfg, g, r.age_mid, r.mean_resid, r.sd_resid, r.n, 'Age', [18, 65]);
+  }, 'Age (years) — residual means should cluster at 0.5 if age linearity holds');
+}
+
+// ── Fig 24b view: Residuals vs Infection (Model 2) ──
+function renderM2ResidsByInfection(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const r = cfg.residsByInf;
+    if (!r || !r.inf) {
+      return `<text x="${g.ox + g.pad.l + g.plotW / 2}" y="${g.oy + g.pad.t + g.plotH / 2}" font-size="8" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    return _renderResidVsPanel(cfg, g, r.inf, r.mean_resid, r.sd_resid, r.n, 'Infection %', [0, 7]);
+  }, 'Infection level (%) — residual means should cluster at 0.5 if quadratic form is adequate');
+}
+
+// ── Fig 24c (Model 1) — DHARMa Q-Q per config ──
+function renderM1DharmaQQ(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const { ox, oy, pad, plotW, plotH, cellH } = g;
+    const d = cfg.m1Dharma;
+    if (!d || !Array.isArray(d.quantiles) || d.quantiles.length === 0) {
+      return `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2}" font-size="8" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    let s = '';
+    for (const v of [0, 0.5, 1]) {
+      const gx = ox + pad.l + v * plotW;
+      const gy = oy + pad.t + (1 - v) * plotH;
+      s += `<line x1="${gx}" y1="${oy + pad.t}" x2="${gx}" y2="${oy + pad.t + plotH}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<line x1="${ox + pad.l}" y1="${gy}" x2="${ox + pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<text x="${gx}" y="${oy + pad.t + plotH + 10}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+      s += `<text x="${ox + pad.l - 5}" y="${gy + 2.5}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">${v}</text>`;
+    }
+    // Diagonal
+    s += `<line x1="${ox + pad.l}" y1="${oy + pad.t + plotH}" x2="${ox + pad.l + plotW}" y2="${oy + pad.t}" stroke="#bbb" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+    // Per-panel axis labels
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 19}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle">Theoretical quantile (Uniform)</text>`;
+    s += `<text x="${ox + 10}" y="${oy + pad.t + plotH / 2}" font-size="7.5" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${ox + 10} ${oy + pad.t + plotH / 2})">Observed quantile</text>`;
+    let path = '';
+    for (let i = 0; i < d.probs.length; i++) {
+      const px = ox + pad.l + d.probs[i] * plotW;
+      const py = oy + pad.t + (1 - Math.max(0, Math.min(1, d.quantiles[i]))) * plotH;
+      path += `${i === 0 ? 'M' : 'L'}${px.toFixed(1)},${py.toFixed(1)} `;
+    }
+    s += `<path d="${path.trim()}" stroke="${cfg.color}" stroke-width="1.3" fill="none"/>`;
+    // Dispersion ratio (top-right corner)
+    const dispStr = `disp = ${d.dispersion_ratio.toFixed(2)}`;
+    s += `<text x="${ox + pad.l + plotW - 3}" y="${oy + pad.t + 10}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="end">${dispStr}</text>`;
+    return s;
+  }, 'Theoretical quantile (Uniform)');
+}
+
+// ── Fig 24c (Model 1) — Residuals vs Infection ──
+function renderM1ResidsByInfection(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const r = cfg.m1ResidsByInf;
+    if (!r || !r.inf) {
+      return `<text x="${g.ox + g.pad.l + g.plotW / 2}" y="${g.oy + g.pad.t + g.plotH / 2}" font-size="8" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    return _renderResidVsPanel(cfg, g, r.inf, r.mean_resid, r.sd_resid, r.n, 'Infection %', [0, 7]);
+  }, 'Infection level (%) — residual means should cluster at 0.5 if quadratic form is adequate');
+}
+
+// ── Fig 24a dispatch (Fixed-Effects Logit Validation) ──
+let _m1View = 'calibration';
+function renderFigM1Validation(allRegs) {
+  const el = document.getElementById('figM1-chart');
+  if (!el) return;
+  const data = computeCalibrationData(allRegs);
+  if (!data) { el.innerHTML = '<div style="color:#999;padding:20px">No data.</div>'; return; }
+  if (_m1View === 'calibration') renderM1Calibration(data, el);
+  else if (_m1View === 'qq') renderM1DharmaQQ(data, el);
+  else if (_m1View === 'resids_inf') renderM1ResidsByInfection(data, el);
+  else if (_m1View === 'rate_diff') renderM1RateDiffByInfection(data, el);
+}
+
+function initFigM1Toggle(allRegs) {
+  const toggle = document.getElementById('figM1-toggle');
+  if (!toggle) return;
+  toggle.addEventListener('click', e => {
+    const btn = e.target.closest('[data-view]');
+    if (!btn) return;
+    _m1View = btn.dataset.view;
+    toggle.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === _m1View));
+    renderFigM1Validation(allRegs);
+  });
+  // Initial render
+  renderFigM1Validation(allRegs);
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Rate-diff residual panel (observed − predicted rate, in percentage points)
+// ────────────────────────────────────────────────────────────────────────
+// Shared panel: plots observed - predicted per bin along a predictor axis.
+// Accepts x array, predicted array, observed array, n array, xRange, xLabel.
+function _renderRateDiffPanel(cfg, g, xArr, predArr, obsArr, nArr, xRange, xLabel) {
+  const { ox, oy, pad, plotW, plotH, cellH } = g;
+  if (!xArr || xArr.length === 0 || !predArr || !obsArr) {
+    return `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2}" font-size="10" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+  }
+  const [xMin, xMax] = xRange || [0, 7];
+  const [yMin, yMax] = [-0.15, 0.15];
+  const xS = v => ox + pad.l + ((v - xMin) / (xMax - xMin)) * plotW;
+  const yS = v => oy + pad.t + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+  let s = '';
+  for (const v of [-0.15, -0.075, 0, 0.075, 0.15]) {
+    const gy = yS(v);
+    s += `<line x1="${ox + pad.l}" y1="${gy}" x2="${ox + pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+    if (v === -0.15 || v === 0 || v === 0.15) {
+      s += `<text x="${ox + pad.l - 5}" y="${gy + 2.5}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">${(v * 100).toFixed(0)}</text>`;
+    }
+  }
+  s += `<line x1="${ox + pad.l}" y1="${yS(0)}" x2="${ox + pad.l + plotW}" y2="${yS(0)}" stroke="#999" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+  const xMid = (xMin + xMax) / 2;
+  const fmtTick = v => Math.abs(v) < 10 ? v.toFixed(1) : v.toFixed(0);
+  for (const v of [xMin, xMid, xMax]) {
+    const gx = xS(v);
+    s += `<line x1="${gx}" y1="${oy + pad.t + plotH}" x2="${gx}" y2="${oy + pad.t + plotH + 3}" stroke="#aaa" stroke-width="0.5"/>`;
+    s += `<text x="${gx}" y="${oy + pad.t + plotH + 12}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${fmtTick(v)}</text>`;
+  }
+  s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 24}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle">${esc(xLabel || 'Infection %')}</text>`;
+  s += `<text x="${ox + 12}" y="${oy + pad.t + plotH / 2}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${ox + 12} ${oy + pad.t + plotH / 2})">Obs − Pred (%)</text>`;
+  let sumAbs = 0, nPts = 0;
+  for (let i = 0; i < xArr.length; i++) {
+    const x = +xArr[i];
+    const pred = +predArr[i];
+    const obs = +obsArr[i];
+    const n = nArr ? +nArr[i] : 500;
+    if (!isFinite(x) || !isFinite(pred) || !isFinite(obs)) continue;
+    const diff = obs - pred;
+    sumAbs += Math.abs(diff);
+    nPts++;
+    const se = Math.sqrt(obs * (1 - obs) / Math.max(1, n));
+    const px = xS(x);
+    const py = yS(Math.max(yMin, Math.min(yMax, diff)));
+    const py_lo = yS(Math.max(yMin, Math.min(yMax, diff - 1.96 * se)));
+    const py_hi = yS(Math.max(yMin, Math.min(yMax, diff + 1.96 * se)));
+    s += `<line x1="${px}" y1="${py_lo}" x2="${px}" y2="${py_hi}" stroke="${cfg.color}" stroke-width="0.7" opacity="0.35"/>`;
+    s += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.8" fill="${cfg.color}" opacity="0.9"/>`;
+  }
+  const mad = nPts > 0 ? sumAbs / nPts : 0;
+  s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + cellH - 6}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle">MAD = ${(mad * 100).toFixed(1)}%</text>`;
+  return s;
+}
+
+// Rate-diff residuals vs age (Model 2 / Model 3 share data since age effect is identical)
+function renderM2RateDiffByAge(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const c = cfg.calibByAge;
+    return _renderRateDiffPanel(cfg, g,
+      c ? c.age_mid : null, c ? c.predicted : null, c ? c.observed : null, c ? c.n : null,
+      [18, 65], 'Age (years)');
+  }, '');
+}
+function renderM3RateDiffByAge(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const c = cfg.m3CalibByAge || cfg.calibByAge;
+    return _renderRateDiffPanel(cfg, g,
+      c ? c.age_mid : null, c ? c.predicted : null, c ? c.observed : null, c ? c.n : null,
+      [18, 65], 'Age (years)');
+  }, '');
+}
+
+// Rate-diff residuals vs infection for all three models
+function renderM1RateDiffByInfection(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const c = cfg.m1Calib;
+    return _renderRateDiffPanel(cfg, g,
+      c ? c.inf : null, c ? c.predicted : null, c ? c.observed : null, c ? c.n : null,
+      [0, 7], 'Infection %');
+  }, '');
+}
+
+function renderM2RateDiffByInfection(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    if (!cfg.bins || cfg.bins.length === 0) {
+      return _renderRateDiffPanel(cfg, g, null, null, null, null, [0, 7], 'Infection %');
+    }
+    const sorted = cfg.bins.slice().sort((a, b) => a.x - b.x);
+    return _renderRateDiffPanel(cfg, g,
+      sorted.map(b => b.x),
+      sorted.map(b => b.predP),
+      sorted.map(b => b.observedP),
+      sorted.map(b => b.n),
+      [0, 7], 'Infection %');
+  }, '');
+}
+
+function renderM3RateDiffByInfection(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const c = cfg.m3Calib;
+    return _renderRateDiffPanel(cfg, g,
+      c ? c.inf : null, c ? c.predicted : null, c ? c.observed : null, c ? c.n : null,
+      [0, 7], 'Infection %');
+  }, '');
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Model 3 renderers (Appendix Figure A3)
+// Thin wrappers around the M2 renderers but pointing at the m3* data fields.
+// ────────────────────────────────────────────────────────────────────────
+function _m3View(data) {
+  // Create a shadow copy of data where cfg.dharma, cfg.blups, etc. point to m3 equivalents.
+  return data.map(cfg => ({
+    ...cfg,
+    dharma: cfg.m3Dharma,
+    blups: cfg.m3Blups,
+    residsByInf: cfg.m3ResidsByInf,
+    residsByAge: cfg.m3ResidsByAge,
+    blupsPred: cfg.m3BlupsPred,
+  }));
+}
+
+function renderM3Calibration(data, el) {
+  // Uses cfg.m3Calib (server-computed) just like renderM1Calibration
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const { ox, oy, pad, plotW, plotH, cellH } = g;
+    const cb = cfg.m3Calib;
+    if (!cb || !cb.inf) {
+      return `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2}" font-size="10" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    const xS = v => ox + pad.l + v * plotW;
+    const yS = v => oy + pad.t + (1 - v) * plotH;
+    let s = '';
+    for (const v of [0, 0.5, 1]) {
+      const gx = xS(v), gy = yS(v);
+      s += `<line x1="${gx}" y1="${oy + pad.t}" x2="${gx}" y2="${oy + pad.t + plotH}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<line x1="${ox + pad.l}" y1="${gy}" x2="${ox + pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<text x="${gx}" y="${oy + pad.t + plotH + 12}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+      s += `<text x="${ox + pad.l - 5}" y="${gy + 3}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">${v}</text>`;
+    }
+    s += `<line x1="${xS(0)}" y1="${yS(0)}" x2="${xS(1)}" y2="${yS(1)}" stroke="#bbb" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 24}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle">Predicted P(stay)</text>`;
+    s += `<text x="${ox + 12}" y="${oy + pad.t + plotH / 2}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${ox + 12} ${oy + pad.t + plotH / 2})">Observed P(stay)</text>`;
+    let sumAbs = 0, nP = 0;
+    for (let i = 0; i < cb.inf.length; i++) {
+      const p = cb.predicted[i]; const o = cb.observed[i];
+      if (!isFinite(p) || !isFinite(o)) continue;
+      sumAbs += Math.abs(p - o); nP++;
+      s += `<circle cx="${xS(p).toFixed(1)}" cy="${yS(o).toFixed(1)}" r="1.8" fill="${cfg.color}" opacity="0.85"/>`;
+    }
+    const mad = nP > 0 ? sumAbs / nP : 0;
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + cellH - 6}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle">MAD = ${(mad * 100).toFixed(1)}%</text>`;
+    return s;
+  }, '');
+}
+
+function renderM3DharmaQQ(data, el) {
+  return renderCalibQQ(_m3View(data), el);
+}
+function renderM3RENormalQQ(data, el) {
+  return renderM2RENormalQQ(_m3View(data), el);
+}
+function renderM3BLUPsVsPredictors(data, el) {
+  return renderM2BLUPsVsPredictors(_m3View(data), el);
+}
+function renderM3ResidsByAge(data, el) {
+  return renderM2ResidsByAge(_m3View(data), el);
+}
+function renderM3ResidsByInfection(data, el) {
+  return renderM2ResidsByInfection(_m3View(data), el);
+}
+
+// ── Fig A3 dispatch (Model 3 Validation — Random-Effects Logit with Mention Interactions) ──
+let _m3View_state = 'calibration';
+function renderFigM3Validation(allRegs) {
+  const el = document.getElementById('figM3-chart');
+  if (!el) return;
+  const data = computeCalibrationData(allRegs);
+  if (!data) { el.innerHTML = '<div style="color:#999;padding:20px">No data.</div>'; return; }
+  if (_m3View_state === 'calibration') renderM3Calibration(data, el);
+  else if (_m3View_state === 'qq') renderM3DharmaQQ(data, el);
+  else if (_m3View_state === 'reqq') renderM3RENormalQQ(data, el);
+  else if (_m3View_state === 'blups_pred') renderM3BLUPsVsPredictors(data, el);
+  else if (_m3View_state === 'rate_diff_age') renderM3RateDiffByAge(data, el);
+  else if (_m3View_state === 'rate_diff') renderM3RateDiffByInfection(data, el);
+}
+
+function initFigM3Toggle(allRegs) {
+  const toggle = document.getElementById('figM3-toggle');
+  if (!toggle) return;
+  toggle.addEventListener('click', e => {
+    const btn = e.target.closest('[data-view]');
+    if (!btn) return;
+    _m3View_state = btn.dataset.view;
+    toggle.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === _m3View_state));
+    renderFigM3Validation(allRegs);
+  });
+  renderFigM3Validation(allRegs);
+}
+
+function initFigCalibrationToggle(allRegs) {
+  const toggle = document.getElementById('figCalib-toggle');
+  if (!toggle) return;
+  toggle.addEventListener('click', e => {
+    const btn = e.target.closest('[data-view]');
+    if (!btn) return;
+    _calibView = btn.dataset.view;
+    toggle.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === _calibView));
+    renderFigCalibration(allRegs);
+  });
+  // Wire up M1 + M3 toggles in the same init path
+  initFigM1Toggle(allRegs);
+  initFigM3Toggle(allRegs);
+}
+
 // ── Fig 25: Agent-Level Logistic Regression (pre-computed from R) ──
 function renderFig25Regression(regData, cfg) {
   const el = document.getElementById('fig25-results');
@@ -976,17 +1857,29 @@ function renderFig25Regression(regData, cfg) {
   html += 'Positive coefficients (OR &gt; 1) &rarr; higher odds of staying home. Negative (OR &lt; 1) &rarr; higher odds of going out.';
   html += '</div>';
 
-  // Table
+  // Format helpers for SE and CI (β ± 1.96·SE)
+  function fmtSE(c) {
+    if (!c || c.se == null || !isFinite(c.se)) return '';
+    return c.se.toFixed(3);
+  }
+  function fmtCI(c) {
+    if (!c || c.estimate == null || c.se == null || !isFinite(c.se)) return '';
+    const lo = c.estimate - 1.96 * c.se;
+    const hi = c.estimate + 1.96 * c.se;
+    return `[${lo.toFixed(2)}, ${hi.toFixed(2)}]`;
+  }
+
+  // Table — 5 columns per model: Coef, SE, 95% CI, OR, Sig (+ 1 predictor label column = 11 total)
   html += '<table class="ols-table" style="width:100%;font-size:11px;border-collapse:collapse">';
   html += '<thead><tr style="border-bottom:2px solid #333">';
   html += '<th style="text-align:left;padding:3px 6px">Predictor</th>';
-  html += '<th style="text-align:right;padding:3px 6px">Coef</th><th style="text-align:right;padding:3px 6px">OR</th><th style="text-align:center;padding:3px 6px">Sig</th>';
-  html += '<th style="text-align:right;padding:3px 6px;border-left:2px solid #ccc">Coef</th><th style="text-align:right;padding:3px 6px">OR</th><th style="text-align:center;padding:3px 6px">Sig</th>';
+  html += '<th style="text-align:right;padding:3px 6px">Coef</th><th style="text-align:right;padding:3px 6px">SE</th><th style="text-align:right;padding:3px 6px">95% CI</th><th style="text-align:right;padding:3px 6px">OR</th><th style="text-align:center;padding:3px 6px">Sig</th>';
+  html += '<th style="text-align:right;padding:3px 6px;border-left:2px solid #ccc">Coef</th><th style="text-align:right;padding:3px 6px">SE</th><th style="text-align:right;padding:3px 6px">95% CI</th><th style="text-align:right;padding:3px 6px">OR</th><th style="text-align:center;padding:3px 6px">Sig</th>';
   html += '</tr>';
   html += '<tr style="border-bottom:1px solid #ccc;font-size:10px;color:#666">';
   html += '<th></th>';
-  html += '<th colspan="3" style="text-align:center;padding:1px">Model 1: Fixed Effects</th>';
-  html += '<th colspan="3" style="text-align:center;padding:1px;border-left:2px solid #ccc">Model 2: Random Effects</th>';
+  html += '<th colspan="5" style="text-align:center;padding:1px">Model 1: Fixed Effects</th>';
+  html += '<th colspan="5" style="text-align:center;padding:1px;border-left:2px solid #ccc">Model 2: Random Effects</th>';
   html += '</tr></thead><tbody>';
 
   const m1c = m1 ? m1.coefficients : {};
@@ -1000,41 +1893,48 @@ function renderFig25Regression(regData, cfg) {
     html += `<td style="font-weight:600;padding:3px 6px">${pred.label}</td>`;
     // Model 1
     html += `<td style="text-align:right;padding:3px 6px;font-family:monospace">${c1 ? fmtCoef(c1.estimate) : ''}</td>`;
+    html += `<td style="text-align:right;padding:3px 6px;font-family:monospace;color:#666">${c1 ? fmtSE(c1) : ''}</td>`;
+    html += `<td style="text-align:right;padding:3px 6px;font-family:monospace;font-size:10px;color:#666">${c1 ? fmtCI(c1) : ''}</td>`;
     html += `<td style="text-align:right;padding:3px 6px;font-family:monospace">${c1 ? fmtOR(c1.or) : ''}</td>`;
     html += `<td style="text-align:center;padding:3px 6px;font-family:monospace">${c1 ? c1.sig : ''}</td>`;
     // Model 2
     html += `<td style="text-align:right;padding:3px 6px;font-family:monospace;border-left:2px solid #ccc">${c2 ? fmtCoef(c2.estimate) : '—'}</td>`;
+    html += `<td style="text-align:right;padding:3px 6px;font-family:monospace;color:#666">${c2 ? fmtSE(c2) : ''}</td>`;
+    html += `<td style="text-align:right;padding:3px 6px;font-family:monospace;font-size:10px;color:#666">${c2 ? fmtCI(c2) : ''}</td>`;
     html += `<td style="text-align:right;padding:3px 6px;font-family:monospace">${c2 ? fmtOR(c2.or) : '—'}</td>`;
     html += `<td style="text-align:center;padding:3px 6px;font-family:monospace">${c2 ? c2.sig : ''}</td>`;
     html += '</tr>';
   });
 
-  // Footer row: fit statistics
+  // Footer row: fit statistics (colspan bumped 3 → 5 to match new column count)
   html += '<tr style="border-top:2px solid #333"><td style="font-weight:600;padding:3px 6px">AIC</td>';
-  html += `<td colspan="3" style="text-align:center;padding:3px 6px">${m1 && m1.fit ? m1.fit.aic.toLocaleString() : '—'}</td>`;
-  html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit ? m2.fit.aic.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="5" style="text-align:center;padding:3px 6px">${m1 && m1.fit ? m1.fit.aic.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="5" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit ? m2.fit.aic.toLocaleString() : '—'}</td>`;
   html += '</tr>';
   html += '<tr><td style="font-weight:600;padding:3px 6px">BIC</td>';
-  html += `<td colspan="3" style="text-align:center;padding:3px 6px">${m1 && m1.fit && m1.fit.bic ? m1.fit.bic.toLocaleString() : '—'}</td>`;
-  html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit && m2.fit.bic ? m2.fit.bic.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="5" style="text-align:center;padding:3px 6px">${m1 && m1.fit && m1.fit.bic ? m1.fit.bic.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="5" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit && m2.fit.bic ? m2.fit.bic.toLocaleString() : '—'}</td>`;
   html += '</tr>';
-  // Pseudo R² (McFadden)
   html += '<tr><td style="font-weight:600;padding:3px 6px">Pseudo R²</td>';
-  html += `<td colspan="3" style="text-align:center;padding:3px 6px">${m1 && m1.fit && m1.fit.pseudo_r2 != null ? m1.fit.pseudo_r2.toFixed(4) : '—'}</td>`;
-  html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">—</td>`;
+  html += `<td colspan="5" style="text-align:center;padding:3px 6px">${m1 && m1.fit && m1.fit.pseudo_r2 != null ? m1.fit.pseudo_r2.toFixed(4) : '—'}</td>`;
+  html += `<td colspan="5" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">—</td>`;
   html += '</tr>';
   html += '<tr><td style="font-weight:600;padding:3px 6px">N</td>';
-  html += `<td colspan="3" style="text-align:center;padding:3px 6px">${m1 && m1.fit ? m1.fit.n.toLocaleString() : '—'}</td>`;
-  html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit ? m2.fit.n.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="5" style="text-align:center;padding:3px 6px">${m1 && m1.fit ? m1.fit.n.toLocaleString() : '—'}</td>`;
+  html += `<td colspan="5" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2 && m2.fit ? m2.fit.n.toLocaleString() : '—'}</td>`;
   html += '</tr>';
   if (m2 && m2.fit && m2.fit.n_groups) {
     html += '<tr><td style="font-weight:600;padding:3px 6px">Groups (agents)</td>';
-    html += '<td colspan="3" style="text-align:center;padding:3px 6px"></td>';
-    html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2.fit.n_groups}</td>`;
+    html += '<td colspan="5" style="text-align:center;padding:3px 6px"></td>';
+    html += `<td colspan="5" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2.fit.n_groups}</td>`;
     html += '</tr>';
     html += '<tr><td style="font-weight:600;padding:3px 6px">RE Variance (σ²<sub>u</sub>)</td>';
-    html += '<td colspan="3" style="text-align:center;padding:3px 6px"></td>';
-    html += `<td colspan="3" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2.fit.re_variance.toFixed(4)}</td>`;
+    html += '<td colspan="5" style="text-align:center;padding:3px 6px"></td>';
+    html += `<td colspan="5" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${m2.fit.re_variance.toFixed(4)}</td>`;
+    html += '</tr>';
+    html += '<tr><td style="font-weight:600;padding:3px 6px">RE SD (σ<sub>u</sub>)</td>';
+    html += '<td colspan="5" style="text-align:center;padding:3px 6px"></td>';
+    html += `<td colspan="5" style="text-align:center;padding:3px 6px;border-left:2px solid #ccc">${Math.sqrt(m2.fit.re_variance).toFixed(4)}</td>`;
     html += '</tr>';
   }
   html += '</tbody></table>';
@@ -1068,14 +1968,28 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
   if (!el) return;
 
   const TRAIT_MAP = [
-    { key: 'extraverted',   label: 'Extraversion',           tipLabel: 'Extraverted',          leftDir: 'Go out more',   rightDir: 'Stay home more' },
-    { key: 'agreeable',     label: 'Agreeableness',          tipLabel: 'Agreeable',             leftDir: 'Go out more',   rightDir: 'Stay home more' },
-    { key: 'conscientious', label: 'Conscientiousness',      tipLabel: 'Conscientious',         leftDir: 'Go out more',   rightDir: 'Stay home more' },
-    { key: 'emot_stable',   label: 'Emotional Stability',    tipLabel: 'Emotionally Stable',    leftDir: 'Go out more',   rightDir: 'Stay home more' },
-    { key: 'open_to_exp',   label: 'Openness to Experience', tipLabel: 'Open to Experience',    leftDir: 'Go out more',   rightDir: 'Stay home more' },
-    { key: 'male',          label: 'Male (vs. Female)',       tipLabel: 'Male',                  leftDir: 'Go out more',   rightDir: 'Stay home more' },
-    { key: 'age',           label: 'Age (per year)',          tipLabel: 'Age (per year)',         leftDir: 'Go out more',   rightDir: 'Stay home more' },
+    { key: 'extraverted',   label: 'Extraversion',           tipLabel: 'Extraverted',         refLabel: 'Introverted',           kind: 'trait',  leftDir: 'Go out more',   rightDir: 'Stay home more' },
+    { key: 'agreeable',     label: 'Agreeableness',          tipLabel: 'Agreeable',           refLabel: 'Antagonistic',          kind: 'trait',  leftDir: 'Go out more',   rightDir: 'Stay home more' },
+    { key: 'conscientious', label: 'Conscientiousness',      tipLabel: 'Conscientious',       refLabel: 'Unconscientious',       kind: 'trait',  leftDir: 'Go out more',   rightDir: 'Stay home more' },
+    { key: 'emot_stable',   label: 'Emotional Stability',    tipLabel: 'Emotionally Stable',  refLabel: 'Neurotic',              kind: 'trait',  leftDir: 'Go out more',   rightDir: 'Stay home more' },
+    { key: 'open_to_exp',   label: 'Openness to Experience', tipLabel: 'Open to Experience',  refLabel: 'Closed to Experience',  kind: 'trait',  leftDir: 'Go out more',   rightDir: 'Stay home more' },
+    { key: 'male',          label: 'Gender',                  tipLabel: 'Male',                refLabel: 'Female',                kind: 'gender', leftDir: 'Go out more',   rightDir: 'Stay home more' },
+    { key: 'age',           label: 'Age (18 \u2192 65)',      tipLabel: '65-year-old',         refLabel: '18-year-old',           kind: 'age',    leftDir: 'Go out more',   rightDir: 'Stay home more' },
   ];
+
+  // Compose a description of the reference agent, omitting the panel's varying attribute.
+  // Matches the info density of Figure 27's tooltip.
+  function describeReferenceAgent(panelKey) {
+    const parts = [];
+    if (panelKey !== 'male') parts.push('Female');
+    if (panelKey !== 'age') parts.push('age 0 (reference)');
+    if (panelKey !== 'extraverted') parts.push('Introverted');
+    if (panelKey !== 'agreeable') parts.push('Antagonistic');
+    if (panelKey !== 'conscientious') parts.push('Unconscientious');
+    if (panelKey !== 'emot_stable') parts.push('Neurotic');
+    if (panelKey !== 'open_to_exp') parts.push('Closed to Experience');
+    return parts.map(p => `  ${p}`).join('\n');
+  }
 
   // Collect configs in display order (matches CONFIG.MODELS)
   const configs = [];
@@ -1102,23 +2016,29 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
   }
 
   // Pre-compute infection range + intercept per config (shared across all panels)
+  // Track the integer infection % where the effect peaks (0..7) for the tooltip.
   const infData = {};
   configs.forEach(c => {
     const coefs = allRegs[c.key].model2.coefficients;
     const b1 = coefs.infection_pct.estimate;
     const b2 = coefs.infection_pct_sq.estimate;
-    const xPeak = Math.min(7, Math.max(0, -b1 / (2 * b2)));
-    const vals = [0, b1 * 7 + b2 * 49, b1 * xPeak + b2 * xPeak * xPeak];
+    let maxInfLO = -Infinity, minInfLO = Infinity, maxInfLv = 0, minInfLv = 0;
+    for (let lv = 0; lv <= 7; lv++) {
+      const lo = b1 * lv + b2 * lv * lv;
+      if (lo > maxInfLO) { maxInfLO = lo; maxInfLv = lv; }
+      if (lo < minInfLO) { minInfLO = lo; minInfLv = lv; }
+    }
     infData[c.key] = {
       intercept: coefs.intercept.estimate,
-      minInfLO: Math.min(...vals),
-      maxInfLO: Math.max(...vals),
+      minInfLO, maxInfLO, minInfLv, maxInfLv,
     };
   });
 
-  // Auto-scale X axis: scan ALL configs (not just filtered) so axis stays constant
+  // Auto-scale X axis: marginal β per trait, centered on 0 (no-effect reference).
+  // Age is per-year; scaled to ×47 so 18→65 span is comparable to binary traits.
   let globalMin = Infinity, globalMax = -Infinity;
-  const expand = v => { if (v < globalMin) globalMin = v; if (v > globalMax) globalMax = v; };
+  const expand = v => { if (isFinite(v)) { if (v < globalMin) globalMin = v; if (v > globalMax) globalMax = v; } };
+  expand(0);
   Object.keys(allRegs).forEach(key => {
     const reg = allRegs[key];
     if (!reg || !reg.model2 || !reg.model2.coefficients) return;
@@ -1126,19 +2046,15 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
     TRAIT_MAP.forEach(t => {
       const coef = coefs[t.key];
       if (!coef) return;
-      expand(coef.estimate - 1.96 * (coef.se || 0));
-      expand(coef.estimate + 1.96 * (coef.se || 0));
+      const effBeta = (t.kind === 'age') ? coef.estimate * 47 : coef.estimate;
+      expand(effBeta);
     });
-    if (coefs.intercept) expand(coefs.intercept.estimate);
-    if (coefs.infection_pct && coefs.infection_pct_sq) {
-      const b1 = coefs.infection_pct.estimate, b2 = coefs.infection_pct_sq.estimate;
-      const xP = Math.min(7, Math.max(0, -b1 / (2 * b2)));
-      [0, b1 * 7 + b2 * 49, b1 * xP + b2 * xP * xP].forEach(expand);
-    }
   });
+  // Symmetric range for easier visual comparison across panels
+  const absMax = Math.max(Math.abs(globalMin), Math.abs(globalMax));
+  globalMin = -absMax * 1.1;
+  globalMax = absMax * 1.1;
   const range = globalMax - globalMin;
-  globalMin -= range * 0.05;
-  globalMax += range * 0.05;
 
   // Layout
   const W = Math.min(el.parentElement?.offsetWidth || 860, 860);
@@ -1206,7 +2122,7 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
       svg += `<line x1="${tx}" y1="${panelBot}" x2="${tx}" y2="${panelBot + 4}" stroke="#bbb" stroke-width="0.5"/>`;
       svg += `<text x="${tx}" y="${panelBot + 13}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
     }
-    svg += `<text x="${panelPad.l - 8}" y="${panelBot + 13}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="end">Log-odds</text>`;
+    svg += `<text x="${panelPad.l - 8}" y="${panelBot + 13}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="end">Log-odds</text>`;
 
     // 5% / 95% reference ticks on primary axis (±2.94)
     const probRefs = [
@@ -1217,40 +2133,34 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
       if (lo < globalMin || lo > globalMax) return;
       const px = xScale(lo);
       svg += `<line x1="${px}" y1="${panelTop}" x2="${px}" y2="${panelBot}" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2,3"/>`;
-      svg += `<text x="${px}" y="${panelBot + 13}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
+      svg += `<text x="${px}" y="${panelBot + 13}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
     });
 
-    // Secondary axis: P(stay home)
-    const probAxisY = panelBot + 22;
-    svg += `<text x="${panelPad.l - 8}" y="${probAxisY + 10}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="end">P(stay home)</text>`;
-    svg += `<line x1="${panelPad.l}" y1="${probAxisY}" x2="${panelPad.l + plotW}" y2="${probAxisY}" stroke="#ddd" stroke-width="0.5"/>`;
+    // Secondary axis: Odds Ratio (e^β) — marginal multiplicative effect
+    const orAxisY = panelBot + 22;
+    svg += `<text x="${panelPad.l - 8}" y="${orAxisY + 10}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="end">Odds Ratio (e^\u03B2)</text>`;
+    svg += `<line x1="${panelPad.l}" y1="${orAxisY}" x2="${panelPad.l + plotW}" y2="${orAxisY}" stroke="#ddd" stroke-width="0.5"/>`;
 
-    // Grid-aligned probability labels
-    for (let v = gridStart; v <= globalMax; v += step) {
-      const px = xScale(v);
-      svg += `<line x1="${px}" y1="${probAxisY}" x2="${px}" y2="${probAxisY + 3}" stroke="#bbb" stroke-width="0.5"/>`;
-      svg += `<text x="${px}" y="${probAxisY + 12}" font-size="6.5" fill="#999" font-family="${SERIF}" text-anchor="middle">${fmtProb(loToProb(v))}</text>`;
-    }
-
-    // Key probability milestones between grid ticks
-    const milestones = [
-      { p: 0.001, label: '0.1%' }, { p: 0.01, label: '1%' },
-      { p: 0.05, label: '5%' }, { p: 0.25, label: '25%' },
-      { p: 0.50, label: '50%' }, { p: 0.75, label: '75%' },
-      { p: 0.95, label: '95%' }, { p: 0.99, label: '99%' },
-      { p: 0.999, label: '99.9%' },
+    // OR milestones: nice multiplicative values with corresponding log-odds positions
+    const orMilestones = [
+      { or: 0.1,   label: '\u00D70.1' },
+      { or: 0.25,  label: '\u00D70.25' },
+      { or: 0.5,   label: '\u00D70.5' },
+      { or: 1,     label: '\u00D71' },
+      { or: 2,     label: '\u00D72' },
+      { or: 4,     label: '\u00D74' },
+      { or: 10,    label: '\u00D710' },
     ];
-    milestones.forEach(({ p, label }) => {
-      const lo = Math.log(p / (1 - p));
+    const orPlaced = [];
+    orMilestones.forEach(({ or, label }) => {
+      const lo = Math.log(or);
       if (lo < globalMin || lo > globalMax) return;
       const px = xScale(lo);
-      let tooClose = false;
-      for (let v = gridStart; v <= globalMax; v += step) {
-        if (Math.abs(px - xScale(v)) < 18) { tooClose = true; break; }
-      }
-      if (tooClose) return;
-      svg += `<line x1="${px}" y1="${probAxisY}" x2="${px}" y2="${probAxisY + 3}" stroke="#bbb" stroke-width="0.5"/>`;
-      svg += `<text x="${px}" y="${probAxisY + 12}" font-size="6.5" fill="#999" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
+      // Avoid overlap with previously placed label
+      if (orPlaced.some(p => Math.abs(p - px) < 26)) return;
+      orPlaced.push(px);
+      svg += `<line x1="${px}" y1="${orAxisY}" x2="${px}" y2="${orAxisY + 3}" stroke="#bbb" stroke-width="0.5"/>`;
+      svg += `<text x="${px}" y="${orAxisY + 12}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
     });
 
     // Direction labels
@@ -1272,87 +2182,62 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
 
       const beta = coef.estimate;
       const se = coef.se || 0;
-      const ciLo = beta - 1.96 * se;
-      const ciHi = beta + 1.96 * se;
-      const sig = coef.p < 0.05;
+      const sig = (coef.p != null) && (coef.p < 0.05);
 
       // Clamp to display range
       const clamp = v => Math.max(globalMin, Math.min(globalMax, v));
-      const px = xScale(clamp(beta));
-      const pxLo = xScale(clamp(ciLo));
-      const pxHi = xScale(clamp(ciHi));
 
-      // Infection range (amber line + markers) — same style as Figure 27
-      const infMinX = xScale(clamp(inf.minInfLO));
-      const infMaxX = xScale(clamp(inf.maxInfLO));
-      svg += `<line x1="${infMinX}" y1="${cy}" x2="${infMaxX}" y2="${cy}" stroke="#D97706" stroke-width="1.5" opacity="0.7"/>`;
-      // Infection min (filled circle)
-      const infMinTip = `● Infection minimum\nLog-odds: ${inf.minInfLO.toFixed(2)}`;
-      svg += `<circle cx="${infMinX}" cy="${cy}" r="3.5" fill="#D97706" stroke="white" stroke-width="1" style="cursor:default" data-ftip-id="${ftip(infMinTip, '#D97706')}"/>`;
-      // Infection max (filled diamond)
-      const d = 5;
-      const infMaxTip = `◆ Infection peak\nLog-odds: ${inf.maxInfLO.toFixed(2)}`;
-      svg += `<polygon points="${infMaxX},${cy - d} ${infMaxX + d},${cy} ${infMaxX},${cy + d} ${infMaxX - d},${cy}" fill="#D97706" stroke="white" stroke-width="0.8" style="cursor:default" data-ftip-id="${ftip(infMaxTip, '#D97706')}"/>`;
+      // Effective β (age scaled to 47-yr span for fair comparison with binary traits)
+      const effBeta = (trait.kind === 'age') ? beta * 47 : beta;
+      const effSE   = (trait.kind === 'age') ? se * 47 : se;
+      const ciLo = effBeta - 1.96 * effSE;
+      const ciHi = effBeta + 1.96 * effSE;
 
-      // Intercept (red I-beam) — same style as Figure 27
-      const intX = xScale(clamp(inf.intercept));
-      const intTip = `┃ Intercept (baseline)\nLog-odds: ${inf.intercept.toFixed(2)}`;
-      svg += `<rect x="${intX - 6}" y="${cy - 9}" width="12" height="18" fill="transparent" style="cursor:default" data-ftip-id="${ftip(intTip, '#e11d48')}"/>`;
-      svg += `<line x1="${intX}" y1="${cy - 7}" x2="${intX}" y2="${cy + 7}" stroke="#e11d48" stroke-width="1.5" opacity="0.7"/>`;
-      svg += `<line x1="${intX - 3}" y1="${cy - 7}" x2="${intX + 3}" y2="${cy - 7}" stroke="#e11d48" stroke-width="1" opacity="0.7"/>`;
-      svg += `<line x1="${intX - 3}" y1="${cy + 7}" x2="${intX + 3}" y2="${cy + 7}" stroke="#e11d48" stroke-width="1" opacity="0.7"/>`;
+      const bx   = xScale(clamp(effBeta));
+      const cxLo = xScale(clamp(ciLo));
+      const cxHi = xScale(clamp(ciHi));
 
-      // CI whisker (provider color)
-      svg += `<line x1="${pxLo.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${pxHi.toFixed(1)}" y2="${cy.toFixed(1)}" stroke="${c.color}" stroke-width="1.5" opacity="0.6"/>`;
+      // Shared tooltip fields
+      const sep = '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
+      const infMag = Math.max(Math.abs(inf.minInfLO), Math.abs(inf.maxInfLO));
+      const traitRatioX = infMag > 0 ? (Math.abs(effBeta) / infMag) : 0;
+      const traitRatioText = infMag > 0 ? `${traitRatioX.toFixed(1)}\u00D7` : '\u2014';
+      const ageNote = trait.kind === 'age' ? `\n(per year \u03B2; scaled to full 47-yr span = ${effBeta.toFixed(2)})` : '';
+      const or = Math.exp(effBeta);
+      const direction = effBeta > 0 ? 'stay-home' : effBeta < 0 ? 'go-out' : 'no effect';
+      const sigText = sig ? 'significant (p < 0.05)' : 'not significant (p \u2265 0.05)';
+
+      // Tooltip
+      const dotTip = `${c.label} \u2014 ${trait.label}\n${sep}\n` +
+        `\u03B2 = ${beta.toFixed(3)}${ageNote}\n` +
+        `95% CI: [${ciLo.toFixed(3)}, ${ciHi.toFixed(3)}]\n` +
+        `Odds Ratio: \u00D7${or.toFixed(2)}\n` +
+        `Direction: pushes toward ${direction}\n` +
+        `${sigText}\n${sep}\n` +
+        `\u03B2 Trait / Infection: ${traitRatioText}`;
+
+      const opac = sig ? 1.0 : 0.35;
+
+      // ── 95% CI whisker ──
+      svg += `<line x1="${cxLo.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${cxHi.toFixed(1)}" y2="${cy.toFixed(1)}" stroke="${c.color}" stroke-width="1.3" opacity="${sig ? 0.6 : 0.25}"/>`;
 
       // Arrow indicators for clipped CIs
       if (ciLo <= globalMin + 0.01) {
-        svg += `<polygon points="${pxLo},${cy - 3} ${pxLo},${cy + 3} ${pxLo - 5},${cy}" fill="${c.color}" opacity="0.6"/>`;
+        svg += `<polygon points="${cxLo},${cy - 3} ${cxLo},${cy + 3} ${cxLo - 5},${cy}" fill="${c.color}" opacity="${sig ? 0.6 : 0.25}"/>`;
       }
       if (ciHi >= globalMax - 0.01) {
-        svg += `<polygon points="${pxHi},${cy - 3} ${pxHi},${cy + 3} ${pxHi + 5},${cy}" fill="${c.color}" opacity="0.6"/>`;
+        svg += `<polygon points="${cxHi},${cy - 3} ${cxHi},${cy + 3} ${cxHi + 5},${cy}" fill="${c.color}" opacity="${sig ? 0.6 : 0.25}"/>`;
       }
 
-      // Point estimate (filled = sig, hollow = not sig)
+      // ── Single β dot — filled + opaque if significant, hollow + faded if not ──
       if (sig) {
-        svg += `<circle cx="${px.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="${c.color}" stroke="${c.color}" stroke-width="1"/>`;
+        svg += `<circle cx="${bx}" cy="${cy}" r="3.5" fill="${c.color}" stroke="white" stroke-width="0.6" opacity="${opac}" style="cursor:default" data-ftip-id="${ftip(dotTip, c.color)}"/>`;
       } else {
-        svg += `<circle cx="${px.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.5" fill="white" stroke="${c.color}" stroke-width="1.5"/>`;
+        svg += `<circle cx="${bx}" cy="${cy}" r="3.5" fill="white" stroke="${c.color}" stroke-width="1.3" opacity="${opac}" style="cursor:default" data-ftip-id="${ftip(dotTip, c.color)}"/>`;
       }
 
-      // Trait symbol (filled = significant, hollow = not)
-      const traitSymbol = sig ? '\u25CF' : '\u25CB';
-
-      // Tooltip: dot — header uses dimension name, coefficient uses adjective
-      let dotTip = `${c.label} \u2014 ${trait.label}\n`;
-      dotTip += `${traitSymbol}  ${trait.tipLabel}: ${beta.toFixed(2)}  [${ciLo.toFixed(2)}, ${ciHi.toFixed(2)}]`;
-      if (!sig) dotTip += '  (Not Significant)';
-      if (trait.key === 'age') dotTip += `\nFull range (47 yrs): ${(beta * 47).toFixed(2)}`;
-      svg += `<circle cx="${px.toFixed(1)}" cy="${cy.toFixed(1)}" r="8" fill="transparent" stroke="none" style="cursor:default" data-ftip-id="${ftip(dotTip, c.color)}"/>`;
-
-      // Config label (left) — full tooltip: intercept, infection, trait, ratio
-      // Age is per-year β; scale to full range (×47) for fair comparison with binary traits
-      const infMag = Math.max(Math.abs(inf.minInfLO), Math.abs(inf.maxInfLO));
-      const effectSize = trait.key === 'age' ? Math.abs(beta) * 47 : Math.abs(beta);
-      const traitRatioX = infMag > 0 ? (effectSize / infMag) : 0;
-      const traitRatioText = infMag > 0 ? `${traitRatioX.toFixed(1)}\u00D7` : '\u2014';
-      const traitRatioPct = infMag > 0 ? (traitRatioX * 100).toFixed(0) : '\u2014';
-      let labelTip = `${c.label} \u2014 ${trait.label}\n` +
-        `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n` +
-        `\u2503  Intercept: ${inf.intercept.toFixed(2)}\n` +
-        `\u25CF\u25C6 Infection: [${inf.minInfLO.toFixed(2)}, ${inf.maxInfLO.toFixed(2)}]\n` +
-        `${traitSymbol}  ${trait.tipLabel}: ${beta.toFixed(2)}  [${ciLo.toFixed(2)}, ${ciHi.toFixed(2)}]${sig ? '' : '  (Not Significant)'}\n` +
-        `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n` +
-        `\u03B2 Trait / Infection: ${traitRatioText}`;
-      if (trait.key === 'age') {
-        labelTip += `\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500` +
-          `\nAge ratio uses full range (18\u201365 = 47 yrs):` +
-          `\n  |${beta.toFixed(3)} \u00D7 47| = ${Math.abs(beta * 47).toFixed(2)}` +
-          `\n  ${Math.abs(beta * 47).toFixed(2)} / ${infMag.toFixed(2)} = ${traitRatioText}` +
-          `\nThis makes age comparable to binary traits` +
-          `\nwhere the full effect is simply |\u03B2|.`;
-      }
-      svg += `<text x="${panelPad.l - 6}" y="${(cy + 3.5).toFixed(1)}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="end" style="cursor:default" data-ftip-id="${ftip(labelTip, c.color)}">${esc(c.label)}</text>`;
+      // Config label (left)
+      svg += `<text x="${panelPad.l - 6}" y="${(cy + 3.5).toFixed(1)}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="end" opacity="${sig ? 1 : 0.6}" style="cursor:default" data-ftip-id="${ftip(dotTip, c.color)}">${esc(c.label)}</text>`;
 
       // Ratio column (right side) — provider-colored
       svg += `<text x="${panelPad.l + plotW + 26}" y="${(cy + 3.5).toFixed(1)}" font-size="7.5" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${traitRatioText}</text>`;
@@ -1385,9 +2270,9 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
     const thX = panelPad.l + plotW + 26;
     svg += `<rect x="${thX - 30}" y="${py - 2}" width="60" height="30" fill="transparent" style="cursor:default" data-ftip-id="${ftip(traitRatioHeaderTip, '#888')}"/>`;
     const ratioNumerator = trait.key === 'age' ? '\u03B2 Age\u00D747' : '\u03B2 Trait';
-    svg += `<text x="${thX}" y="${py + 11}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="middle">${ratioNumerator}</text>`;
+    svg += `<text x="${thX}" y="${py + 11}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${ratioNumerator}</text>`;
     svg += `<line x1="${thX - 16}" y1="${py + 13}" x2="${thX + 16}" y2="${py + 13}" stroke="#bbb" stroke-width="0.5"/>`;
-    svg += `<text x="${thX}" y="${py + 21}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="middle">Infection</text>`;
+    svg += `<text x="${thX}" y="${py + 21}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">Infection</text>`;
 
     // Provider group separator lines
     rowIdx = 0;
@@ -1769,7 +2654,7 @@ function renderTraitRankSpearman(allRegs, elId, modelFilter) {
   // Row labels (left) — match Fig 29 style: provider-colored, right-aligned
   for (let i = 0; i < n; i++) {
     const provColor = CONFIG.PROVIDER_COLORS[models[i].provider] || '#333';
-    svg += `<text x="${ox - 4}" y="${oy + i * cellSize + cellSize / 2 + 3}" font-size="8.5" fill="${provColor}" font-family="${SERIF}" text-anchor="end">${esc(models[i].label)}</text>`;
+    svg += `<text x="${ox - 4}" y="${oy + i * cellSize + cellSize / 2 + 3}" font-size="10" fill="${provColor}" font-family="${SERIF}" text-anchor="end">${esc(models[i].label)}</text>`;
   }
 
   // Column labels (top, rotated -55°) — match Fig 29 style: provider-colored
@@ -1777,7 +2662,7 @@ function renderTraitRankSpearman(allRegs, elId, modelFilter) {
     const provColor = CONFIG.PROVIDER_COLORS[models[j].provider] || '#333';
     const tx = ox + j * cellSize + cellSize / 2;
     const ty = oy - 4;
-    svg += `<text x="${tx}" y="${ty}" font-size="8.5" fill="${provColor}" font-family="${SERIF}" text-anchor="start" transform="rotate(-55,${tx},${ty})">${esc(models[j].label)}</text>`;
+    svg += `<text x="${tx}" y="${ty}" font-size="10" fill="${provColor}" font-family="${SERIF}" text-anchor="start" transform="rotate(-55,${tx},${ty})">${esc(models[j].label)}</text>`;
   }
 
   // Provider group separator lines
@@ -2601,7 +3486,7 @@ function renderDecisionSurface(regData, cfg, chartId) {
     // Also show probability equivalent
     const prob = 1 / (1 + Math.exp(-v));
     const probStr = prob < 0.01 ? '<1%' : prob > 0.99 ? '>99%' : Math.round(prob * 100) + '%';
-    svg += `<text x="${pad.l - 30}" y="${py + 3}" font-size="7" fill="#aaa" font-family="${SERIF}" text-anchor="end">(${probStr})</text>`;
+    svg += `<text x="${pad.l - 30}" y="${py + 3}" font-size="8" fill="#aaa" font-family="${SERIF}" text-anchor="end">(${probStr})</text>`;
   }
   svg += `<text x="12" y="${pad.t + plotH / 2}" font-size="11" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,12,${pad.t + plotH / 2})">Personality Log-Odds</text>`;
 
@@ -2716,7 +3601,7 @@ function renderInfectionORProgression(allRegs, containerId, modelFilter) {
     const px = pad.l + ((exp - logMin) / (logMax - logMin)) * plotW;
     svg += `<line x1="${px}" y1="${pad.t - 5}" x2="${px}" y2="${pad.t + models.length * rowH + 10}" stroke="#eee" stroke-width="0.5"/>`;
     if ((exp - logMin) % labelStep === 0 || exp === 0) {
-      const label = exp === 0 ? '1' : exp === 1 ? '10' : `10<tspan baseline-shift="super" font-size="7">${exp}</tspan>`;
+      const label = exp === 0 ? '1' : exp === 1 ? '10' : `10<tspan baseline-shift="super" font-size="8">${exp}</tspan>`;
       svg += `<text x="${px}" y="${pad.t + models.length * rowH + 24}" font-size="9" fill="#888" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
     }
   }
@@ -3012,6 +3897,8 @@ function renderLogOddsLandscape(allRegs, containerId, modelFilter) {
   const H = pad.t + models.length * rowH + 30 + pad.b;
 
   // X scale: linear log-odds — computed from ALL configs so axis stays constant across filters
+  // New design plots absolute predicted log-odds: intercept, intercept+theoMin, intercept+theoMax,
+  // intercept+theoMin+maxInf, intercept+theoMax+maxInf. Include 0 so the zero line stays visible.
   let globalMin = Infinity, globalMax = -Infinity;
   const _allSeenKeys = new Set();
   CONFIG.MODELS.forEach(am => {
@@ -3022,9 +3909,6 @@ function renderLogOddsLandscape(allRegs, containerId, modelFilter) {
     if (!areg || !areg.model2 || !areg.model2.coefficients) return;
     const ac = areg.model2.coefficients;
     if (!ac.infection_pct || !ac.infection_pct_sq) return;
-    // Compute personality + infection extremes for axis
-    const ap = computeAgentCombinedORs(agentsData, ac);
-    const alo = ap.map(x => x.logCombinedOR);
     const abInf = ac.infection_pct.estimate, abInfSq = ac.infection_pct_sq.estimate;
     let aMaxInf = -Infinity, aMinInf = Infinity;
     for (let lv = 0; lv <= 7; lv++) {
@@ -3038,7 +3922,14 @@ function renderLogOddsLandscape(allRegs, containerId, modelFilter) {
     traitMeta.forEach(tm => { if (ac[tm.key]) { const b = ac[tm.key].estimate; if (b > 0) aThMax += b; else aThMin += b; } });
     if (ac.male) { const bm = ac.male.estimate; if (bm > 0) aThMax += bm; else aThMin += bm; }
     if (ac.age) { const ba = ac.age.estimate; aThMax += ba * (ba > 0 ? 65 : 18); aThMin += ba * (ba > 0 ? 18 : 65); }
-    [Math.min(...alo), Math.max(...alo), aThMin, aThMax, aMinInf, aMaxInf, aInt].forEach(v => {
+    // Absolute positions actually plotted + zero for reference
+    [
+      0,
+      aInt,
+      aInt + aThMin, aInt + aThMax,
+      aInt + aThMin + aMaxInf, aInt + aThMax + aMaxInf,
+      aInt + aThMin + aMinInf, aInt + aThMax + aMinInf,
+    ].forEach(v => {
       if (v < globalMin) globalMin = v;
       if (v > globalMax) globalMax = v;
     });
@@ -3090,7 +3981,7 @@ function renderLogOddsLandscape(allRegs, containerId, modelFilter) {
     else if (p > 0.095 && p < 0.995) label = Math.round(p * 100) + '%';
     else label = (p * 100).toFixed(1) + '%';
     svg += `<line x1="${px}" y1="${probAxisY}" x2="${px}" y2="${probAxisY + 4}" stroke="#bbb" stroke-width="0.5"/>`;
-    svg += `<text x="${px}" y="${probAxisY + 13}" font-size="6.5" fill="#999" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
+    svg += `<text x="${px}" y="${probAxisY + 13}" font-size="7.5" fill="#999" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
   }
 
   // Key probability milestones between grid ticks (smaller, offset to avoid overlap)
@@ -3113,7 +4004,7 @@ function renderLogOddsLandscape(allRegs, containerId, modelFilter) {
     }
     if (tooClose) return;
     svg += `<line x1="${px}" y1="${probAxisY}" x2="${px}" y2="${probAxisY + 4}" stroke="#bbb" stroke-width="0.5"/>`;
-    svg += `<text x="${px}" y="${probAxisY + 13}" font-size="6.5" fill="#999" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
+    svg += `<text x="${px}" y="${probAxisY + 13}" font-size="7.5" fill="#999" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
   });
 
   // Zero reference line (log-odds = 0 → 50%)
@@ -3139,55 +4030,50 @@ function renderLogOddsLandscape(allRegs, containerId, modelFilter) {
     const labelTip = `${m.label}\n` +
       `─────────────────────────\n` +
       `┃  Intercept: ${m.intercept.toFixed(2)}\n` +
-      `●◆ Infection: [${m.minInfLO.toFixed(2)}, ${m.maxInfLO.toFixed(2)}]\n` +
-      `○◇ Personality: [${m.theoMin.toFixed(2)}, ${m.theoMax.toFixed(2)}]\n` +
+      `━  Personality (0% inf): [${(m.intercept + m.theoMin).toFixed(2)}, ${(m.intercept + m.theoMax).toFixed(2)}]\n` +
+      `╌  Personality (peak inf): [${(m.intercept + m.theoMin + m.maxInfLO).toFixed(2)}, ${(m.intercept + m.theoMax + m.maxInfLO).toFixed(2)}]\n` +
+      `   Infection shift: +${m.maxInfLO.toFixed(2)} log-odds\n` +
       `─────────────────────────\n` +
       `Personality / Infection: ${persInfRatioVal.toFixed(1)}\u00D7`;
     svg += `<text x="${pad.l - 8}" y="${cy + 3}" font-size="9" fill="${m.color}" font-family="${SERIF}" text-anchor="end" style="cursor:default" data-tip-id="${tip(labelTip, m.color)}">${esc(m.label)}</text>`;
 
-    // ── Infection log-odds range (amber line) ──
-    const infMinX = xScale(m.minInfLO);
-    const infMaxX = xScale(m.maxInfLO);
-    svg += `<line x1="${infMinX}" y1="${cy}" x2="${infMaxX}" y2="${cy}" stroke="#D97706" stroke-width="1.5" opacity="0.7"/>`;
+    // Absolute positions (log-odds)
+    const baseLo = m.intercept + m.theoMin;
+    const baseHi = m.intercept + m.theoMax;
+    const infLo  = m.intercept + m.theoMin + m.maxInfLO;
+    const infHi  = m.intercept + m.theoMax + m.maxInfLO;
 
-    // ── Actual personality: full range of 100 agents (thin solid line) ──
-    svg += `<line x1="${xScale(m.pMin)}" y1="${cy}" x2="${xScale(m.pMax)}" y2="${cy}" stroke="${m.color}" stroke-width="1" opacity="0.3"/>`;
+    // Two parallel bars: baseline slightly above row center, peak-infection slightly below
+    const yBase = cy - 4;
+    const yInf  = cy + 4;
 
-    // ── Personality: IQR (thick bar with tooltip) ──
-    const pQ1X = xScale(m.pQ1);
-    const pQ3X = xScale(m.pQ3);
-    const iqrTip = `█ Personality IQR (100 agents)\nQ1: ${m.pQ1.toFixed(2)}\nMedian: ${m.median.toFixed(2)}\nQ3: ${m.pQ3.toFixed(2)}\nFull range: ${m.pMin.toFixed(2)} → ${m.pMax.toFixed(2)}`;
-    svg += `<rect x="${pQ1X}" y="${cy - 5}" width="${Math.max(1, pQ3X - pQ1X)}" height="10" fill="${m.color}" fill-opacity="0.4" stroke="${m.color}" stroke-width="0.8" rx="2" style="cursor:default" data-tip-id="${tip(iqrTip, m.color)}"></rect>`;
+    // ── Baseline personality line (solid, filled endpoints) — at infection = 0% ──
+    svg += `<line x1="${xScale(baseLo)}" y1="${yBase}" x2="${xScale(baseHi)}" y2="${yBase}" stroke="${m.color}" stroke-width="1.6" opacity="0.9"/>`;
 
-    // ── Theoretical max marker (hollow diamond) — transparent fill for hover ──
-    const thMaxX = xScale(m.theoMax);
-    const dm = 6;
-    const maxTip = `◇ Theoretical max: most stay-home\nLog-odds: ${m.theoMax.toFixed(2)}\n─────────────────────\n` +
-      `  ${m.theoMaxGender || '—'}, age ${m.theoMaxAge || '—'}\n` +
-      m.theoMaxTraits.map(t => `  ${t}`).join('\n');
-    svg += `<polygon points="${thMaxX},${cy - dm} ${thMaxX + dm},${cy} ${thMaxX},${cy + dm} ${thMaxX - dm},${cy}" fill="transparent" stroke="${m.color}" stroke-width="1.2" opacity="0.6" style="cursor:default" data-tip-id="${tip(maxTip, m.color)}"></polygon>`;
+    // Baseline go-out endpoint (filled CIRCLE) — most go-out agent at 0% infection
+    const baseMinTip = `\u25CF Most go-out agent (0% infection)\nLog-odds: ${baseLo.toFixed(2)} (P = ${fmtPct(loToProb(baseLo))})\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  ${m.theoMinGender || '—'}, age ${m.theoMinAge || '—'}\n` + m.theoMinTraits.map(t => `  ${t}`).join('\n');
+    svg += `<circle cx="${xScale(baseLo)}" cy="${yBase}" r="4" fill="${m.color}" stroke="white" stroke-width="0.8" style="cursor:default" data-tip-id="${tip(baseMinTip, m.color)}"></circle>`;
 
-    // ── Theoretical min marker (hollow circle) — transparent fill for hover ──
-    const thMinX = xScale(m.theoMin);
-    const minTip = `○ Theoretical min: most go-out\nLog-odds: ${m.theoMin.toFixed(2)}\n─────────────────────\n` +
-      `  ${m.theoMinGender || '—'}, age ${m.theoMinAge || '—'}\n` +
-      m.theoMinTraits.map(t => `  ${t}`).join('\n');
-    svg += `<circle cx="${thMinX}" cy="${cy}" r="4.5" fill="transparent" stroke="${m.color}" stroke-width="1.2" opacity="0.6" style="cursor:default" data-tip-id="${tip(minTip, m.color)}"></circle>`;
+    // Baseline stay-home endpoint (filled DIAMOND) — most stay-home agent at 0% infection
+    const baseDm = 5;
+    const baseHiX = xScale(baseHi);
+    const baseMaxTip = `\u25C6 Most stay-home agent (0% infection)\nLog-odds: ${baseHi.toFixed(2)} (P = ${fmtPct(loToProb(baseHi))})\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  ${m.theoMaxGender || '—'}, age ${m.theoMaxAge || '—'}\n` + m.theoMaxTraits.map(t => `  ${t}`).join('\n');
+    svg += `<polygon points="${baseHiX},${yBase - baseDm} ${baseHiX + baseDm},${yBase} ${baseHiX},${yBase + baseDm} ${baseHiX - baseDm},${yBase}" fill="${m.color}" stroke="white" stroke-width="0.8" style="cursor:default" data-tip-id="${tip(baseMaxTip, m.color)}"></polygon>`;
 
-    // ── Infection markers: filled circle (min level) + filled diamond (max level) ──
-    const infMinTip = `● Infection minimum\nLog-odds: ${m.minInfLO.toFixed(2)}`;
-    svg += `<circle cx="${infMinX}" cy="${cy}" r="3.5" fill="#D97706" stroke="white" stroke-width="1" style="cursor:default" data-tip-id="${tip(infMinTip, '#D97706')}"></circle>`;
-    const d = 6;
-    const infMaxTip = `◆ Infection peak\nLog-odds: ${m.maxInfLO.toFixed(2)}`;
-    svg += `<polygon points="${infMaxX},${cy - d} ${infMaxX + d},${cy} ${infMaxX},${cy + d} ${infMaxX - d},${cy}" fill="#D97706" stroke="white" stroke-width="0.8" style="cursor:default" data-tip-id="${tip(infMaxTip, '#D97706')}"></polygon>`;
+    // ── Max-infection personality line (dashed, hollow endpoints) ──
+    svg += `<line x1="${xScale(infLo)}" y1="${yInf}" x2="${xScale(infHi)}" y2="${yInf}" stroke="${m.color}" stroke-width="1.2" opacity="0.65" stroke-dasharray="3,2"/>`;
 
-    // ── Intercept marker (red I-beam) — invisible hit rect for reliable hover ──
-    const intTip = `┃ Intercept (baseline)\nLog-odds: ${m.intercept.toFixed(2)}`;
-    const intX = xScale(m.intercept);
-    svg += `<rect x="${intX - 6}" y="${cy - 9}" width="12" height="18" fill="transparent" style="cursor:default" data-tip-id="${tip(intTip, '#e11d48')}"/>`;
-    svg += `<line x1="${intX}" y1="${cy - 7}" x2="${intX}" y2="${cy + 7}" stroke="#e11d48" stroke-width="1.5" opacity="0.7"/>`;
-    svg += `<line x1="${intX - 3}" y1="${cy - 7}" x2="${intX + 3}" y2="${cy - 7}" stroke="#e11d48" stroke-width="1" opacity="0.7"/>`;
-    svg += `<line x1="${intX - 3}" y1="${cy + 7}" x2="${intX + 3}" y2="${cy + 7}" stroke="#e11d48" stroke-width="1" opacity="0.7"/>`;
+    // Max-infection go-out endpoint (open CIRCLE) — most go-out agent at max infection effect
+    const infMinTip = `\u25CB Most go-out agent (max infection effect, ${m.maxInfLv}%)\nLog-odds: ${infLo.toFixed(2)} (P = ${fmtPct(loToProb(infLo))})\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  ${m.theoMinGender || '—'}, age ${m.theoMinAge || '—'}\n` + m.theoMinTraits.map(t => `  ${t}`).join('\n') + `\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nShift from baseline: +${m.maxInfLO.toFixed(2)} log-odds`;
+    const imX = xScale(infLo);
+    svg += `<circle cx="${imX}" cy="${yInf}" r="4" fill="white" stroke="${m.color}" stroke-width="1.3" opacity="0.9" style="cursor:default" data-tip-id="${tip(infMinTip, m.color)}"></circle>`;
+
+    // Max-infection stay-home endpoint (open DIAMOND) — most stay-home agent at max infection effect
+    const dm = 5;
+    const infMaxTip = `\u25C7 Most stay-home agent (max infection effect, ${m.maxInfLv}%)\nLog-odds: ${infHi.toFixed(2)} (P = ${fmtPct(loToProb(infHi))})\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  ${m.theoMaxGender || '—'}, age ${m.theoMaxAge || '—'}\n` + m.theoMaxTraits.map(t => `  ${t}`).join('\n') + `\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nShift from baseline: +${m.maxInfLO.toFixed(2)} log-odds`;
+    const iMX = xScale(infHi);
+    svg += `<polygon points="${iMX},${yInf - dm} ${iMX + dm},${yInf} ${iMX},${yInf + dm} ${iMX - dm},${yInf}" fill="white" stroke="${m.color}" stroke-width="1.3" opacity="0.9" style="cursor:default" data-tip-id="${tip(infMaxTip, m.color)}"></polygon>`;
+
 
     // ── Ratio column (right side) ──
     const persRange = m.theoMax - m.theoMin;
@@ -3207,36 +4093,27 @@ function renderLogOddsLandscape(allRegs, containerId, modelFilter) {
     `= 1\u00D7 = equal influence`;
   const rhX = pad.l + plotW + 28;
   svg += `<rect x="${rhX - 30}" y="${pad.t - 30}" width="60" height="34" fill="transparent" style="cursor:default" data-tip-id="${tip(ratioHeaderTip, '#888')}"/>`;
-  svg += `<text x="${rhX}" y="${pad.t - 16}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="middle">Personality</text>`;
+  svg += `<text x="${rhX}" y="${pad.t - 16}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">Personality</text>`;
   svg += `<line x1="${rhX - 18}" y1="${pad.t - 12}" x2="${rhX + 18}" y2="${pad.t - 12}" stroke="#bbb" stroke-width="0.5"/>`;
-  svg += `<text x="${rhX}" y="${pad.t - 4}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="middle">Infection</text>`;
+  svg += `<text x="${rhX}" y="${pad.t - 4}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">Infection</text>`;
 
-  // ── Legend (three rows) — below probability axis ──
+  // ── Legend (two rows) — below probability axis ──
   const legY1 = bottomY + 52;
   const legY2 = legY1 + 18;
-  const legY3 = legY2 + 18;
 
-  // Row 1: Personality actual (IQR + full range) + theoretical extremes
-  svg += `<line x1="${pad.l}" y1="${legY1}" x2="${pad.l + 20}" y2="${legY1}" stroke="#666" stroke-width="1" opacity="0.3"/>`;
-  svg += `<rect x="${pad.l + 5}" y="${legY1 - 5}" width="10" height="10" fill="#666" fill-opacity="0.4" stroke="#666" stroke-width="0.8" rx="2"/>`;
-  svg += `<text x="${pad.l + 26}" y="${legY1 + 3}" font-size="9" fill="#555" font-family="${SERIF}">Personality log-odds: 100 agents (IQR + full range)</text>`;
-  const legTheoX = pad.l + 340;
-  svg += `<circle cx="${legTheoX}" cy="${legY1}" r="3.5" fill="none" stroke="#666" stroke-width="1.2" opacity="0.6"/>`;
-  const ltdx = legTheoX + 12;
-  svg += `<polygon points="${ltdx},${legY1 - 4} ${ltdx + 4},${legY1} ${ltdx},${legY1 + 4} ${ltdx - 4},${legY1}" fill="none" stroke="#666" stroke-width="1.2" opacity="0.6"/>`;
-  svg += `<text x="${ltdx + 8}" y="${legY1 + 3}" font-size="9" fill="#555" font-family="${SERIF}">Theoretical min/max personality</text>`;
+  // Row 1: 0% infection line (solid, filled dot + filled diamond)
+  svg += `<circle cx="${pad.l}" cy="${legY1}" r="3.5" fill="#666" stroke="white" stroke-width="0.6"/>`;
+  svg += `<line x1="${pad.l + 4}" y1="${legY1}" x2="${pad.l + 36}" y2="${legY1}" stroke="#666" stroke-width="1.6" opacity="0.9"/>`;
+  const lbDm = 4.5;
+  svg += `<polygon points="${pad.l + 40},${legY1 - lbDm} ${pad.l + 40 + lbDm},${legY1} ${pad.l + 40},${legY1 + lbDm} ${pad.l + 40 - lbDm},${legY1}" fill="#666" stroke="white" stroke-width="0.6"/>`;
+  svg += `<text x="${pad.l + 50}" y="${legY1 + 3}" font-size="9" fill="#555" font-family="${SERIF}">At 0% infection — ● go-out side, ◆ stay-home side</text>`;
 
-  // Row 2: Infection range
-  svg += `<circle cx="${pad.l}" cy="${legY2}" r="3.5" fill="#D97706" stroke="white" stroke-width="1"/>`;
-  svg += `<line x1="${pad.l + 5}" y1="${legY2}" x2="${pad.l + 25}" y2="${legY2}" stroke="#D97706" stroke-width="1.5" opacity="0.7"/>`;
-  svg += `<polygon points="${pad.l + 30},${legY2 - 5} ${pad.l + 35},${legY2} ${pad.l + 30},${legY2 + 5} ${pad.l + 25},${legY2}" fill="#D97706"/>`;
-  svg += `<text x="${pad.l + 42}" y="${legY2 + 3}" font-size="9" fill="#555" font-family="${SERIF}">Infection log-odds range (● = min level, ◆ = peak level)</text>`;
-
-  // Row 3: Intercept
-  svg += `<line x1="${pad.l}" y1="${legY3 - 6}" x2="${pad.l}" y2="${legY3 + 6}" stroke="#e11d48" stroke-width="1.5"/>`;
-  svg += `<line x1="${pad.l - 3}" y1="${legY3 - 6}" x2="${pad.l + 3}" y2="${legY3 - 6}" stroke="#e11d48" stroke-width="1"/>`;
-  svg += `<line x1="${pad.l - 3}" y1="${legY3 + 6}" x2="${pad.l + 3}" y2="${legY3 + 6}" stroke="#e11d48" stroke-width="1"/>`;
-  svg += `<text x="${pad.l + 8}" y="${legY3 + 3}" font-size="9" fill="#555" font-family="${SERIF}">Intercept (baseline log-odds, no traits, no infection)</text>`;
+  // Row 2: Max infection effect line (dashed, hollow dot + hollow diamond)
+  const d1x = pad.l, d2x = pad.l + 40;
+  svg += `<circle cx="${d1x}" cy="${legY2}" r="3.5" fill="white" stroke="#666" stroke-width="1.2"/>`;
+  svg += `<line x1="${d1x + 5}" y1="${legY2}" x2="${d2x - 5}" y2="${legY2}" stroke="#666" stroke-width="1.2" opacity="0.65" stroke-dasharray="3,2"/>`;
+  svg += `<polygon points="${d2x},${legY2 - lbDm} ${d2x + lbDm},${legY2} ${d2x},${legY2 + lbDm} ${d2x - lbDm},${legY2}" fill="white" stroke="#666" stroke-width="1.2"/>`;
+  svg += `<text x="${pad.l + 50}" y="${legY2 + 3}" font-size="9" fill="#555" font-family="${SERIF}">At max infection effect — ○ go-out side, ◇ stay-home side (same agents, infection added)</text>`;
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc">${svg}</svg>`;
 
@@ -3473,8 +4350,8 @@ function renderFig31FanChart(regData, cfg) {
     const color = colorScale(i, 80);
     svg += `<rect x="${legX + i}" y="${legY + 4}" width="1.5" height="8" fill="${color}"/>`;
   }
-  svg += `<text x="${legX}" y="${legY + 22}" font-size="7" fill="#888" font-family="${SERIF}">Go-outers</text>`;
-  svg += `<text x="${legX + 80}" y="${legY + 22}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="end">Stay-homers</text>`;
+  svg += `<text x="${legX}" y="${legY + 22}" font-size="8" fill="#888" font-family="${SERIF}">Go-outers</text>`;
+  svg += `<text x="${legX + 80}" y="${legY + 22}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="end">Stay-homers</text>`;
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc">${svg}</svg>`;
 }
@@ -3826,7 +4703,7 @@ function renderFigDeltaStrip(microRows, cfg, regData) {
     svg += `</g>`;
 
     // Count label above bar
-    svg += `<text x="${xBin(i).toFixed(1)}" y="${(topY - 3).toFixed(1)}" font-size="7" fill="#555" font-family="${SERIF}" text-anchor="middle">${total}</text>`;
+    svg += `<text x="${xBin(i).toFixed(1)}" y="${(topY - 3).toFixed(1)}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle">${total}</text>`;
   });
 
   // X-axis labels (every 1%) — centered under bins
@@ -3837,8 +4714,8 @@ function renderFigDeltaStrip(microRows, cfg, regData) {
   }
 
   // Direction labels
-  svg += `<text x="${histL.toFixed(1)}" y="${(pad.t + plotH + 26).toFixed(1)}" font-size="7" fill="#999" font-family="${SERIF}">\u2190 predicts earlier</text>`;
-  svg += `<text x="${histR.toFixed(1)}" y="${(pad.t + plotH + 26).toFixed(1)}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="end">predicts later \u2192</text>`;
+  svg += `<text x="${histL.toFixed(1)}" y="${(pad.t + plotH + 26).toFixed(1)}" font-size="8" fill="#999" font-family="${SERIF}">\u2190 predicts earlier</text>`;
+  svg += `<text x="${histR.toFixed(1)}" y="${(pad.t + plotH + 26).toFixed(1)}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="end">predicts later \u2192</text>`;
 
   // X-axis title
   svg += `<text x="${((histL + histR) / 2).toFixed(1)}" y="${(pad.t + plotH + 42).toFixed(1)}" font-size="10" fill="#555" font-family="${SERIF}" text-anchor="middle">\u0394 Transition Point (predicted \u2212 actual)</text>`;
@@ -3862,8 +4739,8 @@ function renderFigDeltaStrip(microRows, cfg, regData) {
     svg += `<text x="${(c1X + sideColW / 2).toFixed(1)}" y="${(by - 3).toFixed(1)}" font-size="8" fill="${COL_PRED_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${neverPredTotal}</text>`;
   }
   svg += `<line x1="${c1X}" y1="${yScale(0).toFixed(1)}" x2="${(c1X + sideColW).toFixed(1)}" y2="${yScale(0).toFixed(1)}" stroke="#999" stroke-width="0.5"/>`;
-  svg += `<text x="${(c1X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 12).toFixed(1)}" font-size="6.5" fill="${COL_PRED_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">pred</text>`;
-  svg += `<text x="${(c1X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 20).toFixed(1)}" font-size="6.5" fill="${COL_PRED_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">never</text>`;
+  svg += `<text x="${(c1X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 12).toFixed(1)}" font-size="7.5" fill="${COL_PRED_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">pred</text>`;
+  svg += `<text x="${(c1X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 20).toFixed(1)}" font-size="7.5" fill="${COL_PRED_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">never</text>`;
 
   // Column 2: actual never
   const c2X = sideBaseX + colSpacing;
@@ -3874,8 +4751,8 @@ function renderFigDeltaStrip(microRows, cfg, regData) {
     svg += `<text x="${(c2X + sideColW / 2).toFixed(1)}" y="${(by - 3).toFixed(1)}" font-size="8" fill="${COL_ACTUAL_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${neverActualTotal}</text>`;
   }
   svg += `<line x1="${c2X}" y1="${yScale(0).toFixed(1)}" x2="${(c2X + sideColW).toFixed(1)}" y2="${yScale(0).toFixed(1)}" stroke="#999" stroke-width="0.5"/>`;
-  svg += `<text x="${(c2X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 12).toFixed(1)}" font-size="6.5" fill="${COL_ACTUAL_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">actual</text>`;
-  svg += `<text x="${(c2X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 20).toFixed(1)}" font-size="6.5" fill="${COL_ACTUAL_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">never</text>`;
+  svg += `<text x="${(c2X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 12).toFixed(1)}" font-size="7.5" fill="${COL_ACTUAL_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">actual</text>`;
+  svg += `<text x="${(c2X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 20).toFixed(1)}" font-size="7.5" fill="${COL_ACTUAL_NEVER}" font-family="${SERIF}" text-anchor="middle" font-weight="bold">never</text>`;
 
   // Column 3: both never
   const c3X = sideBaseX + colSpacing * 2;
@@ -3886,8 +4763,8 @@ function renderFigDeltaStrip(microRows, cfg, regData) {
     svg += `<text x="${(c3X + sideColW / 2).toFixed(1)}" y="${(by - 3).toFixed(1)}" font-size="8" fill="#666" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${neverBothTotal}</text>`;
   }
   svg += `<line x1="${c3X}" y1="${yScale(0).toFixed(1)}" x2="${(c3X + sideColW).toFixed(1)}" y2="${yScale(0).toFixed(1)}" stroke="#999" stroke-width="0.5"/>`;
-  svg += `<text x="${(c3X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 12).toFixed(1)}" font-size="6.5" fill="#666" font-family="${SERIF}" text-anchor="middle" font-weight="bold">both</text>`;
-  svg += `<text x="${(c3X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 20).toFixed(1)}" font-size="6.5" fill="#666" font-family="${SERIF}" text-anchor="middle" font-weight="bold">never</text>`;
+  svg += `<text x="${(c3X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 12).toFixed(1)}" font-size="7.5" fill="#666" font-family="${SERIF}" text-anchor="middle" font-weight="bold">both</text>`;
+  svg += `<text x="${(c3X + sideColW / 2).toFixed(1)}" y="${(pad.t + plotH + 20).toFixed(1)}" font-size="7.5" fill="#666" font-family="${SERIF}" text-anchor="middle" font-weight="bold">never</text>`;
 
   // Legend
   const legY = pad.t + plotH + 58;
@@ -4166,7 +5043,7 @@ function renderFig34FanWithData(microRows, cfg, regData) {
       svg += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${r.toFixed(1)}" fill="${dotColor}" fill-opacity="0.35" stroke="${dotColor}" stroke-width="0.5" stroke-opacity="0.5"/>`;
       // Show count label for non-trivial groups
       if (nAgents >= 5) {
-        svg += `<text x="${px.toFixed(1)}" y="${(py + 3).toFixed(1)}" font-size="7" fill="#333" font-family="${SERIF}" text-anchor="middle">${nAgents}</text>`;
+        svg += `<text x="${px.toFixed(1)}" y="${(py + 3).toFixed(1)}" font-size="8" fill="#333" font-family="${SERIF}" text-anchor="middle">${nAgents}</text>`;
       }
     });
   });
@@ -4190,8 +5067,8 @@ function renderFig34FanWithData(microRows, cfg, regData) {
     const color = colorScale(i, 80);
     svg += `<rect x="${legX + i}" y="${legY + 4}" width="1.5" height="8" fill="${color}"/>`;
   }
-  svg += `<text x="${legX}" y="${legY + 22}" font-size="7" fill="#888" font-family="${SERIF}">Go-outers</text>`;
-  svg += `<text x="${legX + 80}" y="${legY + 22}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="end">Stay-homers</text>`;
+  svg += `<text x="${legX}" y="${legY + 22}" font-size="8" fill="#888" font-family="${SERIF}">Go-outers</text>`;
+  svg += `<text x="${legX + 80}" y="${legY + 22}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="end">Stay-homers</text>`;
   // Dot size legend
   svg += `<text x="${legX}" y="${legY + 38}" font-size="9" fill="#555" font-family="${SERIF}" font-weight="bold">Actual data (dots = # agents)</text>`;
   [5, 20, 50].forEach((n, i) => {
@@ -4199,9 +5076,9 @@ function renderFig34FanWithData(microRows, cfg, regData) {
     const cx = legX + 8 + i * 40;
     const cy = legY + 52;
     svg += `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}" fill="#888" fill-opacity="0.35" stroke="#888" stroke-width="0.5"/>`;
-    svg += `<text x="${cx}" y="${cy + r + 10}" font-size="7" fill="#888" font-family="${SERIF}" text-anchor="middle">${n}</text>`;
+    svg += `<text x="${cx}" y="${cy + r + 10}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${n}</text>`;
   });
-  svg += `<text x="${legX}" y="${legY + 72}" font-size="7" fill="#888" font-family="${SERIF}">Y = stay-home count out of 5 reps</text>`;
+  svg += `<text x="${legX}" y="${legY + 72}" font-size="8" fill="#888" font-family="${SERIF}">Y = stay-home count out of 5 reps</text>`;
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc">${svg}</svg>`;
 }
@@ -4369,12 +5246,12 @@ function renderFig35ThreeForces(regData, cfg) {
   if (crossQ1Lv != null) {
     const px = xScale(crossQ1Lv);
     svg += `<line x1="${px}" y1="${yScale(tQ1) - 5}" x2="${px}" y2="${yScale(tQ1) + 5}" stroke="${provColor}" stroke-width="1.5"/>`;
-    svg += `<text x="${px}" y="${yScale(tQ1) - 8}" font-size="7" fill="${provColor}" font-family="${SERIF}" text-anchor="middle">${crossQ1Lv.toFixed(1)}%</text>`;
+    svg += `<text x="${px}" y="${yScale(tQ1) - 8}" font-size="8" fill="${provColor}" font-family="${SERIF}" text-anchor="middle">${crossQ1Lv.toFixed(1)}%</text>`;
   }
   if (crossQ3Lv != null && crossQ3Lv !== crossQ1Lv) {
     const px = xScale(crossQ3Lv);
     svg += `<line x1="${px}" y1="${yScale(tQ3) - 5}" x2="${px}" y2="${yScale(tQ3) + 5}" stroke="${provColor}" stroke-width="1.5"/>`;
-    svg += `<text x="${px}" y="${yScale(tQ3) - 8}" font-size="7" fill="${provColor}" font-family="${SERIF}" text-anchor="middle">${crossQ3Lv.toFixed(1)}%</text>`;
+    svg += `<text x="${px}" y="${yScale(tQ3) - 8}" font-size="8" fill="${provColor}" font-family="${SERIF}" text-anchor="middle">${crossQ3Lv.toFixed(1)}%</text>`;
   }
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc">${svg}</svg>`;
@@ -4457,7 +5334,7 @@ function renderFig36Waterfall(microRows, cfg, regData) {
 
   // Column headers
   svg += `<text x="${pad.l + dotColW / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Starting Position</text>`;
-  svg += `<text x="${pad.l + dotColW / 2}" y="${pad.t - 1}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">(intercept + personality)</text>`;
+  svg += `<text x="${pad.l + dotColW / 2}" y="${pad.t - 1}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">(intercept + personality)</text>`;
   svg += `<text x="${curveL + curveW / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Total Log-Odds as Infection Rises</text>`;
 
   // Separator
@@ -4477,7 +5354,7 @@ function renderFig36Waterfall(microRows, cfg, regData) {
   svg += `<rect x="${pad.l + 8}" y="${yScale(q3)}" width="${dotColW - 16}" height="${yScale(q1) - yScale(q3)}" fill="${provColor}" fill-opacity="0.08" stroke="${provColor}" stroke-width="0.5" stroke-opacity="0.3" rx="2"/>`;
   svg += `<line x1="${pad.l + 8}" y1="${yScale(med)}" x2="${pad.l + dotColW - 8}" y2="${yScale(med)}" stroke="${provColor}" stroke-width="1.5" stroke-dasharray="3,2"/>`;
   // IQR label
-  svg += `<text x="${pad.l + dotColW - 6}" y="${yScale(q1) + 12}" font-size="7" fill="${provColor}" font-family="${SERIF}" text-anchor="end" opacity="0.5">IQR</text>`;
+  svg += `<text x="${pad.l + dotColW - 6}" y="${yScale(q1) + 12}" font-size="8" fill="${provColor}" font-family="${SERIF}" text-anchor="end" opacity="0.5">IQR</text>`;
 
   // Dots (clickable, deterministic positions)
   startPositions.forEach((sp, i) => {
@@ -4580,7 +5457,7 @@ function renderFig36WaterfallHighlight(el, agent, allAgents, crossover, actuals,
 
   // Column headers
   svg += `<text x="${pad.l + dotColW / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Starting Position</text>`;
-  svg += `<text x="${pad.l + dotColW / 2}" y="${pad.t - 1}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">(intercept + personality)</text>`;
+  svg += `<text x="${pad.l + dotColW / 2}" y="${pad.t - 1}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">(intercept + personality)</text>`;
   svg += `<text x="${curveL + curveW / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Total Log-Odds as Infection Rises</text>`;
 
   // Separator
@@ -4597,7 +5474,7 @@ function renderFig36WaterfallHighlight(el, agent, allAgents, crossover, actuals,
   svg += `<rect x="${pad.l + 8}" y="${yScale(q3)}" width="${dotColW - 16}" height="${yScale(q1) - yScale(q3)}" fill="${provColor}" fill-opacity="0.06" stroke="${provColor}" stroke-width="0.5" stroke-opacity="0.2" rx="2"/>`;
   svg += `<line x1="${pad.l + 8}" y1="${yScale(med)}" x2="${pad.l + dotColW - 8}" y2="${yScale(med)}" stroke="${provColor}" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>`;
   // IQR label
-  svg += `<text x="${pad.l + dotColW - 6}" y="${yScale(q1) + 12}" font-size="7" fill="${provColor}" font-family="${SERIF}" text-anchor="end" opacity="0.5">IQR</text>`;
+  svg += `<text x="${pad.l + dotColW - 6}" y="${yScale(q1) + 12}" font-size="8" fill="${provColor}" font-family="${SERIF}" text-anchor="end" opacity="0.5">IQR</text>`;
 
   // Deterministic jitter (same hash as initial render)
   const jitterFor = (i) => ((Math.abs(Math.sin(i * 127.1 + 311.7) * 43758.5453) % 1) - 0.5) * (dotColW - 24);
@@ -4945,9 +5822,9 @@ function renderFig37ThreeForces(microRows, cfg, regData, chartId, detailId) {
 
   // Column headers
   svg += `<text x="${col1L + col1W / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Intercept</text>`;
-  svg += `<text x="${col1L + col1W / 2}" y="${pad.t - 1}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">(same for all)</text>`;
+  svg += `<text x="${col1L + col1W / 2}" y="${pad.t - 1}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">(same for all)</text>`;
   svg += `<text x="${col2L + dotColW / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Starting Position</text>`;
-  svg += `<text x="${col2L + dotColW / 2}" y="${pad.t - 1}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">(intercept + personality)</text>`;
+  svg += `<text x="${col2L + dotColW / 2}" y="${pad.t - 1}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">(intercept + personality)</text>`;
   svg += `<text x="${curveL + curveW / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Total Log-Odds as Infection Rises</text>`;
 
   // Separators
@@ -4970,7 +5847,7 @@ function renderFig37ThreeForces(microRows, cfg, regData, chartId, detailId) {
   // IQR band
   svg += `<rect x="${col2L + 8}" y="${yScale(q3)}" width="${dotColW - 16}" height="${yScale(q1) - yScale(q3)}" fill="${provColor}" fill-opacity="0.08" stroke="${provColor}" stroke-width="0.5" stroke-opacity="0.3" rx="2"/>`;
   svg += `<line x1="${col2L + 8}" y1="${yScale(med)}" x2="${col2L + dotColW - 8}" y2="${yScale(med)}" stroke="${provColor}" stroke-width="1.5" stroke-dasharray="3,2"/>`;
-  svg += `<text x="${col2L + dotColW - 6}" y="${yScale(q1) + 10}" font-size="7" fill="${provColor}" font-family="${SERIF}" text-anchor="end" opacity="0.5">IQR</text>`;
+  svg += `<text x="${col2L + dotColW - 6}" y="${yScale(q1) + 10}" font-size="8" fill="${provColor}" font-family="${SERIF}" text-anchor="end" opacity="0.5">IQR</text>`;
 
   // Dots
   startPositions.forEach((sp, i) => {
@@ -5062,9 +5939,9 @@ function renderFig37ThreeForceHighlight(el, agent, allAgents, crossover, actuals
 
   // Column headers
   svg += `<text x="${col1L + col1W / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Intercept</text>`;
-  svg += `<text x="${col1L + col1W / 2}" y="${pad.t - 1}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">(same for all)</text>`;
+  svg += `<text x="${col1L + col1W / 2}" y="${pad.t - 1}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">(same for all)</text>`;
   svg += `<text x="${col2L + dotColW / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Starting Position</text>`;
-  svg += `<text x="${col2L + dotColW / 2}" y="${pad.t - 1}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">(intercept + personality)</text>`;
+  svg += `<text x="${col2L + dotColW / 2}" y="${pad.t - 1}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">(intercept + personality)</text>`;
   svg += `<text x="${curveL + curveW / 2}" y="${pad.t - 10}" font-size="9" fill="#555" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Total Log-Odds as Infection Rises</text>`;
 
   // Separators
@@ -5087,7 +5964,7 @@ function renderFig37ThreeForceHighlight(el, agent, allAgents, crossover, actuals
   // IQR band
   svg += `<rect x="${col2L + 8}" y="${yScale(q3)}" width="${dotColW - 16}" height="${yScale(q1) - yScale(q3)}" fill="${provColor}" fill-opacity="0.06" stroke="${provColor}" stroke-width="0.5" stroke-opacity="0.2" rx="2"/>`;
   svg += `<line x1="${col2L + 8}" y1="${yScale(med)}" x2="${col2L + dotColW - 8}" y2="${yScale(med)}" stroke="${provColor}" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>`;
-  svg += `<text x="${col2L + dotColW - 6}" y="${yScale(q1) + 10}" font-size="7" fill="${provColor}" font-family="${SERIF}" text-anchor="end" opacity="0.5">IQR</text>`;
+  svg += `<text x="${col2L + dotColW - 6}" y="${yScale(q1) + 10}" font-size="8" fill="${provColor}" font-family="${SERIF}" text-anchor="end" opacity="0.5">IQR</text>`;
 
   // Dimmed dots + selected
   allAgents.forEach((sp, i) => {
@@ -5609,7 +6486,7 @@ function renderFig27ConsistencyMatrix(data, elId, modelFilter) {
   // Row labels (left)
   for (let i = 0; i < n; i++) {
     const provColor = CONFIG.PROVIDER_COLORS[providers[i]] || '#333';
-    svg += `<text x="${ox - 4}" y="${oy + i * cellSize + cellSize / 2 + 3}" font-size="8.5" fill="${provColor}" font-family="${SERIF}" text-anchor="end">${esc(labels[i])}</text>`;
+    svg += `<text x="${ox - 4}" y="${oy + i * cellSize + cellSize / 2 + 3}" font-size="10" fill="${provColor}" font-family="${SERIF}" text-anchor="end">${esc(labels[i])}</text>`;
   }
 
   // Column labels (top, rotated)
@@ -5617,7 +6494,7 @@ function renderFig27ConsistencyMatrix(data, elId, modelFilter) {
     const provColor = CONFIG.PROVIDER_COLORS[providers[j]] || '#333';
     const tx = ox + j * cellSize + cellSize / 2;
     const ty = oy - 4;
-    svg += `<text x="${tx}" y="${ty}" font-size="8.5" fill="${provColor}" font-family="${SERIF}" text-anchor="start" transform="rotate(-55,${tx},${ty})">${esc(labels[j])}</text>`;
+    svg += `<text x="${tx}" y="${ty}" font-size="10" fill="${provColor}" font-family="${SERIF}" text-anchor="start" transform="rotate(-55,${tx},${ty})">${esc(labels[j])}</text>`;
   }
 
   // Provider group separator lines

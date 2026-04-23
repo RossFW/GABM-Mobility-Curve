@@ -1,0 +1,724 @@
+{
+  "concepts": [
+    "Traits",
+    "Work",
+    "Community",
+    "Virus Properties",
+    "Self Health",
+    "Virus Prevalence"
+  ],
+  "keywords": {
+    "Traits": [
+      "extrovert*",
+      "extravert*",
+      "introvert*",
+      "agreeable:ness",
+      "antagonis*",
+      "disagreeable",
+      "?<!unconscientious:ness",
+      "unconscientious",
+      "neurotic:ism",
+      "emotionally stable",
+      "emotional stability",
+      "open to experience",
+      "openness",
+      "open-minded",
+      "closed to experience",
+      "closed-minded",
+      "years old",
+      "young/old! (cases/age)"
+    ],
+    "Work": [
+      "work",
+      "job",
+      "office",
+      "responsib*",
+      "commit*"
+    ],
+    "Community": [
+      "community",
+      "family",
+      "others",
+      "public",
+      "neighbor*",
+      "loved ones",
+      "protect*"
+    ],
+    "Virus Properties": [
+      "airborne",
+      "virus",
+      "contagi*",
+      "deadl*",
+      "catasat"
+    ],
+    "Self Health": [
+      "healthy",
+      "well",
+      "my health",
+      "feel fine/good/healthy"
+    ],
+    "Virus Prevalence": [
+      "infection rate",
+      "cases",
+      "diagnos*",
+      "spread*",
+      "outbreak",
+      "epidemic",
+      "prevalen*",
+      "N %"
+    ]
+  },
+  "by_config": {
+    "anthropic_claude-3-haiku-20240307_off": {
+      "n": 20000,
+      "n_yes": 18121,
+      "n_no": 1879,
+      "overall": {
+        "Traits": 0.6599,
+        "Work": 0.1837,
+        "Community": 0.3846,
+        "Virus Properties": 0.9989,
+        "Self Health": 0.213,
+        "Virus Prevalence": 0.9919
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.6335,
+          "Work": 0.136,
+          "Community": 0.4035,
+          "Virus Properties": 1.0,
+          "Self Health": 0.1673,
+          "Virus Prevalence": 1.0
+        },
+        "no": {
+          "Traits": 0.9138,
+          "Work": 0.6434,
+          "Community": 0.2022,
+          "Virus Properties": 0.9883,
+          "Self Health": 0.6535,
+          "Virus Prevalence": 0.9133
+        }
+      }
+    },
+    "anthropic_claude-haiku-4-5_off": {
+      "n": 20000,
+      "n_yes": 2892,
+      "n_no": 17108,
+      "overall": {
+        "Traits": 0.989,
+        "Work": 0.9875,
+        "Community": 0.3251,
+        "Virus Properties": 0.9376,
+        "Self Health": 0.952,
+        "Virus Prevalence": 0.9984
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 1.0,
+          "Work": 0.9333,
+          "Community": 0.9191,
+          "Virus Properties": 0.999,
+          "Self Health": 0.796,
+          "Virus Prevalence": 1.0
+        },
+        "no": {
+          "Traits": 0.9872,
+          "Work": 0.9967,
+          "Community": 0.2247,
+          "Virus Properties": 0.9273,
+          "Self Health": 0.9784,
+          "Virus Prevalence": 0.9982
+        }
+      }
+    },
+    "anthropic_claude-opus-4-5_off": {
+      "n": 20000,
+      "n_yes": 3386,
+      "n_no": 16614,
+      "overall": {
+        "Traits": 1.0,
+        "Work": 0.9992,
+        "Community": 0.465,
+        "Virus Properties": 0.8506,
+        "Self Health": 0.9067,
+        "Virus Prevalence": 0.9999
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 1.0,
+          "Work": 0.9962,
+          "Community": 0.6988,
+          "Virus Properties": 0.9684,
+          "Self Health": 0.5803,
+          "Virus Prevalence": 1.0
+        },
+        "no": {
+          "Traits": 1.0,
+          "Work": 0.9999,
+          "Community": 0.4174,
+          "Virus Properties": 0.8266,
+          "Self Health": 0.9733,
+          "Virus Prevalence": 0.9998
+        }
+      }
+    },
+    "anthropic_claude-sonnet-4-0_off": {
+      "n": 20000,
+      "n_yes": 9788,
+      "n_no": 10212,
+      "overall": {
+        "Traits": 0.7384,
+        "Work": 0.9516,
+        "Community": 0.4168,
+        "Virus Properties": 0.8623,
+        "Self Health": 0.5463,
+        "Virus Prevalence": 0.9988
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.7868,
+          "Work": 0.9452,
+          "Community": 0.6703,
+          "Virus Properties": 0.9628,
+          "Self Health": 0.2664,
+          "Virus Prevalence": 0.9983
+        },
+        "no": {
+          "Traits": 0.692,
+          "Work": 0.9577,
+          "Community": 0.1737,
+          "Virus Properties": 0.766,
+          "Self Health": 0.8144,
+          "Virus Prevalence": 0.9992
+        }
+      }
+    },
+    "anthropic_claude-sonnet-4-5_off": {
+      "n": 20000,
+      "n_yes": 6407,
+      "n_no": 13593,
+      "overall": {
+        "Traits": 0.9637,
+        "Work": 0.9746,
+        "Community": 0.5193,
+        "Virus Properties": 0.9026,
+        "Self Health": 0.668,
+        "Virus Prevalence": 1.0
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 1.0,
+          "Work": 0.9691,
+          "Community": 0.8878,
+          "Virus Properties": 0.997,
+          "Self Health": 0.4667,
+          "Virus Prevalence": 1.0
+        },
+        "no": {
+          "Traits": 0.9465,
+          "Work": 0.9771,
+          "Community": 0.3456,
+          "Virus Properties": 0.8582,
+          "Self Health": 0.7629,
+          "Virus Prevalence": 1.0
+        }
+      }
+    },
+    "gemini_gemini-2_0-flash_off": {
+      "n": 20000,
+      "n_yes": 10428,
+      "n_no": 9572,
+      "overall": {
+        "Traits": 0.9994,
+        "Work": 0.8324,
+        "Community": 0.2434,
+        "Virus Properties": 0.9388,
+        "Self Health": 0.7469,
+        "Virus Prevalence": 0.9884
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 1.0,
+          "Work": 0.6902,
+          "Community": 0.3335,
+          "Virus Properties": 0.9978,
+          "Self Health": 0.6095,
+          "Virus Prevalence": 1.0
+        },
+        "no": {
+          "Traits": 0.9987,
+          "Work": 0.9873,
+          "Community": 0.1451,
+          "Virus Properties": 0.8746,
+          "Self Health": 0.8966,
+          "Virus Prevalence": 0.9758
+        }
+      }
+    },
+    "gemini_gemini-2_5-flash-lite_off": {
+      "n": 20000,
+      "n_yes": 9885,
+      "n_no": 10115,
+      "overall": {
+        "Traits": 0.9955,
+        "Work": 0.6182,
+        "Community": 0.3855,
+        "Virus Properties": 0.9527,
+        "Self Health": 0.5583,
+        "Virus Prevalence": 0.9892
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 1.0,
+          "Work": 0.4365,
+          "Community": 0.6075,
+          "Virus Properties": 1.0,
+          "Self Health": 0.3622,
+          "Virus Prevalence": 0.9889
+        },
+        "no": {
+          "Traits": 0.9911,
+          "Work": 0.7958,
+          "Community": 0.1686,
+          "Virus Properties": 0.9066,
+          "Self Health": 0.7499,
+          "Virus Prevalence": 0.9896
+        }
+      }
+    },
+    "gemini_gemini-2_5-flash_off": {
+      "n": 20000,
+      "n_yes": 3702,
+      "n_no": 16298,
+      "overall": {
+        "Traits": 0.6591,
+        "Work": 0.9838,
+        "Community": 0.1756,
+        "Virus Properties": 0.9095,
+        "Self Health": 0.9509,
+        "Virus Prevalence": 0.9787
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.9784,
+          "Work": 0.9182,
+          "Community": 0.7699,
+          "Virus Properties": 0.9981,
+          "Self Health": 0.8514,
+          "Virus Prevalence": 0.997
+        },
+        "no": {
+          "Traits": 0.5866,
+          "Work": 0.9987,
+          "Community": 0.0406,
+          "Virus Properties": 0.8894,
+          "Self Health": 0.9736,
+          "Virus Prevalence": 0.9745
+        }
+      }
+    },
+    "gemini_gemini-3-flash-preview_high": {
+      "n": 20000,
+      "n_yes": 5320,
+      "n_no": 14680,
+      "overall": {
+        "Traits": 0.8701,
+        "Work": 0.9208,
+        "Community": 0.2675,
+        "Virus Properties": 0.5271,
+        "Self Health": 0.4603,
+        "Virus Prevalence": 0.6253
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.9241,
+          "Work": 0.8641,
+          "Community": 0.4795,
+          "Virus Properties": 0.9353,
+          "Self Health": 0.2838,
+          "Virus Prevalence": 0.9733
+        },
+        "no": {
+          "Traits": 0.8505,
+          "Work": 0.9413,
+          "Community": 0.1906,
+          "Virus Properties": 0.3791,
+          "Self Health": 0.5243,
+          "Virus Prevalence": 0.4992
+        }
+      }
+    },
+    "gemini_gemini-3-flash-preview_low": {
+      "n": 20000,
+      "n_yes": 5390,
+      "n_no": 14610,
+      "overall": {
+        "Traits": 0.8598,
+        "Work": 0.9288,
+        "Community": 0.2824,
+        "Virus Properties": 0.5525,
+        "Self Health": 0.5191,
+        "Virus Prevalence": 0.6332
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.9349,
+          "Work": 0.8744,
+          "Community": 0.502,
+          "Virus Properties": 0.9514,
+          "Self Health": 0.3161,
+          "Virus Prevalence": 0.9788
+        },
+        "no": {
+          "Traits": 0.832,
+          "Work": 0.9489,
+          "Community": 0.2014,
+          "Virus Properties": 0.4053,
+          "Self Health": 0.5939,
+          "Virus Prevalence": 0.5057
+        }
+      }
+    },
+    "gemini_gemini-3-flash-preview_medium": {
+      "n": 20000,
+      "n_yes": 5492,
+      "n_no": 14508,
+      "overall": {
+        "Traits": 0.8977,
+        "Work": 0.9073,
+        "Community": 0.2745,
+        "Virus Properties": 0.5462,
+        "Self Health": 0.4567,
+        "Virus Prevalence": 0.6185
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.9445,
+          "Work": 0.8498,
+          "Community": 0.4774,
+          "Virus Properties": 0.9332,
+          "Self Health": 0.2806,
+          "Virus Prevalence": 0.9707
+        },
+        "no": {
+          "Traits": 0.88,
+          "Work": 0.9291,
+          "Community": 0.1977,
+          "Virus Properties": 0.3997,
+          "Self Health": 0.5234,
+          "Virus Prevalence": 0.4852
+        }
+      }
+    },
+    "gemini_gemini-3-flash-preview_off": {
+      "n": 20000,
+      "n_yes": 3551,
+      "n_no": 16449,
+      "overall": {
+        "Traits": 0.5446,
+        "Work": 0.964,
+        "Community": 0.1958,
+        "Virus Properties": 0.4884,
+        "Self Health": 0.5235,
+        "Virus Prevalence": 0.7532
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.8136,
+          "Work": 0.9586,
+          "Community": 0.5731,
+          "Virus Properties": 0.9535,
+          "Self Health": 0.3579,
+          "Virus Prevalence": 0.9178
+        },
+        "no": {
+          "Traits": 0.4865,
+          "Work": 0.9652,
+          "Community": 0.1143,
+          "Virus Properties": 0.3879,
+          "Self Health": 0.5592,
+          "Virus Prevalence": 0.7177
+        }
+      }
+    },
+    "openai_gpt-3_5-turbo_off": {
+      "n": 20000,
+      "n_yes": 19444,
+      "n_no": 556,
+      "overall": {
+        "Traits": 0.0797,
+        "Work": 0.0029,
+        "Community": 0.001,
+        "Virus Properties": 0.9258,
+        "Self Health": 0.0001,
+        "Virus Prevalence": 0.9194
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.0786,
+          "Work": 0.003,
+          "Community": 0.0011,
+          "Virus Properties": 0.9253,
+          "Self Health": 0.0001,
+          "Virus Prevalence": 0.9187
+        },
+        "no": {
+          "Traits": 0.1169,
+          "Work": 0.0,
+          "Community": 0.0,
+          "Virus Properties": 0.946,
+          "Self Health": 0.0,
+          "Virus Prevalence": 0.9442
+        }
+      }
+    },
+    "openai_gpt-4_1_off": {
+      "n": 20000,
+      "n_yes": 2838,
+      "n_no": 17162,
+      "overall": {
+        "Traits": 0.9215,
+        "Work": 0.6988,
+        "Community": 0.158,
+        "Virus Properties": 0.8238,
+        "Self Health": 0.594,
+        "Virus Prevalence": 0.9257
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.8932,
+          "Work": 0.2273,
+          "Community": 0.4535,
+          "Virus Properties": 0.9954,
+          "Self Health": 0.2741,
+          "Virus Prevalence": 1.0
+        },
+        "no": {
+          "Traits": 0.9262,
+          "Work": 0.7768,
+          "Community": 0.1091,
+          "Virus Properties": 0.7954,
+          "Self Health": 0.6469,
+          "Virus Prevalence": 0.9134
+        }
+      }
+    },
+    "openai_gpt-4o_off": {
+      "n": 20000,
+      "n_yes": 833,
+      "n_no": 19167,
+      "overall": {
+        "Traits": 0.8847,
+        "Work": 0.6859,
+        "Community": 0.0867,
+        "Virus Properties": 0.834,
+        "Self Health": 0.6461,
+        "Virus Prevalence": 0.8413
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.8055,
+          "Work": 0.0612,
+          "Community": 0.2197,
+          "Virus Properties": 0.9784,
+          "Self Health": 0.0516,
+          "Virus Prevalence": 0.9592
+        },
+        "no": {
+          "Traits": 0.8881,
+          "Work": 0.7131,
+          "Community": 0.0809,
+          "Virus Properties": 0.8277,
+          "Self Health": 0.6719,
+          "Virus Prevalence": 0.8361
+        }
+      }
+    },
+    "openai_gpt-5_1_off": {
+      "n": 20000,
+      "n_yes": 11787,
+      "n_no": 8213,
+      "overall": {
+        "Traits": 0.5936,
+        "Work": 0.9604,
+        "Community": 0.5601,
+        "Virus Properties": 0.8607,
+        "Self Health": 0.5614,
+        "Virus Prevalence": 0.9941
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.417,
+          "Work": 0.9571,
+          "Community": 0.7658,
+          "Virus Properties": 0.9999,
+          "Self Health": 0.4278,
+          "Virus Prevalence": 0.9999
+        },
+        "no": {
+          "Traits": 0.8469,
+          "Work": 0.9652,
+          "Community": 0.2648,
+          "Virus Properties": 0.6608,
+          "Self Health": 0.7531,
+          "Virus Prevalence": 0.9858
+        }
+      }
+    },
+    "openai_gpt-5_2_high": {
+      "n": 20000,
+      "n_yes": 17695,
+      "n_no": 2305,
+      "overall": {
+        "Traits": 0.1673,
+        "Work": 0.9176,
+        "Community": 0.5795,
+        "Virus Properties": 0.9439,
+        "Self Health": 0.3209,
+        "Virus Prevalence": 0.9852
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.1615,
+          "Work": 0.9086,
+          "Community": 0.6478,
+          "Virus Properties": 0.9999,
+          "Self Health": 0.2356,
+          "Virus Prevalence": 0.9999
+        },
+        "no": {
+          "Traits": 0.2113,
+          "Work": 0.9874,
+          "Community": 0.0555,
+          "Virus Properties": 0.5141,
+          "Self Health": 0.9757,
+          "Virus Prevalence": 0.8725
+        }
+      }
+    },
+    "openai_gpt-5_2_low": {
+      "n": 20000,
+      "n_yes": 18663,
+      "n_no": 1337,
+      "overall": {
+        "Traits": 0.1967,
+        "Work": 0.9415,
+        "Community": 0.6228,
+        "Virus Properties": 0.9759,
+        "Self Health": 0.326,
+        "Virus Prevalence": 0.9912
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.1804,
+          "Work": 0.9389,
+          "Community": 0.6634,
+          "Virus Properties": 1.0,
+          "Self Health": 0.2791,
+          "Virus Prevalence": 0.9999
+        },
+        "no": {
+          "Traits": 0.4241,
+          "Work": 0.9768,
+          "Community": 0.0561,
+          "Virus Properties": 0.6395,
+          "Self Health": 0.9806,
+          "Virus Prevalence": 0.8699
+        }
+      }
+    },
+    "openai_gpt-5_2_medium": {
+      "n": 20000,
+      "n_yes": 18199,
+      "n_no": 1801,
+      "overall": {
+        "Traits": 0.2087,
+        "Work": 0.9144,
+        "Community": 0.596,
+        "Virus Properties": 0.9609,
+        "Self Health": 0.3164,
+        "Virus Prevalence": 0.9877
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.2003,
+          "Work": 0.9081,
+          "Community": 0.6494,
+          "Virus Properties": 1.0,
+          "Self Health": 0.2513,
+          "Virus Prevalence": 0.9998
+        },
+        "no": {
+          "Traits": 0.2932,
+          "Work": 0.9783,
+          "Community": 0.0566,
+          "Virus Properties": 0.5664,
+          "Self Health": 0.9739,
+          "Virus Prevalence": 0.8656
+        }
+      }
+    },
+    "openai_gpt-5_2_off": {
+      "n": 20000,
+      "n_yes": 19388,
+      "n_no": 612,
+      "overall": {
+        "Traits": 0.1106,
+        "Work": 0.9647,
+        "Community": 0.4952,
+        "Virus Properties": 0.9858,
+        "Self Health": 0.5835,
+        "Virus Prevalence": 0.9962
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.1059,
+          "Work": 0.9639,
+          "Community": 0.5088,
+          "Virus Properties": 1.0,
+          "Self Health": 0.5706,
+          "Virus Prevalence": 0.9998
+        },
+        "no": {
+          "Traits": 0.2582,
+          "Work": 0.9918,
+          "Community": 0.0654,
+          "Virus Properties": 0.5359,
+          "Self Health": 0.9918,
+          "Virus Prevalence": 0.8824
+        }
+      }
+    },
+    "openai_o3_required": {
+      "n": 20000,
+      "n_yes": 11472,
+      "n_no": 8528,
+      "overall": {
+        "Traits": 0.7659,
+        "Work": 0.9025,
+        "Community": 0.3321,
+        "Virus Properties": 0.7013,
+        "Self Health": 0.2702,
+        "Virus Prevalence": 0.9761
+      },
+      "by_decision": {
+        "yes": {
+          "Traits": 0.7891,
+          "Work": 0.8456,
+          "Community": 0.5456,
+          "Virus Properties": 0.9816,
+          "Self Health": 0.0297,
+          "Virus Prevalence": 0.9943
+        },
+        "no": {
+          "Traits": 0.7346,
+          "Work": 0.979,
+          "Community": 0.0449,
+          "Virus Properties": 0.3242,
+          "Self Health": 0.5938,
+          "Virus Prevalence": 0.9517
+        }
+      }
+    }
+  }
+}

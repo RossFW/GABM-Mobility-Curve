@@ -233,6 +233,36 @@ for (dir_name in config_dirs) {
         conv_warn <- paste(m2@optinfo$conv$lme4$messages, collapse = "; ")
       }
 
+      # DHARMa simulated residuals (for calibration Q-Q in viz)
+      # Scaled residuals under a well-specified model should be Uniform(0,1).
+      # We store a compact CDF summary (99 quantiles) plus KS + dispersion tests.
+      dharma_info <- NULL
+      if (requireNamespace("DHARMa", quietly = TRUE)) {
+        tryCatch({
+          sim <- DHARMa::simulateResiduals(fittedModel = m2, n = 250,
+                                           plot = FALSE, seed = 42)
+          resids <- sim$scaledResiduals
+          probs  <- seq(0.01, 0.99, by = 0.01)
+          qvals  <- as.numeric(quantile(resids, probs = probs, na.rm = TRUE))
+          t_unif <- DHARMa::testUniformity(sim, plot = FALSE)
+          t_disp <- DHARMa::testDispersion(sim, plot = FALSE)
+          dharma_info <- list(
+            n_sim            = 250,
+            n_obs            = length(resids),
+            probs            = probs,
+            quantiles        = qvals,
+            ks_statistic     = as.numeric(t_unif$statistic),
+            ks_p_value       = as.numeric(t_unif$p.value),
+            dispersion_ratio = as.numeric(t_disp$statistic),
+            dispersion_p     = as.numeric(t_disp$p.value)
+          )
+        }, error = function(e) {
+          cat("[DHARMa failed:", e$message, "] ")
+        })
+      } else {
+        cat("[DHARMa package not installed — skipping] ")
+      }
+
       output$model2 <- list(
         type         = "random_effects_logit",
         coefficients = m2_coefs,
@@ -243,7 +273,8 @@ for (dir_name in config_dirs) {
           n_groups    = length(unique(df$agent_id)),
           re_variance = round(re_var, 6)
         ),
-        warning      = conv_warn
+        warning      = conv_warn,
+        dharma       = dharma_info
       )
     }, error = function(e) {
       m2_status <<- paste("ERROR:", e$message)

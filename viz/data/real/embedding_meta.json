@@ -1,0 +1,189 @@
+{
+  "gemini_gemini-2_0-flash_off": {
+    "model": "text-embedding-3-large",
+    "skipped": true,
+    "reason": "already done",
+    "n": 20000,
+    "ts": 1776890835.163568
+  },
+  "anthropic_claude-3-haiku-20240307_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1681055,
+    "cost_usd": 0.2185,
+    "elapsed_s": 87.8,
+    "file_mb": 102.7,
+    "ts": 1776889990.0880141
+  },
+  "anthropic_claude-haiku-4-5_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 2744372,
+    "cost_usd": 0.3568,
+    "elapsed_s": 111.0,
+    "file_mb": 137.2,
+    "ts": 1776890126.925129
+  },
+  "anthropic_claude-opus-4-5_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 2805103,
+    "cost_usd": 0.3647,
+    "elapsed_s": 438.5,
+    "file_mb": 134.1,
+    "ts": 1776890592.1443388
+  },
+  "anthropic_claude-sonnet-4-0_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 2206257,
+    "cost_usd": 0.2868,
+    "elapsed_s": 88.0,
+    "file_mb": 106.5,
+    "ts": 1776890701.4337559
+  },
+  "anthropic_claude-sonnet-4-5_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 2781360,
+    "cost_usd": 0.3616,
+    "elapsed_s": 107.4,
+    "file_mb": 132.3,
+    "ts": 1776890834.256926
+  },
+  "gemini_gemini-2_5-flash-lite_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 2393435,
+    "cost_usd": 0.3111,
+    "elapsed_s": 86.8,
+    "file_mb": 98.7,
+    "ts": 1776890940.446898
+  },
+  "gemini_gemini-2_5-flash_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 2516556,
+    "cost_usd": 0.3272,
+    "elapsed_s": 81.7,
+    "file_mb": 93.3,
+    "ts": 1776891039.862853
+  },
+  "gemini_gemini-3-flash-preview_high": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1402067,
+    "cost_usd": 0.1823,
+    "elapsed_s": 117.4,
+    "file_mb": 145.4,
+    "ts": 1776891184.512529
+  },
+  "gemini_gemini-3-flash-preview_low": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1478071,
+    "cost_usd": 0.1921,
+    "elapsed_s": 108.3,
+    "file_mb": 145.4,
+    "ts": 1776891320.202635
+  },
+  "gemini_gemini-3-flash-preview_medium": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1399758,
+    "cost_usd": 0.182,
+    "elapsed_s": 110.3,
+    "file_mb": 145.4,
+    "ts": 1776891457.980603
+  },
+  "gemini_gemini-3-flash-preview_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1795820,
+    "cost_usd": 0.2335,
+    "elapsed_s": 114.7,
+    "file_mb": 145.4,
+    "ts": 1776891600.2780979
+  },
+  "openai_gpt-3_5-turbo_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 255609,
+    "cost_usd": 0.0332,
+    "elapsed_s": 37.7,
+    "file_mb": 46.9,
+    "ts": 1776891646.999269
+  },
+  "openai_gpt-4_1_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1582430,
+    "cost_usd": 0.2057,
+    "elapsed_s": 117.7,
+    "file_mb": 133.8,
+    "ts": 1776891789.894633
+  },
+  "openai_gpt-4o_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1215645,
+    "cost_usd": 0.158,
+    "elapsed_s": 105.1,
+    "file_mb": 132.4,
+    "ts": 1776891919.938118
+  },
+  "openai_gpt-5_1_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1913898,
+    "cost_usd": 0.2488,
+    "elapsed_s": 114.0,
+    "file_mb": 143.9,
+    "ts": 1776892061.121143
+  },
+  "openai_gpt-5_2_high": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1454072,
+    "cost_usd": 0.189,
+    "elapsed_s": 112.7,
+    "file_mb": 145.4,
+    "ts": 1776892201.866571
+  },
+  "openai_gpt-5_2_low": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1487966,
+    "cost_usd": 0.1934,
+    "elapsed_s": 116.2,
+    "file_mb": 145.3,
+    "ts": 1776892347.6449761
+  },
+  "openai_gpt-5_2_medium": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1461479,
+    "cost_usd": 0.19,
+    "elapsed_s": 108.7,
+    "file_mb": 145.4,
+    "ts": 1776892483.8531919
+  },
+  "openai_gpt-5_2_off": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1546925,
+    "cost_usd": 0.2011,
+    "elapsed_s": 108.1,
+    "file_mb": 144.2,
+    "ts": 1776892619.321846
+  },
+  "openai_o3_required": {
+    "model": "text-embedding-3-large",
+    "n": 20000,
+    "tokens": 1288434,
+    "cost_usd": 0.1675,
+    "elapsed_s": 109.7,
+    "file_mb": 145.4,
+    "ts": 1776892756.304401
+  }
+}

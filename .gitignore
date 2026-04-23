@@ -22,3 +22,16 @@ viz/screenshots/
 # Editor
 .vscode/
 .idea/
+
+# Large embedding files — too big for GitHub (128MB each × 21 configs)
+*.npz
+
+# Regression backup dirs
+viz/data/real/regressions.bak/
+viz/data/real/regressions.bak2/
+
+# Playwright CLI cache
+.playwright-cli/
+
+# Claude project files
+.claude/

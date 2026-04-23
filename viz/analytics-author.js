@@ -324,11 +324,11 @@ function renderLogOddsWalkthrough() {
   h += '<tbody>';
   h += '<tr><td>Claude Opus 4.5</td><td>+8.90</td><td>&minus;5.02</td><td>&minus;14.97</td></tr>';
   h += '<tr><td>Claude Sonnet 4.5</td><td>+7.76</td><td>&minus;5.41</td><td>&minus;7.47</td></tr>';
-  h += '<tr><td>GPT-4o</td><td colspan="2" style="text-align:center"><em>(see Fig 31)</em></td><td>&minus;9.2</td></tr>';
-  h += '<tr><td>GPT-5.2 (low)</td><td colspan="2" style="text-align:center"><em>(see Fig 31)</em></td><td>&minus;0.6</td></tr>';
+  h += '<tr><td>GPT-4o</td><td colspan="2" style="text-align:center"><em>(see Fig 30)</em></td><td>&minus;9.2</td></tr>';
+  h += '<tr><td>GPT-5.2 (low)</td><td colspan="2" style="text-align:center"><em>(see Fig 30)</em></td><td>&minus;0.6</td></tr>';
   h += '</tbody></table>';
 
-  h += '<p>This is a central finding (RQ5): the <em>direction</em> of trait effects is largely consistent across providers (conscientiousness always positive, extraversion always negative), but the <em>magnitude</em> varies by orders of magnitude. Opus 4.5 has some of the most extreme coefficients in the sample, with the deepest intercept and the widest personality spread. See <strong>Figure 29</strong> (cross-model forest plot) and <strong>Figure 30</strong> (trait effects) for comparisons across all 21 configurations.</p>';
+  h += '<p>This is a central finding (RQ5): the <em>direction</em> of trait effects is largely consistent across providers (conscientiousness always positive, extraversion always negative), but the <em>magnitude</em> varies by orders of magnitude. Opus 4.5 has some of the most extreme coefficients in the sample, with the deepest intercept and the widest personality spread. See <strong>Figure 28</strong> (per-trait power ratio across models) and <strong>Figure 29</strong> (trait effects) for comparisons across all 21 configurations.</p>';
 
   h += '</div>';
   el.innerHTML = h;

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BLUPs-vs-Predictors Walkthrough — Opus 4.5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- KaTeX for proper math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+<style>
+  :root {
+    --serif: "Libre Baskerville", "Georgia", "Palatino", "Times New Roman", serif;
+    --mono: "Menlo", "Consolas", "Monaco", monospace;
+    --ink: #222;
+    --muted: #666;
+    --accent: #1a4a8a;
+    --rule: #ccc;
+    --box: #f7f7f2;
+    --code-bg: #eef1f4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--serif);
+    font-size: 15.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: #fafafa;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 30px 100px;
+  }
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 18px;
+    margin-bottom: 30px;
+  }
+  header .eyebrow {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 26px;
+    margin: 0 0 8px 0;
+    font-weight: bold;
+  }
+  header .subtitle {
+    font-style: italic;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  h2 {
+    font-size: 20px;
+    margin-top: 40px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 6px;
+  }
+  h3 {
+    font-size: 15.5px;
+    margin-top: 24px;
+    color: #111;
+    font-style: italic;
+  }
+  p { margin: 0.6em 0; }
+
+  code, .code {
+    font-family: var(--mono);
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 13px;
+    color: #222;
+  }
+  pre {
+    font-family: var(--mono);
+    background: #f2f4f7;
+    border-left: 3px solid #555;
+    padding: 10px 14px;
+    margin: 14px 0;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: #f0f4fa;
+    padding: 10px 16px;
+    margin: 14px 0;
+    font-size: 14.5px;
+  }
+  .callout .tag {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    text-transform: uppercase;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .num-box {
+    background: #f5f8ee;
+    border: 1px solid #bcc9a8;
+    border-radius: 3px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 14.5px;
+  }
+  .num-box .title {
+    font-weight: bold;
+    font-variant: small-caps;
+    color: #4a5a2b;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  table { border-collapse: collapse; margin: 14px auto; font-size: 13px; }
+  th, td { border: 1px solid #bbb; padding: 4px 10px; text-align: left; }
+  th { background: #eee; }
+  tr.alt td { background: #fafafa; }
+  td.num, th.num { text-align: right; font-family: var(--mono); }
+
+  .katex-display { margin: 0.7em 0 !important; }
+  .katex { font-size: 1.05em; }
+
+  .step-divider {
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10px;
+    color: var(--muted);
+    margin: 24px 0 4px;
+    border-top: 1px solid var(--rule);
+    padding-top: 8px;
+  }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Paper 3 · Internal walkthrough</div>
+  <h1>BLUPs-vs-Predictors — Worked Example with Opus 4.5</h1>
+  <div class="subtitle">Checking Assumption 6 of Model 2 (random intercepts orthogonal to fixed-effect predictors) using extraversion as the test predictor</div>
+</header>
+
+<h2>Setup — What we're doing</h2>
+<p>
+We want to test <strong>Assumption 6</strong> for Model 2 fit on Claude Opus 4.5: <em>are the 100 random intercepts (BLUPs) orthogonal to the</em> <code>extraverted</code> <em>indicator?</em>
+</p>
+<p>
+"Orthogonal" here means uncorrelated — the mean BLUP among extraverts should equal the mean BLUP among introverts, up to sampling noise. If orthogonality holds, \( \beta_{\text{extraverted}} \) has fully captured extraversion's effect; if not, some of extraversion's true effect has leaked into the random intercepts, biasing the fixed-effect estimate.
+</p>
+
+<h2>Step 1 — Extract the 100 BLUPs from the fitted model</h2>
+<p>
+From the stored JSON output (<code>model2.blups.intercepts</code> for Opus 4.5):
+</p>
+<ul>
+  <li>100 BLUPs total, drawn from Normal(0, \( \hat{\sigma}^2_{\text{agent}} \)) where \( \hat{\sigma}_{\text{agent}} = 1.90 \).</li>
+  <li>Overall sample variance of the 100 BLUPs ≈ 1.69 (slightly less than \( \hat{\sigma}^2_{\text{agent}} = 3.61 \) because BLUPs are shrunken estimates, not direct draws).</li>
+  <li>Range: min <span class="code">−3.02</span>, median <span class="code">−0.01</span>, max <span class="code">+5.55</span>.</li>
+</ul>
+
+<h2>Step 2 — Split by extraversion and compute group means</h2>
+<p>
+Each of Opus 4.5's 100 agents has a trait profile. Splitting on <code>extraverted</code>:
+</p>
+<ul>
+  <li><strong>Extraverted</strong> group: \( n_E = 53 \) agents.</li>
+  <li><strong>Introverted</strong> group: \( n_I = 47 \) agents.</li>
+</ul>
+<p>
+Compute each group's mean BLUP:
+</p>
+\[ M_E = \frac{1}{n_E}\sum_{i\,:\,\text{extraverted}} u_i = +0.055 \]
+\[ M_I = \frac{1}{n_I}\sum_{i\,:\,\text{introverted}} u_i = +0.111 \]
+<p>
+The statistic of interest is the difference:
+</p>
+\[ \Delta = M_E - M_I = +0.055 - 0.111 = -0.056 \]
+<p>
+Under perfect orthogonality, \( \mathbb{E}[\Delta] = 0 \).
+</p>
+
+<h2>Step 3 — Standard error of \( \Delta \)</h2>
+
+<h3>Piece 1: Why variance of a sample mean is \( \sigma^2 / n \)</h3>
+<p>
+Take any random variable \(X\) with variance \( \sigma^2 \). Averaging \(n\) independent draws gives
+\( M = (X_1 + X_2 + \dots + X_n) / n \). Each draw contributes variance \( \sigma^2 / n^2 \) to \(M\), and there are \(n\) independent draws summing, so:
+</p>
+\[ \operatorname{Var}(M) = n \cdot \frac{\sigma^2}{n^2} = \frac{\sigma^2}{n} \]
+<p>
+Averaging \(n\) observations shrinks variance by a factor of \(n\). More data = tighter estimate.
+</p>
+
+<h3>Piece 2: Why variances add for the difference of independent means</h3>
+<p>
+For any two independent random variables \(A\) and \(B\):
+</p>
+\[ \operatorname{Var}(A - B) = \operatorname{Var}(A) + \operatorname{Var}(B) \]
+<p>
+Variances add even for differences, because variance measures <em>spread</em>; subtracting increases total spread just as adding does. The key requirement is independence — here \( M_E \) and \( M_I \) are computed on disjoint sets of agents, so they are independent.
+</p>
+
+<h3>Piece 3: Within-group variances for Opus 4.5</h3>
+
+<p>
+The sample variance of a set of \(n\) values \( x_1, x_2, \ldots, x_n \) with mean \( \bar{x} \) is:
+</p>
+\[ s^2 = \frac{1}{n - 1} \sum_{i=1}^{n} (x_i - \bar{x})^2 \]
+<p>
+The denominator is \(n - 1\), not \(n\) — this is <strong>Bessel's correction</strong>, which gives an <em>unbiased</em> estimate of the population variance. Using \(n\) would slightly underestimate the true variance because you're computing deviations from the sample mean (not the unknown true mean), which is always a bit too close to the data.
+</p>
+
+<h4 style="font-style:italic;margin-top:18px;margin-bottom:6px;color:#333">Computing \( \sigma^2_E \) for the 53 extraverted agents</h4>
+<p>Recall \( M_E = +0.0554 \). For each of the 53 extraverted BLUPs, compute the squared deviation \( (u_i - M_E)^2 \):</p>
+
+<table>
+  <thead>
+    <tr><th>agent_id</th><th class="num">\(u_i\)</th><th class="num">\(u_i - M_E\)</th><th class="num">\((u_i - M_E)^2\)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td class="num">−0.027</td><td class="num">−0.0822</td><td class="num">0.006756</td></tr>
+    <tr class="alt"><td>3</td><td class="num">−0.001</td><td class="num">−0.0560</td><td class="num">0.003138</td></tr>
+    <tr><td>11</td><td class="num">−0.000</td><td class="num">−0.0556</td><td class="num">0.003093</td></tr>
+    <tr class="alt"><td>15</td><td class="num">−0.003</td><td class="num">−0.0581</td><td class="num">0.003371</td></tr>
+    <tr><td>17</td><td class="num">−0.005</td><td class="num">−0.0603</td><td class="num">0.003636</td></tr>
+    <tr class="alt"><td>18</td><td class="num">−0.000</td><td class="num">−0.0554</td><td class="num">0.003069</td></tr>
+    <tr><td>22</td><td class="num">−0.018</td><td class="num">−0.0730</td><td class="num">0.005332</td></tr>
+    <tr class="alt"><td>24</td><td class="num">+1.466</td><td class="num">+1.4104</td><td class="num">1.989340</td></tr>
+    <tr><td>26</td><td class="num">−2.149</td><td class="num">−2.2040</td><td class="num">4.857489</td></tr>
+    <tr class="alt"><td>27</td><td class="num">−0.000</td><td class="num">−0.0554</td><td class="num">0.003070</td></tr>
+    <tr><td colspan="4" style="text-align:center;color:#888">... 43 more agents ...</td></tr>
+  </tbody>
+</table>
+
+<p>Summing all 53 squared deviations:</p>
+\[ \sum_{i \in \text{extraverted}} (u_i - M_E)^2 = 45.4612 \]
+<p>Divide by \( n_E - 1 = 52 \):</p>
+\[ \sigma^2_E = \frac{45.4612}{52} = \mathbf{0.8743} \]
+
+<h4 style="font-style:italic;margin-top:18px;margin-bottom:6px;color:#333">Computing \( \sigma^2_I \) for the 47 introverted agents</h4>
+<p>Recall \( M_I = +0.1112 \). Same procedure:</p>
+
+<table>
+  <thead>
+    <tr><th>agent_id</th><th class="num">\(u_i\)</th><th class="num">\(u_i - M_I\)</th><th class="num">\((u_i - M_I)^2\)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td class="num">−2.067</td><td class="num">−2.1783</td><td class="num">4.745140</td></tr>
+    <tr class="alt"><td>2</td><td class="num">−0.184</td><td class="num">−0.2950</td><td class="num">0.087020</td></tr>
+    <tr><td>4</td><td class="num">−0.253</td><td class="num">−0.3642</td><td class="num">0.132647</td></tr>
+    <tr class="alt"><td>5</td><td class="num">−0.061</td><td class="num">−0.1723</td><td class="num">0.029704</td></tr>
+    <tr><td>6</td><td class="num">−1.283</td><td class="num">−1.3944</td><td class="num">1.944441</td></tr>
+    <tr class="alt"><td>7</td><td class="num">+1.960</td><td class="num">+1.8490</td><td class="num">3.418970</td></tr>
+    <tr><td>8</td><td class="num">−0.103</td><td class="num">−0.2144</td><td class="num">0.045954</td></tr>
+    <tr class="alt"><td>9</td><td class="num">−0.056</td><td class="num">−0.1672</td><td class="num">0.027968</td></tr>
+    <tr><td>10</td><td class="num">−0.521</td><td class="num">−0.6326</td><td class="num">0.400177</td></tr>
+    <tr class="alt"><td>12</td><td class="num">+2.880</td><td class="num">+2.7688</td><td class="num">7.666169</td></tr>
+    <tr><td colspan="4" style="text-align:center;color:#888">... 37 more agents ...</td></tr>
+  </tbody>
+</table>
+
+<p>Summing all 47 squared deviations:</p>
+\[ \sum_{i \in \text{introverted}} (u_i - M_I)^2 = 121.3889 \]
+<p>Divide by \( n_I - 1 = 46 \):</p>
+\[ \sigma^2_I = \frac{121.3889}{46} = \mathbf{2.6389} \]
+
+<div class="callout">
+  <span class="tag">Observation</span>
+  Notice \( \sigma^2_I = 2.64 \) is about <strong>3× larger</strong> than \( \sigma^2_E = 0.87 \). Opus 4.5's introverted agents have far more spread in their random intercepts than its extraverts. Looking at the tables above, the introverts include outliers like agent 12 (\(u_{12} = +2.88\)) and agent 7 (\(+1.96\)) — while the extraverts are mostly clustered near zero with just two large outliers (agents 24 and 26). This asymmetry doesn't affect the orthogonality conclusion (which only depends on the difference of <em>means</em>), but it's an interesting descriptive detail about the BLUP distribution under this model.
+</div>
+
+<p>Summary for the next step:</p>
+\[ \sigma^2_E = 0.8743, \quad \sigma^2_I = 2.6389 \]
+
+<h3>Piece 4: Assemble the SE</h3>
+<p>
+Each group mean has variance \( \sigma^2 / n \):
+</p>
+\[ \operatorname{Var}(M_E) = \frac{\sigma^2_E}{n_E} = \frac{0.874}{53} = 0.0165 \]
+\[ \operatorname{Var}(M_I) = \frac{\sigma^2_I}{n_I} = \frac{2.639}{47} = 0.0562 \]
+<p>
+Variance of the difference adds (independent groups):
+</p>
+\[ \operatorname{Var}(\Delta) = \operatorname{Var}(M_E) + \operatorname{Var}(M_I) = 0.0165 + 0.0562 = 0.0727 \]
+<p>
+Standard error is the square root:
+</p>
+\[ \operatorname{SE}(\Delta) = \sqrt{ \frac{\sigma^2_E}{n_E} + \frac{\sigma^2_I}{n_I} } = \sqrt{0.0727} = \mathbf{0.270} \]
+
+<div class="num-box">
+  <div class="title">Interpretation</div>
+  If this study were repeated many times under identical conditions, the estimated \( \Delta \) would wobble around its true value with a typical spread of 0.27 log-odds. That is our noise floor.
+</div>
+
+<h2>Step 4 — 95% confidence interval</h2>
+
+<h3>Why 1.96</h3>
+<p>
+Under the Central Limit Theorem, with 30+ agents per group, \( \Delta \) is approximately Normally distributed around its true value. For a Standard Normal distribution, 95% of the probability mass lies within \( \pm 1.96 \) standard deviations of the mean. So we take \( \pm 1.96 \times \operatorname{SE}(\Delta) \) to capture 95% of plausible values.
+</p>
+
+<h3>Plug in the Opus 4.5 numbers</h3>
+\[ \operatorname{CI}_{95\%} = \hat\Delta \pm 1.96 \times \operatorname{SE}(\hat\Delta) = -0.056 \pm 1.96 \times 0.270 \]
+\[ = -0.056 \pm 0.529 \]
+\[ = [\, -0.585,\; +0.473 \,] \]
+
+<h3>How to read it</h3>
+<p>
+<strong>Frequentist coverage:</strong> "If we repeated this study many times and constructed a CI this way each time, 95% of those CIs would contain the true \( \Delta \)."
+</p>
+<p>
+<strong>Pragmatic:</strong> "The true \( \Delta \) is plausibly between \( -0.585 \) and \( +0.473 \); values outside that range are ruled out at the 5% significance level."
+</p>
+
+<h2>Step 5 — Decision and interpretation</h2>
+
+<p>
+<strong>Does the CI contain 0?</strong> <strong>Yes</strong> — \( [-0.585, +0.473] \) straddles zero comfortably.
+</p>
+<p>
+<strong>Null hypothesis:</strong> \( H_0:\; \mathbb{E}[\Delta] = 0 \) (BLUPs orthogonal to extraversion).
+</p>
+<p>
+<strong>Decision:</strong> Fail to reject \( H_0 \) at \( \alpha = 0.05 \).
+</p>
+<p>
+<strong>Conclusion:</strong> No evidence of systematic correlation between BLUPs and extraversion. \( \beta_{\text{extraverted}} \) in Opus 4.5 fully absorbs the systematic effect of extraversion; no leakage into random intercepts. Assumption 6 passes for this predictor.
+</p>
+
+<div class="callout">
+  <span class="tag">Dashboard</span>
+  On the Appendix Figure B2 → "BLUPs vs predictors" view, Opus 4.5's "Extra vs I" row shows a dot at \( \Delta \approx -0.06 \) with whiskers from \( -0.58 \) to \( +0.47 \). The dot is the config color (purple), not red, because the CI crosses zero.
+</div>
+
+<h2>Full predictor-by-predictor table (Opus 4.5)</h2>
+<p>
+Applying the same Step 2 through Step 5 logic to the other six predictors gives the full scoreboard:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Predictor</th><th class="num">\( \Delta \) (est.)</th><th class="num">SE</th><th class="num">95% CI</th><th>Pass?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Age (over range)</td><td class="num">+0.120</td><td class="num">0.436</td><td class="num">[−0.735, +0.975]</td><td>✓</td></tr>
+    <tr class="alt"><td>Male</td><td class="num">+0.033</td><td class="num">0.261</td><td class="num">[−0.479, +0.545]</td><td>✓</td></tr>
+    <tr><td>Extraverted</td><td class="num">−0.056</td><td class="num">0.270</td><td class="num">[−0.585, +0.473]</td><td>✓</td></tr>
+    <tr class="alt"><td>Agreeable</td><td class="num">+0.029</td><td class="num">0.257</td><td class="num">[−0.474, +0.532]</td><td>✓</td></tr>
+    <tr><td>Conscientious</td><td class="num">+0.041</td><td class="num">0.265</td><td class="num">[−0.478, +0.560]</td><td>✓</td></tr>
+    <tr class="alt"><td>Emot. Stable</td><td class="num">−0.021</td><td class="num">0.285</td><td class="num">[−0.580, +0.538]</td><td>✓</td></tr>
+    <tr><td>Open to Exp.</td><td class="num">+0.053</td><td class="num">0.263</td><td class="num">[−0.462, +0.568]</td><td>✓</td></tr>
+  </tbody>
+</table>
+
+<p>
+All seven 95% CIs contain zero \( \Rightarrow \) <strong>Opus 4.5's random intercepts are orthogonal to every fixed-effect predictor.</strong> Assumption 6 holds cleanly across the board for this configuration.
+</p>
+
+<h2>Defense-ready one-sentence summary</h2>
+<div class="callout">
+  <span class="tag">Elevator pitch</span>
+  For each of the seven fixed-effect predictors in Model 2, we computed the difference of mean BLUPs between groups (for dummy predictors) or across the full range (for age), formed its standard error via \( \sqrt{\sigma^2_E / n_E + \sigma^2_I / n_I} \), and checked whether the 95% CI crosses zero. A CI crossing zero indicates the random intercepts are orthogonal to that predictor — i.e., the fixed-effect coefficient is fully absorbing the systematic signal with no leakage. For Opus 4.5, all seven predictors passed this test, supporting Assumption 6 of the mixed-model identification.
+</div>
+
+<footer>
+  Companion walkthrough to Appendix Figure B2 · generated 2026-04-21<br>
+  Questions: rossfw@vt.edu
+</footer>
+
+</body>
+</html>

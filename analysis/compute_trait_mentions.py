@@ -147,17 +147,27 @@ def process_config(micro_path, patterns, agent_lookup):
     """Process one config's micro CSV.
 
     Returns:
-        mention_rates: {dim: rate} for all 7 dimensions
+        mention_rates: {dim: rate} for all 7 dimensions (overall marginal)
         echo_rates: {dim: {assigned, unassigned}} for Big Five only
-        pole_rates: {dim_pole: rate} for Big Five only
+        pole_rates: {dim_pole: rate} — WITHIN-GROUP dimension mention rate.
+            For each agent-assigned pole, the rate is:
+              P(any keyword from that dimension appears in response
+                | agent assigned this pole)
+            e.g., pole_rates["conscientiousness_positive"] = % of
+            conscientious-trait agents' responses that mention any
+            conscientiousness keyword (either "conscientious" or
+            "unconscientious"). This is what Figure 32 renders.
         flag_rows: list of dicts for mention_flags.csv
     """
     total = 0
     dim_mentions = {d: 0 for d in ALL_DIMENSIONS}
-    pole_mentions = {}
-    for dim in TRAIT_KEYWORDS:
-        pole_mentions[f"{dim}_positive"] = 0
-        pole_mentions[f"{dim}_negative"] = 0
+
+    # Within-group counters: per dim, per agent pole assignment
+    #   pole_group[dim][pole]["total"]        — # responses from agents assigned this pole
+    #   pole_group[dim][pole]["dim_mentions"] — # of those responses that mention ANY dim keyword
+    pole_group = {dim: {"positive": {"total": 0, "dim_mentions": 0},
+                        "negative": {"total": 0, "dim_mentions": 0}}
+                  for dim in TRAIT_KEYWORDS}
 
     echo = {d: {"assigned_mentions": 0, "assigned_total": 0,
                 "unassigned_mentions": 0, "unassigned_total": 0}
@@ -193,13 +203,15 @@ def process_config(micro_path, patterns, agent_lookup):
 
                 if has_any:
                     dim_mentions[dim] += 1
-                if has_pos:
-                    pole_mentions[f"{dim}_positive"] += 1
-                if has_neg:
-                    pole_mentions[f"{dim}_negative"] += 1
+
+                # Within-group tally for Figure 32
+                agent_pole = agent_info["traits"].get(dim)
+                if agent_pole in ("positive", "negative"):
+                    pole_group[dim][agent_pole]["total"] += 1
+                    if has_any:
+                        pole_group[dim][agent_pole]["dim_mentions"] += 1
 
                 # Echo analysis
-                agent_pole = agent_info["traits"].get(dim)
                 if agent_pole == "positive":
                     echo[dim]["assigned_total"] += 1
                     if has_pos:
@@ -245,10 +257,15 @@ def process_config(micro_path, patterns, agent_lookup):
             "unassigned": round(e["unassigned_mentions"] / e["unassigned_total"], 4) if e["unassigned_total"] else 0,
         }
 
+    # Within-group pole rates: for each agent pole, what % of those agents'
+    # responses mention any keyword from the dimension. Fig 32 uses these.
     pole_rates = {}
     for dim in TRAIT_KEYWORDS:
-        pole_rates[f"{dim}_positive"] = round(pole_mentions[f"{dim}_positive"] / total, 4) if total else 0
-        pole_rates[f"{dim}_negative"] = round(pole_mentions[f"{dim}_negative"] / total, 4) if total else 0
+        for pole in ("positive", "negative"):
+            g = pole_group[dim][pole]
+            pole_rates[f"{dim}_{pole}"] = (
+                round(g["dim_mentions"] / g["total"], 4) if g["total"] else 0
+            )
 
     return mention_rates, echo_rates, pole_rates, flag_rows
 

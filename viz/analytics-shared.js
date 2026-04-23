@@ -9,6 +9,7 @@ let modelMetadata = [];  // rows from data/metadata/models.csv
 // tab2Rendered removed — Model Characteristics tab retired
 let tab3Rendered = false;
 let agentTabRendered = false;
+let appendixRegressionsRendered = false;
 let agentsData = null; // cached agents.json
 let tabRegRendered = false;
 let _cohortAllRegs = null;

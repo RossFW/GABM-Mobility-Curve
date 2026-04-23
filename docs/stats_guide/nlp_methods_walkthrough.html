@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NLP Methods Walkthrough — Figs 40, 41 &amp; 42</title>
+<style>
+body { font-family: Georgia, 'Libre Baskerville', serif; max-width: 1100px; margin: 0 auto; padding: 28px; color: #222; line-height: 1.55; }
+h1 { border-bottom: 2px solid #333; padding-bottom: 10px; }
+h2 { margin-top: 44px; border-bottom: 1px solid #ccc; padding-bottom: 6px; color: #1a4a8a; }
+h3 { color: #333; margin-top: 28px; }
+.box { background: #fafafa; border-left: 3px solid #1a4a8a; padding: 12px 18px; margin: 16px 0; font-size: 13px; }
+.response { background: #fffef5; border: 1px solid #e0d8a0; padding: 10px 14px; margin: 8px 0; font-family: Menlo, monospace; font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
+.response .meta { color: #888; font-style: italic; display: block; margin-bottom: 4px; font-family: Georgia, serif; }
+table { border-collapse: collapse; margin: 12px 0; font-size: 12px; font-family: Menlo, monospace; }
+table td, table th { border: 1px solid #ccc; padding: 4px 9px; text-align: right; }
+table th { background: #eee; text-align: center; font-family: Georgia, serif; }
+.formula { background: #f0f7ff; border: 1px solid #b3d4fc; border-radius: 4px; padding: 10px 16px; margin: 10px 0; font-family: Cambria, Georgia, serif; font-size: 14px; }
+code { background: #eee; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.callout { background: #e3f2fd; border-left: 4px solid #1a4a8a; padding: 10px 16px; margin: 14px 0; font-size: 13px; }
+.sim-hi { background: #c8e6c9; }
+.sim-mid { background: #fff8e1; }
+.sim-lo { background: #ffecb3; }
+hr { border: none; border-top: 1px dashed #ccc; margin: 30px 0; }
+.kv { font-family: Menlo, monospace; font-size: 12px; color: #555; }
+ol.steps li, ul.notes li { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>NLP Methods Walkthrough</h1>
+<p style="font-style:italic;color:#666">How we built <strong>Figure 40 (Response Text Similarity)</strong>, <strong>Figure 41 (Persona Individuation)</strong>, and <strong>Figure 42 (Reasoning Diversity)</strong>, using real Opus 4.5 data as the running example.</p>
+
+<div class="callout">
+<strong>TL;DR:</strong>
+Figure 40 uses simple word-overlap statistics (no AI needed) to ask: when a model makes the same decision 5 times in a row, does it also write the same words? Figures 41 &amp; 42 go deeper, using <em>embeddings</em> — turning each reasoning response into a 3,072-dimensional vector (via OpenAI <code>text-embedding-3-large</code>) so that similar texts end up near each other in that space. Figure 41 tests whether reasoning for the SAME agent is more similar than reasoning for DIFFERENT agents (persona individuation). Figure 42 measures how much semantic spread a model uses overall (reasoning diversity).
+</div>
+
+<h2>Figure 40 — Response Text Similarity (the simple baseline)</h2>
+
+<p>Before reaching for embeddings, we ask a simpler question: <em>when a model agrees with itself 5 times (same decision across all 5 reps), does it also write the same text?</em> We only look at groups where all 5 reps produced the same decision, because comparing "yes" text to "no" text would trivially show low similarity.</p>
+
+<h3>Metric 1 — Exact match</h3>
+<p>The response strings are compared character-by-character. If all 5 are identical, that's an exact match. This catches models that are fully deterministic (temperature = 0) and have no output randomness at all. In practice, even temperature-0 models rarely hit 100% because of minor nondeterminism in GPU floating-point arithmetic.</p>
+
+<h3>Metric 2 — Jaccard similarity (word overlap)</h3>
+<p>Jaccard asks: what fraction of the total unique words appear in both responses?</p>
+
+<div class="formula">
+Jaccard(<em>A</em>, <em>B</em>) = |words in A ∩ B| / |words in A ∪ B| &nbsp;&nbsp;∈ [0, 1]
+<br><br>
+<small>Example: A = "the virus is airborne and deadly", B = "the virus is contagious"<br>
+∩ = {the, virus, is} → 3 shared words<br>
+∪ = {the, virus, is, airborne, and, deadly, contagious} → 7 unique words<br>
+Jaccard = 3/7 ≈ 0.43</small>
+</div>
+
+<p>For each unanimous group of 5 reps, there are C(5,2) = 10 pairwise comparisons. We average Jaccard across all 10 pairs, then average across all unanimous groups. A score near 1.0 means the model writes nearly identical sentences every time; near 0.0 means it uses completely different words even though the decision was the same.</p>
+
+<div class="box">
+<strong>How this differs from Figures 41 &amp; 42:</strong> Jaccard is purely lexical — it counts shared words, not shared meaning. Two responses that say the same thing in completely different words ("I am concerned about my health" vs. "My wellbeing worries me") would score Jaccard ≈ 0 but cosine similarity ≈ 0.85. Fig 40 is the surface-level check; Figs 41 &amp; 42 are the semantic check.
+</div>
+
+<h2>Step 1 — What is an embedding?</h2>
+
+<p>Each of the 420,000 reasoning responses was sent to OpenAI's <code>text-embedding-3-large</code> endpoint, which returns a 3,072-dimensional vector of real numbers. Example:</p>
+
+<div class="response">
+<span class="meta">Claude Opus 4.5 · agent 23 · infection 3.3% · rep 0 · decision=yes</span>
+As someone who is introverted, neurotic, and conscientious, I would be very concerned about the 3.3% infection rate in Dewberry Hollow. That's a significant number of new cases in just one day. My neurotic tendencies make me anxious about health risks, and my conscientious nature means I take responsibilities seriously - both to protect myself and others…
+</div>
+
+<p>→ becomes a vector like <code class="kv">[0.0248, −0.0117, 0.0094, 0.0036, −0.0081, …]</code> with 3,072 entries. The model is trained so that <strong>texts with similar meanings produce vectors that point in similar directions</strong>. The exact numbers have no inherent meaning — only relative angles between vectors do.</p>
+
+<div class="formula">
+<strong>Cosine similarity</strong> between two vectors <em>a</em>, <em>b</em>:
+<br><br>
+cos(<em>a</em>, <em>b</em>) = (<em>a</em> · <em>b</em>) / (‖<em>a</em>‖ · ‖<em>b</em>‖) &nbsp;&nbsp;∈ [−1, 1]
+<br><br>
+<small>1 = identical direction (same meaning). 0 = orthogonal. −1 = opposite meaning. For normalized vectors on a unit sphere, cosine similarity is the dot product.</small>
+</div>
+
+<h2>Step 2 — Figure 41: Persona Individuation</h2>
+
+<h3>Within-agent similarity (same persona, 5 reps)</h3>
+
+<p>Each agent was asked the same question 5 times at each of 40 infection levels. We look at the 5 responses and ask: <em>how similar are they to each other?</em></p>
+
+<p>Here are all 5 reps for <strong>agent 23 at infection 3.3%</strong>:</p>
+
+<div class="response">
+<span class="meta">rep 0 · decision=yes</span>As someone who is introverted, neurotic, and conscientious, I would be very concerned about the 3.3% infection rate in Dewberry Hollow. That's a significant number of new cases in just one day. My neurotic tendencies make me anxious about health risks, and my conscientious nature means I take responsibilities seriously — both to protect myself and others. Being closed to experience means I'm not inclined to break my routine…</div>
+
+<div class="response">
+<span class="meta">rep 1 · decision=yes</span>As someone who is introverted, neurotic, and conscientious, I would be very concerned about the 3.3% infection rate in Dewberry Hollow. That's a significant number of new cases in just one day. My neurotic tendencies make me anxious about health risks, and my conscientious nature means I take responsibilities seriously — both to protect myself and others. Being closed to experience means I'm not inclined to…</div>
+
+<div class="response">
+<span class="meta">rep 2 · decision=yes</span>As someone who is introverted, neurotic, and conscientious, I would be very concerned about the 3.3% infection rate… [near-identical to rep 0/1]</div>
+
+<div class="response">
+<span class="meta">rep 3 · decision=yes</span>As someone who is introverted, neurotic, and conscientious, I would be very concerned about the 3.3% infection rate… [near-identical to rep 0]</div>
+
+<div class="response">
+<span class="meta">rep 4 · decision=yes</span>As someone who is introverted, neurotic, and conscientious, I would be very concerned about the 3.3% infection rate… [slightly different middle sentence but same overall frame]</div>
+
+<p>Compute cosine similarity for every pair of reps (there are C(5,2) = 10 pairs). Here is the actual similarity matrix for this agent+level:</p>
+
+<table>
+<thead><tr><th>&nbsp;</th><th>rep 0</th><th>rep 1</th><th>rep 2</th><th>rep 3</th><th>rep 4</th></tr></thead>
+<tbody>
+<tr><th>rep 0</th><td class="sim-hi">1.0000</td><td class="sim-hi">0.9773</td><td class="sim-hi">0.9959</td><td class="sim-hi">0.9959</td><td class="sim-hi">0.9806</td></tr>
+<tr><th>rep 1</th><td class="sim-hi">0.9773</td><td class="sim-hi">1.0000</td><td class="sim-hi">0.9778</td><td class="sim-hi">0.9778</td><td class="sim-hi">0.9673</td></tr>
+<tr><th>rep 2</th><td class="sim-hi">0.9959</td><td class="sim-hi">0.9778</td><td class="sim-hi">1.0000</td><td class="sim-hi">1.0000</td><td class="sim-hi">0.9809</td></tr>
+<tr><th>rep 3</th><td class="sim-hi">0.9959</td><td class="sim-hi">0.9778</td><td class="sim-hi">1.0000</td><td class="sim-hi">1.0000</td><td class="sim-hi">0.9809</td></tr>
+<tr><th>rep 4</th><td class="sim-hi">0.9806</td><td class="sim-hi">0.9673</td><td class="sim-hi">0.9809</td><td class="sim-hi">0.9809</td><td class="sim-hi">1.0000</td></tr>
+</tbody>
+</table>
+
+<p>Take the mean of the 10 off-diagonal pairs (upper triangle), ignoring the 1.0s on the diagonal:</p>
+
+<div class="formula">
+<strong>within-agent similarity for (agent 23, level 3.3%)</strong> = (0.9773 + 0.9959 + 0.9959 + 0.9806 + 0.9778 + 0.9778 + 0.9673 + 1.0000 + 0.9809 + 0.9809) / 10 = <strong>0.9834</strong>
+</div>
+
+<p><strong>Repeat for all 100 agents × 40 infection levels = 4,000 groups.</strong> Average their 4,000 within-agent means to get one number per model. For Claude Opus 4.5, this comes out to <strong>within_mean = 0.959</strong>.</p>
+
+<h3>Across-agent similarity (different personas, same infection level)</h3>
+
+<p>Same measure, but now picking <em>pairs of responses from DIFFERENT agents at the same infection level</em>. This is our null baseline: if the model always wrote exactly the same template regardless of agent, across-agent and within-agent would be identical.</p>
+
+<p>Here are 3 concrete across-agent comparisons with agent 23, rep 0 (shown above) as the reference:</p>
+
+<div class="response">
+<span class="meta">agent 30 (Laura) · infection 3.3% · decision=no</span>As Laura, I'm extroverted and antagonistic, which means I don't like being told what to do and I crave social interaction. I'm also unconscientious, meaning I'm not particularly careful or responsible about risks. Being closed to experience means I'm resistant to changing my routine. I feel healthy…</div>
+<p class="kv">→ cosine similarity with agent 23, rep 0: <strong>0.7492</strong> (very different persona, different decision)</p>
+
+<div class="response">
+<span class="meta">agent 50 · infection 3.3% · decision=yes</span>As someone who is introverted, neurotic, and conscientious, I would be very concerned about the 3.3% infection rate in Dewberry Hollow. That's a significant number of new cases in just one day. Being 60 years old puts me in a higher risk category, and my neurotic tendencies would make me anxious about health risks…</div>
+<p class="kv">→ cosine similarity with agent 23, rep 0: <strong>0.9524</strong> (same personality traits, similar reasoning — high similarity)</p>
+
+<div class="response">
+<span class="meta">agent 84 · infection 3.3% · decision=no</span>As someone who is antagonistic and unconscientious, I'm not particularly concerned about following safety guidelines or being considerate of others' health. I'm emotionally stable, so I'm not prone to anxiety or panic about the virus…</div>
+<p class="kv">→ cosine similarity with agent 23, rep 0: <strong>0.7073</strong> (opposite persona, opposite decision — lowest similarity)</p>
+
+<p>To compute across-agent for the full model:</p>
+
+<ol class="steps">
+<li>For each of the 40 infection levels, sample 1,000 random pairs of <em>different</em> agents.</li>
+<li>Compute cosine similarity for each pair.</li>
+<li>Average the 1,000 pair-similarities → one mean per infection level.</li>
+<li>Average across the 40 levels → <strong>across_mean</strong>.</li>
+</ol>
+
+<p>For Opus 4.5, this comes out to <strong>across_mean = 0.808</strong>.</p>
+
+<h3>The persona-individuation delta</h3>
+
+<div class="formula">
+Δ = within_mean − across_mean = 0.959 − 0.808 = <strong>0.151</strong>
+</div>
+
+<p><strong>Interpretation</strong>: Opus 4.5's reasoning for the same agent is 15% more similar (in cosine terms) than its reasoning for a different agent at the same infection level. The gap is meaningfully positive → Opus does individuate personas. In contrast, <strong>GPT-5.2 (high) has Δ = 0.02</strong> — its reasoning for agent 23 looks essentially identical to its reasoning for agent 84 regardless of the personality traits we assigned, which means GPT-5.2 is largely ignoring the persona information.</p>
+
+<h2>Step 3 — Figure 42: Effective Reasoning Modes by Decision</h2>
+
+<p>Figure 42 asks: <em>how many distinct reasoning templates does a model use — and does that differ between "stay home" and "go out" decisions?</em></p>
+
+<h3>The core idea: K-Means clustering on embeddings</h3>
+
+<p>If you project all 20,000 response embeddings into space, responses with similar reasoning will cluster together. K-Means finds K cluster centroids that minimize the distance of each point to its nearest centroid. The question is: what K best describes the actual structure?</p>
+
+<p>We run K-Means separately on <strong>yes-only</strong> (stay-home) responses and <strong>no-only</strong> (go-out) responses. This matters because running it on all responses together would find the yes/no decision split as a dominant source of clustering — inflating K artificially and obscuring the reasoning template structure within each decision.</p>
+
+<h3>Choosing K: silhouette score</h3>
+
+<p>For each K ∈ {2, 3, …, 20}, we run K-Means and score it with the <strong>silhouette score</strong> (Rousseeuw 1987):</p>
+
+<div class="formula">
+<strong>Silhouette</strong> for a point <em>i</em> in cluster C:
+<br>
+&nbsp;&nbsp;<em>a(i)</em> = mean distance from <em>i</em> to other points in its own cluster (how tight is my cluster?).<br>
+&nbsp;&nbsp;<em>b(i)</em> = mean distance from <em>i</em> to the nearest OTHER cluster (how far am I from the next cluster?).<br>
+&nbsp;&nbsp;<strong>s(i)</strong> = (<em>b(i)</em> − <em>a(i)</em>) / max(<em>a(i)</em>, <em>b(i)</em>) &nbsp;∈ [−1, 1]
+<br><br>
+<small>s = 1: tightly in your cluster, far from others. s = 0: on the boundary between clusters. s = −1: probably in the wrong cluster. We average over all points. The K with the highest average silhouette is the "best" K.</small>
+</div>
+
+<p>The K that maximizes the silhouette is reported as <strong>best_k</strong> — the effective number of reasoning modes for that decision type.</p>
+
+<h3>Worked example: Claude Opus 4.5</h3>
+
+<p>Opus 4.5 has 20,000 responses: roughly 12,000 yes and 8,000 no. Running on yes-only:</p>
+
+<table>
+<thead><tr><th>K</th><th>silhouette (yes-only)</th></tr></thead>
+<tbody>
+<tr><td><strong>2</strong></td><td class="sim-hi"><strong>best ← stay-home reasoning has 2 main modes</strong></td></tr>
+<tr><td>3</td><td class="sim-mid">lower</td></tr>
+<tr><td>4–20</td><td class="sim-lo">lower still</td></tr>
+</tbody>
+</table>
+
+<p>Running on no-only:</p>
+
+<table>
+<thead><tr><th>K</th><th>silhouette (no-only)</th></tr></thead>
+<tbody>
+<tr><td>2–19</td><td class="sim-lo">gradually increasing</td></tr>
+<tr><td><strong>20</strong></td><td class="sim-hi"><strong>best ← go-out reasoning has 20 distinct modes</strong></td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<strong>What this means for Opus 4.5:</strong> When deciding to stay home, it basically writes one of two templates — probably a high-anxiety version and a mild-concern version. When deciding to go out, it has 20 distinct reasoning modes — it invents varied justifications for leaving (social obligation, feels healthy, low risk tolerance, etc.). This is an asymmetric repertoire: <em>rigid when cautious, creative when dismissing risk</em>.
+</div>
+
+<p>By contrast, <strong>GPT-5.2</strong> shows best_k = 2 for both yes and no — two templates total regardless of direction. And <strong>GPT-3.5-Turbo</strong> shows best_k = 19/17 for yes/no — many rigid templates for both, consistent with its 70% exact-match rate in Figure 40.</p>
+
+<h3>Why PCA to 128 dimensions first?</h3>
+
+<p>K-Means on raw 3,072-dim vectors is slow and noisy (curse of dimensionality — all points appear equidistant in very high dimensions). Projecting to 128 PCA dimensions preserves ~90% of the variance and speeds compute ~20×. Standard practice for clustering high-dimensional embeddings (Aggarwal et al. 2001).</p>
+
+<h2>Step 4 — Putting it all together</h2>
+
+<div class="box">
+<strong>Figure 41</strong>: for each of 21 models, compute (within_mean, across_mean, Δ) using same-decision pairs only. Rank by Δ. Plot as paired dots — hollow circle at across_mean, filled circle at within_mean.
+</div>
+
+<div class="box">
+<strong>Figure 42</strong>: for each of 21 models, run K-Means separately on yes-only and no-only embeddings. Plot as paired triangles per model — blue triangle up = stay-home K, red triangle down = go-out K. Models with large yes/no gaps have asymmetric reasoning repertoires.
+</div>
+
+<h2>Why these methods and not others</h2>
+
+<ul class="notes">
+<li><strong>Cosine similarity on sentence embeddings</strong> is the canonical short-text similarity measure in NLP since Reimers &amp; Gurevych (EMNLP 2019) introduced the sentence-transformers framework. It handles synonyms, paraphrase, and word order — things that simple word-overlap (Jaccard, BLEU) miss.</li>
+<li><strong>OpenAI text-embedding-3-large</strong> was chosen for reproducibility + citation recognition. MTEB score 64.6 is competitive; differences vs. top-scoring models (Gemini Embedding 001 at 68.3) are small for short-text use cases.</li>
+<li><strong>K-Means + silhouette</strong> is textbook — every ML course teaches this combination. Alternatives (HDBSCAN, gap statistic) are defensible but less widely recognized. Silhouette's weakness is that it favors convex clusters, but for our use case (is the model templating?) that's a feature, not a bug — we <em>want</em> to detect tight, well-separated templates.</li>
+<li><strong>PCA pre-reduction to 128 dims</strong> preserves >90% variance and avoids curse-of-dimensionality artifacts in high-dim K-Means (Aggarwal et al. 2001).</li>
+</ul>
+
+<hr>
+
+<footer style="margin-top:48px;font-size:11px;color:#888;text-align:center;font-style:italic">
+Source scripts:
+<code>analysis/compute_response_text_similarity.py</code> (Fig 40) ·
+<code>analysis/compute_response_embeddings.py</code> ·
+<code>analysis/compute_persona_similarity.py</code> (Fig 41) ·
+<code>analysis/compute_reasoning_diversity.py</code> (Fig 42)
+</footer>
+</body>
+</html>

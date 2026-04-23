@@ -4,9 +4,12 @@ GABM Mobility Curve — Response Text Similarity Pre-computation
 
 Groups micro data by (agent_id, infection_level) → 5 reps.
 Computes decision agreement rates and text similarity metrics.
-Output: viz/data/real/response_text_similarity.json
 
-Used by Figures 38-39 (Response Consistency) in analytics.html.
+Metrics (unanimous groups only — all 5 reps same decision):
+  - exact_match: character-identical responses
+  - jaccard:     word-overlap (Jaccard) similarity
+
+Output: viz/data/real/response_text_similarity.json
 """
 
 import csv
@@ -25,138 +28,121 @@ OUT_FILE = DATA_DIR / "response_text_similarity.json"
 
 
 def tokenize(text):
-    """Simple word tokenization for Jaccard similarity."""
     return set(text.lower().split())
 
 
 def pairwise_jaccard(texts):
-    """Compute mean pairwise Jaccard similarity across all C(n,2) pairs."""
     token_sets = [tokenize(t) for t in texts]
-    similarities = []
+    sims = []
     for a, b in combinations(range(len(token_sets)), 2):
         sa, sb = token_sets[a], token_sets[b]
         union = sa | sb
-        if not union:
-            similarities.append(1.0)
-        else:
-            similarities.append(len(sa & sb) / len(union))
-    return sum(similarities) / len(similarities) if similarities else 0
+        sims.append(len(sa & sb) / len(union) if union else 1.0)
+    return sum(sims) / len(sims) if sims else 0.0
 
 
 def process_config(micro_path):
-    """Process one config. Returns agreement rate, exact match rate, mean Jaccard, and by-level stats."""
-    # Group by (agent_id, infection_level)
     groups = defaultdict(lambda: {"responses": [], "texts": []})
 
     with open(micro_path, newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
+        for row in csv.DictReader(f):
             key = (int(row["agent_id"]), row["infection_level"])
-            groups[key]["responses"].append(row["response"])
+            groups[key]["responses"].append(row["response"].strip().lower())
             groups[key]["texts"].append(row.get("reasoning_text", ""))
 
     total_groups = 0
     agreed_groups = 0
-    exact_match_count = 0
-    exact_match_eligible = 0
-    jaccard_sum = 0.0
-    jaccard_count = 0
+    exact_eligible = 0
+    exact_count = 0
+    jac_sum = 0.0;   jac_n = 0
+    jac_yes_sum = 0.0; jac_yes_n = 0
+    jac_no_sum  = 0.0; jac_no_n  = 0
 
-    # By-level tracking
-    by_level = defaultdict(lambda: {"total": 0, "agreed": 0, "jaccard_sum": 0.0, "jaccard_n": 0})
+    by_level = defaultdict(lambda: {"total": 0, "agreed": 0, "jac_sum": 0.0, "jac_n": 0})
 
     for (aid, level), data in groups.items():
         total_groups += 1
         responses = data["responses"]
         texts = data["texts"]
 
-        # Decision agreement: all 5 reps same answer
         all_agree = len(set(responses)) == 1
         if all_agree:
             agreed_groups += 1
-
         by_level[level]["total"] += 1
         if all_agree:
             by_level[level]["agreed"] += 1
 
-        # Text similarity — only for unanimous groups
         if all_agree and len(texts) >= 2:
-            exact_match_eligible += 1
-
-            # Exact match: all texts identical
+            exact_eligible += 1
             if len(set(texts)) == 1:
-                exact_match_count += 1
+                exact_count += 1
 
-            # Jaccard similarity
             jac = pairwise_jaccard(texts)
-            jaccard_sum += jac
-            jaccard_count += 1
+            jac_sum += jac
+            jac_n += 1
+            by_level[level]["jac_sum"] += jac
+            by_level[level]["jac_n"] += 1
 
-            by_level[level]["jaccard_sum"] += jac
-            by_level[level]["jaccard_n"] += 1
-
-    agreement_rate = agreed_groups / total_groups if total_groups else 0
-    exact_match_rate = exact_match_count / exact_match_eligible if exact_match_eligible else 0
-    mean_jaccard = jaccard_sum / jaccard_count if jaccard_count else 0
+            decision = responses[0]  # all same since all_agree
+            if decision == "yes":
+                jac_yes_sum += jac; jac_yes_n += 1
+            elif decision == "no":
+                jac_no_sum  += jac; jac_no_n  += 1
 
     level_stats = {}
     for level in sorted(by_level.keys(), key=float):
         bl = by_level[level]
         level_stats[level] = {
             "agreement": round(bl["agreed"] / bl["total"], 4) if bl["total"] else 0,
-            "jaccard": round(bl["jaccard_sum"] / bl["jaccard_n"], 4) if bl["jaccard_n"] else 0,
+            "jaccard":   round(bl["jac_sum"] / bl["jac_n"], 4) if bl["jac_n"] else None,
         }
 
-    return (round(agreement_rate, 4), round(exact_match_rate, 4),
-            round(mean_jaccard, 4), level_stats)
+    return {
+        "agreement_rate":    round(agreed_groups / total_groups, 4) if total_groups else 0,
+        "exact_match_rate":  round(exact_count / exact_eligible, 4) if exact_eligible else 0,
+        "mean_jaccard":      round(jac_sum     / jac_n,     4) if jac_n     else None,
+        "mean_jaccard_yes":  round(jac_yes_sum / jac_yes_n, 4) if jac_yes_n else None,
+        "mean_jaccard_no":   round(jac_no_sum  / jac_no_n,  4) if jac_no_n  else None,
+        "by_level":          level_stats,
+    }
 
 
 def main():
-    configs_out = []
-    labels_out = []
-    providers_out = []
-    temps_out = []
-    decision_agreement = {}
-    exact_text_match = {}
-    mean_jaccard = {}
-    by_level = {}
+    out = {
+        "configs": [], "labels": [], "providers": [], "temperature": [],
+        "decision_agreement": {}, "exact_text_match": {},
+        "mean_jaccard": {}, "mean_jaccard_yes": {}, "mean_jaccard_no": {},
+        "by_level": {},
+    }
 
     for cfg in CONFIGS:
         micro_path = DATA_DIR / cfg["dir"] / "probe_results_micro.csv"
         if not micro_path.exists():
-            print(f"SKIP: {cfg['dir']} — no micro CSV")
+            print(f"SKIP {cfg['dir']} — no micro CSV")
             continue
 
-        print(f"Processing {cfg['dir']}...", end=" ", flush=True)
-        agree, exact, jac, levels = process_config(micro_path)
+        print(f"  {cfg['dir']}...", end=" ", flush=True)
+        r = process_config(micro_path)
+        k = cfg["dir"]
+        out["configs"].append(k)
+        out["labels"].append(cfg["label"])
+        out["providers"].append(cfg["provider"])
+        out["temperature"].append(cfg["temp"])
+        out["decision_agreement"][k] = r["agreement_rate"]
+        out["exact_text_match"][k] = r["exact_match_rate"]
+        out["mean_jaccard"][k]     = r["mean_jaccard"]
+        out["mean_jaccard_yes"][k] = r["mean_jaccard_yes"]
+        out["mean_jaccard_no"][k]  = r["mean_jaccard_no"]
+        out["by_level"][k] = r["by_level"]
 
-        configs_out.append(cfg["dir"])
-        labels_out.append(cfg["label"])
-        providers_out.append(cfg["provider"])
-        temps_out.append(cfg["temp"])
-        decision_agreement[cfg["dir"]] = agree
-        exact_text_match[cfg["dir"]] = exact
-        mean_jaccard[cfg["dir"]] = jac
-        by_level[cfg["dir"]] = levels
-
-        print(f"agreement={agree:.1%}, exact_match={exact:.1%}, jaccard={jac:.3f}")
-
-    result = {
-        "configs": configs_out,
-        "labels": labels_out,
-        "providers": providers_out,
-        "temperature": temps_out,
-        "decision_agreement": decision_agreement,
-        "exact_text_match": exact_text_match,
-        "mean_jaccard": mean_jaccard,
-        "by_level": by_level,
-    }
+        jy = f"{r['mean_jaccard_yes']:.3f}" if r["mean_jaccard_yes"] is not None else "n/a"
+        jn = f"{r['mean_jaccard_no']:.3f}"  if r["mean_jaccard_no"]  is not None else "n/a"
+        print(f"agree={r['agreement_rate']:.1%}  exact={r['exact_match_rate']:.1%}  "
+              f"jaccard={r['mean_jaccard']:.3f}  yes={jy}  no={jn}")
 
     with open(OUT_FILE, "w") as f:
-        json.dump(result, f, indent=2)
-
-    print(f"\nWritten {len(configs_out)} configs to {OUT_FILE}")
-    print(f"File size: {os.path.getsize(OUT_FILE):,} bytes")
+        json.dump(out, f, indent=2)
+    print(f"\nWrote {OUT_FILE}  ({os.path.getsize(OUT_FILE):,} bytes)")
 
 
 if __name__ == "__main__":
