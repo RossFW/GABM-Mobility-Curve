@@ -42,11 +42,11 @@ function initResponseAnalysisFigures() {
     buildFilterPills('ra-textsim-filters', 'raTextsim', f => renderRATextSimilarity(s, f));
     renderRATextSimilarity(s);
 
-    // Fig 39: Persona Individuation
+    // Fig 40: Persona Individuation
     if (personaSim) {
-      buildFilterPills('ra-persona-filters', 'raPersona', f => renderRAPersonaSimilarity(personaSim, 'ra-persona-sim-chart', f));
-      renderRAPersonaSimilarity(personaSim);
-      renderRAPersonaSimilarityAuthor(personaSim);  // Author Notes archive copy (no filter)
+      buildFilterPills('ra-persona-filters', 'raPersona', f => renderRAPersonaSimilarity(personaSim, s, 'ra-persona-sim-chart', f));
+      renderRAPersonaSimilarity(personaSim, s);
+      renderRAPersonaSimilarityAuthor(personaSim, s);  // Author Notes archive copy (no filter)
     }
 
     if (diversity)  renderRAReasoningDiversityAuthor(diversity);  // Author Notes only
@@ -71,7 +71,9 @@ function initResponseAnalysisFigures() {
   });
 }
 
-/* ── Figure 33: Trait Mention Heatmap (10 poles + 2 context) ── */
+/* ── Figure 32: Trait Mention Heatmap (10 poles + 2 context) ──
+   Modes: 'overall' | 'yes' (stay-home only) | 'no' (go-out only) |
+   'diff' (yes − no, diverging color). */
 function renderRATraitHeatmap(data, modelFilter = null) {
   const el = document.getElementById('ra-fig33-chart');
   if (!el) return;
@@ -86,8 +88,11 @@ function renderRATraitHeatmap(data, modelFilter = null) {
     providers = keep.map(i => providers[i]);
   }
 
-  // 10 Big Five poles + 2 context columns (Infection, Age)
-  const poles = [
+  // Column structure: 10 Big Five POLE columns (extraverted/introverted, etc.) + 2 context.
+  // Same structure for ALL modes — overall, stay-home only, go-out only, diff.
+  // Pole columns use within-group rates (e.g., "% of introverted-trait agents whose
+  // response mentions any extraversion keyword"); context columns use marginal rates.
+  const cols = [
     { key: 'extraversion_positive',        label: 'Extraverted',      label2: '',            synonyms: 'extroverted, extrovert, extraverted, extravert, extraversion, extroversion', source: 'pole' },
     { key: 'extraversion_negative',        label: 'Introverted',      label2: '',            synonyms: 'introverted, introvert, introversion', source: 'pole' },
     { key: 'agreeableness_positive',       label: 'Agreeable',        label2: '',            synonyms: 'agreeable, agreeableness', source: 'pole' },
@@ -98,132 +103,170 @@ function renderRATraitHeatmap(data, modelFilter = null) {
     { key: 'neuroticism_negative',         label: 'Emotionally',      label2: 'Stable',      synonyms: 'emotionally stable, emotional stability', source: 'pole' },
     { key: 'openness_positive',            label: 'Open to',          label2: 'Experience',  synonyms: 'open to experience, openness, open-minded', source: 'pole' },
     { key: 'openness_negative',            label: 'Closed to',        label2: 'Experience',  synonyms: 'closed to experience, closed-minded', source: 'pole' },
-    // Context columns (dimension-level, from mention_rates)
-    { key: 'infection',                    label: 'Infection',        label2: '',            synonyms: 'infection, infected, cases, diagnosed, diagnoses, X%', source: 'dim' },
-    { key: 'age',                          label: 'Age',              label2: '',            synonyms: 'years old, young, age, old, own age number', source: 'dim' },
+    { key: 'infection',                    label: 'Infection',        label2: '',            synonyms: 'infection, infected, cases, diagnosed, N% (infection level)', source: 'dim' },
+    { key: 'age',                          label: 'Age',              label2: '',            synonyms: 'years old, young, age, old, N (own age)', source: 'dim' },
   ];
-  const nCols = poles.length;  // 12
+
   const nRows = configs.length;
-  const nBigFiveCols = 10;  // first 10 are Big Five poles
+  const cellW = 76, cellH = 22;
+  const labelW = 160, topH = 120;
   const gapW = 8;  // visual gap before context columns
 
-  const cellW = 76, cellH = 22;
-  const labelW = 160, topH = 110;
-  const pad = { l: labelW + 10, t: topH, r: 30, b: 40 };
-  const W = pad.l + nBigFiveCols * cellW + gapW + 2 * cellW + pad.r;
-  const H = pad.t + nRows * cellH + pad.b;
-
-  // Helper to get x position for a column (accounts for gap)
-  function colX(c) {
-    if (c < nBigFiveCols) return pad.l + c * cellW;
-    return pad.l + nBigFiveCols * cellW + gapW + (c - nBigFiveCols) * cellW;
-  }
-
-  let svg = '';
-
-  // Dimension group brackets at top — Big Five
-  const dimNames = ['Extraversion', 'Agreeableness', 'Conscientiousness', 'Neuroticism', 'Openness'];
-  for (let d = 0; d < 5; d++) {
-    const x1 = colX(d * 2);
-    const x2 = x1 + 2 * cellW;
-    const cx = (x1 + x2) / 2;
-    svg += `<text x="${cx}" y="${pad.t - 82}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${dimNames[d]}</text>`;
-    svg += `<line x1="${x1 + 4}" y1="${pad.t - 76}" x2="${x2 - 4}" y2="${pad.t - 76}" stroke="#bbb" stroke-width="1"/>`;
-  }
-
-  // Context group bracket
-  const ctxX1 = colX(nBigFiveCols);
-  const ctxX2 = ctxX1 + 2 * cellW;
-  const ctxCx = (ctxX1 + ctxX2) / 2;
-  svg += `<text x="${ctxCx}" y="${pad.t - 82}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Context</text>`;
-  svg += `<line x1="${ctxX1 + 4}" y1="${pad.t - 76}" x2="${ctxX2 - 4}" y2="${pad.t - 76}" stroke="#bbb" stroke-width="1"/>`;
-
-  // Column headers
-  for (let c = 0; c < nCols; c++) {
-    const x = colX(c) + cellW / 2;
-    const pole = poles[c];
-    if (pole.label2) {
-      svg += `<text x="${x}" y="${pad.t - 56}" font-size="9.5" fill="#333" font-family="${SERIF}" text-anchor="middle" font-style="italic">${esc(pole.label)}</text>`;
-      svg += `<text x="${x}" y="${pad.t - 45}" font-size="9.5" fill="#333" font-family="${SERIF}" text-anchor="middle" font-style="italic">${esc(pole.label2)}</text>`;
-    } else {
-      svg += `<text x="${x}" y="${pad.t - 50}" font-size="9.5" fill="#333" font-family="${SERIF}" text-anchor="middle" font-style="italic">${esc(pole.label)}</text>`;
+  // Lookup: rate(configKey, col, mode)
+  function rateFor(cfg, col, mode) {
+    const k = col.key;
+    if (mode === 'diff') {
+      const y = col.source === 'pole'
+        ? (data.pole_rates_yes?.[cfg]?.[k] ?? 0)
+        : (data.mention_rates_yes?.[cfg]?.[k] ?? 0);
+      const n = col.source === 'pole'
+        ? (data.pole_rates_no?.[cfg]?.[k] ?? 0)
+        : (data.mention_rates_no?.[cfg]?.[k] ?? 0);
+      return y - n;
     }
-    // Synonyms
-    const synLines = [];
-    let current = '';
-    for (const w of pole.synonyms.split(', ')) {
-      if (current && (current + ', ' + w).length > 14) {
-        synLines.push(current);
-        current = w;
+    if (mode === 'yes') {
+      return col.source === 'pole'
+        ? (data.pole_rates_yes?.[cfg]?.[k] ?? 0)
+        : (data.mention_rates_yes?.[cfg]?.[k] ?? 0);
+    }
+    if (mode === 'no') {
+      return col.source === 'pole'
+        ? (data.pole_rates_no?.[cfg]?.[k] ?? 0)
+        : (data.mention_rates_no?.[cfg]?.[k] ?? 0);
+    }
+    return col.source === 'pole'
+      ? (data.pole_rates[cfg][k] ?? 0)
+      : (data.mention_rates[cfg][k] ?? 0);
+  }
+
+  function build(mode) {
+    const nBigFiveCols = 10;
+    const nCols = cols.length;
+    const pad = { l: labelW + 10, t: topH, r: 30, b: 24 };
+    const W = pad.l + nBigFiveCols * cellW + gapW + 2 * cellW + pad.r;
+    const H = pad.t + nRows * cellH + pad.b;
+
+    function colX(c) {
+      if (c < nBigFiveCols) return pad.l + c * cellW;
+      return pad.l + nBigFiveCols * cellW + gapW + (c - nBigFiveCols) * cellW;
+    }
+
+    let svg = '';
+
+    // Big Five group brackets (one per dimension, spans the pole pair).
+    const dimNames = ['Extraversion', 'Agreeableness', 'Conscientiousness', 'Neuroticism', 'Openness'];
+    for (let d = 0; d < 5; d++) {
+      const x1 = colX(d * 2);
+      const x2 = x1 + 2 * cellW;
+      const cx = (x1 + x2) / 2;
+      svg += `<text x="${cx}" y="${pad.t - 92}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${dimNames[d]}</text>`;
+      svg += `<line x1="${x1 + 4}" y1="${pad.t - 86}" x2="${x2 - 4}" y2="${pad.t - 86}" stroke="#bbb" stroke-width="1"/>`;
+    }
+    // Context group bracket
+    const ctxX1 = colX(nBigFiveCols);
+    const ctxX2 = ctxX1 + 2 * cellW;
+    const ctxCx = (ctxX1 + ctxX2) / 2;
+    svg += `<text x="${ctxCx}" y="${pad.t - 92}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Context</text>`;
+    svg += `<line x1="${ctxX1 + 4}" y1="${pad.t - 86}" x2="${ctxX2 - 4}" y2="${pad.t - 86}" stroke="#bbb" stroke-width="1"/>`;
+
+    // Column headers
+    for (let c = 0; c < nCols; c++) {
+      const x = colX(c) + cellW / 2;
+      const col = cols[c];
+      if (col.label2) {
+        svg += `<text x="${x}" y="${pad.t - 76}" font-size="9.5" fill="#333" font-family="${SERIF}" text-anchor="middle" font-style="italic">${esc(col.label)}</text>`;
+        svg += `<text x="${x}" y="${pad.t - 65}" font-size="9.5" fill="#333" font-family="${SERIF}" text-anchor="middle" font-style="italic">${esc(col.label2)}</text>`;
       } else {
-        current = current ? current + ', ' + w : w;
+        svg += `<text x="${x}" y="${pad.t - 70}" font-size="9.5" fill="#333" font-family="${SERIF}" text-anchor="middle" font-style="italic">${esc(col.label)}</text>`;
+      }
+      const synLines = col.synonyms.split(', ');
+      for (let sl = 0; sl < synLines.length; sl++) {
+        svg += `<text x="${x}" y="${pad.t - 50 + sl * 9}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">${esc(synLines[sl])}</text>`;
       }
     }
-    if (current) synLines.push(current);
-    for (let sl = 0; sl < synLines.length; sl++) {
-      svg += `<text x="${x}" y="${pad.t - 30 + sl * 9}" font-size="7" fill="#999" font-family="${SERIF}" text-anchor="middle">${esc(synLines[sl])}</text>`;
+
+    // Rows
+    for (let r = 0; r < nRows; r++) {
+      const y = pad.t + r * cellH;
+      const provColor = CONFIG.PROVIDER_COLORS[providers[r]] || '#999';
+      svg += `<circle cx="${pad.l - labelW}" cy="${y + cellH / 2}" r="4" fill="${provColor}"/>`;
+      svg += `<text x="${pad.l - labelW + 10}" y="${y + cellH / 2 + 4}" font-size="10" fill="#333" font-family="${SERIF}">${esc(labels[r])}</text>`;
+
+      for (let c = 0; c < nCols; c++) {
+        const x = colX(c);
+        const col = cols[c];
+        const rate = rateFor(configs[r], col, mode);
+
+        let fill, textColor, display;
+        if (mode === 'diff') {
+          // Diverging red (stay-home) / blue (go-out); saturate at |0.5|.
+          const t = Math.max(-1, Math.min(1, rate * 2));
+          if (t > 0) fill = `rgba(229, 57, 53, ${Math.min(1, Math.abs(t))})`;
+          else fill = `rgba(33, 150, 243, ${Math.min(1, Math.abs(t))})`;
+          textColor = Math.abs(t) > 0.55 ? '#fff' : '#333';
+          const pct = Math.round(rate * 100);
+          display = (pct >= 0 ? '+' : '') + pct + '%';
+        } else {
+          const intensity = Math.min(Math.max(rate, 0), 1);
+          const rr = Math.round(255 - intensity * 200);
+          const gg = Math.round(255 - intensity * 180);
+          const bb = Math.round(255 - intensity * 60);
+          fill = `rgb(${rr},${gg},${bb})`;
+          textColor = intensity > 0.6 ? '#fff' : '#333';
+          display = Math.round(rate * 100) + '%';
+        }
+        svg += `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" fill="${fill}" stroke="#eee" stroke-width="0.5"/>`;
+        svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 4}" font-size="10" fill="${textColor}" font-family="${SERIF}" text-anchor="middle">${display}</text>`;
+      }
     }
-  }
 
-  // Rows
-  for (let r = 0; r < nRows; r++) {
-    const y = pad.t + r * cellH;
-    const provColor = CONFIG.PROVIDER_COLORS[providers[r]] || '#999';
-
-    svg += `<circle cx="${pad.l - labelW}" cy="${y + cellH / 2}" r="4" fill="${provColor}"/>`;
-    svg += `<text x="${pad.l - labelW + 10}" y="${y + cellH / 2 + 4}" font-size="10" fill="#333" font-family="${SERIF}">${esc(labels[r])}</text>`;
-
-    for (let c = 0; c < nCols; c++) {
-      const x = colX(c);
-      const pole = poles[c];
-      // Get rate from correct source
-      const rate = pole.source === 'pole'
-        ? data.pole_rates[configs[r]][pole.key]
-        : (data.mention_rates[configs[r]][pole.key] || 0);
-      const pct = Math.round(rate * 100);
-
-      const intensity = Math.min(rate, 1);
-      const red = Math.round(255 - intensity * 200);
-      const green = Math.round(255 - intensity * 180);
-      const blue = Math.round(255 - intensity * 60);
-      const fill = `rgb(${red},${green},${blue})`;
-
-      svg += `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" fill="${fill}" stroke="#eee" stroke-width="0.5"/>`;
-      svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 4}" font-size="10" fill="${intensity > 0.6 ? '#fff' : '#333'}" font-family="${SERIF}" text-anchor="middle">${pct}%</text>`;
+    // Grid borders + dividers
+    svg += `<rect x="${pad.l}" y="${pad.t}" width="${nBigFiveCols * cellW}" height="${nRows * cellH}" fill="none" stroke="#999" stroke-width="1"/>`;
+    svg += `<rect x="${colX(nBigFiveCols)}" y="${pad.t}" width="${2 * cellW}" height="${nRows * cellH}" fill="none" stroke="#999" stroke-width="1"/>`;
+    // Vertical dividers between Big Five dimension pairs
+    for (let d = 1; d < 5; d++) {
+      const x = colX(d * 2);
+      svg += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t + nRows * cellH}" stroke="#999" stroke-width="1"/>`;
     }
+    // Vertical divider between Infection and Age
+    const divX = colX(nBigFiveCols + 1);
+    svg += `<line x1="${divX}" y1="${pad.t}" x2="${divX}" y2="${pad.t + nRows * cellH}" stroke="#ddd" stroke-width="0.5"/>`;
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
   }
 
-  // Grid border — Big Five section
-  svg += `<rect x="${pad.l}" y="${pad.t}" width="${nBigFiveCols * cellW}" height="${nRows * cellH}" fill="none" stroke="#999" stroke-width="1"/>`;
-  // Grid border — Context section
-  svg += `<rect x="${colX(nBigFiveCols)}" y="${pad.t}" width="${2 * cellW}" height="${nRows * cellH}" fill="none" stroke="#999" stroke-width="1"/>`;
-
-  // Vertical dividers between dimension pairs (Big Five)
-  for (let d = 1; d < 5; d++) {
-    const x = colX(d * 2);
-    svg += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t + nRows * cellH}" stroke="#999" stroke-width="1"/>`;
+  function subtitleHTML(mode) {
+    const baseStyle = `font-size:10px;font-style:italic;color:#777;font-family:${SERIF};margin-bottom:8px`;
+    if (mode === 'diff') {
+      // Gradient bar replaces text subtitle — most informative for the reader.
+      return `<div style="display:flex;align-items:center;gap:8px;${baseStyle}">
+        <span style="font-style:normal;color:#555">Difference: stay-home − go-out</span>
+        <span>−50%</span>
+        <div style="width:140px;height:10px;background:linear-gradient(to right, rgb(33,150,243), white, rgb(229,57,53));border:1px solid #ccc"></div>
+        <span>+50%</span>
+        <span>(red = more in stay-home reasoning)</span>
+      </div>`;
+    }
+    let text;
+    if (mode === 'yes')      text = 'Among responses that decided stay-home: % that mention each topic';
+    else if (mode === 'no')  text = 'Among responses that decided go-out: % that mention each topic';
+    else                     text = '% of all responses that mention each topic';
+    return `<div style="${baseStyle}">${text}</div>`;
   }
-  // Vertical divider between Infection and Age
-  const divX = colX(nBigFiveCols + 1);
-  svg += `<line x1="${divX}" y1="${pad.t}" x2="${divX}" y2="${pad.t + nRows * cellH}" stroke="#ddd" stroke-width="0.5"/>`;
 
-  // Legend
-  const totalGridW = nBigFiveCols * cellW + gapW + 2 * cellW;
-  const legY = pad.t + nRows * cellH + 14;
-  const legW = 180;
-  const legX = pad.l + (totalGridW - legW) / 2;
-  for (let i = 0; i < legW; i++) {
-    const t = i / legW;
-    const rr = Math.round(255 - t * 200);
-    const gg = Math.round(255 - t * 180);
-    const bb = Math.round(255 - t * 60);
-    svg += `<rect x="${legX + i}" y="${legY}" width="1.5" height="10" fill="rgb(${rr},${gg},${bb})"/>`;
+  function draw(mode) {
+    el.innerHTML = `<div style="margin-bottom:6px">
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="trait-heatmap-mode" value="overall" ${mode==='overall'?'checked':''}> Overall</label>
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="trait-heatmap-mode" value="yes" ${mode==='yes'?'checked':''}> Stay-home only</label>
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="trait-heatmap-mode" value="no" ${mode==='no'?'checked':''}> Go-out only</label>
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="trait-heatmap-mode" value="diff" ${mode==='diff'?'checked':''}> Δ (stay − go)</label>
+    </div>
+    ${subtitleHTML(mode)}
+    ${build(mode)}`;
+    el.querySelectorAll('input[name="trait-heatmap-mode"]').forEach(r =>
+      r.addEventListener('change', e => draw(e.target.value)));
   }
-  svg += `<text x="${legX}" y="${legY + 22}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="start">0%</text>`;
-  svg += `<text x="${legX + legW}" y="${legY + 22}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="end">100%</text>`;
-  svg += `<text x="${legX + legW / 2}" y="${legY + 22}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle">mention rate</text>`;
-
-  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+  draw('overall');
 }
 
 /* ── Figure 35: Output Token Landscape (box plots) ─────────── */
@@ -708,28 +751,27 @@ function getAmplificationData(regData, traitData, configKey) {
   });
 }
 
-/* ── Figure 35: Model 3 Coefficient Table ────────────────────── */
-function renderRAModel3Table(allRegs, traitData) {
-  const pickerEl = document.getElementById('ra-m3table-picker');
-  const chartEl = document.getElementById('ra-m3table-chart');
-  if (!chartEl) return;
+/* ── Figure 33: Random-Effects Logit with Mention Flags Table ────────── */
+// renderModel3Coef renders one model's mention-flag regression coefficient
+// table into a target element. Used both by the interactive Figure 33 (with
+// model picker) and by Appendix B.2 (21 static per-model panels).
+function renderModel3Coef(allRegs, traitData, m, targetEl) {
+  if (!targetEl) return;
 
-  let currentIdx = 0;
-
-  function fmtC(v) { return v == null ? '—' : v.toFixed(3); }
-  function fmtOR(v) {
+  const fmtC = v => v == null ? '—' : v.toFixed(3);
+  const fmtOR = v => {
     if (v == null) return '—';
     if (v > 1e6) return '> 10⁶';
     if (v < 1e-6) return '< 10⁻⁶';
     return v.toFixed(3);
-  }
-  function fmtCI(c) {
+  };
+  const fmtCI = c => {
     if (!c) return '—';
     const lo = c.estimate - 1.96 * c.se, hi = c.estimate + 1.96 * c.se;
     return `[${lo.toFixed(3)}, ${hi.toFixed(3)}]`;
-  }
+  };
 
-  // Predictor rows grouped into 3 sections
+  // Predictor rows grouped into 2 sections
   const BASE = [
     { key: 'intercept',        label: 'Intercept' },
     { key: 'infection_pct',    label: 'Infection Rate (%)' },
@@ -759,15 +801,14 @@ function renderRAModel3Table(allRegs, traitData) {
     { key: 'mentioned_age',             label: 'Mentioned Age',             fig32Key: null, dimKey: 'age' },
   ];
 
-  function render(modelIdx) {
-    const m = CONFIG.MODELS[modelIdx];
-    const key = configDirKey(m);
-    const regData = allRegs[key];
-    if (!regData || !regData.model3 || regData.model3.error) {
-      chartEl.innerHTML = '<p style="color:#999;font-style:italic">Model 3 not available for this configuration.</p>';
-      return;
-    }
+  const key = configDirKey(m);
+  const regData = allRegs[key];
+  if (!regData || !regData.model3 || regData.model3.error) {
+    targetEl.innerHTML = '<p style="color:#999;font-style:italic">Mention-flag regression not available for this configuration.</p>';
+    return;
+  }
 
+  {
     const m3 = regData.model3;
     const coefs = m3.coefficients;
     const poleFlags = m3.pole_flags || {};
@@ -777,14 +818,6 @@ function renderRAModel3Table(allRegs, traitData) {
 
     let html = '';
     html += '<div style="font-size:13px;font-weight:bold;color:#111;margin-bottom:6px">' + esc(m.label) + '</div>';
-
-    // Banner
-    html += '<div style="background:#f0f7ff;border:1px solid #b3d4fc;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:12px">';
-    html += '<strong>Random-effects logit with pole-level mention flags (main effects only).</strong> ';
-    html += 'DV: <code style="background:#e8e8e8;padding:1px 4px;border-radius:2px">stay_home</code> (1 = stay home, 0 = go out). ';
-    html += 'Positive coefficients (OR > 1) → higher odds of staying home. ';
-    html += '<strong>' + (m3.n_mention_main || 0) + '</strong> mention flag(s) included (Fig-32 within-group rate in 15–85%).';
-    html += '</div>';
 
     // Table header
     html += '<table class="ols-table" style="width:100%;font-size:11px;border-collapse:collapse">';
@@ -824,7 +857,7 @@ function renderRAModel3Table(allRegs, traitData) {
 
     // Section: Mention flags — pole-level (10 poles) + 2 context.
     // "Rate" shown is the Fig-32 within-group rate that gated inclusion.
-    html += '<tr><td colspan="7" style="padding:10px 6px 2px;font-size:10px;color:#666;font-style:italic;border-bottom:1px solid #ddd">Mention Flags (pole-level; rate = Fig 32 within-group rate that gated inclusion)</td></tr>';
+    html += '<tr><td colspan="7" style="padding:10px 6px 2px;font-size:10px;color:#666;font-style:italic;border-bottom:1px solid #ddd">Mention Flags (rate from Figure 32; only included when between 15% and 85%)</td></tr>';
     rowIdx = 0;
     MENTION.forEach(p => {
       let rate = '';
@@ -867,9 +900,9 @@ function renderRAModel3Table(allRegs, traitData) {
 
     // Contrast flag summary — pole-level
     html += '<div style="margin-top:8px;padding:8px 12px;background:#fff8f0;border:1px solid #f0d0a0;border-radius:4px;font-size:11px">';
-    html += '<strong>Inclusion gate (Fig 32 within-group rates).</strong> ';
-    html += 'Each mention flag enters only when the corresponding Fig-32 cell is in 15–85%. ';
-    html += 'Outside this window the mention is saturated (everyone says it) or starved (no one says it) — not identifiable as a regressor.';
+    html += '<strong>Inclusion gate (Figure 32 mention rates).</strong> ';
+    html += 'A mention flag enters only when its Figure 32 rate is between 15% and 85%. ';
+    html += 'Below 15% almost no responses mention it; above 85% nearly all of them do — either way there is no usable variation.';
     html += '<div style="margin-top:4px;display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:4px 12px">';
     MENTION.forEach(p => {
       let rate = null, ok = false;
@@ -887,13 +920,21 @@ function renderRAModel3Table(allRegs, traitData) {
     });
     html += '</div></div>';
 
-    chartEl.innerHTML = html;
+    targetEl.innerHTML = html;
   }
+}
 
+// Interactive Figure 33 — wraps renderModel3Coef with a model picker.
+function renderRAModel3Table(allRegs, traitData) {
+  const pickerEl = document.getElementById('ra-m3table-picker');
+  const chartEl = document.getElementById('ra-m3table-chart');
+  if (!chartEl) return;
+  let currentIdx = 0;
+  const draw = idx => renderModel3Coef(allRegs, traitData, CONFIG.MODELS[idx], chartEl);
   if (pickerEl) {
-    buildModelPicker('ra-m3table-picker', currentIdx, idx => { currentIdx = idx; render(idx); });
+    buildModelPicker('ra-m3table-picker', currentIdx, idx => { currentIdx = idx; draw(idx); });
   }
-  render(currentIdx);
+  draw(currentIdx);
 }
 
 /* ── Figure 35: Cross-Model Pole Positions (4 markers per model per dim) ── */
@@ -1020,7 +1061,7 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null)
   });
 
   // Pre-compute per-panel row set.
-  //   B5 panels: include any config with at least one pole-mention coefficient.
+  //   B5 panels: include any config with at least one mention coefficient.
   //   Ctx panels: include only configs whose mention coef is significant (p<0.05),
   //     per the spec "don't include if not significant". This avoids blank rows.
   const panelRows = PANELS.map(panel => {
@@ -1108,7 +1149,7 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null)
   svg += `<circle cx="${lx}" cy="${legY}" r="3.5" fill="${legColor}"/>`;
   svg += `<text x="${lx + 9}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">With mention, <tspan font-weight="bold">p &lt; 0.05</tspan> only</text>`;
   // Row-below: positional semantics
-  svg += `<text x="${panelPad.l}" y="${legY + 22}" font-size="8.5" fill="#888" font-family="${SERIF}" font-style="italic">Each row = one LLM. Left panel = low-pole agents (○ at 0). Right panel = high-pole agents (○ at &#946;<tspan font-size="6" baseline-shift="sub">trait</tspan>). Filled dot = shift from mentioning that pole (significant only).</text>`;
+  svg += `<text x="${panelPad.l}" y="${legY + 22}" font-size="8.5" fill="#888" font-family="${SERIF}" font-style="italic">Each row = one LLM. Within each Big Five panel: left side = agents at one label of the trait (e.g., Introverted), right side = agents at the other label (e.g., Extraverted). Filled dot = shift from mentioning that label (significant only).</text>`;
 
   let py = headerLegendH;
 
@@ -1241,7 +1282,7 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null)
         }
 
         // Tooltip
-        const tt = `○ no mention: 0.00<br>● + mention: ${pos.mention.toFixed(2)}<br>β<sub>mention</sub> = ${pos.mention.toFixed(3)}<br>${esc(panel.traitLabel)} span = ${pos.traitSpan.toFixed(2)}`;
+        const tt = `○ no mention: 0.00<br>● + mention: ${pos.mention.toFixed(2)}<br>${esc(panel.traitLabel)} span = ${pos.traitSpan.toFixed(2)}`;
         svg += `<rect x="${panelPad.l}" y="${(cy - rowH / 2).toFixed(1)}" width="${ctxPlotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(c.label)} — ${panel.dim}" data-color="${c.color}" data-extra="${tt}" style="cursor:default"/>`;
         rowIdx++;
         return;
@@ -1293,15 +1334,20 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null)
       const f = v => v != null ? v.toFixed(2) : '—';
       if (showLow) {
         let ttLow = `○ ${panel.lowLabel}, no mention: 0.00 (reference)`;
-        ttLow += `<br>● ${panel.lowLabel} + mention: ${f(pos.lowYes)}`;
-        ttLow += `<br>β<sub>mention ${esc(panel.lowLabel.toLowerCase())}</sub> = ${f(pos.betaLow)}`;
+        if (sigLow) {
+          ttLow += `<br>● ${panel.lowLabel} + mention: ${f(pos.lowYes)}`;
+        } else {
+          ttLow += `<br>${panel.lowLabel} + mention: ${f(pos.lowYes)} (not significant, p ≥ 0.05)`;
+        }
         svg += `<rect x="${panelPad.l}" y="${(cy - rowH / 2).toFixed(1)}" width="${subPlotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(c.label)} — ${panel.dim} / ${esc(panel.lowLabel)}" data-color="${c.color}" data-extra="${ttLow}" style="cursor:default"/>`;
       }
       if (showHigh) {
-        let ttHigh = `△ ${panel.highLabel}, no mention: ${f(pos.hiNo)} &nbsp;(= β<sub>${esc(panel.traitKey)}</sub>)`;
-        ttHigh += `<br>▲ ${panel.highLabel} + mention: ${f(pos.hiYes)} &nbsp;(= β<sub>${esc(panel.traitKey)}</sub> + β<sub>mention ${esc(panel.highLabel.toLowerCase())}</sub>)`;
-        ttHigh += `<br>β<sub>${esc(panel.traitKey)}</sub> = ${f(pos.betaTrait)}`;
-        ttHigh += `<br>β<sub>mention ${esc(panel.highLabel.toLowerCase())}</sub> = ${f(pos.betaHigh)}`;
+        let ttHigh = `○ ${panel.highLabel}, no mention: ${f(pos.hiNo)}`;
+        if (sigHigh) {
+          ttHigh += `<br>● ${panel.highLabel} + mention: ${f(pos.hiYes)}`;
+        } else {
+          ttHigh += `<br>${panel.highLabel} + mention: ${f(pos.hiYes)} (not significant, p ≥ 0.05)`;
+        }
         svg += `<rect x="${panelPad.l + subPlotW + subGap}" y="${(cy - rowH / 2).toFixed(1)}" width="${subPlotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(c.label)} — ${panel.dim} / ${esc(panel.highLabel)}" data-color="${c.color}" data-extra="${ttHigh}" style="cursor:default"/>`;
       }
 
@@ -1358,16 +1404,23 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null)
      within  = mean pairwise cosine across 5 reps per (agent, infection_level)
      across  = mean cosine of random pairs of DIFFERENT agents at same level
      delta   = within − across.  Large positive delta = strong individuation. */
-function renderRAPersonaSimilarityAuthor(data) { renderRAPersonaSimilarity(data, 'ra-persona-sim-author-chart'); }
+function renderRAPersonaSimilarityAuthor(data, simData) { renderRAPersonaSimilarity(data, simData, 'ra-persona-sim-author-chart'); }
 function renderRAReasoningDiversityAuthor(data)  { renderRAReasoningDiversity(data,  'ra-diversity-author-chart');  }
 
-function renderRAPersonaSimilarity(data, elId = 'ra-persona-sim-chart', modelFilter = null) {
+function renderRAPersonaSimilarity(data, simData, elId = 'ra-persona-sim-chart', modelFilter = null) {
   const el = document.getElementById(elId);
   if (!el) return;
 
-  // Sort configs by delta (descending = most individuating first).
+  // Build temperature lookup from response_text_similarity data (keyed by config dir).
+  const tempByCfg = {};
+  if (simData && simData.configs && simData.temperature) {
+    simData.configs.forEach((cfg, i) => { tempByCfg[cfg] = simData.temperature[i]; });
+  }
+  const TEMP0 = '#3B82F6';  // blue — matches Fig 38
+  const TEMP1 = '#F59E0B';  // orange — matches Fig 38
+  const tempColor = t => (t === '0' ? TEMP0 : TEMP1);
+
   const rows = [];
-  const cfgKeys = Object.keys(data);
   CONFIG.MODELS.forEach(m => {
     const key = configDirKey(m);
     if (!data[key]) return;
@@ -1376,10 +1429,12 @@ function renderRAPersonaSimilarity(data, elId = 'ra-persona-sim-chart', modelFil
     rows.push({
       key, label: m.label, provider: m.provider,
       color: CONFIG.PROVIDER_COLORS[m.provider] || '#999',
+      temp: tempByCfg[key] || '0',
       within: r.within_mean, across: r.across_mean, delta: r.delta,
     });
   });
-  // Keep CONFIG.MODELS order (provider-grouped) rather than sorting by delta
+  // Sort by Δ descending — most individuating models first.
+  rows.sort((a, b) => b.delta - a.delta);
 
   const W = Math.min(el.parentElement?.offsetWidth || 900, 900);
   const rowH = 20;
@@ -1398,7 +1453,7 @@ function renderRAPersonaSimilarity(data, elId = 'ra-persona-sim-chart', modelFil
 
   // Title
   svg += `<text x="${W / 2}" y="20" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">Persona Individuation — Cosine Similarity of Reasoning Embeddings</text>`;
-  svg += `<text x="${W / 2}" y="36" font-size="9" fill="#777" font-family="${SERIF}" text-anchor="middle" font-style="italic">Same-decision pairs only. Within-agent (5 reps, same agent) vs across-agent (different agents, same level). Larger gap = more individuation.</text>`;
+  svg += `<text x="${W / 2}" y="36" font-size="9" fill="#777" font-family="${SERIF}" text-anchor="middle" font-style="italic">Within-agent (5 reps, same persona) vs across-agent (different agents, same direction, same level). Larger gap = more individuation. Sorted by Δ.</text>`;
 
   // X axis
   const axisY = pad.t + rows.length * rowH;
@@ -1413,31 +1468,38 @@ function renderRAPersonaSimilarity(data, elId = 'ra-persona-sim-chart', modelFil
   // Rows
   rows.forEach((r, i) => {
     const y = pad.t + i * rowH + rowH / 2;
-    // Label
+    const tCol = tempColor(r.temp);
+    // Label (provider color)
     svg += `<circle cx="${pad.l - 8}" cy="${y}" r="3" fill="${r.color}"/>`;
     svg += `<text x="${pad.l - 14}" y="${y + 3}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="end">${esc(r.label)}</text>`;
 
-    // Across dot (hollow)
-    svg += `<circle cx="${xScale(r.across)}" cy="${y}" r="3.5" fill="white" stroke="${r.color}" stroke-width="1.5"/>`;
+    // Across dot (hollow, temp color)
+    svg += `<circle cx="${xScale(r.across)}" cy="${y}" r="3.5" fill="white" stroke="${tCol}" stroke-width="1.5"/>`;
 
-    // Within dot (filled)
-    svg += `<circle cx="${xScale(r.within)}" cy="${y}" r="3.5" fill="${r.color}"/>`;
+    // Within dot (filled, temp color)
+    svg += `<circle cx="${xScale(r.within)}" cy="${y}" r="3.5" fill="${tCol}"/>`;
 
-    // Connecting line + Δ label on the right
-    svg += `<line x1="${xScale(r.across)}" y1="${y}" x2="${xScale(r.within)}" y2="${y}" stroke="${r.color}" stroke-width="0.8" opacity="0.35" stroke-dasharray="2,2"/>`;
-    svg += `<text x="${pad.l + plotW + 6}" y="${y + 3}" font-size="9" fill="${r.color}" font-family="${SERIF}">Δ=${r.delta.toFixed(2)}</text>`;
+    // Connecting line — temp-colored to highlight the gap
+    svg += `<line x1="${xScale(r.across)}" y1="${y}" x2="${xScale(r.within)}" y2="${y}" stroke="${tCol}" stroke-width="1.4" opacity="0.6"/>`;
+
+    // Δ label (right) — temp-colored
+    svg += `<text x="${pad.l + plotW + 6}" y="${y + 3}" font-size="9" fill="${tCol}" font-family="${SERIF}" font-weight="bold">Δ=${r.delta.toFixed(2)}</text>`;
 
     // Tooltip hit target
-    const tt = `within = ${r.within.toFixed(3)}<br>across = ${r.across.toFixed(3)}<br>Δ = ${r.delta.toFixed(3)}`;
+    const tt = `within = ${r.within.toFixed(3)}<br>across = ${r.across.toFixed(3)}<br>Δ = ${r.delta.toFixed(3)}<br>temperature = ${r.temp}`;
     svg += `<rect x="${pad.l}" y="${pad.t + i * rowH}" width="${plotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(r.label)} — persona individuation" data-color="${r.color}" data-extra="${tt}" style="cursor:default"/>`;
   });
 
-  // Legend — positioned on its own row between subtitle and plot
+  // Legend strip — marker semantics + temperature key
   const legY = pad.t - 16;
   svg += `<circle cx="${pad.l}" cy="${legY}" r="3.5" fill="white" stroke="#666" stroke-width="1.5"/>`;
-  svg += `<text x="${pad.l + 8}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Across agents (different persona)</text>`;
-  svg += `<circle cx="${pad.l + 220}" cy="${legY}" r="3.5" fill="#666"/>`;
-  svg += `<text x="${pad.l + 228}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Within agent (same persona, 5 reps)</text>`;
+  svg += `<text x="${pad.l + 8}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Across agents</text>`;
+  svg += `<circle cx="${pad.l + 100}" cy="${legY}" r="3.5" fill="#666"/>`;
+  svg += `<text x="${pad.l + 108}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Within agent</text>`;
+  svg += `<line x1="${pad.l + 200}" y1="${legY}" x2="${pad.l + 220}" y2="${legY}" stroke="${TEMP0}" stroke-width="2"/>`;
+  svg += `<text x="${pad.l + 224}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">temp = 0</text>`;
+  svg += `<line x1="${pad.l + 290}" y1="${legY}" x2="${pad.l + 310}" y2="${legY}" stroke="${TEMP1}" stroke-width="2"/>`;
+  svg += `<text x="${pad.l + 314}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">temp = 1</text>`;
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
   wireTooltips(el);
@@ -1574,31 +1636,40 @@ function renderRADecisionDrivers(data, modelFilter = null) {
       data: byConfig[key] });
   });
 
+  function subtitleHTML(mode) {
+    const baseStyle = `font-size:10px;font-style:italic;color:#777;font-family:${SERIF};margin-bottom:8px`;
+    if (mode === 'diff') {
+      return `<div style="display:flex;align-items:center;gap:8px;${baseStyle}">
+        <span style="font-style:normal;color:#555">Difference: stay-home − go-out</span>
+        <span>−50%</span>
+        <div style="width:140px;height:10px;background:linear-gradient(to right, rgb(33,150,243), white, rgb(229,57,53));border:1px solid #ccc"></div>
+        <span>+50%</span>
+        <span>(red = more in stay-home reasoning)</span>
+      </div>`;
+    }
+    let text;
+    if (mode === 'yes')      text = 'Among responses that decided stay-home: % that mention each topic';
+    else if (mode === 'no')  text = 'Among responses that decided go-out: % that mention each topic';
+    else                     text = '% of all responses that mention each topic';
+    return `<div style="${baseStyle}">${text}</div>`;
+  }
+
   function draw(mode) {
     // mode: "overall" | "yes" | "no" | "diff" (yes - no)
     const W = Math.min(el.parentElement?.offsetWidth || 1200, 1200);
     const labelW = 170;
     const cellW = Math.floor((W - labelW - 40) / concepts.length);
     const cellH = 22;
-    // Header stack (top → bottom):
-    //   title (y=16) → subtitle (y=32) → concept names (2 lines) → keyword stack → grid
-    const KW_LINES = 6;
+    // Header stack (top → bottom): concept names (2 lines) → keyword stack → grid
+    const KW_LINES = 10;
     const kwLineH = 9;
     const nameLineH = 12;
-    const titleBlockH = 40;  // reserves vertical room for title + subtitle
+    const titleBlockH = 8;  // small top buffer (title + subtitle now live OUTSIDE the SVG)
     const headerH = titleBlockH + 2 * nameLineH + 8 + KW_LINES * kwLineH + 8;
     const pad = { l: labelW, t: headerH, r: 16, b: 56 };
     const H = pad.t + rows.length * cellH + pad.b;
 
     let svg = '';
-
-    // Title + mode toggle
-    svg += `<text x="${W / 2}" y="18" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">Decision Drivers — Concept Frequency in Reasoning Text</text>`;
-    const subtitle = mode === "yes" ? "Among STAY HOME decisions" :
-                     mode === "no"  ? "Among GO OUT decisions" :
-                     mode === "diff"? "Difference: stay home − go out (red = more in stay-home reasoning)" :
-                                      "Across all decisions";
-    svg += `<text x="${W / 2}" y="34" font-size="9" fill="#777" font-family="${SERIF}" text-anchor="middle" font-style="italic">${subtitle}</text>`;
 
     // Column headers — two-line wrapped concept name (top) + keyword stack
     // below. Wrapping at "/" or whitespace avoids narrow-cell overlap problems
@@ -1673,12 +1744,13 @@ function renderRADecisionDrivers(data, modelFilter = null) {
       });
     });
 
-    el.innerHTML = `<div style="margin-bottom:8px">
+    el.innerHTML = `<div style="margin-bottom:6px">
       <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="overall" ${mode==='overall'?'checked':''}> Overall</label>
-      <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="yes" ${mode==='yes'?'checked':''}> Stay home only</label>
-      <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="no" ${mode==='no'?'checked':''}> Go out only</label>
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="yes" ${mode==='yes'?'checked':''}> Stay-home only</label>
+      <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="no" ${mode==='no'?'checked':''}> Go-out only</label>
       <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="diff" ${mode==='diff'?'checked':''}> Δ (stay − go)</label>
     </div>
+    ${subtitleHTML(mode)}
     <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
     el.querySelectorAll('input[name="drv-mode"]').forEach(r => r.addEventListener('change', e => draw(e.target.value)));
   }

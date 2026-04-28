@@ -40,12 +40,6 @@ function initSectionNavs() {
       filterSectionTab('tab-responses', 'responses-section-nav', link.dataset.filter);
     });
   });
-  document.querySelectorAll('#author-section-nav .section-link').forEach(link => {
-    link.addEventListener('click', e => {
-      e.preventDefault();
-      filterSectionTab('tab-author', 'author-section-nav', link.dataset.filter);
-    });
-  });
   document.querySelectorAll('#appendix-section-nav .section-link').forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
@@ -57,7 +51,6 @@ function initSectionNavs() {
   filterSectionTab('tab-curves', 'curves-section-nav', 'all');
   filterSectionTab('tab-agents', 'agents-section-nav', 'all');
   filterSectionTab('tab-responses', 'responses-section-nav', 'all');
-  filterSectionTab('tab-author', 'author-section-nav', 'all');
   filterSectionTab('tab-appendix', 'appendix-section-nav', 'all');
 }
 
@@ -78,9 +71,14 @@ function initTabs() {
         renderAgentAnalysis();
         tab3Rendered = true;
       }
-      // Lazy-render Appendix A mobility-curve regressions on first Appendix visit
+      // Lazy-render Appendix A, B, and D on first Appendix visit
       if (tab === 'appendix' && !appendixRegressionsRendered) {
         renderAppendixARegressions();
+        renderAppendixBRegressions();
+        renderAppendixB2Regressions();
+        renderFigA1CoefficientBars();
+        renderFigA2Calculator();
+        renderFigA3CrossModelEffects();
         appendixRegressionsRendered = true;
       }
       // Lazy-render Response Analysis on first visit
@@ -88,14 +86,6 @@ function initTabs() {
         agentTabRendered = true;
         loadAgentsJSON(initFig23Spotlight);
         initResponseAnalysisFigures();
-      }
-      // Lazy-render Author Notes comparisons + interactive figures
-      if (tab === 'author') {
-        renderAuthorComparisons();
-        renderAuthorPerModelComparisons();
-        renderFigA1CoefficientBars();
-        renderFigA2Calculator();
-        renderFigA3CrossModelEffects();
       }
     });
   });
@@ -224,6 +214,41 @@ function renderAppendixARegressions() {
   }
 }
 
+// Render Appendix B.1: fixed-effects + random-effects logit tables for all 21 configs
+function renderAppendixBRegressions() {
+  loadAllRegressions(function(allRegs) {
+    CONFIG.MODELS.forEach((m, i) => {
+      const key = configDirKey(m);
+      const elId = `appendix-b1-reg-${i}`;
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const regData = allRegs[key];
+      if (!regData) {
+        el.innerHTML = '<div style="color:#999;padding:12px;font-size:12px">No regression data for this configuration.</div>';
+        return;
+      }
+      renderFig25Regression(regData, m, elId);
+    });
+  });
+}
+
+// Render Appendix B.2: random-effects logit with mention flags for all 21 configs.
+// Reuses renderModel3Coef (analytics-responses.js).
+function renderAppendixB2Regressions() {
+  const cb = Date.now();
+  Promise.all([
+    new Promise(res => loadAllRegressions(res)),
+    fetch('data/real/trait_mentions.json?_=' + cb).then(r => r.json()),
+  ]).then(([allRegs, traitData]) => {
+    CONFIG.MODELS.forEach((m, i) => {
+      const elId = `appendix-b2-reg-${i}`;
+      const el = document.getElementById(elId);
+      if (!el) return;
+      renderModel3Coef(allRegs, traitData, m, el);
+    });
+  });
+}
+
 function initRegToggles() {
   document.querySelectorAll('.reg-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -250,7 +275,6 @@ function init() {
   initTabs();
   initRegToggles();
   initSectionNavs();
-  renderLogOddsWalkthrough();
 
   Papa.parse(CONFIG.ALL_MACRO, {
     download: true, header: true, dynamicTyping: true, skipEmptyLines: true,

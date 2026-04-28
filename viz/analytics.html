@@ -434,6 +434,8 @@
 
   <!-- Tab Navigation -->
   <nav id="tab-nav">
+    <a href="#" class="tab-link" data-tab="rq">Research Questions</a>
+    <span class="tab-sep">|</span>
     <a href="#" class="tab-link active" data-tab="curves">Mobility Curves</a>
     <span class="tab-sep">|</span>
     <a href="#" class="tab-link" data-tab="agents">Cohort Analysis</a>
@@ -441,11 +443,91 @@
     <a href="#" class="tab-link" data-tab="responses">Response Analysis</a>
     <span class="tab-sep">|</span>
     <a href="#" class="tab-link" data-tab="appendix">Appendix</a>
-    <span class="tab-sep">|</span>
-    <a href="#" class="tab-link author-link" data-tab="author">Author Notes</a>
   </nav>
 
   <div id="loading">Loading data&hellip;</div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB — RESEARCH QUESTIONS
+  ══════════════════════════════════════════════ -->
+  <div id="tab-rq" class="tab-pane">
+
+    <!-- Research Questions & Evidence Map -->
+    <div class="section" id="rq-section" data-section="rq">
+      <div class="fig-num">Research Questions</div>
+      <div class="fig-title">Research Questions &amp; Evidence Map</div>
+      <div id="rq-content" style="font-family:'Libre Baskerville','Georgia',serif;font-size:13px;line-height:1.65;color:#333;max-width:980px">
+
+        <p style="margin:8px 0 14px;color:#555;font-style:italic">Each research question is mapped to the figures that bear on it. Figures listed at the bottom are descriptive context or interactive exploration tools and do not test a specific hypothesis.</p>
+
+        <h4 style="margin:18px 0 6px;font-size:13px;color:#111;letter-spacing:0.04em">Theme A &mdash; Comparing LLM Mobility Curves</h4>
+        <table class="ols-table" style="width:100%;margin-bottom:8px">
+          <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
+          <tbody>
+            <tr><td>RQ1</td><td>Does LLM reasoning budget affect mobility curves?</td><td>Figs 1, 2</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ2</td><td>Does LLM size affect mobility curves?</td><td>Figs 3, 4</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ3</td><td>Does LLM evolution affect mobility curves?</td><td>Figs 5, 6, 7</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ4</td><td>Does LLM provider affect mobility curves?</td><td>Figs 8, 9</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ5</td><td>Does LLM knowledge cutoff affect mobility curves?</td><td>Figs 10, 11&ndash;14</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ6</td><td>Does LLM release date affect mobility curves?</td><td>Figs 15, 16&ndash;18</td><td><em>TBD</em></td></tr>
+          </tbody>
+        </table>
+
+        <h4 style="margin:22px 0 6px;font-size:13px;color:#111;letter-spacing:0.04em">Theme B &mdash; Trait Interpretation</h4>
+        <table class="ols-table" style="width:100%;margin-bottom:8px">
+          <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
+          <tbody>
+            <tr><td>RQ7</td><td>How do agent traits affect mobility curves?</td><td>Figs 22, 23, 25, 27</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ8</td><td>Are personality effects larger than infection effects?</td><td>Fig 26</td><td><em>TBD</em></td></tr>
+          </tbody>
+        </table>
+
+        <h4 style="margin:22px 0 6px;font-size:13px;color:#111;letter-spacing:0.04em">Theme C &mdash; Cross-Model Consistency</h4>
+        <table class="ols-table" style="width:100%;margin-bottom:8px">
+          <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
+          <tbody>
+            <tr><td>RQ9</td><td>Do LLMs agree on which predictors matter?</td><td>Figs 28, 29</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ10</td><td>Do LLMs agree on which agents are most cautious?</td><td>Fig 30</td><td><em>TBD</em></td></tr>
+          </tbody>
+        </table>
+
+        <h4 style="margin:22px 0 6px;font-size:13px;color:#111;letter-spacing:0.04em">Theme D &mdash; Reasoning Text Analysis</h4>
+        <table class="ols-table" style="width:100%;margin-bottom:8px">
+          <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
+          <tbody>
+            <tr><td>RQ11</td><td>How do trait mentions shape the decision?</td><td>Figs 32, 33, 34</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ12</td><td>Beyond trait mentions, which concept categories dominate stay-home vs. go-out reasoning?</td><td>Fig 37</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ13</td><td>How does reasoning length vary across LLMs and infection levels?</td><td>Figs 35, 36</td><td><em>TBD</em></td></tr>
+          </tbody>
+        </table>
+
+        <h4 style="margin:22px 0 6px;font-size:13px;color:#111;letter-spacing:0.04em">Theme E &mdash; Response Heterogeneity</h4>
+        <p style="margin:0 0 8px;color:#666;font-style:italic;font-size:12px">How similar or different are LLM responses &mdash; across repetitions of the same prompt (RQ14, RQ15) and across different personas (RQ16)?</p>
+        <table class="ols-table" style="width:100%;margin-bottom:8px">
+          <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
+          <tbody>
+            <tr><td>RQ14</td><td>When asked the same question 5 times, do models give the same decision?</td><td>Fig 38</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ15</td><td>When models give the same decision, do they also produce the same reasoning text?</td><td>Fig 39</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ16</td><td>Does the LLM produce genuinely persona-specific reasoning, or use the same template regardless of who the agent is?</td><td>Fig 40</td><td><em>TBD</em></td></tr>
+          </tbody>
+        </table>
+
+        <h4 style="margin:22px 0 6px;font-size:13px;color:#111;letter-spacing:0.04em">Figures not in the paper&rsquo;s RQ structure</h4>
+        <table class="ols-table" style="width:100%">
+          <thead><tr><th style="width:60px">Fig</th><th>Title</th><th>Disposition</th></tr></thead>
+          <tbody>
+            <tr class="rq-uncovered"><td>Fig 19</td><td>Agent-Level Decision Heatmap</td><td>Appendix candidate &mdash; Fig 30 is the stronger paper-level evidence for RQ10.</td></tr>
+            <tr class="rq-uncovered"><td>Fig 20</td><td>Rep-to-Rep Decision Agreement (Mobility tab, by infection level)</td><td>Appendix candidate &mdash; Fig 38 is the paper-level evidence for RQ15.</td></tr>
+            <tr class="rq-uncovered"><td>Fig 21</td><td>Interactive Comparison Tool (Dummy OLS)</td><td>Excluded from paper &mdash; exploration tool only.</td></tr>
+            <tr class="rq-uncovered"><td>Fig 24</td><td>Personality Ranking Accuracy</td><td>Appendix candidate &mdash; Fig 30 is the stronger paper-level evidence for RQ10.</td></tr>
+            <tr class="rq-uncovered"><td>Fig 31</td><td>Agent Spotlight &mdash; Cross-Model Comparison</td><td>Illustrative example may be drawn from this in the paper, but the figure itself is an exploration tool, not a hypothesis test.</td></tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+  </div><!-- end tab-rq -->
 
   <!-- ══════════════════════════════════════════════
        TAB 1 — MOBILITY CURVES
@@ -478,7 +560,7 @@
     <div class="section" id="figA-section" data-section="reasoning" style="display:none">
       <div class="fig-num">Figure 1</div>
       <div class="fig-title">GPT-5.2 &mdash; Effect of Reasoning Budget</div>
-      <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high). N&thinsp;=&thinsp;100 agents &times; 5 repetitions &times; 40 infection levels per configuration.</div>
+      <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). N&thinsp;=&thinsp;100 agents &times; 5 repetitions &times; 40 infection levels per configuration.</div>
       <div class="chart-container" id="figA-chart"></div>
       <div class="legend" id="figA-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -492,7 +574,7 @@
     <div class="section" id="figB-section" data-section="reasoning" style="display:none">
       <div class="fig-num">Figure 2</div>
       <div class="fig-title">Gemini 3 Flash Preview &mdash; Effect of Reasoning Budget</div>
-      <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). Dashed lines indicate extended reasoning (medium and high).</div>
+      <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high).</div>
       <div class="chart-container" id="figB-chart"></div>
       <div class="legend" id="figB-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -508,7 +590,7 @@
     <div class="section" id="figAnthro-section" data-section="within" style="display:none">
       <div class="fig-num">Figure 3</div>
       <div class="fig-title">Anthropic &mdash; Model Size Comparison: Haiku &middot; Sonnet &middot; Opus (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves across three model size tiers — Claude Haiku 4.5 (small), Sonnet 4.5 (mid), and Opus 4.5 (large) — all with reasoning off. Tests whether model size predicts behavioral sensitivity to infection risk.</div>
+      <div class="fig-caption">Mobility curves across three model size tiers — Claude Haiku 4.5 (small), Sonnet 4.5 (mid), and Opus 4.5 (large) — all with reasoning off. Tests whether model size predicts behavioral sensitivity within the same model generation.</div>
       <div class="chart-container" id="figAnthro-chart"></div>
       <div class="legend" id="figAnthro-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -538,7 +620,7 @@
     <div class="section" id="figD-section" data-section="generational" style="display:none">
       <div class="fig-num">Figure 5</div>
       <div class="fig-title">Gemini &mdash; Model Evolution (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview at reasoning = off. Gemini 2.5 Flash Lite excluded due to anomalous inverted response curve (see Figure 4).</div>
+      <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview, all at reasoning = off.</div>
       <div class="chart-container" id="figD-chart"></div>
       <div class="legend" id="figD-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -552,7 +634,7 @@
     <div class="section" id="figAnthroGen-section" data-section="generational" style="display:none">
       <div class="fig-num">Figure 6</div>
       <div class="fig-title">Anthropic &mdash; Model Evolution (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves for Claude Sonnet 4.0 and Claude Sonnet 4.5, both with reasoning off. Each line = mean mobility across 5 repetitions per infection level.</div>
+      <div class="fig-caption">Mobility curves for Claude Sonnet 4.0 and Claude Sonnet 4.5, both at reasoning = off.</div>
       <div class="chart-container" id="figAnthroGen-chart"></div>
       <div class="legend" id="figAnthroGen-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -596,7 +678,7 @@
     <div class="section" id="s3-section" data-section="cross" style="display:none">
       <div class="fig-num">Figure 9</div>
       <div class="fig-title">Within-Provider Model Variation</div>
-      <div class="fig-caption">All configurations overlaid within each provider. Hover to identify individual models.</div>
+      <div class="fig-caption">All configurations overlaid within each provider.</div>
       <div class="facet-row" id="s3-facets"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
     </div>
@@ -607,7 +689,7 @@
     <div class="section" id="s-cutoff-timeline" data-section="cutoff" style="display:none">
       <div class="fig-num">Figure 10</div>
       <div class="fig-title">Model Knowledge Cutoff Dates</div>
-      <div class="fig-caption">All 21 configurations plotted by knowledge cutoff date, grouped by provider. Brackets indicate the groupings used in Figures 12&ndash;15.</div>
+      <div class="fig-caption">All 21 configurations plotted by knowledge cutoff date, grouped by provider. Brackets indicate the groupings used in Figures 11&ndash;14.</div>
       <div id="cutoff-timeline-chart"></div>
     </div>
 
@@ -615,7 +697,7 @@
     <div class="section" id="figCutPre24-section" data-section="cutoff" style="display:none">
       <div class="fig-num">Figure 11</div>
       <div class="fig-title">Knowledge Cutoff &mdash; Pre-2024</div>
-      <div class="fig-caption">Models with the oldest training data: GPT-3.5 Turbo (cutoff Sep 2021), Claude 3 Haiku (Aug 2023), and GPT-4o (Oct 2023). Training data spans a 2-year range. All reasoning = off.</div>
+      <div class="fig-caption">Models with the oldest knowledge cutoffs: GPT-3.5 Turbo (Sep 2021), Claude 3 Haiku (Aug 2023), and GPT-4o (Oct 2023). All reasoning = off.</div>
       <div class="chart-container" id="figCutPre24-chart"></div>
       <div class="legend" id="figCutPre24-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -643,7 +725,7 @@
     <div class="section" id="figCutEarly25-section" data-section="cutoff" style="display:none">
       <div class="fig-num">Figure 13</div>
       <div class="fig-title">Knowledge Cutoff &mdash; Early 2025 (Jan&ndash;Mar)</div>
-      <div class="fig-caption">Six models with Jan&ndash;Mar 2025 knowledge cutoffs across two providers: Sonnet 4.5, Haiku 4.5, Sonnet 4.0 (Anthropic) and Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemini 3 Flash (Gemini). All reasoning = off. Tests whether models trained on similar data converge behaviorally.</div>
+      <div class="fig-caption">Six models with Jan&ndash;Mar 2025 knowledge cutoffs across Anthropic and Gemini: Sonnet 4.5, Haiku 4.5, Sonnet 4.0 (Anthropic) and Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemini 3 Flash (Gemini). All reasoning = off.</div>
       <div class="chart-container" id="figCutEarly25-chart"></div>
       <div class="legend" id="figCutEarly25-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -657,7 +739,7 @@
     <div class="section" id="figCutLate25-section" data-section="cutoff" style="display:none">
       <div class="fig-num">Figure 14</div>
       <div class="fig-title">Knowledge Cutoff &mdash; Late 2025 (Aug)</div>
-      <div class="fig-caption">The two flagship models with Aug 2025 knowledge cutoffs: Claude Opus 4.5 (Anthropic) and GPT-5.2 (OpenAI). All reasoning = off. Direct cross-provider comparison of models trained on the most recent data in the study.</div>
+      <div class="fig-caption">The two models with the most recent knowledge cutoffs in the study (Aug 2025): Claude Opus 4.5 (Anthropic) and GPT-5.2 (OpenAI). All reasoning = off.</div>
       <div class="chart-container" id="figCutLate25-chart"></div>
       <div class="legend" id="figCutLate25-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -673,7 +755,7 @@
     <div class="section" id="s-release-timeline" data-section="release" style="display:none">
       <div class="fig-num">Figure 15</div>
       <div class="fig-title">Model Release Dates</div>
-      <div class="fig-caption">All 21 configurations plotted by release date, grouped by provider. Brackets indicate the groupings used in Figures 17&ndash;19.</div>
+      <div class="fig-caption">All 21 configurations plotted by release date, grouped by provider. Brackets indicate the groupings used in Figures 16&ndash;18.</div>
       <div id="release-timeline-chart"></div>
     </div>
 
@@ -681,7 +763,7 @@
     <div class="section" id="figRelLegacy-section" data-section="release" style="display:none">
       <div class="fig-num">Figure 16</div>
       <div class="fig-title">Release Date &mdash; Legacy Era (pre-2025)</div>
-      <div class="fig-caption">The three oldest models in the study: GPT-3.5 Turbo (Jan 2024), Claude 3 Haiku (Mar 2024), and GPT-4o (Nov 2024). All reasoning = off. Cross-provider comparison of pre-2025 releases.</div>
+      <div class="fig-caption">The three oldest models in the study by release date: GPT-3.5 Turbo (Jan 2024), Claude 3 Haiku (Mar 2024), and GPT-4o (Nov 2024). All reasoning = off.</div>
       <div class="chart-container" id="figRelLegacy-chart"></div>
       <div class="legend" id="figRelLegacy-legend"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
@@ -745,13 +827,7 @@
     <div class="section" id="figJ-section" data-section="comparison" style="display:none">
       <div class="fig-num">Figure 21</div>
       <div class="fig-title">Model Comparison &mdash; Dummy Variable OLS</div>
-      <div class="fig-caption">
-        Select two model configurations to compare. Each open circle = one repetition at one
-        infection level (5 reps &times; 40 levels = 200 observations per config, 400 total).
-        D&thinsp;=&thinsp;0 for Config A, D&thinsp;=&thinsp;1 for Config B.<br>
-        <strong>Model 1:</strong> Mobility = &beta;&#8320; + &beta;&#8321;&middot;NC + &beta;&#8322;&middot;NC&sup2; + &beta;&#8323;&middot;D &nbsp;|&nbsp;
-        <strong>Model 2:</strong> Mobility = &beta;&#8320; + &beta;&#8321;&middot;NC + &beta;&#8322;&middot;NC&sup2; + &beta;&#8323;&middot;D + <strong>&beta;&#8324;&middot;D&middot;NC</strong>
-      </div>
+      <div class="fig-caption">Dummy-variable OLS comparing two model configurations across 400 pooled observations (200 per config: 5 reps &times; 40 infection levels). Each circle = one repetition at one infection level. The interaction term (D &times; NC) tests whether the two configurations differ in their sensitivity to infection level, beyond any difference in baseline mobility.</div>
       <div class="figJ-controls">
         <div style="display:flex;flex-direction:column;gap:3px">
           <span style="font-size:11px;color:#888;font-style:italic">Baseline (D = 0)</span>
@@ -779,7 +855,7 @@
   <div id="tab-agents" class="tab-pane">
 
     <div id="agents-section-nav">
-      <a class="section-link active" data-filter="all" href="#">All</a>
+      <a class="section-link active" data-filter="all" href="#">All Figures</a>
       <span class="nav-sep">&middot;</span>
       <a class="section-link" data-filter="demographics" href="#">Demographics</a>
       <span class="nav-sep">&middot;</span>
@@ -808,7 +884,7 @@
     <div class="section" id="fig25-section" data-section="regression">
       <div class="fig-num">Figure 23</div>
       <div class="fig-title">Agent-Level Logistic Regression</div>
-      <div class="fig-caption">Logistic regression on individual agent decisions (20,000 obs per config). <strong>Fixed-effects logit</strong>: 99 agent dummies absorb individual variation; only infection coefficients shown. <strong>Random-effects logit</strong>: random intercepts per agent (glmer) — estimates trait and demographic effects. Follows the regression approach from Paper 1. <em>Model validation diagnostics (calibration, DHARMa residuals, random-intercept Q-Q, BLUPs vs predictors, functional-form checks) are provided in Appendix Figures B1 (fixed-effects) and B2 (random-effects).</em></div>
+      <div class="fig-caption">Logistic regression on individual agent decisions (20,000 obs per config). <strong>Fixed-effects logit</strong>: 99 agent dummies absorb individual variation; only infection coefficients shown. <strong>Random-effects logit</strong>: random intercepts per agent — estimates trait and demographic effects. <em>Per-model coefficient tables for all 21 configurations are in Appendix B.1; diagnostic validation is in Appendix Figures C1 (fixed-effects) and C2 (random-effects).</em></div>
       <div id="fig25-model-select" style="margin-bottom:12px"></div>
       <div id="fig25-results"></div>
     </div>
@@ -817,9 +893,7 @@
     <div class="section" id="fig29-section" data-section="regression">
       <div class="fig-num">Figure 24</div>
       <div class="fig-title">Personality Ranking Accuracy</div>
-      <div class="fig-caption">Spearman rank correlation between predicted agent ranking (from combined personality OR) and actual stay-home rate ranking, computed independently for each of the 21 LLM configurations. Higher &rho; indicates stronger correspondence between regression-predicted personality effects and observed agent behavior.</div>
-      <button id="fig25-guide-toggle" style="background:none;border:1px solid #ccc;padding:5px 14px;font-family:'Libre Baskerville',Georgia,serif;font-size:12px;cursor:pointer;border-radius:3px;color:#555;margin-bottom:8px">How This Works &#x25BE;</button>
-      <div id="fig25-guide" style="display:none"></div>
+      <div class="fig-caption">Spearman rank correlation between predicted agent ranking and actual stay-home rate ranking, computed independently for each of the 21 LLM configurations. Higher &rho; indicates stronger correspondence between regression-predicted personality effects and observed agent behavior. See Appendix D &rarr; Understanding: Spearman for a full walkthrough.</div>
       <div id="fig29-headline" style="margin-bottom:8px"></div>
       <div class="chart-container" id="fig29-chart"></div>
     </div>
@@ -830,7 +904,7 @@
     <div class="section" id="fig37-section" data-section="traits-infection">
       <div class="fig-num">Figure 25</div>
       <div class="fig-title">Decision Anatomy: Traits &amp; Infection Level Impact</div>
-      <div class="fig-caption">Each agent&rsquo;s stay-home decision is decomposed into three forces in log-odds space. Column 1 shows the intercept (identical for all agents), Column 2 shows each agent&rsquo;s starting position (intercept + personality), and Column 3 shows how infection shifts total log-odds upward. Click any dot or curve to explore an agent.</div>
+      <div class="fig-caption">Each agent&rsquo;s stay-home decision is decomposed into three additive components in log-odds space: the model intercept (identical for all agents), the personality contribution (sum of trait coefficients for that agent&rsquo;s specific profile), and the infection contribution (varies with infection level, identical across agents). All components use fixed-effects coefficients from the random-effects logit.</div>
       <div id="fig37-model-select" style="margin-bottom:12px"></div>
       <div class="chart-container" id="fig37-chart"></div>
       <div id="fig37-detail" style="display:none;margin-top:12px"></div>
@@ -840,12 +914,10 @@
     <div class="section" id="fig27-lo-section" data-section="traits-infection">
       <div class="fig-num">Figure 26</div>
       <div class="fig-title">Log-Odds Landscape: Traits &amp; Infection</div>
-      <div class="fig-caption">For each model, the combined personality log-odds range across 100 agents (bar&nbsp;=&nbsp;IQR, whisker&nbsp;=&nbsp;full range) is compared to the infection log-odds range across 0%&ndash;7% infection levels. Hollow markers show the theoretical min/max personality &mdash; the most &ldquo;go out&rdquo; and &ldquo;stay home&rdquo; trait combinations possible. The right-hand column shows the Personality/Infection ratio: how many times wider the personality spread is than the infection range. A secondary axis maps log-odds to P(stay&nbsp;home). Use the filter pills to compare subsets of models.</div>
-      <button id="fig27-lo-guide-toggle" style="background:none;border:1px solid #ccc;padding:5px 14px;font-family:'Libre Baskerville',Georgia,serif;font-size:12px;cursor:pointer;border-radius:3px;color:#555;margin-bottom:8px">How to Read This Figure &#x25BE;</button>
-      <div id="fig27-lo-guide" style="display:none"></div>
+      <div class="fig-caption">For each model, two parallel ranges are shown on the same log-odds axis. The solid line shows the theoretical personality range at zero infection &mdash; filled circle = most risk-prone trait combination, filled diamond = most risk-averse &mdash; anchored at intercept + personality log-odds. The dashed line shows the same two extremes shifted by the peak infection effect; the horizontal gap between any solid and hollow marker is infection&rsquo;s contribution. Both lines span the same width (personality range). The right-hand column shows the Personality/Infection ratio: values above 1.0&times; indicate personality variation exceeds infection&rsquo;s full effect. Positions are computed from trait coefficients estimated in the random-effects logit plus the model intercept.</div>
       <div id="fig27-lo-filters"></div>
       <div class="chart-container" id="fig27-lo-chart"></div>
-      <div class="fig-note">Personality log-odds = &Sigma;&beta;<sub>trait</sub> &times; trait<sub>i</sub> + &beta;<sub>male</sub> &times; male + &beta;<sub>age</sub> &times; age for each of 100 agents. Infection log-odds = &beta;<sub>inf</sub> &times; x + &beta;<sub>inf&sup2;</sub> &times; x&sup2; over 0&ndash;7%. On this additive scale, widths are directly comparable: a personality spread of 20 and an infection range of 8 means personality swings log-odds 2.5&times; more than infection. The ratio column quantifies this comparison as a single number. All coefficients from the random-effects logit.</div>
+      <div class="fig-note">Personality log-odds = intercept + &Sigma;&beta;<sub>trait</sub> &times; trait<sub>i</sub> + &beta;<sub>male</sub> &times; male + &beta;<sub>age</sub> &times; age, using theoretical extremes (not observed agents). Infection shift = &beta;<sub>inf</sub> &times; x + &beta;<sub>inf&sup2;</sub> &times; x&sup2; at peak infection level. All coefficients from the random-effects logit. Ratio = personality span &divide; infection shift.</div>
     </div>
 
     <div class="curve-section-header">Trait Breakdown</div>
@@ -853,10 +925,8 @@
     <!-- Figure 27: Cross-Model Trait Coefficient Comparison -->
     <div class="section" id="fig26-section" data-section="trait-breakdown">
       <div class="fig-num">Figure 27</div>
-      <div class="fig-title">Cross-Model Trait Coefficient Comparison</div>
-      <div class="fig-caption">Log-odds coefficients (&beta;) from the random-effects logit for each personality trait, gender, and age, compared across all 21 LLM configurations. Each panel is one trait dimension. Dashed line&nbsp;=&nbsp;0 (no effect). Filled dots&nbsp;=&nbsp;significant (p&lt;0.05); hollow/faded&nbsp;=&nbsp;not significant. A secondary axis maps &beta; to odds ratio (e^&beta;): &times;1 means no effect, &times;2 means the trait doubles stay-home odds. The right-hand column shows the |&beta;|/infection ratio &mdash; how impactful this trait is relative to a full infection-level sweep. Age &beta; is per year; scaled to the full 18&ndash;65 span for fair comparison with binary traits. Use filter pills to compare subsets.</div>
-      <button id="fig26-guide-toggle" style="background:none;border:1px solid #ccc;padding:5px 14px;font-family:'Libre Baskerville',Georgia,serif;font-size:12px;cursor:pointer;border-radius:3px;color:#555;margin-bottom:8px">How to Read This Figure &#x25BE;</button>
-      <div id="fig26-guide" style="display:none"></div>
+      <div class="fig-title">Cross-Model Trait Effect Comparison</div>
+      <div class="fig-caption">Log-odds coefficients (&beta;) from the random-effects logit for each personality trait, gender, and age, compared across all 21 configurations. One panel per predictor. Filled dot&nbsp;=&nbsp;significant (p&nbsp;&lt;&nbsp;0.05); hollow&nbsp;=&nbsp;not significant; whiskers&nbsp;=&nbsp;95% CI. The dashed vertical line marks &beta;&nbsp;=&nbsp;0; lighter ticks at &plusmn;2.94 are the 5% and 95% probability anchors. The right column reports |&beta;|&nbsp;/&nbsp;infection range: values above 1.0&times; indicate the predictor&rsquo;s swing exceeds infection&rsquo;s full effect over 0&ndash;7%. Age &beta; is per year; the ratio scales it to the full 18&ndash;65 span (47 years) so it is comparable with the binary traits.</div>
       <div id="fig29-filters"></div>
       <div class="chart-container" id="fig26-chart"></div>
     </div>
@@ -865,7 +935,7 @@
     <div class="section" id="cohort-trait-power-section" data-section="trait-breakdown">
       <div class="fig-num">Figure 28</div>
       <div class="fig-title">Per-Trait Power Ratio &mdash; Individual Trait Effects vs. Infection</div>
-      <div class="fig-caption">Each marker shows one predictor&rsquo;s |&beta;| as a multiple of the infection log-odds range, matching the &beta;&nbsp;Trait/Infection ratio in Figure 27 above. Circles&nbsp;=&nbsp;Big Five traits; diamonds&nbsp;=&nbsp;demographics (gender, age over 47-year span). The grey bar spans the weakest to strongest predictor. Markers to the right of the red dashed line (1.0&times;) indicate predictors individually more powerful than infection&rsquo;s full effect. Faded markers&nbsp;=&nbsp;not significant (p&nbsp;&gt;&nbsp;0.05).</div>
+      <div class="fig-caption">Each marker shows one predictor&rsquo;s |&beta;| as a multiple of the infection log-odds range, matching the &beta;&nbsp;Trait/Infection ratio in Figure 27 above. Each Big Five trait has a distinct shape; Male and Age (scaled over the 47-year span) both use diamonds &mdash; see legend. The grey bar spans the weakest to strongest predictor. Markers to the right of the red dashed line (1.0&times;) indicate predictors individually more powerful than infection&rsquo;s full effect. Faded markers&nbsp;=&nbsp;not significant (p&nbsp;&gt;&nbsp;0.05).</div>
       <div id="cohort-tp-filters"></div>
       <div class="chart-container" id="cohort-trait-power-chart"></div>
       <div class="fig-note">ratio = |&beta;<sub>predictor</sub>| / max(&Delta;<sub>infection</sub>). Age effect scaled to full range (18&ndash;65 = 47 years). Coefficients from the random-effects logit.</div>
@@ -877,7 +947,7 @@
     <div class="section" id="trait-rank-section" data-section="cross-model">
       <div class="fig-num">Figure 29</div>
       <div class="fig-title">Trait Importance Ranking Across Models</div>
-      <div class="fig-caption">The heatmap shows pairwise Spearman &rho; on 8-predictor importance rankings (Big Five + gender + age + infection): do two models agree on <em>which</em> predictors matter most? High &rho; means models share a similar &ldquo;value system&rdquo; for what drives agent decisions. Compare with Figure 30 below, which measures agreement on <em>which agents</em> are cautious.</div>
+      <div class="fig-caption">Pairwise Spearman &rho; on each model&rsquo;s 8-predictor importance ranking (Big Five + Male + Age + Infection, ranked by |&beta;|&nbsp;/&nbsp;infection ratio). High &rho; means two models share the same hierarchy of <em>what matters</em> for stay-home decisions.</div>
       <div id="trait-rank-filters"></div>
       <div class="chart-container" id="trait-rank-chart"></div>
     </div>
@@ -886,12 +956,12 @@
     <div class="section" id="fig27-section" data-section="cross-model">
       <div class="fig-num">Figure 30</div>
       <div class="fig-title">Agent Behavioral Consistency Across Models</div>
-      <div class="fig-caption">Spearman rank correlation (&rho;) of per-agent stay-home rates between each pair of 21 LLM configurations. High &rho; indicates agents maintain their relative behavioral ordering regardless of which model simulates them &mdash; evidence that personality traits genuinely drive decisions.</div>
+      <div class="fig-caption">For each model, the 100 agents are ranked by their average stay-home rate (across all infection levels and reps). Each cell shows the Spearman &rho; between two models&rsquo; rankings &mdash; high &rho; means both models agree on <em>which agents</em> are most cautious, even if their absolute rates differ.</div>
       <div id="fig28-filters"></div>
       <div class="chart-container" id="fig27-chart"></div>
     </div>
 
-    <!-- (misc section retired — figDelta promoted to Logit Regression as Fig 23, fig32 moved to Author Notes comparisons) -->
+    <!-- (misc section retired — figDelta promoted to Logit Regression as Fig 23) -->
 
   </div><!-- end tab-agents (Cohort Analysis) -->
 
@@ -920,7 +990,7 @@
     <div class="section" id="fig23-section" data-section="spotlight">
       <div class="fig-num">Figure 31</div>
       <div class="fig-title">Agent Spotlight &mdash; Cross-Model Comparison</div>
-      <div class="fig-caption">Select an individual agent and one or more LLM configurations to compare how that agent responds to rising infection levels across different models. Each line shows how many of the 5 runs the agent chose to stay home at each infection level (0 = always goes out, 5 = always stays home). Click any data point to read the agent's reasoning.</div>
+      <div class="fig-caption">Compare a single agent&rsquo;s response to rising infection across one or more LLM configurations. Each line shows how many of the 5 reps the agent chose to stay home at each infection level (0 = always went out, 5 = always stayed home). Click any data point to read that response&rsquo;s reasoning.</div>
       <div id="fig23-profile" class="spotlight-profile"></div>
       <div id="fig23-model-select" style="margin-bottom:12px"></div>
       <div class="chart-container" id="fig23-chart"></div>
@@ -934,23 +1004,23 @@
     <div class="section" id="ra-fig33-section" data-section="trait-util" style="display:none">
       <div class="fig-num">Figure 32</div>
       <div class="fig-title">Trait Mention Heatmap &mdash; Big Five, Infection &amp; Age References in LLM Reasoning</div>
-      <div class="fig-caption">How often does each model reference personality traits, infection, and age in its reasoning? Each cell shows the percentage of 20,000 responses where the model mentioned at least one keyword for that category. The two rightmost columns show infection context mentions (words like &ldquo;infection&rdquo;, &ldquo;cases&rdquo;, or rate percentages) and age mentions (words like &ldquo;years old&rdquo;, &ldquo;young&rdquo;, or the agent&rsquo;s own age number).</div>
+      <div class="fig-caption">Percentage of each model&rsquo;s 20,000 responses containing at least one keyword from each column (synonyms shown below each header). Big Five columns are split into the two opposing labels of a trait (e.g., Extraverted / Introverted) &mdash; a trait counts as mentioned whenever a keyword from either column appears, regardless of which label the agent actually has. Infection and Age combine word lists with pattern matching (rate percentages; the agent&rsquo;s own age number).</div>
       <div id="ra-heatmap-filters"></div>
       <div class="chart-container" id="ra-fig33-chart"></div>
-      <div class="fig-note">Keyword matching is case-insensitive. Synonyms listed under each column header. Big Five columns count pole-level mentions; Infection and Age use combined flags (words + patterns). Keywords validated through 3-iteration audit of 420K responses.</div>
+      <div class="fig-note">Keyword matching is case-insensitive.</div>
     </div>
 
     <!-- (Figure 33 removed — was Per-Trait Power Ratio duplicate of Cohort Fig 28) -->
 
-    <!-- Figure 33: Model 3 Coefficient Table -->
+    <!-- Figure 33: Random-Effects Logit with Mention Flags — Coefficient Table -->
     <div class="section" id="ra-m3table-section" data-section="trait-util" style="display:none">
       <div class="fig-num">Figure 33</div>
-      <div class="fig-title">Mention-Flag Regression Coefficients &mdash; Random-Effects Logit with Pole-Level Mention Flags</div>
-      <div class="fig-caption">Coefficient table for a random-effects logit extended with pole-level mention flags. Each of the 10 Big Five poles has its own flag (e.g., <code>mentioned_conscientious</code> vs. <code>mentioned_unconscientious</code>) plus <code>mentioned_infection</code> and <code>mentioned_age</code>. A flag enters the regression only when its Figure&nbsp;32 within-group rate is in [15&percnt;, 85&percnt;]; outside that window the mention is too uniform to be an informative predictor.</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Coefficient Table</div>
+      <div class="fig-caption">A logistic regression that adds, on top of the agent&rsquo;s actual traits and infection level, a yes/no flag for each trait label or context the response could mention (e.g., did the response say &ldquo;extraverted&rdquo;? &ldquo;infection&rdquo;?). The mention coefficients show whether <em>talking about</em> a trait shifts the agent&rsquo;s stay-home odds. A mention flag is only included when its Figure&nbsp;32 rate falls between 15&percnt; and 85&percnt; &mdash; outside that range almost every response says it (or none do), so the flag carries no usable variation. <em>Per-model coefficient tables for all 21 configurations are in Appendix B.2; diagnostic validation is in Appendix Figure C3.</em></div>
       <div id="ra-m3table-picker" style="margin-bottom:12px"></div>
       <div class="chart-container" id="ra-m3table-chart"></div>
       <div class="fig-note">
-        Model 3: <code>glmer(stay_home ~ base + trait_dummies + included_mention_flags + (1|agent_id), family=binomial)</code>. No trait&thinsp;&times;&thinsp;mention interactions &mdash; each mention flag enters as a main effect alongside the trait dummy. See the gate panel below the table for each pole&rsquo;s Figure&nbsp;32 within-group rate and inclusion status.
+        Model: <code>glmer(stay_home ~ base + trait_dummies + included_mention_flags + (1|agent_id), family=binomial)</code>. No trait&thinsp;&times;&thinsp;mention interactions &mdash; each mention flag enters as a main effect alongside the trait dummy. See the gate panel below the table for each candidate&rsquo;s Figure&nbsp;32 mention rate and inclusion status.
         <details style="margin-top:6px">
           <summary style="cursor:pointer;color:#555;font-weight:600">Full Regression Equation</summary>
           <div style="margin-top:6px;padding:8px 12px;background:#f8f8f8;border:1px solid #ddd;border-radius:4px;font-size:11px;line-height:1.6;overflow-x:auto">
@@ -959,11 +1029,11 @@
             + &beta;<sub>3</sub>&middot;male<br>
             + &beta;<sub>4</sub>&middot;extraverted + &beta;<sub>5</sub>&middot;agreeable + &beta;<sub>6</sub>&middot;conscientious + &beta;<sub>7</sub>&middot;emot_stable + &beta;<sub>8</sub>&middot;open_to_exp
             + &beta;<sub>9</sub>&middot;age_years<br>
-            + &Sigma;<sub>pole</sub> &gamma;<sub>pole</sub>&middot;mentioned_<em>pole</em> &nbsp;&nbsp; (included iff Fig 32 within-group rate &isin; [15&percnt;, 85&percnt;])<br>
+            + &Sigma;<sub>k</sub> &gamma;<sub>k</sub>&middot;mentioned_<em>k</em> &nbsp;&nbsp; (each <em>k</em> included iff its Figure 32 rate &isin; [15&percnt;, 85&percnt;])<br>
             + <em>u<sub>i</sub></em> &nbsp;&nbsp; (<em>u<sub>i</sub></em> ~ N(0, &sigma;&sup2;<sub>u</sub>))
           </div>
           <div style="margin-top:4px;font-size:10px;color:#888">
-            Poles: extroverted, introverted, agreeable, antagonistic, conscientious, unconscientious, neurotic, emot_stable, open, closed, infection, age (12 total). Each enters iff its Figure&nbsp;32 rate passes the 15&ndash;85&percnt; gate. No trait&thinsp;&times;&thinsp;mention interaction terms &mdash; earlier interaction specification was removed after within-group collinearity inflated SEs in Opus/Sonnet configurations.
+            Mention candidates (12 total): extroverted, introverted, agreeable, antagonistic, conscientious, unconscientious, neurotic, emot_stable, open, closed, infection, age. Each enters iff its Figure&nbsp;32 rate passes the 15&ndash;85&percnt; gate.
           </div>
         </details>
       </div>
@@ -972,11 +1042,11 @@
     <!-- Figure 34: Cross-Model Pole Positions (4 markers per model per dim) -->
     <div class="section" id="ra-xmodel-section" data-section="trait-util" style="display:none">
       <div class="fig-num">Figure 34</div>
-      <div class="fig-title">Pole-Level Positions Across Models &mdash; Does Invoking a Pole or Context Shift Behavior?</div>
-      <div class="fig-caption">For each of the 5 Big Five dimensions, one row per model with up to four markers on the log-odds scale (relative to the reference agent). Left panel&nbsp;=&nbsp;low-pole agents; right panel&nbsp;=&nbsp;high-pole agents. Hollow circle&nbsp;=&nbsp;that agent type without mentioning the pole keyword; filled circle&nbsp;=&nbsp;same agent type who mentioned it (significant only, p&nbsp;&lt;&nbsp;0.05). A connecting line appears only when the mention shift is significant. The final two panels (Infection and Age) use the same hollow/filled convention for the mention shift on a single axis. Models with no significant mention coefficient for a dimension are omitted from that panel.</div>
+      <div class="fig-title">Mention Effects Across Models</div>
+      <div class="fig-caption">Seven panels: one for each Big Five trait, plus Infection and Age. Each panel shows one row per model on the log-odds scale. Each Big Five panel is split: agents at one label of the trait on the left (e.g., Introverted), the other on the right (e.g., Extraverted). A hollow marker is that agent type&rsquo;s baseline log-odds when their response did <em>not</em> mention the trait; the filled marker shows where the same agent type lands when their response <em>did</em> mention that label. A line connects the pair only when the mention shift is statistically significant (p&nbsp;&lt;&nbsp;0.05). For Big Five panels, a row appears whenever at least one of the two labels passed the Figure&nbsp;32 inclusion gate (15&ndash;85&percnt;), regardless of significance. The Infection and Age panels are stricter: a row appears only when the mention shift is significant.</div>
       <div id="ra-xmodel-filters"></div>
       <div class="chart-container" id="ra-xmodel-chart"></div>
-      <div class="fig-note">Source: random-effects logit with pole-level mention flags (main effects only). Positions are log-odds relative to the reference agent (low-pole, no mention). Mention flags only enter when the Figure-32 within-group rate is in [15&ndash;85%]. Ratio columns on the right show each effect as a multiple of that model&rsquo;s full infection log-odds range — <em>&ldquo;how many infection-effects strong is this shift?&rdquo;</em> Only significant (p&nbsp;&lt;&nbsp;0.05) mention effects are shown; trait baseline positions are always shown.</div>
+      <div class="fig-note">Source: random-effects logit with one mention flag per trait label and per context category (main effects only). Mention flags only enter when the Figure&nbsp;32 mention rate falls between 15&percnt; and 85&percnt;. Ratio columns on the right show each effect as a multiple of that model&rsquo;s full infection log-odds range &mdash; how many infection-effects strong each shift is. Only significant (p&nbsp;&lt;&nbsp;0.05) mention effects are drawn as filled markers; baseline positions (no mention) are always shown.</div>
     </div>
 
     <!-- Figure 36 (Pole Mention Effect Matrix) removed — superseded by Figure 35
@@ -989,21 +1059,21 @@
     <!-- Figure 35: Output Token Landscape -->
     <div class="section" id="ra-fig34-section" data-section="verbosity" style="display:none">
       <div class="fig-num">Figure 35</div>
-      <div class="fig-title">Output Token Landscape &mdash; Response Verbosity by Model</div>
-      <div class="fig-caption">How verbose is each model&rsquo;s reasoning? Each box shows the distribution of output token counts across 20,000 responses. Longer responses may indicate more thorough reasoning &mdash; or more padding. Models with reasoning enabled use separate thinking tokens not shown here.</div>
+      <div class="fig-title">Response Verbosity by Model</div>
+      <div class="fig-caption">Distribution of output token counts across each model&rsquo;s 20,000 responses. Models with reasoning enabled use separate thinking tokens, which are not shown here.</div>
       <div id="ra-verbosity-filters"></div>
       <div class="chart-container" id="ra-fig34-chart"></div>
-      <div class="fig-note">Box = interquartile range (25th&ndash;75th percentile); whiskers = 10th&ndash;90th percentile; line = median. Reasoning tokens (internal chain-of-thought) are not included in output token counts. Reasoning-token counts were captured reliably only for Gemini 3 Flash (low/med/high); OpenAI o3 / GPT-5.2 reasoning configs and Gemini 2.5 Flash returned zero in our probe data and are treated as missing rather than genuinely zero.</div>
+      <div class="fig-note">Box = interquartile range (25th&ndash;75th percentile); whiskers = 10th&ndash;90th percentile; line = median. Internal reasoning tokens are excluded.</div>
     </div>
 
     <!-- Figure 36: Verbosity × Infection Level -->
     <div class="section" id="ra-fig35-section" data-section="verbosity" style="display:none">
       <div class="fig-num">Figure 36</div>
-      <div class="fig-title">Verbosity &times; Infection Level &mdash; Does Response Length Change With Infection Level?</div>
-      <div class="fig-caption">Each line shows the average number of output tokens per response at each infection level. Rising lines indicate models write longer responses as infection increases; flat lines suggest fixed-length reasoning regardless of context.</div>
+      <div class="fig-title">Mean Output Tokens by Infection Level</div>
+      <div class="fig-caption">Each line shows the average number of output tokens per response at each infection level.</div>
       <div id="ra-verbosity-bl-filters"></div>
       <div class="chart-container" id="ra-fig35-chart"></div>
-      <div class="fig-note">Each point is the mean of 500 responses (100 agents &times; 5 reps) at that infection level. Output tokens only; internal reasoning tokens are excluded (not reliably captured for all reasoning-enabled configs).</div>
+      <div class="fig-note">Each point is the mean of 500 responses (100 agents &times; 5 reps) at that infection level. Output tokens only; internal reasoning tokens are excluded.</div>
     </div>
 
     <div class="curve-section-header">Decision Themes</div>
@@ -1011,11 +1081,11 @@
     <!-- Figure 37: Decision Drivers Heatmap -->
     <div class="section" id="ra-drivers-section" data-section="decision-themes" style="display:none">
       <div class="fig-num">Figure 37</div>
-      <div class="fig-title">Decision Themes &mdash; Which Concepts Each Model Invokes When Reasoning</div>
-      <div class="fig-caption">For each model, how often does each concept appear in reasoning text? Each cell shows the percentage of responses mentioning at least one keyword from that category. Use the toggle to compare stay-home vs go-out reasoning, or view &ldquo;&Delta;&rdquo; to see which concepts are cited more in one direction than the other.</div>
+      <div class="fig-title">Decision Themes &mdash; Concept Frequency in Reasoning Text</div>
+      <div class="fig-caption">Each cell shows the percentage of a model&rsquo;s responses that mention at least one keyword from that concept category. Four views are available: overall mention rate, stay-home only, go-out only, and &Delta; (stay-home minus go-out, where positive values indicate concepts cited more in stay-home reasoning).</div>
       <div id="ra-drivers-filters"></div>
       <div class="chart-container" id="ra-drivers-chart"></div>
-      <div class="fig-note"><strong>†</strong> <em>Traits</em> keywords are the Big Five pole terms from Figure 32 (extrovert/introvert, agreeable/antagonistic, conscientious/unconscientious, emotionally stable/neurotic, open/closed to experience) plus age references — excluding infection-related words. <strong>Notation</strong>: trailing <code>*</code> = wildcard suffix (e.g. <code>contagi*</code> matches <em>contagious, contagion</em>). Slashes = alternation (e.g. <code>feel fine/good/healthy</code>). <code>N&nbsp;%</code> = number followed by a percent sign. See <code>analysis/compute_decision_drivers.py</code> for the full regex list.</div>
+      <div class="fig-note"><strong>†</strong> <em>Traits</em> keywords are the Big Five trait labels from Figure 32 (extrovert/introvert, agreeable/antagonistic, conscientious/unconscientious, emotionally stable/neurotic, open/closed to experience) plus age references — excluding infection-related words. <strong>Notation</strong>: trailing <code>*</code> = wildcard suffix (e.g. <code>contagi*</code> matches <em>contagious, contagion</em>). Slashes = alternation (e.g. <code>feel fine/good/healthy</code>). <code>N&nbsp;%</code> = number followed by a percent sign.</div>
     </div>
 
     <div class="curve-section-header">Response Repeatability</div>
@@ -1023,8 +1093,8 @@
     <!-- Figure 38: Rep-to-Rep Decision Agreement -->
     <div class="section" id="ra-fig37-section" data-section="consistency" style="display:none">
       <div class="fig-num">Figure 38</div>
-      <div class="fig-title">Rep-to-Rep Decision Agreement &mdash; How Consistent Are Models?</div>
-      <div class="fig-caption">How consistent are models when asked the same question five times? Each bar shows the percentage of (agent, infection level) combinations where all 5 repetitions produced the same stay-home decision. Temperature-0 models (blue) should theoretically be deterministic; temperature-1 models (orange) are expected to vary.</div>
+      <div class="fig-title">Rep-to-Rep Decision Agreement</div>
+      <div class="fig-caption">Each bar shows the percentage of (agent, infection level) combinations where all 5 repetitions produced the same stay-home decision. Bars are colored by sampling temperature: blue&nbsp;=&nbsp;temperature&nbsp;0, orange&nbsp;=&nbsp;temperature&nbsp;1.</div>
       <div id="ra-agreement-filters"></div>
       <div class="chart-container" id="ra-fig37-chart"></div>
       <div class="fig-note">Each model has 4,000 unique (agent, infection level) groups (100 agents &times; 40 levels), each with 5 repetitions. Agreement = all 5 reps return the same &ldquo;yes&rdquo; or &ldquo;no.&rdquo;</div>
@@ -1033,8 +1103,8 @@
     <!-- Figure 39: Response Text Similarity -->
     <div class="section" id="ra-fig38-section" data-section="consistency" style="display:none">
       <div class="fig-num">Figure 39</div>
-      <div class="fig-title">Response Text Similarity &mdash; Beyond Decision Agreement</div>
-      <div class="fig-caption">When models make the same decision across all 5 repetitions, do they also produce the same reasoning? &ldquo;Exact match&rdquo; measures character-identical responses; &ldquo;word overlap&rdquo; (Jaccard) captures semantic similarity even when phrasing differs. Perfect determinism would show both metrics at 100%.</div>
+      <div class="fig-title">Response Text Similarity</div>
+      <div class="fig-caption">Among 5-repetition groups where all 5 reps made the same decision, two metrics measure how similar the response text is: &ldquo;exact match&rdquo; is the share of pairs that are character-identical; &ldquo;word overlap&rdquo; (Jaccard) is the share of vocabulary that two responses share, capturing similarity when phrasing differs.</div>
       <div id="ra-textsim-filters"></div>
       <div class="chart-container" id="ra-fig38-chart"></div>
       <div class="fig-note">Jaccard similarity = |shared words| &divide; |all unique words| across each pair of the 10 pairwise comparisons per 5-rep group, then averaged. Only computed for groups with unanimous decisions.</div>
@@ -1043,11 +1113,11 @@
     <!-- Figure 40: Persona Individuation -->
     <div class="section" id="ra-persona-sim-section" data-section="consistency" style="display:none">
       <div class="fig-num">Figure 40</div>
-      <div class="fig-title">Persona Individuation &mdash; Does Reasoning Actually Differ Across Agents?</div>
-      <div class="fig-caption">For each model, we compute the cosine similarity of <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI <code>text-embedding-3-large</code></a> vectors between (a) the 5 repeated responses for each single agent at each infection level (<em>within-agent</em>), and (b) random pairs of <em>different</em> agents at the same infection level (<em>across-agent</em>). Only <strong>same-decision pairs</strong> are included in both comparisons, isolating reasoning style from decision agreement. A large <strong>within &minus; across</strong> gap means the model generates genuinely persona-specific reasoning; a near-zero gap means it produces the same template regardless of who the agent is.</div>
+      <div class="fig-title">Persona Individuation</div>
+      <div class="fig-caption">For each model, cosine similarity of <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI <code>text-embedding-3-large</code></a> vectors is computed on a strict subset of the data: an agent only qualifies at a given infection level when all 5 of its reps made the same decision. The 5/5 requirement applies to <em>both</em> within-agent and across-agent comparisons below. <em>Within-agent</em> similarity is the mean of all 10 rep-pair cosines among each qualifying agent&rsquo;s 5 reps. For <em>across-agent</em>, the qualifying agents at each infection level are split by which direction they unanimously chose (5/5 stay home or 5/5 go out); every pair of agents from the same direction contributes one similarity value, computed as the mean of all 25 cross-rep cosines (one rep from each agent), and the across-agent number is the average over all such pairs across all levels and both directions. A large within &minus; across gap indicates persona-specific reasoning; a near-zero gap indicates the model produces similar text regardless of who the agent is. Markers, connecting line, and &Delta; label are colored by sampling temperature: blue&nbsp;=&nbsp;temperature&nbsp;0, orange&nbsp;=&nbsp;temperature&nbsp;1.</div>
       <div id="ra-persona-filters"></div>
       <div class="chart-container" id="ra-persona-sim-chart"></div>
-      <div class="fig-note">Method: Reimers &amp; Gurevych (2019, EMNLP)-style embedding cosine similarity. Same-decision restriction: mixing yes/no pairs confounds persona similarity with decision similarity — restricting to same-decision pairs isolates the persona effect. Models shown in provider order. Models ranked by &Delta;.</div>
+      <div class="fig-note">Method: Reimers &amp; Gurevych (2019, EMNLP)-style embedding cosine similarity. Restricting to agents whose 5 reps all chose the same direction, and then matching across-agent pairs on the same chosen direction, prevents the comparison from being dominated by the trivial yes-text vs no-text gap, so any remaining within &minus; across gap reflects persona-driven reasoning style. Models sorted by &Delta; (descending).</div>
     </div>
 
   </div><!-- end tab-responses -->
@@ -1060,97 +1130,397 @@
     <div id="appendix-section-nav">
       <a class="section-link active" data-filter="all" href="#">All</a>
       <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="mobility" href="#">Mobility Curves (Appendix A)</a>
+      <a class="section-link" data-filter="mobility" href="#">Mobility Curve Regressions (Appendix A)</a>
       <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="logit" href="#">Logistic Regression (Appendix B)</a>
+      <a class="section-link" data-filter="logit-regs" href="#">Logistic Regressions (Appendix B)</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="logit" href="#">Model Diagnostics (Appendix C)</a>
+      <span class="nav-sep">&middot;</span>
+      <a class="section-link" data-filter="statsref" href="#">Statistical Reference (Appendix D)</a>
     </div>
 
     <!-- ──────────────────────────────────────────────
-         APPENDIX A — Mobility Curves / Linear Regressions
+         APPENDIX A — Mobility Curve OLS Regressions
          ────────────────────────────────────────────── -->
     <div class="section" data-section="mobility" style="margin-bottom:24px">
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#666;margin-bottom:6px">Appendix A &middot; Mobility Curves</div>
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:22px;font-weight:bold;color:#111;margin-bottom:8px">Mobility Curve OLS Regressions</div>
-      <div style="font-style:italic;color:#555;font-size:14px;line-height:1.55">For each comparison in the Mobility Curves tab (Figs 1&ndash;21), an OLS regression quantifies cross-configuration differences with dummy-variable coding (one config as baseline, others as contrasts). These tables are surfaced below, with panel titles linking back to the corresponding main-text figure. The full behavioral curves live in the <a href="#" onclick="document.querySelector('.tab-link[data-tab=curves]').click(); return false;" style="color:#1a4a8a">Mobility Curves tab</a>; this appendix presents the underlying regressions.</div>
+      <div class="fig-num">Appendix A &middot; Mobility Curve Regressions</div>
+      <div class="fig-title">OLS Regression Tables for Figures 1&ndash;18</div>
+      <div class="fig-caption">For each mobility curve comparison, an OLS regression quantifies cross-configuration differences using dummy-variable coding (one configuration as baseline, others as contrasts). Baseline = reasoning off unless otherwise noted.</div>
     </div>
 
-    <!-- Each section below contains a per-comparison OLS regression panel.
-         Panel IDs end in "-app" so the same render functions from
-         analytics-init.js can be reused; registration happens in initTabs. -->
+    <!-- A.1 Reasoning Budget -->
+    <div class="section" data-section="mobility" style="margin-bottom:8px">
+      <div class="fig-num">A.1 &mdash; Reasoning Budget Comparisons</div>
+    </div>
 
-    <!-- A · Reasoning budget comparisons -->
     <div class="section" data-section="mobility" style="margin-bottom:18px">
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:13px;font-weight:bold;color:#111;margin-bottom:8px">A.1 &mdash; Reasoning Budget Comparisons</div>
-      <div style="font-style:italic;font-size:12px;color:#777;margin-bottom:4px">OLS regression of mobility (% going outside) on infection level and reasoning-budget dummies. Baseline = reasoning off.</div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 1:</em> GPT-5.2 reasoning budget (off / low / medium / high)</div>
-      <div class="reg-table-panel" id="reg-gpt52-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 2:</em> Gemini 3 Flash reasoning budget (off / low / medium / high)</div>
+      <div class="fig-num">Figure A.1.1</div>
+      <div class="fig-title">GPT-5.2 &mdash; Reasoning Budget (off / low / medium / high)</div>
+      <div class="fig-caption">Corresponds to Figure 1. Baseline = reasoning off.</div>
+      <div class="reg-table-panel" id="reg-gpt52-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.1.2</div>
+      <div class="fig-title">Gemini 3 Flash Preview &mdash; Reasoning Budget (off / low / medium / high)</div>
+      <div class="fig-caption">Corresponds to Figure 2. Baseline = reasoning off.</div>
       <div class="reg-table-panel" id="reg-gemini3flash-app"></div>
     </div>
 
-    <!-- A · Model size comparisons -->
+    <!-- A.2 Model Size -->
+    <div class="section" data-section="mobility" style="margin-bottom:8px">
+      <div class="fig-num">A.2 &mdash; Model Size Comparisons</div>
+    </div>
+
     <div class="section" data-section="mobility" style="margin-bottom:18px">
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:13px;font-weight:bold;color:#111;margin-bottom:8px">A.2 &mdash; Model Size Comparisons</div>
-      <div style="font-style:italic;font-size:12px;color:#777;margin-bottom:4px">Mobility ~ infection + size-tier dummies. Smallest tier (Haiku / Flash Lite) as baseline.</div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 3:</em> Anthropic size comparison (Haiku &middot; Sonnet &middot; Opus 4.5)</div>
-      <div class="reg-table-panel" id="reg-figAnthro-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 4:</em> Gemini size comparison (2.5 Flash Lite &middot; 2.5 Flash)</div>
+      <div class="fig-num">Figure A.2.1</div>
+      <div class="fig-title">Anthropic &mdash; Model Size (Haiku &middot; Sonnet &middot; Opus 4.5)</div>
+      <div class="fig-caption">Corresponds to Figure 3. Baseline = Claude Haiku 4.5.</div>
+      <div class="reg-table-panel" id="reg-figAnthro-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.2.2</div>
+      <div class="fig-title">Gemini &mdash; Model Size (2.5 Flash Lite &middot; 2.5 Flash)</div>
+      <div class="fig-caption">Corresponds to Figure 4. Baseline = Gemini 2.5 Flash Lite.</div>
       <div class="reg-table-panel" id="reg-figGeminiLite-app"></div>
     </div>
 
-    <!-- A · Model evolution / generational -->
+    <!-- A.3 Model Evolution -->
+    <div class="section" data-section="mobility" style="margin-bottom:8px">
+      <div class="fig-num">A.3 &mdash; Model Evolution</div>
+    </div>
+
     <div class="section" data-section="mobility" style="margin-bottom:18px">
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:13px;font-weight:bold;color:#111;margin-bottom:8px">A.3 &mdash; Model Evolution (Generational Comparisons)</div>
-      <div style="font-style:italic;font-size:12px;color:#777;margin-bottom:4px">Earliest release in each family as baseline; later generations as dummies.</div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 5:</em> Gemini evolution (2.0 &rarr; 2.5 &rarr; 3 Flash)</div>
-      <div class="reg-table-panel" id="reg-figD-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 6:</em> Anthropic evolution (Sonnet 4.0 &rarr; 4.5)</div>
-      <div class="reg-table-panel" id="reg-figAnthroGen-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 7:</em> OpenAI evolution (GPT-3.5 &rarr; 4o &rarr; 5.1 &rarr; 5.2)</div>
+      <div class="fig-num">Figure A.3.1</div>
+      <div class="fig-title">Gemini &mdash; Evolution (2.0 Flash &rarr; 2.5 Flash &rarr; 3 Flash)</div>
+      <div class="fig-caption">Corresponds to Figure 5. Baseline = Gemini 2.0 Flash.</div>
+      <div class="reg-table-panel" id="reg-figD-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.3.2</div>
+      <div class="fig-title">Anthropic &mdash; Evolution (Sonnet 4.0 &rarr; Sonnet 4.5)</div>
+      <div class="fig-caption">Corresponds to Figure 6. Baseline = Claude Sonnet 4.0.</div>
+      <div class="reg-table-panel" id="reg-figAnthroGen-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.3.3</div>
+      <div class="fig-title">OpenAI &mdash; Evolution (GPT-3.5 Turbo &rarr; 4o &rarr; 5.1 &rarr; 5.2)</div>
+      <div class="fig-caption">Corresponds to Figure 7. Baseline = GPT-3.5 Turbo.</div>
       <div class="reg-table-panel" id="reg-figC-app"></div>
     </div>
 
-    <!-- A · Cross-provider flagship -->
+    <!-- A.4 Cross-Provider Flagship -->
+    <div class="section" data-section="mobility" style="margin-bottom:8px">
+      <div class="fig-num">A.4 &mdash; Cross-Provider Flagship</div>
+    </div>
+
     <div class="section" data-section="mobility" style="margin-bottom:18px">
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:13px;font-weight:bold;color:#111;margin-bottom:8px">A.4 &mdash; Cross-Provider Flagship Comparison</div>
-      <div style="font-style:italic;font-size:12px;color:#777;margin-bottom:4px">Claude Opus 4.5 as baseline.</div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 8:</em> Claude Opus 4.5 vs GPT-5.2 vs Gemini 3 Flash</div>
+      <div class="fig-num">Figure A.4.1</div>
+      <div class="fig-title">Flagship Models &mdash; Claude Opus 4.5 vs GPT-5.2 vs Gemini 3 Flash</div>
+      <div class="fig-caption">Corresponds to Figure 8. Baseline = Claude Opus 4.5.</div>
       <div class="reg-table-panel" id="reg-figFlagship-app"></div>
     </div>
 
-    <!-- A · Knowledge cutoff groupings -->
+    <!-- A.5 Knowledge Cutoff -->
+    <div class="section" data-section="mobility" style="margin-bottom:8px">
+      <div class="fig-num">A.5 &mdash; Knowledge Cutoff Era Comparisons</div>
+    </div>
+
     <div class="section" data-section="mobility" style="margin-bottom:18px">
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:13px;font-weight:bold;color:#111;margin-bottom:8px">A.5 &mdash; Knowledge Cutoff Era Comparisons</div>
-      <div style="font-style:italic;font-size:12px;color:#777;margin-bottom:4px">Models grouped by training-data cutoff; earliest config in each group as baseline.</div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 11:</em> Pre-2024 cutoff era</div>
-      <div class="reg-table-panel" id="reg-figCutPre24-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 12:</em> Mid-2024 cutoff (Jun&ndash;Sep)</div>
-      <div class="reg-table-panel" id="reg-figCutMid24-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 13:</em> Early 2025 cutoff (Jan&ndash;Mar)</div>
-      <div class="reg-table-panel" id="reg-figCutEarly25-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 14:</em> Late 2025 cutoff (Aug)</div>
+      <div class="fig-num">Figure A.5.1</div>
+      <div class="fig-title">Knowledge Cutoff &mdash; Pre-2024 Era</div>
+      <div class="fig-caption">Corresponds to Figure 11. Baseline = GPT-3.5 Turbo (Sep 2021 cutoff).</div>
+      <div class="reg-table-panel" id="reg-figCutPre24-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.5.2</div>
+      <div class="fig-title">Knowledge Cutoff &mdash; Mid-2024 (Jun&ndash;Sep)</div>
+      <div class="fig-caption">Corresponds to Figure 12. Baseline = GPT-4.1 (Jun 2024 cutoff).</div>
+      <div class="reg-table-panel" id="reg-figCutMid24-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.5.3</div>
+      <div class="fig-title">Knowledge Cutoff &mdash; Early 2025 (Jan&ndash;Mar)</div>
+      <div class="fig-caption">Corresponds to Figure 13. Baseline = Claude Sonnet 4.0 (Jan 2025 cutoff).</div>
+      <div class="reg-table-panel" id="reg-figCutEarly25-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.5.4</div>
+      <div class="fig-title">Knowledge Cutoff &mdash; Late 2025 (Aug)</div>
+      <div class="fig-caption">Corresponds to Figure 14. Baseline = Claude Opus 4.5 (Aug 2025 cutoff).</div>
       <div class="reg-table-panel" id="reg-figCutLate25-app"></div>
     </div>
 
-    <!-- A · Release date groupings -->
+    <!-- A.6 Release Date -->
+    <div class="section" data-section="mobility" style="margin-bottom:8px">
+      <div class="fig-num">A.6 &mdash; Release Date Era Comparisons</div>
+    </div>
+
     <div class="section" data-section="mobility" style="margin-bottom:18px">
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:13px;font-weight:bold;color:#111;margin-bottom:8px">A.6 &mdash; Release Date Era Comparisons</div>
-      <div style="font-style:italic;font-size:12px;color:#777;margin-bottom:4px">Models grouped by public release date; earliest config in each group as baseline.</div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 16:</em> Legacy era (pre-2025)</div>
-      <div class="reg-table-panel" id="reg-figRelLegacy-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 17:</em> Early 2025 (Feb&ndash;Jun)</div>
-      <div class="reg-table-panel" id="reg-figRelSpring-app" style="margin-bottom:14px"></div>
-      <div style="font-size:12px;color:#555;margin-bottom:4px"><em>Corresponds to Figure 18:</em> Late 2025 (Sep&ndash;Dec)</div>
+      <div class="fig-num">Figure A.6.1</div>
+      <div class="fig-title">Release Date &mdash; Legacy Era (pre-2025)</div>
+      <div class="fig-caption">Corresponds to Figure 16. Baseline = GPT-3.5 Turbo (Jan 2024 release).</div>
+      <div class="reg-table-panel" id="reg-figRelLegacy-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.6.2</div>
+      <div class="fig-title">Release Date &mdash; Early 2025 (Feb&ndash;Jun)</div>
+      <div class="fig-caption">Corresponds to Figure 17. Baseline = Gemini 2.0 Flash (Feb 2025 release).</div>
+      <div class="reg-table-panel" id="reg-figRelSpring-app"></div>
+    </div>
+
+    <div class="section" data-section="mobility" style="margin-bottom:18px">
+      <div class="fig-num">Figure A.6.3</div>
+      <div class="fig-title">Release Date &mdash; Late 2025 (Sep&ndash;Dec)</div>
+      <div class="fig-caption">Corresponds to Figure 18. Baseline = Claude Sonnet 4.5 (Sep 2025 release).</div>
       <div class="reg-table-panel" id="reg-figRelLate-app"></div>
+    </div>
+
+    <!-- ──────────────────────────────────────────────
+         APPENDIX B — Logistic Regression Tables (all 21 configs)
+         ────────────────────────────────────────────── -->
+    <div class="section" data-section="logit-regs" style="margin-bottom:20px;border-top:2px solid #333;padding-top:18px">
+      <div class="fig-num">Appendix B &middot; Logistic Regressions</div>
+      <div class="fig-title">Per-Model Logistic Regression Tables &mdash; All 21 Configurations</div>
+      <div class="fig-caption">Full coefficient tables for each of the 21 LLM configurations under two regression specifications. <strong>B.1</strong> shows the fixed-effects and random-effects logits used in Figure 23 (infection + traits + demographics). <strong>B.2</strong> shows the random-effects logit with mention flags used in Figure 33 (adds yes/no flags for whether the response mentioned each trait label or context category). Diagnostic validation for both specifications is provided in Appendix C.</div>
+    </div>
+
+    <!-- B.1 Base Logit -->
+    <div class="section" data-section="logit-regs" style="margin-bottom:8px">
+      <div class="fig-num">B.1 &mdash; Fixed-Effects &amp; Random-Effects Logits (Figure 23)</div>
+    </div>
+
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.1</div>
+      <div class="fig-title">Logistic Regression &mdash; Claude Opus 4.5</div>
+      <div id="appendix-b1-reg-0"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.2</div>
+      <div class="fig-title">Logistic Regression &mdash; Claude Sonnet 4.5</div>
+      <div id="appendix-b1-reg-1"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.3</div>
+      <div class="fig-title">Logistic Regression &mdash; Claude Haiku 4.5</div>
+      <div id="appendix-b1-reg-2"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.4</div>
+      <div class="fig-title">Logistic Regression &mdash; Claude Sonnet 4.0</div>
+      <div id="appendix-b1-reg-3"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.5</div>
+      <div class="fig-title">Logistic Regression &mdash; Claude 3 Haiku</div>
+      <div id="appendix-b1-reg-4"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.6</div>
+      <div class="fig-title">Logistic Regression &mdash; GPT-5.2</div>
+      <div id="appendix-b1-reg-5"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.7</div>
+      <div class="fig-title">Logistic Regression &mdash; GPT-5.2 (low reasoning)</div>
+      <div id="appendix-b1-reg-6"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.8</div>
+      <div class="fig-title">Logistic Regression &mdash; GPT-5.2 (medium reasoning)</div>
+      <div id="appendix-b1-reg-7"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.9</div>
+      <div class="fig-title">Logistic Regression &mdash; GPT-5.2 (high reasoning)</div>
+      <div id="appendix-b1-reg-8"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.10</div>
+      <div class="fig-title">Logistic Regression &mdash; GPT-5.1</div>
+      <div id="appendix-b1-reg-9"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.11</div>
+      <div class="fig-title">Logistic Regression &mdash; GPT-4.1</div>
+      <div id="appendix-b1-reg-10"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.12</div>
+      <div class="fig-title">Logistic Regression &mdash; GPT-4o</div>
+      <div id="appendix-b1-reg-11"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.13</div>
+      <div class="fig-title">Logistic Regression &mdash; GPT-3.5 Turbo</div>
+      <div id="appendix-b1-reg-12"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.14</div>
+      <div class="fig-title">Logistic Regression &mdash; o3</div>
+      <div id="appendix-b1-reg-13"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.15</div>
+      <div class="fig-title">Logistic Regression &mdash; Gemini 3 Flash</div>
+      <div id="appendix-b1-reg-14"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.16</div>
+      <div class="fig-title">Logistic Regression &mdash; Gemini 3 Flash (low reasoning)</div>
+      <div id="appendix-b1-reg-15"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.17</div>
+      <div class="fig-title">Logistic Regression &mdash; Gemini 3 Flash (medium reasoning)</div>
+      <div id="appendix-b1-reg-16"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.18</div>
+      <div class="fig-title">Logistic Regression &mdash; Gemini 3 Flash (high reasoning)</div>
+      <div id="appendix-b1-reg-17"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.19</div>
+      <div class="fig-title">Logistic Regression &mdash; Gemini 2.5 Flash Lite</div>
+      <div id="appendix-b1-reg-18"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.20</div>
+      <div class="fig-title">Logistic Regression &mdash; Gemini 2.5 Flash</div>
+      <div id="appendix-b1-reg-19"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.1.21</div>
+      <div class="fig-title">Logistic Regression &mdash; Gemini 2.0 Flash</div>
+      <div id="appendix-b1-reg-20"></div>
+    </div>
+
+    <!-- B.2 Random-Effects Logit with Mention Flags -->
+    <div class="section" data-section="logit-regs" style="margin-bottom:8px">
+      <div class="fig-num">B.2 &mdash; Random-Effects Logit with Mention Flags (Figure 33)</div>
+    </div>
+
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.1</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Claude Opus 4.5</div>
+      <div id="appendix-b2-reg-0"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.2</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Claude Sonnet 4.5</div>
+      <div id="appendix-b2-reg-1"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.3</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Claude Haiku 4.5</div>
+      <div id="appendix-b2-reg-2"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.4</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Claude Sonnet 4.0</div>
+      <div id="appendix-b2-reg-3"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.5</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Claude 3 Haiku</div>
+      <div id="appendix-b2-reg-4"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.6</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; GPT-5.2</div>
+      <div id="appendix-b2-reg-5"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.7</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; GPT-5.2 (low)</div>
+      <div id="appendix-b2-reg-6"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.8</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; GPT-5.2 (med)</div>
+      <div id="appendix-b2-reg-7"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.9</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; GPT-5.2 (high)</div>
+      <div id="appendix-b2-reg-8"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.10</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; GPT-5.1</div>
+      <div id="appendix-b2-reg-9"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.11</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; GPT-4.1</div>
+      <div id="appendix-b2-reg-10"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.12</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; GPT-4o</div>
+      <div id="appendix-b2-reg-11"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.13</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; GPT-3.5 Turbo</div>
+      <div id="appendix-b2-reg-12"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.14</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; o3</div>
+      <div id="appendix-b2-reg-13"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.15</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Gemini 3 Flash</div>
+      <div id="appendix-b2-reg-14"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.16</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Gemini 3 Flash (low)</div>
+      <div id="appendix-b2-reg-15"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.17</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Gemini 3 Flash (med)</div>
+      <div id="appendix-b2-reg-16"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.18</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Gemini 3 Flash (high)</div>
+      <div id="appendix-b2-reg-17"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.19</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Gemini 2.5 Flash Lite</div>
+      <div id="appendix-b2-reg-18"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.20</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Gemini 2.5 Flash</div>
+      <div id="appendix-b2-reg-19"></div>
+    </div>
+    <div class="section" data-section="logit-regs" style="margin-bottom:18px">
+      <div class="fig-num">Figure B.2.21</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Gemini 2.0 Flash</div>
+      <div id="appendix-b2-reg-20"></div>
     </div>
 
     <!-- ──────────────────────────────────────────────
          APPENDIX B — Logistic Regression Validation
          ────────────────────────────────────────────── -->
     <div class="section" data-section="logit" style="margin-bottom:20px;border-top:2px solid #333;padding-top:18px">
-      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#666;margin-bottom:6px">Appendix B &middot; Model Validation</div>
+      <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#666;margin-bottom:6px">Appendix C &middot; Model Diagnostics</div>
       <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:22px;font-weight:bold;color:#111;margin-bottom:8px">Diagnostics for the Agent-Level Logistic Regressions</div>
-      <div style="font-style:italic;color:#555;font-size:14px;line-height:1.55;margin-bottom:14px">These figures validate the three logit specifications that underlie the regression-based results in this paper. Figure B1 tests the fixed-effects logit (infection curve shape only); Figure B2 tests the random-effects logit (infection + traits + random intercepts, used in Figs 23, 24, 26, 27, 28, 29); Figure B3 tests the mention-interaction logit (adds trait&times;mention interactions, used in Figs 34&ndash;36). Each panel is a 3&times;7 grid of small multiples, one per LLM configuration.</div>
+      <div style="font-style:italic;color:#555;font-size:14px;line-height:1.55;margin-bottom:14px">These figures validate the three logit specifications that underlie the regression-based results in this paper. Figure C1 tests the fixed-effects logit (infection curve shape only); Figure C2 tests the random-effects logit (infection + traits + random intercepts, used in Figures 23, 25, 26, 27, 28); Figure C3 tests the random-effects logit with mention flags (adds yes/no flags for whether the response mentioned each trait label or context, used in Figures 33 and 34). Each panel is a 3&times;7 grid of small multiples, one per LLM configuration.</div>
 
       <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:13px;font-weight:bold;color:#111;margin:18px 0 6px">Assumption &rarr; Figure mapping</div>
       <div style="font-style:italic;color:#666;font-size:12px;margin-bottom:8px">Below, each modeling assumption is linked to the toggle view that tests it. A "&#10003;" means the assumption is covered in the listed figure; "&mdash;" means not applicable for that model. The reader can audit each assumption independently by selecting the corresponding view.</div>
@@ -1160,9 +1530,9 @@
             <th style="text-align:left;padding:6px 10px">#</th>
             <th style="text-align:left;padding:6px 10px">Assumption</th>
             <th style="text-align:left;padding:6px 10px">Toggle that tests it</th>
-            <th style="text-align:center;padding:6px 10px">B1</th>
-            <th style="text-align:center;padding:6px 10px">B2</th>
-            <th style="text-align:center;padding:6px 10px">B3</th>
+            <th style="text-align:center;padding:6px 10px">C1</th>
+            <th style="text-align:center;padding:6px 10px">C2</th>
+            <th style="text-align:center;padding:6px 10px">C3</th>
           </tr>
         </thead>
         <tbody>
@@ -1216,14 +1586,14 @@
           </tr>
         </tbody>
       </table>
-      <div style="font-size:11px;color:#888;font-style:italic">B1 (fixed-effects) validates only Assumptions 1, 2, 3a, 4 plus overall fit; agent dummies absorb between-agent variation so Assumptions 3b, 5, 6 don&rsquo;t apply. B2 and B3 cover the full set.</div>
+      <div style="font-size:11px;color:#888;font-style:italic">C1 (fixed-effects) validates only Assumptions 1, 2, 3a, 4 plus overall fit; agent dummies absorb between-agent variation so Assumptions 3b, 5, 6 don&rsquo;t apply. C2 and C3 cover the full set.</div>
     </div>
 
     <!-- Appendix Figure A1: Fixed-Effects Logit Validation -->
     <div class="section" id="figM1-section" data-section="logit">
-      <div class="fig-num">Figure B1</div>
+      <div class="fig-num">Figure C1</div>
       <div class="fig-title">Fixed-Effects Logit Validation</div>
-      <div class="fig-caption">Diagnostics for the fixed-effects logit (<code>glm(stay_home ~ infection_pct + infection_pct<sup>2</sup> + factor(agent_id))</code>): per-agent dummies absorb all between-agent variation, so the only structural thing to check is whether the quadratic infection form is adequate. If this model looks clean but the random-effects model (Figure B2) doesn&rsquo;t, the issue lives in the trait or random-intercept specification. If both look off, the infection curve itself is the culprit.</div>
+      <div class="fig-caption">Diagnostics for the fixed-effects logit (<code>glm(stay_home ~ infection_pct + infection_pct<sup>2</sup> + factor(agent_id))</code>): per-agent dummies absorb all between-agent variation, so the only structural thing to check is whether the quadratic infection form is adequate. If this model looks clean but the random-effects model (Figure C2) doesn&rsquo;t, the issue lives in the trait or random-intercept specification. If both look off, the infection curve itself is the culprit.</div>
       <div id="figM1-toggle" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px">
         <button class="spotlight-preset-pill active" data-view="calibration">Calibration (pred vs obs)</button>
         <button class="spotlight-preset-pill" data-view="qq">DHARMa residual Q-Q</button>
@@ -1235,7 +1605,7 @@
 
     <!-- Appendix Figure A2: Random-Effects Logit Validation -->
     <div class="section" id="figCalib-section" data-section="logit">
-      <div class="fig-num">Figure B2</div>
+      <div class="fig-num">Figure C2</div>
       <div class="fig-title">Random-Effects Logit Validation</div>
       <div class="fig-caption">Diagnostics for the random-effects logit (<code>glmer(... + (1 | agent_id))</code>). Each view tests a specific model assumption or fit property; under a correctly specified model all five checks track their reference line (diagonal or 0.5).</div>
       <div id="figCalib-toggle" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px">
@@ -1257,11 +1627,11 @@
       </div>
     </div>
 
-    <!-- Appendix Figure A3: Model 3 (Mention-Interaction Logit) Validation -->
+    <!-- Appendix Figure C3: Random-Effects Logit with Mention Flags — Validation -->
     <div class="section" id="figM3-section" data-section="logit">
-      <div class="fig-num">Figure B3</div>
-      <div class="fig-title">Mention-Interaction Logit Validation</div>
-      <div class="fig-caption">Diagnostics for Model 3 — the random-effects logit extended with trait&times;mention interactions (<code>glmer(stay_home ~ ... + mentioned_ext + extraverted:mentioned_ext + ... + (1 | agent_id))</code>). Same toggle suite as Figure B2; the additional interaction terms test whether the model&rsquo;s explicit mention of a trait amplifies that trait&rsquo;s behavioral effect. Used throughout the Response Analysis tab (Figs 34&ndash;36). Under a correctly specified model all checks track their reference line (diagonal or 0 for rate-diff / 0.5 for DHARMa scaled).</div>
+      <div class="fig-num">Figure C3</div>
+      <div class="fig-title">Random-Effects Logit with Mention Flags &mdash; Validation</div>
+      <div class="fig-caption">Diagnostics for the random-effects logit with mention flags (<code>glmer(stay_home ~ ... + mention_flags + (1 | agent_id))</code>). Same toggle suite as Figure C2; the additional mention-flag terms test whether explicitly invoking a trait label or context shifts the agent&rsquo;s decision. Used in Figures 33 and 34. Under a correctly specified model all checks track their reference line (diagonal or 0 for rate-diff / 0.5 for DHARMa scaled).</div>
       <div id="figM3-toggle" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px">
         <button class="spotlight-preset-pill active" data-view="calibration">Calibration (pred vs obs)</button>
         <button class="spotlight-preset-pill" data-view="qq">DHARMa residual Q-Q</button>
@@ -1271,117 +1641,125 @@
         <button class="spotlight-preset-pill" data-view="rate_diff">Residuals vs infection</button>
       </div>
       <div class="chart-container" id="figM3-chart"></div>
-      <div class="fig-note">Model 3 fits the same agent-level logit structure as Model 2 plus mention flags and interactions. Its identification rests on the same assumptions (plus: no confounding between mention occurrence and unmodeled predictors). Diagnostic reads are identical to Figure B2 &mdash; good model = near-diagonal Q-Q, near-1 dispersion, near-0 residual means. A well-validated Model 3 supports the amplification claims in Response Analysis (Figs 34&ndash;36); a poorly-validated Model 3 would warrant flagging those claims as exploratory rather than inferential.</div>
+      <div class="fig-note">Same agent-level logit structure as the random-effects logit (Figure C2) plus mention flags. Identification rests on the same assumptions (plus: no confounding between mention occurrence and unmodeled predictors). Diagnostic reads are identical to Figure C2 &mdash; good model = near-diagonal Q-Q, near-1 dispersion, near-0 residual means. A well-validated specification supports the mention-shift claims in Figures 33 and 34; a poorly-validated specification would warrant flagging those claims as exploratory rather than inferential.</div>
     </div>
 
-  </div><!-- end tab-appendix -->
-
-  <!-- ══════════════════════════════════════════════
-       TAB 5 — AUTHOR NOTES
-  ══════════════════════════════════════════════ -->
-  <div id="tab-author" class="tab-pane">
-
-    <div id="author-section-nav">
-      <a class="section-link active" data-filter="all" href="#">All</a>
-      <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="rq" href="#">Research Questions</a>
-      <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="logodds" href="#">Understanding: Log Odds</a>
-      <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="spearman" href="#">Understanding: Spearman</a>
-      <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="threeforces" href="#">Finding: Three Forces</a>
-      <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="comparison" href="#">Figure Comparisons</a>
-      <span class="nav-sep">&middot;</span>
-      <a class="section-link" data-filter="unused" href="#">Unused Figures</a>
+    <!-- ──────────────────────────────────────────────
+         APPENDIX D — Statistical Reference
+         ────────────────────────────────────────────── -->
+    <div class="section" data-section="statsref" style="margin-bottom:20px;border-top:2px solid #333;padding-top:18px">
+      <div class="fig-num">Appendix D &middot; Statistical Reference</div>
+      <div class="fig-title">Statistical Methods Reference</div>
+      <div class="fig-caption">Reference explanations for the statistical methods used in this study, intended for readers less familiar with these techniques.</div>
     </div>
 
-    <!-- Research Questions & Evidence Map -->
-    <div class="section" id="rq-section" data-section="rq">
-      <div class="fig-num">Research Questions</div>
-      <div class="fig-title">Research Questions &amp; Evidence Map</div>
-      <div id="rq-content">
-        <table class="ols-table" style="width:100%;margin-top:12px">
-          <thead>
-            <tr><th style="width:50px">RQ</th><th>Question</th><th style="width:140px">Evidence</th><th style="width:200px">Key Finding</th></tr>
-          </thead>
+    <!-- D.1 Understanding Logit Regression -->
+    <div class="section" data-section="statsref" style="margin-bottom:8px">
+      <div class="fig-num">D.1 &mdash; Understanding Logit Regression</div>
+    </div>
+
+    <div class="section" id="logodds-section" data-section="statsref" style="margin-bottom:18px">
+      <div id="logodds-walkthrough" style="font-family:'Libre Baskerville','Georgia',serif;font-size:13px;line-height:1.7;color:#333;max-width:780px">
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">1. Why logit?</h4>
+        <p>Each decision an agent makes is binary: stay home or go out. Standard linear regression doesn&rsquo;t fit binary outcomes well &mdash; it can predict probabilities below 0 or above 1, and it assumes a constant variance that binary data don&rsquo;t have. <strong>Logistic regression</strong> (&ldquo;logit regression&rdquo; for short) fits binary data by modelling <em>log-odds</em> instead of probability directly.</p>
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">2. Log-odds and odds ratios</h4>
+        <p>If <em>P</em> is the probability of staying home:</p>
+        <ul style="margin:6px 0;padding-left:20px">
+          <li><strong>Odds</strong> = <em>P</em>&nbsp;/&nbsp;(1&nbsp;&minus;&nbsp;<em>P</em>) &mdash; how many times more likely staying home is than going out</li>
+          <li><strong>Log-odds</strong> = ln(odds) &mdash; the natural log of the odds, ranging from &minus;&infin; to +&infin;</li>
+        </ul>
+        <p>The transformation matters because log-odds are unbounded and <em>additive</em>, which lets the model write each agent&rsquo;s log-odds as a sum of contributions:</p>
+        <p style="text-align:center;font-family:monospace;font-size:13px;background:#f5f5f5;padding:10px;border-radius:4px">log-odds = &beta;<sub>0</sub> + &beta;<sub>1</sub>&middot;infection + &beta;<sub>2</sub>&middot;extraverted + &beta;<sub>3</sub>&middot;conscientious + &hellip;</p>
+        <p>Each coefficient &beta; tells you how much that predictor shifts log-odds. The matching <strong>odds ratio</strong> is OR&nbsp;=&nbsp;exp(&beta;):</p>
+        <ul style="margin:6px 0;padding-left:20px">
+          <li>OR&nbsp;&gt;&nbsp;1 &rarr; the predictor increases stay-home odds (positive &beta;)</li>
+          <li>OR&nbsp;&lt;&nbsp;1 &rarr; the predictor decreases stay-home odds (negative &beta;)</li>
+          <li>OR&nbsp;=&nbsp;1 &rarr; no effect (&beta;&nbsp;=&nbsp;0)</li>
+        </ul>
+        <p>Because log-odds are unbounded, a coefficient of zero corresponds to 50/50 odds (P&nbsp;=&nbsp;0.5). Positive log-odds means the agent is more likely to stay home than go out; negative means the opposite.</p>
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">3. Reading a coefficient table</h4>
+        <p>Every regression table in this paper has the same columns:</p>
+        <ul style="margin:6px 0;padding-left:20px">
+          <li><strong>Coef</strong> &mdash; the &beta; value, the change in log-odds for a one-unit change in that predictor (other predictors held constant)</li>
+          <li><strong>SE</strong> &mdash; the standard error of &beta;</li>
+          <li><strong>OR</strong> &mdash; exp(Coef), the multiplicative effect on odds</li>
+          <li><strong>95% CI</strong> &mdash; the 95% confidence interval, &beta;&nbsp;&plusmn;&nbsp;1.96&middot;SE</li>
+          <li><strong>Sig</strong> &mdash; significance markers (<code>***</code> p&nbsp;&lt;&nbsp;0.001, <code>**</code> p&nbsp;&lt;&nbsp;0.01, <code>*</code> p&nbsp;&lt;&nbsp;0.05)</li>
+        </ul>
+        <p>One model&rsquo;s table is shown interactively in <strong>Figure 23</strong> (Cohort Analysis); per-model tables for all 21 LLM configurations are in <strong>Appendix B</strong>.</p>
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">4. Fixed-effects vs. random-effects</h4>
+        <p>The 100 agents are not interchangeable: each has its own personality, age, and gender. There are two ways the regression can handle that:</p>
+        <ul style="margin:6px 0;padding-left:20px">
+          <li><strong>Fixed-effects logit</strong>: include a dummy variable for each agent (<code>factor(agent_id)</code>). The 99 dummies absorb every difference between agents, so only the infection coefficients are reported. Useful when the question is just &ldquo;what is the shape of the infection curve, controlling for who the agent is?&rdquo;</li>
+          <li><strong>Random-effects logit</strong>: instead of 99 dummies, treat each agent&rsquo;s baseline as a draw from a Normal distribution (a <em>random intercept</em>). This is more efficient and lets trait, gender, and age stay in the model as predictors instead of being absorbed by the dummies.</li>
+        </ul>
+        <p>Both specifications are reported side-by-side in <strong>Figure 23</strong>. Diagnostic validation for both is in <strong>Appendix C1</strong> (fixed-effects) and <strong>C2</strong> (random-effects).</p>
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">5. The three logit specifications used in this paper</h4>
+        <table class="ols-table" style="width:100%;margin:10px 0;font-size:12px">
+          <thead><tr><th>Specification</th><th>Predictors</th><th>Where it appears</th></tr></thead>
           <tbody>
-            <tr><td>RQ1</td><td>Do different LLM providers produce meaningfully different mobility curves?</td><td>Figs 8&ndash;9</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ2</td><td>Does reasoning budget affect behavioral sensitivity?</td><td>Figs 1&ndash;2</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ3</td><td>Do larger models within a provider show different behavioral patterns?</td><td>Figs 3&ndash;4</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ4</td><td>How has model behavior evolved across generations?</td><td>Figs 5&ndash;7</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ5</td><td>Do LLMs interpret personality traits consistently across providers?</td><td>Figs 28, 29</td><td>Directions consistent; magnitudes vary 100&times; across providers</td></tr>
-            <tr><td>RQ6</td><td>Are agent-level behavioral differences preserved across models?</td><td>Figs 27, 32 (spotlight)</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ7</td><td>Does training data recency (knowledge cutoff) predict behavior?</td><td>Figs 10&ndash;14</td><td><em>TBD</em></td></tr>
-          </tbody>
-          <tbody>
-            <tr><td colspan="4" style="padding:14px 0 6px;font-weight:600;font-size:11px;color:#999;border-top:2px solid #ddd;letter-spacing:0.5px">FIGURES WITHOUT DEDICATED RESEARCH QUESTIONS</td></tr>
-            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 19: Agent-Level Decision Heatmap</td><td>Mobility Curves &gt; Agent Curve</td><td><em>Exploratory</em></td></tr>
-            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 20: Cross-Repetition Concordance</td><td>Mobility Curves &gt; Agent Curve</td><td><em>Supports RQ6</em></td></tr>
-            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 21: Interactive Comparison Tool</td><td>Mobility Curves &gt; Comparison Tool</td><td><em>Exploratory</em></td></tr>
-            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 22: Sample Demographics</td><td>Cohort Analysis</td><td><em>Descriptive</em></td></tr>
-            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 23: Logistic Regression</td><td>Cohort Analysis</td><td><em>Supports RQ5</em></td></tr>
-            <tr class="rq-uncovered"><td>&mdash;</td><td>Fig 32: Agent Spotlight</td><td>Response Analysis</td><td><em>Supports RQ6</em></td></tr>
+            <tr><td>Fixed-effects logit</td><td>infection, infection&sup2;, 99 agent dummies</td><td>Figure 23; Appendix B.1; Appendix C1</td></tr>
+            <tr><td>Random-effects logit</td><td>infection, infection&sup2;, traits, gender, age, random intercept per agent</td><td>Figures 23, 25, 26, 27, 28; Appendix B.1; Appendix C2</td></tr>
+            <tr><td>Random-effects logit with mention flags</td><td>same as above plus yes/no flags for whether the response mentioned each trait label or context (only flags whose Figure 32 rate is between 15% and 85% are included)</td><td>Figures 33, 34; Appendix B.2; Appendix C3</td></tr>
           </tbody>
         </table>
+
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">6. Companion figures (Claude Opus 4.5)</h4>
+        <p>The two figures below ground the abstract concepts above in concrete numbers from one model (Claude Opus 4.5):</p>
+        <ul style="margin:6px 0;padding-left:20px">
+          <li><strong>Figure D.1.1</strong> shows each predictor&rsquo;s coefficient as a horizontal bar &mdash; longer bars are larger effects.</li>
+          <li><strong>Figure D.1.2</strong> is an interactive calculator: toggle traits and infection level to see the predicted probability of staying home update in real time.</li>
+        </ul>
       </div>
     </div>
 
-    <!-- Understanding: Log Odds -->
-    <div class="section" id="logodds-section" data-section="logodds">
-      <div class="fig-num">Author Note &mdash; Statistical Methods</div>
-      <div class="fig-title">Understanding Log Odds &amp; the Regression Table</div>
-      <div class="fig-caption">A comprehensive walkthrough of log-odds, odds ratios, effect sizes, and how to compare predictors &mdash; using Claude Opus 4.5 as the running example.</div>
-      <div id="logodds-walkthrough"></div>
-    </div>
-
-    <!-- Figure A3: Coefficient Bar Chart (Author Notes illustrative; A1/A2 are the appendix validation figures) -->
-    <div class="section" id="figA1-section" data-section="logodds">
-      <div class="fig-num">Figure A3</div>
+    <!-- Figure D.1.1: Coefficient Bar Chart -->
+    <div class="section" id="figA1-section" data-section="statsref" style="margin-bottom:18px">
+      <div class="fig-num">Figure D.1.1</div>
       <div class="fig-title">Coefficient Effect Sizes &mdash; Claude Opus 4.5</div>
       <div class="fig-caption">Bar chart showing the magnitude and direction of each predictor&rsquo;s coefficient. Longer bars = larger effects. All binary traits are on the same scale (0&ndash;1), making bar lengths directly comparable.</div>
       <div class="chart-container" id="figA1-chart"></div>
       <div id="figA1-caption" style="font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:#888;font-style:italic;margin-top:6px;max-width:780px"></div>
     </div>
 
-    <!-- Figure A4: Interactive Probability Calculator -->
-    <div class="section" id="figA2-section" data-section="logodds">
-      <div class="fig-num">Figure A4</div>
+    <!-- Figure D.1.2: Interactive Probability Calculator -->
+    <div class="section" id="figA2-section" data-section="statsref" style="margin-bottom:18px">
+      <div class="fig-num">Figure D.1.2</div>
       <div class="fig-title">Interactive Probability Calculator &mdash; Claude Opus 4.5</div>
       <div class="fig-caption">Toggle agent traits, gender, age, and infection level to see the predicted probability of staying home. Watch how each trait shifts the log-odds and which traits dominate the decision.</div>
       <div id="figA2-calculator" style="font-family:'Libre Baskerville',Georgia,serif;font-size:12px;line-height:1.6;color:#333"></div>
     </div>
 
-    <!-- Figure A5: Cross-Model Effect Comparison -->
-    <div class="section" id="figA3-section" data-section="logodds">
-      <div class="fig-num">Figure A5</div>
-      <div class="fig-title">Cross-Model Trait Effect Comparison</div>
-      <div class="fig-caption">How each of the 21 LLM configurations weights each personality trait. Opus 4.5 is highlighted. All dots on the same row should be on the same side of zero (consistent direction) but vary in distance (magnitude).</div>
-      <div class="chart-container" id="figA3-chart"></div>
-      <div id="figA3-caption" style="font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:#888;font-style:italic;margin-top:6px;max-width:780px"></div>
+    <!-- D.2 Understanding Spearman's ρ -->
+    <div class="section" data-section="statsref" style="margin-bottom:8px;margin-top:24px">
+      <div class="fig-num">D.2 &mdash; Understanding Spearman&rsquo;s Rank Correlation (&rho;)</div>
     </div>
 
-    <!-- Spearman's ρ Walkthrough -->
-    <div class="section" id="spearman-section" data-section="spearman">
-      <div class="fig-num">Author Note &mdash; Statistical Methods</div>
-      <div class="fig-title">Understanding Spearman&rsquo;s Rank Correlation (&rho;)</div>
+    <div class="section" id="spearman-section" data-section="statsref" style="margin-bottom:18px">
       <div id="spearman-walkthrough" style="font-family:'Libre Baskerville','Georgia',serif;font-size:13px;line-height:1.7;color:#333;max-width:780px">
 
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">1. What is Spearman&rsquo;s rank correlation?</h4>
-        <p>A non-parametric measure of how well two variables&rsquo; <em>rankings</em> agree. Unlike Pearson correlation, it doesn&rsquo;t assume linearity &mdash; it only cares about <em>ordering</em>. If agents who rank high in one model also rank high in another, &rho; is close to +1.</p>
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">1. What is Spearman&rsquo;s &rho;?</h4>
+        <p>Spearman&rsquo;s &rho; is a non-parametric measure of how well two <em>rankings</em> agree. It cares only about ordering, not absolute values, so it works equally well for raw rates, log-transformed rates, or anything else that can be sorted.</p>
         <ul style="margin:6px 0;padding-left:20px">
           <li>&rho; = +1: perfect agreement (identical rankings)</li>
           <li>&rho; = 0: no relationship (random orderings)</li>
-          <li>&rho; = &minus;1: perfect disagreement (reversed rankings)</li>
+          <li>&rho; = &minus;1: reversed rankings</li>
         </ul>
 
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">2. Worked example with 5 agents</h4>
-        <p>Consider 5 agents simulated by two different LLM configs. Each agent&rsquo;s stay-home rate is the proportion of decisions where they chose to stay home.</p>
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">2. How it&rsquo;s computed</h4>
+        <p>Rank each variable from lowest (1) to highest (<em>n</em>); for each item, compute <em>d</em> = (rank in A) &minus; (rank in B); then:</p>
+        <p style="text-align:center;font-size:15px;margin:12px 0">&rho; = 1 &minus; (6 &times; &Sigma;<em>d</em>&sup2;) / (<em>n</em> &times; (<em>n</em>&sup2; &minus; 1))</p>
+        <p>If two items tie, they share the average of their tied ranks (e.g., a tie for 19th and 20th gives both a rank of 19.5).</p>
 
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">3. Worked example (5 agents, 2 models)</h4>
         <table class="ols-table" style="width:auto;margin:10px 0">
           <thead>
-            <tr><th>Agent</th><th>Config A rate</th><th>Rank A</th><th>Config B rate</th><th>Rank B</th><th><em>d</em></th><th><em>d</em>&sup2;</th></tr>
+            <tr><th>Agent</th><th>Model A rate</th><th>Rank A</th><th>Model B rate</th><th>Rank B</th><th><em>d</em></th><th><em>d</em>&sup2;</th></tr>
           </thead>
           <tbody>
             <tr><td>Alice</td><td>0.85</td><td>5</td><td>0.72</td><td>4</td><td>1</td><td>1</td></tr>
@@ -1391,171 +1769,20 @@
             <tr><td>Eve</td><td>0.70</td><td>4</td><td>0.80</td><td>5</td><td>&minus;1</td><td>1</td></tr>
           </tbody>
         </table>
+        <p style="text-align:center;font-size:14px">&rho; = 1 &minus; (6 &times; 4) / (5 &times; 24) = 1 &minus; 0.2 = <strong>0.80</strong></p>
+        <p>The two models broadly agree on which agents stay home most, with one minor reordering at the top and one at the bottom.</p>
 
-        <p><strong>Step 1:</strong> Rank each column from lowest (1) to highest (5).</p>
-        <p><strong>Step 2:</strong> Compute <em>d</em> = Rank A &minus; Rank B for each agent.</p>
-        <p><strong>Step 3:</strong> Apply the formula:</p>
-        <p style="text-align:center;font-size:15px;margin:12px 0">&rho; = 1 &minus; (6 &times; &Sigma;<em>d</em>&sup2;) / (<em>n</em> &times; (<em>n</em>&sup2; &minus; 1))</p>
-        <p style="text-align:center;font-size:14px">&rho; = 1 &minus; (6 &times; 4) / (5 &times; 24) = 1 &minus; 24/120 = 1 &minus; 0.2 = <strong>0.80</strong></p>
-        <p>Interpretation: &rho; = 0.80 indicates strong agreement &mdash; the two models largely agree on which agents are cautious and which are bold.</p>
-
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">3. How we use it in Figure 30</h4>
+        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">4. Where &rho; appears in this paper</h4>
         <ul style="margin:6px 0;padding-left:20px">
-          <li>Instead of 5 agents, we have <strong>100</strong></li>
-          <li>Instead of 2 configs, we compute &rho; for all <strong>21 &times; 21 = 441 pairs</strong> (210 unique off-diagonal pairs)</li>
-          <li>Each agent&rsquo;s stay-home rate is computed across all 200 decisions (40 infection levels &times; 5 reps)</li>
-          <li>High &rho; across model pairs &rarr; agents are &ldquo;real individuals&rdquo; whose traits drive behavior consistently</li>
-          <li>Low &rho; &rarr; the LLM model matters more than the agent&rsquo;s traits</li>
+          <li><strong>Figure 24</strong> &mdash; the regression&rsquo;s predicted agent ranking is correlated against the actual stay-home ranking observed in the data. High &rho; means the regression&rsquo;s personality weights pick out the right agents.</li>
+          <li><strong>Figure 29</strong> &mdash; pairwise &rho; on each model&rsquo;s 8-predictor importance ranking (Big Five + Male + Age + Infection). High &rho; means two models share the same hierarchy of <em>which predictors matter most</em>.</li>
+          <li><strong>Figure 30</strong> &mdash; pairwise &rho; on each model&rsquo;s per-agent stay-home-rate ranking (100 agents). High &rho; means two models agree on <em>which agents</em> are most cautious.</li>
         </ul>
-
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">4. Interpreting the heatmap</h4>
-        <ul style="margin:6px 0;padding-left:20px">
-          <li><strong>Dark cells</strong> = high &rho; (strong agreement on agent ordering)</li>
-          <li><strong>Light cells</strong> = low &rho; (models rank agents differently)</li>
-          <li>The <strong>diagonal</strong> is always 1.0 (a config correlated with itself)</li>
-          <li>Look for <strong>provider blocks</strong>: do models from the same provider agree more with each other than with models from other providers?</li>
-        </ul>
+        <p>Figures 29 and 30 are heatmaps: each cell is the &rho; between the row model and the column model. The diagonal is 1.0 by construction (a model perfectly correlated with itself). Cells colored toward the dark end of the scale indicate strong agreement; lighter cells indicate disagreement.</p>
       </div>
     </div>
 
-
-    <!-- Finding: Three Forces -->
-    <div class="section" id="threeforces-section" data-section="threeforces">
-      <div class="fig-num">Author Note &mdash; Key Finding</div>
-      <div class="fig-title">The Three Forces: Intercept, Personality, and Infection</div>
-      <div style="font-family:'Libre Baskerville','Georgia',serif;font-size:13px;line-height:1.7;color:#333;max-width:780px">
-
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">The decision equation</h4>
-        <p>Each agent&rsquo;s probability of staying home is governed by three forces combined in the logit:</p>
-        <p style="text-align:center;font-size:14px;margin:12px 0;font-family:monospace;background:#f5f5f5;padding:8px;border-radius:4px">
-          P(stay home) = logistic(<strong>intercept</strong> + log(<strong>personality OR</strong>) + log(<strong>infection OR</strong>))
-        </p>
-        <p>The agent flips from &ldquo;go out&rdquo; to &ldquo;stay home&rdquo; (P &gt; 50%) when the sum crosses zero. Each force plays a distinct role:</p>
-        <ul style="margin:6px 0;padding-left:20px">
-          <li><strong>Intercept</strong> = baseline gravity. A negative intercept pulls all agents toward going out; a positive one pulls toward staying home. Same for everyone.</li>
-          <li><strong>Personality OR</strong> = the agent-specific push. Varies by agent based on their trait combination. A conscientious, agreeable agent might have combined OR = 10,000; an extraverted, emotionally stable agent might have OR = 0.00001.</li>
-          <li><strong>Infection OR</strong> = the situational push. Grows with infection level, same for all agents. At 0% infection, OR = 1 (no effect). At 7%, it can reach 10&sup2; to 10&sup4; depending on the model.</li>
-        </ul>
-
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">Why relative magnitude matters (Fig 27)</h4>
-        <p>Figure 26 plots personality ORs and infection ORs on the same log scale. This reveals a fundamental difference in how LLMs weight <em>situation</em> vs. <em>character</em>:</p>
-        <table class="ols-table" style="width:auto;margin:10px 0">
-          <thead>
-            <tr><th>Model</th><th>Personality OR range</th><th>Infection OR at 7%</th><th>Intercept</th><th>Implication</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Claude Sonnet 4.5</td><td>10&sup5; spread</td><td>~10&sup3;</td><td>&minus;7.5</td><td>Personality-driven: some agents&rsquo; traits can never be overcome by infection</td></tr>
-            <tr><td>GPT-5.2 (low)</td><td>~2 orders</td><td>~10&sup3;</td><td>&minus;0.6</td><td>Infection-driven: infection overwhelms all personalities by ~1%</td></tr>
-            <tr><td>GPT-4o</td><td>~5 orders</td><td>~10&sup3;</td><td>&minus;9.2</td><td>Intercept-anchored: strong negative baseline keeps mobility high despite infection exceeding personality</td></tr>
-          </tbody>
-        </table>
-
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">The GPT-4o puzzle: why infection OR &gt; personality isn&rsquo;t enough</h4>
-        <p>GPT-4o&rsquo;s infection curve exceeds its personality cloud in Fig 33, yet its mobility curve (Fig 9, yellow line) stays relatively high. The intercept explains this: at &minus;9.2, the model has a strong baseline pull toward going out. For an agent to flip to staying home, the combined personality + infection push must exceed 9.2 in log-odds space &mdash; a high bar.</p>
-        <p>Compare GPT-5.2 (low) with intercept &minus;0.6: agents are nearly indifferent at baseline. The slightest infection push flips them. This is why its mobility curve collapses immediately.</p>
-
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">What this means for the mobility curve shape</h4>
-        <p>The shape of a model&rsquo;s mobility curve is the <em>visible consequence</em> of how it balances these three forces:</p>
-        <ul style="margin:6px 0;padding-left:20px">
-          <li><strong>Wide personality spread + moderate intercept</strong> &rarr; gradual S-curve. Agents peel off one by one as infection overwhelms each agent&rsquo;s unique threshold. (Claude Sonnet 4.5)</li>
-          <li><strong>Narrow personality spread + near-zero intercept</strong> &rarr; cliff. All agents flip together because they have similar thresholds. (GPT-5.2 low)</li>
-          <li><strong>Any personality spread + very negative intercept</strong> &rarr; high-riding curve that resists dropping. The &ldquo;gravity&rdquo; toward going out is so strong that even large infection ORs struggle to flip the decision. (GPT-4o, Claude Opus 4.5)</li>
-        </ul>
-
-        <h4 style="margin:18px 0 8px;font-size:14px;color:#111">The deeper question</h4>
-        <p>This reveals that LLMs differ not just in <em>how sensitive</em> they are to infection, but in <em>what they prioritize</em>. Some models treat the agent&rsquo;s personality as the dominant factor in decision-making; others treat the situational case count as dominant. This is a model-level characteristic &mdash; a reflection of how each LLM internally weights character vs. circumstance when simulating human behavior.</p>
-      </div>
-    </div>
-
-    <!-- ── Figure Comparisons ── -->
-
-    <!-- 27a vs 27: Peak OR vs Full Range -->
-    <div class="section" id="comparison-27-section" data-section="comparison">
-      <div class="fig-num">Figure Comparison</div>
-      <div class="fig-title">Figure 27a vs. Figure 26 &mdash; Peak vs. Full Range</div>
-      <div class="fig-caption">Figure 27a shows only the <strong>peak</strong> infection OR per model. Figure 26 extends this to show the full <strong>min-to-max</strong> infection OR range, handling nonlinear and inverted models like Gemini 2.5 Flash Lite. Compare the two to decide which visualization better communicates the person-vs-situation tradeoff.</div>
-      <div style="margin:12px 0 4px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:#888;font-style:italic">Figure 27a &mdash; Trait OR vs. Infection OR (peak only)</div>
-      <div class="chart-container" id="comparison-27a-chart"></div>
-      <div style="margin:24px 0 4px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:#888;font-style:italic">Figure 26 &mdash; Odds Ratio Landscape: Traits &amp; Infection (min-to-max range)</div>
-      <div class="chart-container" id="comparison-27-chart"></div>
-    </div>
-
-    <!-- 28a vs 28: Waterfall vs Three Forces -->
-    <div class="section" id="comparison-28-section" data-section="comparison">
-      <div class="fig-num">Figure Comparison</div>
-      <div class="fig-title">Figure 26a vs. Figure 25 &mdash; Waterfall vs. Three Forces</div>
-      <div class="fig-caption"><strong>Figure 26a</strong> combines intercept + personality into a single &ldquo;Starting Position&rdquo; column, then shows how infection shifts total log-odds. <strong>Figure 25</strong> (in Cohort Analysis) separates the intercept into its own column, making the three forces (intercept, personality, infection) visually distinct. Both are per-model with click-to-explore agent detail.</div>
-      <div style="margin:12px 0 4px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:#888;font-style:italic">Figure 26a &mdash; Agent Decision Waterfall</div>
-      <div id="fig36-model-select" style="margin-bottom:12px"></div>
-      <div class="chart-container" id="fig36-chart"></div>
-      <div id="fig36-detail" style="display:none;margin-top:12px"></div>
-      <div style="margin:24px 0 4px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:#888;font-style:italic">Figure 25 &mdash; Decision Anatomy: Traits &amp; Infection Level Impact</div>
-      <div id="comparison-28b-model-select" style="margin-bottom:12px"></div>
-      <div class="chart-container" id="comparison-28b-chart"></div>
-      <div id="comparison-28b-detail" style="display:none;margin-top:12px"></div>
-    </div>
-
-    <!-- Decision Surface vs Figure 24: Probability Landscape vs Mechanistic Decomposition -->
-    <div class="section" id="comparison-surface-section" data-section="comparison">
-      <div class="fig-num">Figure Comparison</div>
-      <div class="fig-title">Decision Surface vs. Figure 25 &mdash; Probability Landscape vs. Mechanistic Decomposition</div>
-      <div class="fig-caption">The <strong>Decision Surface</strong> shows predicted P(stay home) as a heatmap over infection level and personality log-odds space. <strong>Figure 26</strong> decomposes the same prediction into three mechanistic components (intercept, personality, infection). Both use Model 2 coefficients; compare to see the same model from two complementary angles.</div>
-      <div style="margin:12px 0 4px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:#888;font-style:italic">Decision Surface &mdash; Probability Landscape</div>
-      <div id="comparison-surface-model-select" style="margin-bottom:12px"></div>
-      <div class="chart-container" id="comparison-surface-chart"></div>
-      <div style="margin:24px 0 4px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:#888;font-style:italic">Figure 25 &mdash; Decision Anatomy: Traits &amp; Infection Level Impact</div>
-      <div id="comparison-surface-forces-model-select" style="margin-bottom:12px"></div>
-      <div class="chart-container" id="comparison-surface-forces-chart"></div>
-      <div id="comparison-surface-forces-detail" style="display:none;margin-top:12px"></div>
-    </div>
-
-    <!-- Combined Trait Power (moved from Response Analysis) -->
-    <div class="section" id="ra-trait-power-combined-section" data-section="unused">
-      <div class="fig-num">Figure (unused)</div>
-      <div class="fig-title">Combined Trait Power vs Infection &mdash; Do Personal Characteristics Outweigh Infection?</div>
-      <div class="fig-caption">How powerful are all personal characteristics (Big Five traits + gender + age) compared to infection level? Each bar shows the total log-odds swing from the most &ldquo;stay home&rdquo; to most &ldquo;go out&rdquo; personality profile, expressed as a percentage of infection&rsquo;s maximum effect (peak of the quadratic curve over 0&ndash;7%). Values above 100% mean personal characteristics collectively outweigh infection. <em>Superseded by Figure 27&rsquo;s Personality/Infection ratio column.</em></div>
-      <div class="chart-container" id="ra-trait-power-combined-chart"></div>
-      <div class="fig-note">max(&Delta;<sub>infection</sub>) = peak of &beta;&#8321;x + &beta;&#8322;x&sup2; over [0, 7%]. Combined swing = &Sigma;|&beta;<sub>trait</sub>| + |&beta;<sub>male</sub>| + |&beta;<sub>age</sub> &times; 47|. Age range = 18&ndash;65 years. Coefficients from Model 2 (random-effects logit with agent random intercepts).</div>
-    </div>
-
-    <!-- Per-Trait Behavioral Breakdown (moved from Cohort Analysis) -->
-    <div class="section" id="fig24-section" data-section="unused">
-      <div class="fig-num">Figure (unused)</div>
-      <div class="fig-title">Per-Trait Behavioral Breakdown</div>
-      <div class="fig-caption">For a selected model, each agent's transition point (first infection level where stay-home is the majority decision) is computed and grouped by Big-5 personality dimension. Paired bars show the mean transition point for each trait pole. Age scatter shows whether older agents transition earlier or later. <em>Superseded by Figures 27 and 28 (log-odds landscape + forest plot with ratio columns).</em></div>
-      <div id="fig24-model-select" style="margin-bottom:12px"></div>
-      <div class="chart-container" id="fig24-chart"></div>
-    </div>
-
-    <!-- Fig 41 archive: Persona Individuation -->
-    <div class="section" id="ra-persona-sim-author-section" data-section="unused">
-      <div class="fig-num">Figure 41 (Archive)</div>
-      <div class="fig-title">Persona Individuation &mdash; Cosine Similarity of Reasoning Embeddings</div>
-      <div class="fig-caption">Archive copy of Figure 39 (Persona Individuation). Within-agent vs across-agent cosine similarity using same-decision pairs only. Δ = within − across; higher = model individuates personas more. See Response Analysis tab for the live version.</div>
-      <div class="chart-container" id="ra-persona-sim-author-chart"></div>
-      <div class="fig-note">Same-decision restriction: only pairs where both responses made the same decision are included, isolating reasoning style from decision agreement. Method: Reimers &amp; Gurevych (2019, EMNLP) embedding cosine similarity.</div>
-    </div>
-
-    <!-- Fig 42 archive: Reasoning Diversity (K-Means) -->
-    <div class="section" id="ra-diversity-author-section" data-section="unused">
-      <div class="fig-num">Figure 42 (Archive — K-Means Diversity)</div>
-      <div class="fig-title">Effective Reasoning Modes &mdash; K-Means by Decision Type</div>
-      <div class="fig-caption">K-Means clustering run separately on stay-home and go-out response embeddings. Best K chosen by silhouette score (K &isin; [2, 20]). Moved to Author Notes — K without cluster labels is hard to interpret narratively.</div>
-      <div class="chart-container" id="ra-diversity-author-chart"></div>
-      <div class="fig-note">K selection by silhouette score (Rousseeuw 1987). PCA to 128 dims before K-Means (Aggarwal et al. 2001). n=3,000 subsample per decision group. OpenAI <code>text-embedding-3-large</code> vectors.</div>
-    </div>
-
-    <!-- Predicted vs Actual Transition Points (moved from Miscellaneous) -->
-    <div class="section" id="fig32-section" data-section="unused">
-      <div class="fig-num">Figure Comparison</div>
-      <div class="fig-title">Predicted vs. Actual Transition Points</div>
-      <div class="fig-caption">For each agent: predicted transition point (infection level where Model 2 predicts P(stay home) crosses 50%) vs. actual transition point (first infection level where the agent&rsquo;s majority decision is stay home). Agents that never transition in the data are shown at 7.5%. Complements Figure 24&rsquo;s histogram view of the same prediction error.</div>
-      <div id="fig32-model-select" style="margin-bottom:12px"></div>
-      <div id="fig32-headline" style="margin-bottom:8px"></div>
-      <div class="chart-container" id="fig32-chart"></div>
-    </div>
-
-  </div><!-- end tab-author -->
+  </div><!-- end tab-appendix -->
 
 </div><!-- end #app -->
 
@@ -1563,8 +1790,8 @@
 <script src="analytics-shared.js?v=60"></script>
 <script src="analytics-curves.js?v=57"></script>
 <script src="analytics-cohort.js?v=125"></script>
-<script src="analytics-responses.js?v=71"></script>
-<script src="analytics-author.js?v=59"></script>
-<script src="analytics-init.js?v=58"></script>
+<script src="analytics-responses.js?v=76"></script>
+<script src="analytics-author.js?v=61"></script>
+<script src="analytics-init.js?v=60"></script>
 </body>
 </html>

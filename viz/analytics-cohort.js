@@ -112,26 +112,14 @@ function renderAgentAnalysis() {
   // Fig 21: demographics
   loadAgentsJSON(renderFig21Demographics);
 
-  // Fig 24: trait effects
-  loadAgentsJSON(() => {
-    buildModelPicker('fig24-model-select', 0, idx => {
-      loadMicro(idx, (rows, cfg) => renderFig24TraitEffects(rows, cfg));
-    });
-    loadMicro(0, (rows, cfg) => renderFig24TraitEffects(rows, cfg));
-  });
-
   // Fig 25: regression table (pre-computed from R)
   buildModelPicker('fig25-model-select', 0, idx => {
     loadRegression(idx, (data, cfg) => renderFig25Regression(data, cfg));
   });
   loadRegression(0, (data, cfg) => renderFig25Regression(data, cfg));
 
-  // Fig 25: predictive accuracy guide (collapsible footnotes)
-  renderFig25Guide();
-
-  // Fig 27: log-odds landscape guide + Fig 28: forest plot guide
+  // Fig 27: log-odds landscape guide
   renderFig27LOGuide();
-  renderFig26Guide();
 
   // Figs 27 (Log-Odds Landscape), 29 (Forest Plot), 28 (Consistency Matrix)
   // All share filter pills — load data, build pills, render
@@ -1812,15 +1800,15 @@ function initFigCalibrationToggle(allRegs) {
 }
 
 // ── Fig 25: Agent-Level Logistic Regression (pre-computed from R) ──
-function renderFig25Regression(regData, cfg) {
-  const el = document.getElementById('fig25-results');
+function renderFig25Regression(regData, cfg, elId = 'fig25-results') {
+  const el = document.getElementById(elId);
   if (!el) return;
 
   const m1 = regData.model1;
   const m2 = regData.model2;
 
-  if (m1 && m1.error) { el.innerHTML = `<p style="color:#c00;font-size:12px">Model 1 error: ${esc(m1.error)}</p>`; return; }
-  if (m2 && m2.error) { el.innerHTML = `<p style="color:#c00;font-size:12px">Model 2 error: ${esc(m2.error)}</p>`; return; }
+  if (m1 && m1.error) { el.innerHTML = `<p style="color:#c00;font-size:12px">Fixed-effects logit error: ${esc(m1.error)}</p>`; return; }
+  if (m2 && m2.error) { el.innerHTML = `<p style="color:#c00;font-size:12px">Random-effects logit error: ${esc(m2.error)}</p>`; return; }
 
   // Predictor display order and labels
   const predictors = [
@@ -1851,12 +1839,6 @@ function renderFig25Regression(regData, cfg) {
 
   let html = `<div style="font-size:13px;font-weight:bold;color:#111;margin-bottom:6px">${esc(cfg.label)}</div>`;
 
-  // Dependent variable banner
-  html += '<div style="background:#f0f7ff;border:1px solid #b3d4fc;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:12px">';
-  html += '<strong>Dependent variable:</strong> <code style="background:#e8e8e8;padding:1px 4px;border-radius:2px">stay_home</code> &mdash; <strong>1 = stay home, 0 = go out</strong>. ';
-  html += 'Positive coefficients (OR &gt; 1) &rarr; higher odds of staying home. Negative (OR &lt; 1) &rarr; higher odds of going out.';
-  html += '</div>';
-
   // Format helpers for SE and CI (β ± 1.96·SE)
   function fmtSE(c) {
     if (!c || c.se == null || !isFinite(c.se)) return '';
@@ -1878,8 +1860,8 @@ function renderFig25Regression(regData, cfg) {
   html += '</tr>';
   html += '<tr style="border-bottom:1px solid #ccc;font-size:10px;color:#666">';
   html += '<th></th>';
-  html += '<th colspan="5" style="text-align:center;padding:1px">Model 1: Fixed Effects</th>';
-  html += '<th colspan="5" style="text-align:center;padding:1px;border-left:2px solid #ccc">Model 2: Random Effects</th>';
+  html += '<th colspan="5" style="text-align:center;padding:1px">Fixed-Effects Logit</th>';
+  html += '<th colspan="5" style="text-align:center;padding:1px;border-left:2px solid #ccc">Random-Effects Logit</th>';
   html += '</tr></thead><tbody>';
 
   const m1c = m1 ? m1.coefficients : {};
@@ -1947,14 +1929,12 @@ function renderFig25Regression(regData, cfg) {
   // Footnotes
   html += '<div style="margin-top:12px;font-size:10px;color:#666;line-height:1.5;border-top:1px solid #ddd;padding-top:8px">';
   html += '<div style="font-weight:600;margin-bottom:4px">Notes</div>';
-  html += '<div>Model 1 = fixed-effects logit (glm) with 99 agent dummies (only infection coefficients reported). ';
-  html += 'Model 2 = random-effects logit (glmer, lme4) with random intercepts per agent.</div>';
+  html += '<div>Fixed-effects logit (glm) with 99 agent dummies — only infection coefficients reported. ';
+  html += 'Random-effects logistic regression (lme4) with random intercepts per agent — estimates trait and demographic effects.</div>';
   html += '<div style="margin-top:4px">Dummy coding: male = 1, extraverted = 1, agreeable = 1, conscientious = 1, emotionally stable = 1, open to experience = 1. ';
   html += 'Reference categories: female, introverted, antagonistic, unconscientious, neurotic, closed to experience.</div>';
   html += '<div style="margin-top:4px">No normalization: age in raw years (18–65), infection rate as percentage (0–7%).</div>';
-  html += '<div style="margin-top:4px">Coefficients are log-odds (DV: stay_home, where 1 = stay home, 0 = go out). OR = exp(coefficient). OR > 1 → higher odds of staying home; OR < 1 → higher odds of going out. ';
-  html += 'OR CIs = exp(coef ± 1.96 × SE). See "Understanding: Log Odds" in Author Notes for a worked example.</div>';
-  html += '<div style="margin-top:4px">Significance: *** p < 0.001, ** p < 0.01, * p < 0.05, . p < 0.1</div>';
+  html += '<div style="margin-top:4px">Significance: *** p &lt; 0.001, ** p &lt; 0.01, * p &lt; 0.05</div>';
   html += '<div style="margin-top:4px">20,000 observations per configuration (100 agents × 40 infection levels × 5 repetitions). ';
   html += 'Computed in R using glm() and lme4::glmer(optimizer = bobyqa).</div>';
   html += '</div>';
@@ -2059,7 +2039,7 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
   // Layout
   const W = Math.min(el.parentElement?.offsetWidth || 860, 860);
   const rowH = 14;
-  const panelPad = { t: 24, b: 48, l: 160, r: 60 };
+  const panelPad = { t: 24, b: 26, l: 160, r: 60 };
   const gapBetweenProviders = 6;
   const panelGap = 14;
 
@@ -2134,33 +2114,6 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
       const px = xScale(lo);
       svg += `<line x1="${px}" y1="${panelTop}" x2="${px}" y2="${panelBot}" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2,3"/>`;
       svg += `<text x="${px}" y="${panelBot + 13}" font-size="8" fill="#999" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
-    });
-
-    // Secondary axis: Odds Ratio (e^β) — marginal multiplicative effect
-    const orAxisY = panelBot + 22;
-    svg += `<text x="${panelPad.l - 8}" y="${orAxisY + 10}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="end">Odds Ratio (e^\u03B2)</text>`;
-    svg += `<line x1="${panelPad.l}" y1="${orAxisY}" x2="${panelPad.l + plotW}" y2="${orAxisY}" stroke="#ddd" stroke-width="0.5"/>`;
-
-    // OR milestones: nice multiplicative values with corresponding log-odds positions
-    const orMilestones = [
-      { or: 0.1,   label: '\u00D70.1' },
-      { or: 0.25,  label: '\u00D70.25' },
-      { or: 0.5,   label: '\u00D70.5' },
-      { or: 1,     label: '\u00D71' },
-      { or: 2,     label: '\u00D72' },
-      { or: 4,     label: '\u00D74' },
-      { or: 10,    label: '\u00D710' },
-    ];
-    const orPlaced = [];
-    orMilestones.forEach(({ or, label }) => {
-      const lo = Math.log(or);
-      if (lo < globalMin || lo > globalMax) return;
-      const px = xScale(lo);
-      // Avoid overlap with previously placed label
-      if (orPlaced.some(p => Math.abs(p - px) < 26)) return;
-      orPlaced.push(px);
-      svg += `<line x1="${px}" y1="${orAxisY}" x2="${px}" y2="${orAxisY + 3}" stroke="#bbb" stroke-width="0.5"/>`;
-      svg += `<text x="${px}" y="${orAxisY + 12}" font-size="8" fill="#888" font-family="${SERIF}" text-anchor="middle">${label}</text>`;
     });
 
     // Direction labels
@@ -2291,9 +2244,9 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
   // Footnotes
   const footY = totalH + 16;
   const footnotes = [
-    'Source: Model 2 random-effects logit (glmer) \u03B2 coefficients. \u03B2 > 0 = higher log-odds of staying home.',
-    'Dummy coding: trait present = 1 (reference = absent). Male = 1 (reference = female). Age = raw years (18\u201365), \u03B2 is per-year increment.',
-    '95% CIs = \u03B2 \u00B1 1.96 \u00D7 SE. Amber markers = infection log-odds range (0\u20137%). Red I-beam = intercept (baseline). 20,000 obs per config.',
+    'Source: random-effects logistic regression \u03B2 coefficients. \u03B2 > 0 = higher log-odds of staying home.',
+    'Dummy coding: positive pole = 1 (reference = opposite pole \u2014 introverted, antagonistic, unconscientious, neurotic, closed). Male = 1 (reference = female). Age = raw years (18\u201365), \u03B2 is per-year increment.',
+    '95% CIs = \u03B2 \u00B1 1.96 \u00D7 SE. 20,000 obs per config.',
   ];
   footnotes.forEach((f, i) => {
     svg += `<text x="10" y="${footY + i * 12}" font-size="7.5" fill="#aaa" font-family="${SERIF}">${f}</text>`;
@@ -2722,59 +2675,6 @@ function renderTraitRankSpearman(allRegs, elId, modelFilter) {
   }
 }
 
-// ── Fig 26 Interpretation Guide ─────────────────────────────
-
-function renderFig26Guide() {
-  const el = document.getElementById('fig26-guide');
-  if (!el) return;
-
-  const S = 'font-family:"Libre Baskerville","Georgia",serif';
-  const mono = 'font-family:monospace;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:4px';
-
-  let html = `<div style="${S};font-size:13px;line-height:1.7;color:#333;max-width:780px;margin:8px 0 12px;border:1px solid #e0e0e0;border-radius:4px;padding:14px 18px">`;
-
-  html += '<h4 style="margin:0 0 8px;font-size:14px;color:#111">What is a log-odds coefficient (\u03B2)?</h4>';
-  html += '<p style="margin:0 0 8px">Each dot is a <strong>\u03B2 coefficient</strong> from the logistic regression. It tells you how much having a trait shifts the log-odds of staying home:</p>';
-  html += `<div style="${mono};margin:6px 0">`;
-  html += '\u03B2 > 0 &rarr; trait increases odds of staying home (dot right of dashed line)<br>';
-  html += '\u03B2 = 0 &rarr; no effect (dot on dashed line)<br>';
-  html += '\u03B2 < 0 &rarr; trait decreases odds of staying home (dot left of dashed line)</div>';
-
-  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Why log-odds?</h4>';
-  html += '<p style="margin:0 0 8px">Log-odds coefficients are <strong>additive</strong>: you can directly compare their magnitudes. A trait with \u03B2 = 8 has twice the effect of a trait with \u03B2 = 4. This makes it easy to compare trait effects against infection effects on the same scale.</p>';
-
-  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Context markers</h4>';
-  html += '<p style="margin:0 0 4px">Each row includes two reference markers to help you judge the trait\'s importance:</p>';
-  html += '<ul style="margin:4px 0 8px;padding-left:20px">';
-  html += '<li><span style="color:#e11d48;font-weight:bold">Red I-beam</span> = intercept (baseline log-odds with no traits, no infection)</li>';
-  html += '<li><span style="color:#D97706;font-weight:bold">Amber line with \u25CF and \u25C6</span> = infection log-odds range (min to max effect over 0\u20137%). If a trait dot is <em>farther</em> from zero than the amber range is wide, that single trait outweighs infection\'s full effect.</li>';
-  html += '</ul>';
-
-  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">\u03B2 Trait / Infection ratio column</h4>';
-  html += '<p style="margin:0 0 4px">The right-hand column shows how powerful each trait is relative to infection:</p>';
-  html += `<div style="${mono};margin:6px 0">`;
-  html += 'ratio = |effect size| / max infection log-odds range</div>';
-  html += '<p style="margin:4px 0 4px">For <strong>binary traits</strong> (Big Five, gender), the effect size is simply |&beta;| &mdash; the full swing from having vs. not having the trait.</p>';
-  html += '<p style="margin:4px 0 4px">For <strong>age</strong>, the dot shows &beta; per year, but the ratio uses the <strong>full age range</strong>: |&beta; &times; 47| (the difference between the youngest agent at 18 and the oldest at 65). This makes the ratio comparable to binary traits, which also represent their full possible effect.</p>';
-  html += '<p style="margin:4px 0 8px">Values above 1.0&times; mean that predictor alone shifts log-odds more than the entire infection range. Hover any model name in the Age panel to see the full calculation.</p>';
-
-  html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">Secondary P(stay home) axis</h4>';
-  html += '<p style="margin:0 0 8px">The top axis translates log-odds into <strong>probability of staying home</strong>, assuming all other variables are zero (intercept only). This helps ground the abstract \u03B2 values in a concrete behavioral outcome. Note: the mapping is nonlinear \u2014 equal distances in log-odds correspond to unequal probability changes.</p>';
-
-  html += '</div>';
-  el.innerHTML = html;
-
-  // Wire toggle button
-  const btn = document.getElementById('fig26-guide-toggle');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      const open = el.style.display !== 'none';
-      el.style.display = open ? 'none' : 'block';
-      btn.innerHTML = open ? 'How to Read This Figure &#x25BE;' : 'How to Read This Figure &#x25B4;';
-    });
-  }
-}
-
 // ── Fig 27: Agent Behavioral Consistency Matrix ─────────────
 
 function renderFig28PredictedVsActual(microRows, cfg, regData) {
@@ -2784,7 +2684,7 @@ function renderFig28PredictedVsActual(microRows, cfg, regData) {
 
   // Check Model 2 exists
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data for this config.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data for this config.</div>';
     if (headlineEl) headlineEl.innerHTML = '';
     return;
   }
@@ -2903,7 +2803,7 @@ function renderFig28Guide() {
 
   html += '<p style="margin:0 0 10px"><strong>1. What is Combined Personality OR?</strong></p>';
   html += '<p style="margin:0 0 8px">Each agent has a personality profile: traits like extraverted or conscientious, a gender, and an age. ';
-  html += 'The regression (Model 2) gives an odds ratio for each trait. ';
+  html += 'The random-effects logit gives an odds ratio for each trait. ';
   html += 'To get an agent\u2019s <em>combined</em> OR, we multiply the ORs of all traits the agent has:</p>';
   html += `<div style="${mono};margin:0 0 10px">Combined OR = OR<sub>extrav</sub><sup>1 or 0</sup> \u00D7 OR<sub>agree</sub><sup>1 or 0</sup> \u00D7 \u2026 \u00D7 OR<sub>age</sub><sup>age years</sup></div>`;
   html += '<p style="margin:0 0 10px">A combined OR of 500 means the model predicts that agent has 500\u00D7 the odds of staying home compared to the reference profile (female, introverted, antagonistic, unconscientious, neurotic, closed to experience).</p>';
@@ -3385,7 +3285,7 @@ function renderDecisionSurface(regData, cfg, chartId) {
   if (!el || !agentsData) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data for this config.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data for this config.</div>';
     return;
   }
 
@@ -4166,7 +4066,7 @@ function renderFig25Guide() {
   // ── The two rankings ──
   html += '<h4 style="margin:14px 0 8px;font-size:14px;color:#111">The two rankings</h4>';
   html += '<p style="margin:0 0 4px"><strong>Predicted ranking</strong> &mdash; from the regression model</p>';
-  html += '<p style="margin:0 0 8px;font-size:12px;color:#555">Each agent&rsquo;s combined personality odds ratio (OR) is computed from Model 2 coefficients: the product of all trait ORs for that agent&rsquo;s specific trait combination. Agents are then sorted from lowest OR (most likely to go out) to highest OR (most likely to stay home). This ranking reflects <em>what the regression predicts</em> about each agent&rsquo;s relative cautiousness.</p>';
+  html += '<p style="margin:0 0 8px;font-size:12px;color:#555">Each agent&rsquo;s combined personality odds ratio (OR) is computed from the random-effects logit: the product of all trait ORs for that agent&rsquo;s specific trait combination. Agents are then sorted from lowest OR (most likely to go out) to highest OR (most likely to stay home). This ranking reflects <em>what the regression predicts</em> about each agent&rsquo;s relative cautiousness.</p>';
 
   html += '<p style="margin:0 0 4px"><strong>Actual ranking</strong> &mdash; from the raw simulation data</p>';
   html += '<p style="margin:0 0 8px;font-size:12px;color:#555">Each agent&rsquo;s actual stay-home rate is computed across all 200 decisions (40 infection levels &times; 5 repetitions). Agents are sorted from lowest rate (goes out most) to highest rate (stays home most). This ranking reflects <em>what the agent actually did</em>.</p>';
@@ -4215,7 +4115,7 @@ function renderFig31FanChart(regData, cfg) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data for this config.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data for this config.</div>';
     if (headlineEl) headlineEl.innerHTML = '';
     return;
   }
@@ -4363,7 +4263,7 @@ function renderFig32TransitionScatter(microRows, cfg, regData) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data.</div>';
     if (headlineEl) headlineEl.innerHTML = '';
     return;
   }
@@ -4454,7 +4354,7 @@ function renderFig32TransitionScatter(microRows, cfg, regData) {
   svg += `<text x="${pad.l - 8}" y="${yScale(NEVER) + 3}" font-size="8" fill="#aaa" font-family="${SERIF}" text-anchor="end">Never</text>`;
 
   // Axis labels
-  svg += `<text x="${pad.l + plotW / 2}" y="${H - 8}" font-size="11" fill="#555" font-family="${SERIF}" text-anchor="middle">Predicted Transition Point (from Model 2)</text>`;
+  svg += `<text x="${pad.l + plotW / 2}" y="${H - 8}" font-size="11" fill="#555" font-family="${SERIF}" text-anchor="middle">Predicted Transition Point (from the random-effects logit)</text>`;
   svg += `<text x="14" y="${pad.t + plotH / 2}" font-size="11" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90,14,${pad.t + plotH / 2})">Actual Transition Point (from data)</text>`;
 
   // Deterministic jitter based on agent_id for stable positioning
@@ -4505,7 +4405,7 @@ function renderFigDeltaStrip(microRows, cfg, regData) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data for this config.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data for this config.</div>';
     if (headlineEl) headlineEl.innerHTML = '';
     return;
   }
@@ -4818,7 +4718,7 @@ function renderFig33MagnitudeComparison(regData, cfg) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data.</div>';
     return;
   }
 
@@ -4936,7 +4836,7 @@ function renderFig34FanWithData(microRows, cfg, regData) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data.</div>';
     return;
   }
 
@@ -5089,7 +4989,7 @@ function renderFig35ThreeForces(regData, cfg) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data.</div>';
     return;
   }
 
@@ -5264,7 +5164,7 @@ function renderFig36Waterfall(microRows, cfg, regData) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data.</div>';
     return;
   }
 
@@ -5751,7 +5651,7 @@ function renderFig37ThreeForces(microRows, cfg, regData, chartId, detailId) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data.</div>';
     return;
   }
 
@@ -6071,7 +5971,7 @@ function renderFig38Explorer(microRows, cfg, regData) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data.</div>';
     return;
   }
 
@@ -6302,7 +6202,7 @@ function renderFig39CrossoverDistribution(microRows, cfg, regData) {
   if (!el) return;
 
   if (!regData || !regData.model2 || !regData.model2.coefficients) {
-    el.innerHTML = '<div style="color:#999;padding:20px">No Model 2 regression data.</div>';
+    el.innerHTML = '<div style="color:#999;padding:20px">No regression data.</div>';
     return;
   }
 

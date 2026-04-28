@@ -148,26 +148,35 @@ def process_config(micro_path, patterns, agent_lookup):
 
     Returns:
         mention_rates: {dim: rate} for all 7 dimensions (overall marginal)
+        mention_rates_by_decision: {"yes": {...}, "no": {...}} — same dims, but
+            restricted to stay-home (yes) or go-out (no) responses only.
         echo_rates: {dim: {assigned, unassigned}} for Big Five only
-        pole_rates: {dim_pole: rate} — WITHIN-GROUP dimension mention rate.
-            For each agent-assigned pole, the rate is:
-              P(any keyword from that dimension appears in response
-                | agent assigned this pole)
-            e.g., pole_rates["conscientiousness_positive"] = % of
-            conscientious-trait agents' responses that mention any
-            conscientiousness keyword (either "conscientious" or
-            "unconscientious"). This is what Figure 32 renders.
+        pole_rates: {dim_pole: rate} — WITHIN-GROUP dimension mention rate
+            for Figure 32. See note below.
+        pole_rates_by_decision: {"yes": {...}, "no": {...}} — same poles, but
+            restricted by decision.
         flag_rows: list of dicts for mention_flags.csv
+
+    Pole rate definition: For each agent-assigned pole, the rate is
+        P(any keyword from that dimension appears in response | agent assigned this pole)
+    e.g., pole_rates["conscientiousness_positive"] = % of conscientious-trait
+    agents' responses that mention any conscientiousness keyword (either
+    "conscientious" or "unconscientious"). This is what Figure 32 renders.
     """
+    decisions = ("yes", "no")
     total = 0
+    total_by = {d: 0 for d in decisions}
     dim_mentions = {d: 0 for d in ALL_DIMENSIONS}
+    dim_mentions_by = {dec: {d: 0 for d in ALL_DIMENSIONS} for dec in decisions}
 
     # Within-group counters: per dim, per agent pole assignment
-    #   pole_group[dim][pole]["total"]        — # responses from agents assigned this pole
-    #   pole_group[dim][pole]["dim_mentions"] — # of those responses that mention ANY dim keyword
     pole_group = {dim: {"positive": {"total": 0, "dim_mentions": 0},
                         "negative": {"total": 0, "dim_mentions": 0}}
                   for dim in TRAIT_KEYWORDS}
+    pole_group_by = {dec: {dim: {"positive": {"total": 0, "dim_mentions": 0},
+                                  "negative": {"total": 0, "dim_mentions": 0}}
+                            for dim in TRAIT_KEYWORDS}
+                     for dec in decisions}
 
     echo = {d: {"assigned_mentions": 0, "assigned_total": 0,
                 "unassigned_mentions": 0, "unassigned_total": 0}
@@ -185,6 +194,10 @@ def process_config(micro_path, patterns, agent_lookup):
             agent_age = row.get("age", "") or agent_info["age"]
             infection_level = row.get("infection_level", "")
             rep = row.get("rep", "")
+            decision = (row.get("response") or "").strip().lower()
+            dec_key = decision if decision in decisions else None
+            if dec_key is not None:
+                total_by[dec_key] += 1
 
             # Per-response flag dict
             flags = {
@@ -203,6 +216,8 @@ def process_config(micro_path, patterns, agent_lookup):
 
                 if has_any:
                     dim_mentions[dim] += 1
+                    if dec_key is not None:
+                        dim_mentions_by[dec_key][dim] += 1
 
                 # Within-group tally for Figure 32
                 agent_pole = agent_info["traits"].get(dim)
@@ -210,6 +225,10 @@ def process_config(micro_path, patterns, agent_lookup):
                     pole_group[dim][agent_pole]["total"] += 1
                     if has_any:
                         pole_group[dim][agent_pole]["dim_mentions"] += 1
+                    if dec_key is not None:
+                        pole_group_by[dec_key][dim][agent_pole]["total"] += 1
+                        if has_any:
+                            pole_group_by[dec_key][dim][agent_pole]["dim_mentions"] += 1
 
                 # Echo analysis
                 if agent_pole == "positive":
@@ -235,19 +254,31 @@ def process_config(micro_path, patterns, agent_lookup):
             has_infection = check_infection(text, patterns)
             if has_infection:
                 dim_mentions["infection"] += 1
+                if dec_key is not None:
+                    dim_mentions_by[dec_key]["infection"] += 1
             flags["mentioned_infection"] = 1 if has_infection else 0
 
             # Age
             has_age = check_age(text, agent_age, patterns)
             if has_age:
                 dim_mentions["age"] += 1
+                if dec_key is not None:
+                    dim_mentions_by[dec_key]["age"] += 1
             flags["mentioned_age"] = 1 if has_age else 0
 
             flag_rows.append(flags)
 
-    # Compute rates
+    # Overall rates
     mention_rates = {d: round(dim_mentions[d] / total, 4) if total else 0
                      for d in ALL_DIMENSIONS}
+
+    # By-decision rates (yes-only and no-only)
+    mention_rates_by_decision = {
+        dec: {d: round(dim_mentions_by[dec][d] / total_by[dec], 4)
+                  if total_by[dec] else 0
+              for d in ALL_DIMENSIONS}
+        for dec in decisions
+    }
 
     echo_rates = {}
     for d in TRAIT_KEYWORDS:
@@ -257,8 +288,7 @@ def process_config(micro_path, patterns, agent_lookup):
             "unassigned": round(e["unassigned_mentions"] / e["unassigned_total"], 4) if e["unassigned_total"] else 0,
         }
 
-    # Within-group pole rates: for each agent pole, what % of those agents'
-    # responses mention any keyword from the dimension. Fig 32 uses these.
+    # Within-group pole rates (overall)
     pole_rates = {}
     for dim in TRAIT_KEYWORDS:
         for pole in ("positive", "negative"):
@@ -267,7 +297,17 @@ def process_config(micro_path, patterns, agent_lookup):
                 round(g["dim_mentions"] / g["total"], 4) if g["total"] else 0
             )
 
-    return mention_rates, echo_rates, pole_rates, flag_rows
+    # Within-group pole rates by decision
+    pole_rates_by_decision = {
+        dec: {f"{dim}_{pole}": (round(pole_group_by[dec][dim][pole]["dim_mentions"]
+                                      / pole_group_by[dec][dim][pole]["total"], 4)
+                                if pole_group_by[dec][dim][pole]["total"] else 0)
+              for dim in TRAIT_KEYWORDS for pole in ("positive", "negative")}
+        for dec in decisions
+    }
+
+    return (mention_rates, mention_rates_by_decision,
+            echo_rates, pole_rates, pole_rates_by_decision, flag_rows)
 
 
 def main():
@@ -281,8 +321,12 @@ def main():
     labels_out = []
     providers_out = []
     mention_rates_out = {}
+    mention_rates_yes_out = {}
+    mention_rates_no_out = {}
     echo_rates_out = {}
     pole_rates_out = {}
+    pole_rates_yes_out = {}
+    pole_rates_no_out = {}
 
     for cfg in CONFIGS:
         micro_path = DATA_DIR / cfg["dir"] / "probe_results_micro.csv"
@@ -291,15 +335,20 @@ def main():
             continue
 
         print(f"Processing {cfg['dir']}...", end=" ", flush=True)
-        mention_rates, echo_rates, pole_rates, flag_rows = process_config(
+        (mention_rates, mention_rates_by, echo_rates,
+         pole_rates, pole_rates_by, flag_rows) = process_config(
             micro_path, patterns, agent_lookup)
 
         configs_out.append(cfg["dir"])
         labels_out.append(cfg["label"])
         providers_out.append(cfg["provider"])
         mention_rates_out[cfg["dir"]] = mention_rates
+        mention_rates_yes_out[cfg["dir"]] = mention_rates_by["yes"]
+        mention_rates_no_out[cfg["dir"]] = mention_rates_by["no"]
         echo_rates_out[cfg["dir"]] = echo_rates
         pole_rates_out[cfg["dir"]] = pole_rates
+        pole_rates_yes_out[cfg["dir"]] = pole_rates_by["yes"]
+        pole_rates_no_out[cfg["dir"]] = pole_rates_by["no"]
 
         # Write mention_flags.csv
         flags_path = DATA_DIR / cfg["dir"] / "mention_flags.csv"
@@ -322,8 +371,12 @@ def main():
         "providers": providers_out,
         "dimensions": ALL_DIMENSIONS,
         "mention_rates": mention_rates_out,
+        "mention_rates_yes": mention_rates_yes_out,
+        "mention_rates_no": mention_rates_no_out,
         "echo_rates": echo_rates_out,
         "pole_rates": pole_rates_out,
+        "pole_rates_yes": pole_rates_yes_out,
+        "pole_rates_no": pole_rates_no_out,
     }
 
     with open(OUT_FILE, "w") as f:

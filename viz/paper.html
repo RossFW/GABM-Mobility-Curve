@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paper Outline — GABM Mobility Curve</title>
+  <script src="nav.js" defer></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #ffffff;
+      color: #111111;
+      font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+      padding: 40px 0 100px;
+    }
+
+    #app {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .page-header { border-bottom: 2px solid #111; padding-bottom: 16px; }
+    h1 { font-size: 18px; font-weight: bold; color: #111; margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: #555; font-style: italic; }
+
+    .intro {
+      font-size: 13px; color: #333; line-height: 1.7; padding: 4px 0;
+    }
+    .intro p { margin-bottom: 10px; }
+
+    h2 {
+      font-size: 15px; color: #111; font-weight: bold;
+      border-bottom: 1px solid #ccc; padding: 16px 0 4px;
+      margin-top: 12px;
+    }
+    h3 {
+      font-size: 13px; color: #111; font-weight: bold;
+      margin: 14px 0 4px;
+    }
+
+    ul, ol {
+      font-size: 13px; line-height: 1.6; color: #333;
+      padding-left: 22px; margin: 4px 0 8px;
+    }
+    ul ul, ol ul, ul ol, ol ol { margin: 4px 0; }
+    li { margin-bottom: 4px; }
+
+    em.tbd { color: #999; font-style: italic; }
+    .note {
+      font-size: 11px; color: #888; font-style: italic;
+      margin: 6px 0 10px;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Menlo', monospace; font-size: 12px;
+      background: #f5f5f5; padding: 1px 4px; border-radius: 2px;
+    }
+
+    p { font-size: 13px; line-height: 1.6; color: #333; }
+    strong { color: #111; }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <header class="page-header">
+      <h1>Cross-Provider LLM Probe — Paper Draft Scaffold</h1>
+      <p class="page-subtitle">Paper-order rearrangement of the dashboard content. Empty sections are placeholders to be filled in.</p>
+    </header>
+
+    <div class="intro">
+      <p>This page mirrors the intended structure of the manuscript. Sections appear in the order planned for the paper, which differs from the dashboard&rsquo;s browsing order. Figure references throughout use <em>dashboard</em> numbering (e.g., &ldquo;Fig 8&rdquo; means dashboard Figure 8); the paper will renumber its own figures when drafted.</p>
+      <p>Sections marked <em class="tbd">TBD</em> are intentional placeholders &mdash; we expect to fill them as the Key Findings on the Research Questions tab settle.</p>
+    </div>
+
+    <!-- ─────────── 1. Title & Abstract ─────────── -->
+    <section>
+      <h2>1. Title &amp; Abstract</h2>
+      <p class="note">Working title TBD. Abstract: ~200 words synthesizing the headline findings once Key Findings are complete.</p>
+    </section>
+
+    <!-- ─────────── 2. Introduction ─────────── -->
+    <section>
+      <h2>2. Introduction</h2>
+      <ul>
+        <li>Motivation: LLMs as agents in social simulations; persona-driven decision-making.</li>
+        <li>Gap addressed: how do LLMs differ across providers, sizes, and reasoning configurations when simulating persona-driven behavior?</li>
+        <li>Research questions (high-level): see <a href="analytics.html">Research Questions tab</a>.</li>
+        <li>Contributions:
+          <ul>
+            <li>21-LLM-configuration probe under matched conditions (100 personas &times; 40 infection levels &times; 5 reps).</li>
+            <li>Direct comparison of provider, size, evolution, reasoning budget, and training-data recency on a controlled task.</li>
+            <li>Joint behavioral + textual analysis (mobility decisions and reasoning text).</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ─────────── 3. Background / Related Work ─────────── -->
+    <section>
+      <h2>3. Background &amp; Related Work</h2>
+      <ul>
+        <li>Generative agent-based models (GABM) &mdash; trace back to Park et al.; Paper 1 of this dissertation.</li>
+        <li>LLM benchmarking literature &mdash; standard benchmarks vs. behavioral probes.</li>
+        <li>Big Five personality theory &mdash; brief; cite empirical compliance findings (Conscientiousness &harr; health-protective behavior) without overclaiming theoretical predictions.</li>
+        <li>Paper 1 (original GABM epidemic) and Paper 2 (prompt sensitivity) as direct precedents.</li>
+        <li><em class="tbd">TBD: specific references.</em></li>
+      </ul>
+    </section>
+
+    <!-- ─────────── 4. Methods ─────────── -->
+    <section>
+      <h2>4. Methods</h2>
+      <ul>
+        <li><strong>4.1 Simulation setup.</strong> Dewberry Hollow town; single decision per agent per condition (stay home / go out).</li>
+        <li><strong>4.2 Agent population (Fig 22).</strong> 100 frozen personas with Big Five traits, gender, age. Sampled to balance trait combinations.</li>
+        <li><strong>4.3 Probe design.</strong> 40 infection levels (0%&ndash;7%) &times; 5 repetitions per (agent, level) cell.</li>
+        <li><strong>4.4 LLM configurations.</strong> 21 configs spanning OpenAI, Anthropic, Google: provider, model size, generation, reasoning budget. Cost / token bookkeeping summarized.</li>
+        <li><strong>4.5 Response collection.</strong> Structured JSON outputs (decision + reasoning text). 0 format errors across 420,000 responses.</li>
+        <li><strong>4.6 Analytical methods.</strong>
+          <ul>
+            <li>Mobility curves: mean stay-home rate per infection level per config; OLS dummy-variable comparisons.</li>
+            <li>Logistic regression: fixed-effects (infection-curve only) and random-effects (with traits, gender, age, random intercept per agent). Diagnostics in Appendix C.</li>
+            <li>Logistic regression with mention flags: extends random-effects logit with yes/no flags for whether the response mentions each trait label or context category.</li>
+            <li>Spearman &rho;: rank-based agreement on predictor importance and on per-agent stay-home rates.</li>
+            <li>Embedding cosine similarity: OpenAI <code>text-embedding-3-large</code>; persona individuation via within- vs. across-agent same-decision pairs.</li>
+            <li>Mention keyword construction and validation.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ─────────── 5. Results ─────────── -->
+    <section>
+      <h2>5. Results</h2>
+      <p class="note">Paper-order presentation: lead with the largest source of variation (provider), then drill into within-provider modulators. This order differs from the dashboard navigation but uses the same figures.</p>
+
+      <h3>5.1 Aggregate behavior across LLM configurations</h3>
+      <ul>
+        <li><strong>5.1.1 Cross-provider differences (RQ4).</strong> Figs 8, 9. <em class="tbd">Lead finding: providers differ by ~80 pp in baseline mobility before any other lever is pulled.</em></li>
+        <li><strong>5.1.2 Reasoning budget (RQ1).</strong> Figs 1, 2. <em class="tbd">~8&ndash;9 pp shift; opposite directions across providers; small relative to the between-LLM gap.</em></li>
+        <li><strong>5.1.3 Model size (RQ2).</strong> Figs 3, 4. <em class="tbd">TBD.</em></li>
+        <li><strong>5.1.4 Model evolution (RQ3).</strong> Figs 5, 6, 7. <em class="tbd">TBD.</em></li>
+        <li><strong>5.1.5 Knowledge cutoff (RQ5).</strong> Figs 10, 11&ndash;14. <em class="tbd">TBD.</em></li>
+        <li><strong>5.1.6 Release date (RQ6).</strong> Figs 15, 16&ndash;18. <em class="tbd">TBD.</em></li>
+      </ul>
+
+      <h3>5.2 What drives the decision: trait effects</h3>
+      <ul>
+        <li><strong>5.2.1 Trait interpretation (RQ7).</strong> Figs 22, 23, 25, 27. <em class="tbd">TBD.</em></li>
+        <li><strong>5.2.2 Personality vs. infection magnitude (RQ8).</strong> Fig 26. <em class="tbd">TBD.</em></li>
+      </ul>
+
+      <h3>5.3 Cross-model consistency</h3>
+      <ul>
+        <li><strong>5.3.1 Predictor importance agreement (RQ9).</strong> Figs 28, 29. <em class="tbd">TBD.</em></li>
+        <li><strong>5.3.2 Agent identity agreement (RQ10).</strong> Fig 30. <em class="tbd">TBD.</em></li>
+      </ul>
+
+      <h3>5.4 What&rsquo;s in the reasoning text</h3>
+      <ul>
+        <li><strong>5.4.1 Trait mentions and behavioral effect (RQ11).</strong> Figs 32, 33, 34. <em class="tbd">TBD.</em></li>
+        <li><strong>5.4.2 Decision themes (RQ12).</strong> Fig 37. <em class="tbd">TBD.</em></li>
+        <li><strong>5.4.3 Reasoning length (RQ13).</strong> Figs 35, 36. <em class="tbd">TBD.</em></li>
+      </ul>
+
+      <h3>5.5 Response heterogeneity</h3>
+      <ul>
+        <li><strong>5.5.1 Decision repeatability (RQ14).</strong> Fig 38. <em class="tbd">TBD.</em></li>
+        <li><strong>5.5.2 Reasoning text repeatability (RQ15).</strong> Fig 39. <em class="tbd">TBD.</em></li>
+        <li><strong>5.5.3 Persona individuation (RQ16).</strong> Fig 40. <em class="tbd">TBD.</em></li>
+      </ul>
+    </section>
+
+    <!-- ─────────── 6. Discussion ─────────── -->
+    <section>
+      <h2>6. Discussion</h2>
+      <ul>
+        <li>Headline takeaways &mdash; <em class="tbd">TBD once Key Findings are complete.</em></li>
+        <li>Implications for LLM agent simulation: which LLM you choose dominates the simulation output.</li>
+        <li>Implications for persona modeling: do LLMs actually individuate personas, or fall back to templates?</li>
+        <li>Limitations: single decision type (stay home / go out), 100 frozen personas, single epidemic context, no fine-tuning.</li>
+        <li>Future work: longitudinal probes, more decision types, fine-tuned models, intervention experiments.</li>
+      </ul>
+    </section>
+
+    <!-- ─────────── 7. Conclusion ─────────── -->
+    <section>
+      <h2>7. Conclusion</h2>
+      <p class="note">~1&ndash;2 paragraphs synthesizing the contribution. TBD.</p>
+    </section>
+
+    <!-- ─────────── 8. Appendices ─────────── -->
+    <section>
+      <h2>8. Appendices</h2>
+      <ul>
+        <li><strong>A.</strong> Mobility-curve OLS regressions (per Theme A figure pair). See dashboard Appendix A.</li>
+        <li><strong>B.1.</strong> Per-model fixed-effects + random-effects logit tables (21 configs). See dashboard Appendix B.1.</li>
+        <li><strong>B.2.</strong> Per-model random-effects logit with mention flags (21 configs). See dashboard Appendix B.2.</li>
+        <li><strong>C.</strong> Model diagnostics (DHARMa Q-Q, calibration, residual plots). See dashboard Appendix C.</li>
+        <li><strong>D.</strong> Statistical reference (log-odds walkthrough, Spearman walkthrough). See dashboard Appendix D.</li>
+      </ul>
+    </section>
+
+  </div>
+</body>
+</html>

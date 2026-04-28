@@ -10,6 +10,7 @@
     { href: 'methodology.html', label: 'METHODOLOGY' },
     { href: 'town.html',        label: 'SIMULATION' },
     { href: 'analytics.html',   label: 'ANALYTICS' },
+    { href: 'paper.html',       label: 'PAPER' },
   ];
 
   const nav = document.createElement('nav');

@@ -1125,8 +1125,8 @@ function drawFigJ(microA, microB, mA, mB) {
         <thead>
           <tr>
             <th rowspan="2">Coefficient</th>
-            <th colspan="4" style="text-align:center;border-bottom:1px solid #ccc">Model 1 (no interaction)</th>
-            <th colspan="4" style="text-align:center;border-bottom:1px solid #ccc">Model 2 (with D·NC)</th>
+            <th colspan="4" style="text-align:center;border-bottom:1px solid #ccc">No interaction</th>
+            <th colspan="4" style="text-align:center;border-bottom:1px solid #ccc">With D&middot;NC interaction</th>
           </tr>
           <tr>
             <th>β</th><th>SE</th><th>t</th><th>p</th>
@@ -1136,8 +1136,8 @@ function drawFigJ(microA, microB, mA, mB) {
         <tbody>${rows1.join('')}</tbody>
         <tfoot>
           <tr><td colspan="9" style="padding-top:6px;font-size:11px;color:#555">
-            R² (M1) = ${m1.r2.toFixed(3)} &nbsp;|&nbsp; R² (M2) = ${m2.r2.toFixed(3)} &nbsp;|&nbsp;
-            df = ${m1.df} (M1), ${m2.df} (M2) &nbsp;|&nbsp;
+            R² (no interaction) = ${m1.r2.toFixed(3)} &nbsp;|&nbsp; R² (with interaction) = ${m2.r2.toFixed(3)} &nbsp;|&nbsp;
+            df = ${m1.df} (no int.), ${m2.df} (with int.) &nbsp;|&nbsp;
             ★ = key test rows &nbsp;|&nbsp; *** p&lt;0.001, ** p&lt;0.01, * p&lt;0.05
           </td></tr>
         </tfoot>
