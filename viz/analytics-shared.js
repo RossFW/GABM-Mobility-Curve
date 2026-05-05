@@ -74,6 +74,7 @@ const MODEL_GROUPS = {
 const CW = 860, CH = 360, PAD = { t: 28, r: 24, b: 48, l: 58 };
 const FIG_CW = 860, FIG_CH = 360, FIG_PAD = { t: 28, r: 24, b: 48, l: 58 };
 const SMALL_CW = 252, SMALL_CH = 240, SMALL_PAD = { t: 22, r: 16, b: 40, l: 46 };
+const MED_CW   = 560, MED_CH   = 300, MED_PAD   = { t: 24, r: 18, b: 44, l: 50 };
 
 // Academic color constants
 const AX_COLOR  = '#333333';   // axis text + tick marks
@@ -87,10 +88,19 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Piecewise-linear X axis: 0–3.5% maps to the left half of the plot, 3.5–7%
+// to the right half. Gives the four sparsely-sampled high-end points
+// (4/5/6/7%) equal screen width to the densely-sampled low-end points.
 function levelToX(level, w, pad) {
-  const idx = LEVELS.indexOf(+level);
-  if (idx < 0) return pad.l;
-  return pad.l + (idx / (LEVELS.length - 1)) * (w - pad.l - pad.r);
+  const lvl = +level;
+  const plotW = w - pad.l - pad.r;
+  let frac;
+  if (lvl <= 3.5) {
+    frac = (lvl / 3.5) * 0.5;
+  } else {
+    frac = 0.5 + ((lvl - 3.5) / (7 - 3.5)) * 0.5;
+  }
+  return pad.l + frac * plotW;
 }
 
 function pctToY(pct, h, pad) {
@@ -114,11 +124,16 @@ function groupByModel(data) {
 // ── SVG axis helpers (academic style) ────────────────────────
 const SERIF = "Georgia,'Times New Roman',serif";
 
-function xAxisTicks(w, h, pad) {
+function xAxisTicks(w, h, pad, opts) {
   const ticks = [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0, 7.0];
+  // Small panels can't fit the dense 0.5%-step labels in their left half,
+  // so on `sparse` we drop the half-integer labels and keep tick marks only.
+  const hideLabels = (opts && opts.sparse) ? new Set([0.5, 1.5, 2.5, 3.5]) : new Set();
   return ticks.map(t => {
     const x = levelToX(t, w, pad);
-    return `<text x="${x}" y="${h - pad.b + 14}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="middle">${t}%</text>` +
+    const label = hideLabels.has(t) ? ''
+      : `<text x="${x}" y="${h - pad.b + 14}" fill="${AX_COLOR}" font-size="10" font-family="${SERIF}" text-anchor="middle">${t}%</text>`;
+    return label +
            `<line x1="${x}" y1="${h - pad.b}" x2="${x}" y2="${h - pad.b + 4}" stroke="${AX_COLOR}" stroke-width="0.8"/>`;
   }).join('');
 }
@@ -182,7 +197,7 @@ function legendHTML(items) {
 
 // ── SVG wrapper ───────────────────────────────────────────────
 function makeSVG(w, h, inner) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" style="display:block;background:${SVG_BG}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="display:block;background:${SVG_BG}">
     ${svgBorder(w, h)}
     ${inner}
   </svg>`;

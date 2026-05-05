@@ -618,7 +618,7 @@ Always ask: "is this effect size meaningful in context?" For stay-home probabili
 
 ## A.6 Temperature, thinking budgets, and LLM stochasticity
 
-Paper-specific: the configurations differ not just in underlying LLM but in **temperature settings** and **reasoning budgets** (e.g., GPT-5.2 high/medium/low). These mechanically affect response variance:
+Paper-specific: the configurations differ not just in underlying LLM but in **temperature settings** and **reasoning levels** (e.g., GPT-5.2 high/medium/low). These mechanically affect response variance:
 
 - Higher temperature → more rep-to-rep disagreement → dispersion ratio closer to 1 or above
 - Lower temperature → more rep-to-rep agreement → dispersion ratio below 1

@@ -286,7 +286,7 @@ You have to provide Response in a single word; it must be either "Yes" or "No".<
 
     <div class="prose">
       <p>
-        Twenty-one model configurations span three major LLM providers, covering multiple model generations, size tiers, and reasoning budget levels. All models are accessed via their respective APIs with version-pinned model IDs to ensure reproducibility. Data was collected in March 2026.
+        Twenty-one model configurations span three major LLM providers, covering multiple model generations, size tiers, and reasoning level levels. All models are accessed via their respective APIs with version-pinned model IDs to ensure reproducibility. Data was collected in March 2026.
       </p>
     </div>
 
@@ -332,7 +332,7 @@ You have to provide Response in a single word; it must be either "Yes" or "No".<
 
     <div class="prose" style="margin-top: 12px">
       <p>
-        <strong>Reasoning budget</strong> controls the amount of internal "thinking" a model performs before responding. Most configurations use reasoning = off (standard inference). GPT-5.2 and Gemini 3 Flash are tested across the full reasoning ladder (off, low, medium, high) to measure the effect of reasoning budget on behavioral sensitivity. The o3 model always uses reasoning (required by API).
+        <strong>Reasoning level</strong> controls the amount of internal "thinking" a model performs before responding. Most configurations use reasoning = off (standard inference). GPT-5.2 and Gemini 3 Flash are tested across the full reasoning ladder (off, low, medium, high) to measure the effect of reasoning level on behavioral sensitivity. The o3 model always uses reasoning (required by API).
       </p>
       <p>
         <strong>Temperature</strong> is set to 0 for non-thinking models and 1 for reasoning-capable models (API-enforced for Anthropic; Google recommendation for Gemini). Five repetitions per agent&ndash;level capture the resulting stochasticity.
@@ -375,15 +375,15 @@ You have to provide Response in a single word; it must be either "Yes" or "No".<
 
     <div class="prose">
       <p>
-        The 21 configurations are designed to support six primary analytical dimensions. Each dimension isolates a specific factor &mdash; reasoning budget, model size, generation, provider, or training data recency &mdash; while holding others as constant as possible.
+        The 21 configurations are designed to support six primary analytical dimensions. Each dimension isolates a specific factor &mdash; reasoning level, model size, generation, provider, or training data recency &mdash; while holding others as constant as possible.
       </p>
     </div>
 
     <ol class="dim-list">
       <li>
         <span class="dim-num">1</span>
-        <strong>Reasoning Budget Effects</strong> &mdash;
-        Does increasing the reasoning budget (off &rarr; low &rarr; medium &rarr; high) shift behavioral sensitivity?
+        <strong>Reasoning Level Effects</strong> &mdash;
+        Does increasing the reasoning level (off &rarr; low &rarr; medium &rarr; high) shift behavioral sensitivity?
         Tested on GPT-5.2 and Gemini 3 Flash, the only models offering the full reasoning ladder.
         <br><span class="dim-ref">&rarr; Figures 1&ndash;2 (Reasoning tab)</span>
       </li>

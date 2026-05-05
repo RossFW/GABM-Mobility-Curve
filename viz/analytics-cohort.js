@@ -3111,10 +3111,6 @@ function renderFig30InfectionOR(allRegs) {
   renderInfectionEffectChart(allRegs, 'fig30-chart', 'model2');
 }
 
-function renderFig30bInfectionOR(allRegs) {
-  renderInfectionEffectChart(allRegs, 'fig30b-chart', 'model1');
-}
-
 // ── Trait OR vs Infection OR ──────────────────────────────────
 function renderTraitVsInfectionOR(allRegs, containerId) {
   const el = document.getElementById(containerId || 'trait-vs-infection-chart');

@@ -286,21 +286,12 @@ function init() {
       computeAllOLS();
 
       // ── Tab 1: Mobility Curves ────────────────────────────────
-      renderFigA();
-      renderFigB();
-      renderFigAnthro();
-      renderFigGeminiLite();
-      renderFigD();
-      renderFigAnthroGen();
-      renderFigC();
+      renderReasoningLadderFacets('figA-facets');
+      renderSizeFacets('figSize-facets');
+      renderEvolutionFacets('figEvolution-facets');
+      renderCutoffEraFacets('figCutEras-facets');
+      renderReleaseEraFacets('figRelEras-facets');
       renderFigFlagship();
-      renderFigCutPre24();
-      renderFigCutMid24();
-      renderFigCutEarly25();
-      renderFigCutLate25();
-      renderFigRelLegacy();
-      renderFigRelSpring();
-      renderFigRelLate();
       renderS3();
 
       // Figure 20: Comparison Tool (needs micro data, lazy-loaded on run)

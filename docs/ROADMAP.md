@@ -1,168 +1,181 @@
 # Paper 3 Roadmap — GABM Mobility Curve
 
-*Last updated: March 23 2026*
+*Last updated: April 28, 2026*
 
 ## One-Line Summary
 
-Cross-sectional probe: 100 frozen agents × 40 infection levels × 21 LLM configs =
-420,000 API calls. Generates "mobility curves" for cross-provider LLM comparison.
+Cross-sectional probe: 100 frozen agents × 40 infection levels × 21 LLM configs × 5 reps =
+**420,000 responses**. Compares mobility behavior across LLM providers, sizes,
+generations, reasoning levels, and training-data eras.
 
 ---
 
-## Where We Are (March 2026)
+## Where We Are (April 2026)
 
-### ✅ Done
-- Probe design finalized: 40 levels, 21 configs, 100 agents, 5 reps
-- Provider layer complete: Anthropic, OpenAI, Gemini with reasoning budget control
-- Gemini migrated to `google-genai` SDK: `thinking_budget=0` for 2.5-flash/lite at off; temp=1 for all thinking models
-- Coverage matrix documented: `site/coverage.html`
-- GitHub repo live: RossFW/GABM-Mobility-Curve
-- **Phase 2 data collection complete** (March 2026): all 21 configs, 420,000 rows, validated, backed up to GitHub
-- Model metadata documented: `data/metadata/models.csv` + `docs/MODEL_CARD.md`
-- Visualization live with real data: `viz/analytics.html` (39-figure academic dashboard) + `viz/town.html` + `viz/methodology.html`
-- Regression analysis complete: fixed-effects + random-effects logit for all 21 configs
-- Dashboard restructured: 4 tabs (Mobility Curves, Cohort Analysis, Response Analysis, Author Notes)
-- **Response Analysis figures** (March 2026): 7 new figures (33–39) covering trait utilization, verbosity, decision entropy, response consistency
-  - Pre-computation scripts: `compute_trait_mentions.py`, `compute_verbosity_stats.py`, `compute_response_text_similarity.py`
-  - Key findings: 0/420K format errors; Gemini 2.5 Flash Lite = 100% deterministic; GPT-5.1 only 64.7% decision agreement at temp=0
-- **analytics.js refactored** (March 2026): split 7,765-line monolith into 6 tab-specific files
-  - `analytics-shared.js` (700) → `analytics-curves.js` (1,147) → `analytics-cohort.js` (4,668) → `analytics-responses.js` (555) → `analytics-author.js` (440) → `analytics-init.js` (261)
-  - Trait mention keywords tightened: removed common words (responsible, organized, calm, curious) that inflated rates
+The infrastructure, data collection, analysis, and dashboard are all complete.
+**Phase 5 — paper writing — is the active phase.** Methods (§4) is drafted in
+`viz/paper.html`. Results (§5) is scaffolded in paper order with per-RQ bullets that
+remain TBD until Key Findings are filled in. The next concrete step is walking through
+RQ1 → RQ16 to commit Key Findings.
 
-### 🔲 Immediate Next
+### What's Done
 
-```bash
-# Step 1: Combine all 21 macro CSVs
-python combine_data.py      # → viz/data/real/all_macro.csv
+- Probe design, provider layer, full data collection (420K responses, 0 format errors).
+- All three logistic-regression specifications fit per config (fixed-effects,
+  random-effects, random-effects with mention flags); diagnostics in Appendix C.
+- All NLP analyses done (trait mentions with yes/no/diff splits; concept categories;
+  verbosity; rep agreement; Jaccard; persona-similarity 5/5-unanimity rewrite).
+- Dashboard polished across 5 tabs (RQ, Mobility, Persona, Response, Appendix) with
+  caption / terminology cleanup pass complete.
+- Paper outline scaffold (`viz/paper.html`) with Methods (§4) drafted.
+- Figure 2 (sample demographics) shares the dashboard's `renderFig21Demographics()`
+  so edits to either side propagate.
 
-# Step 2: Run OLS regression
-python analyze_results.py   # → figures/ + regression table
-```
+### What's Next (Phase 5 Pipeline)
+
+1. **Key Findings, RQ1 → RQ16.** Walk through each RQ; commit a 1–2 sentence finding to
+   the Research Questions tab table. Discuss screenshots + regression numbers when
+   needed.
+2. **Expand `paper.html` §5.x.** Once a Key Finding is settled, expand the matching
+   bullet in §5 into a paragraph of paper prose.
+3. **Lock paper figure numbering.** Currently §5 references dashboard numbers
+   (Figs 8, 9 for RQ1, etc.). When Results prose is drafted, renumber as paper figures.
+4. **Discussion (§6).** Once headline findings are clear, draft Discussion bullets
+   into prose. Anchor on: provider differences dominate; reasoning is a small
+   modulator; persona individuation varies dramatically; cross-model consistency.
+5. **Conclusion + Abstract.** Last to write.
+6. **References.** Grow `paper.html` §9 as citations are added inline.
 
 ---
 
 ## Phase Pipeline
 
+### Phase 1 — Infrastructure ✅ COMPLETE
+Probe design, provider layer, validation. Details in `docs/STATUS.md` Phase 1.
+
 ### Phase 2 — Data Collection ✅ COMPLETE
-21 configs × 20,000 calls = 420,000 rows. All macro CSVs present.
-Output: `data/{provider}_{model}_{reasoning}/probe_results_macro.csv`
+21 configs × 20,000 responses = 420,000 rows.
+Output: `data/{provider}_{model}_{reasoning}/probe_results_{macro,micro}.csv`.
 
-### Phase 3 — OLS Regression Analysis
+### Phase 3 — Analysis ✅ COMPLETE
+- Three logistic-regression specifications per config (R/lme4).
+- All NLP analyses (trait mentions with yes/no/diff splits; concept categories;
+  verbosity; rep agreement; Jaccard; embedding-based persona similarity).
+- Per-figure OLS comparisons for Theme A.
 
-**Primary: macro-level OLS**
-- Merge all 21 macro CSVs → `data/combined/all_macro.csv`
-  - 840 rows: 21 configs × 40 infection levels
-  - Columns: provider, model, reasoning, infection_level, pct_stay_home, n_total, n_valid, ...
-- OLS: `pct_stay_home ~ infection_level` per config
-  - Fit separately for each of 21 configs
-  - Compare slope β (sensitivity to infection rate) and intercept α (baseline mobility)
-  - Fit alternative: `logit(pct_stay_home/100) ~ infection_level` (logistic, more principled)
-- Cross-model contrasts: provider effects, reasoning-level effects, generational effects
-- Export LaTeX regression table for paper
+### Phase 4 — Dashboard ✅ COMPLETE
+- 5 tabs: Research Questions, Mobility Curves, Persona Analysis, Response Analysis, Appendix.
+- Appendix structure: A (mobility OLS) / B.1 (base logits) / B.2 (mention-flag logits) / C (diagnostics) / D (statistical reference walkthroughs).
+- Caption / terminology cleanup pass complete.
 
-**Secondary: agent-level OLS**
-- Merge all micro CSVs → `data/combined/all_micro.csv` (~420K rows)
-- OLS: `stay_home ~ infection_level + age + trait_openness + trait_conscientiousness + ...` per model
-- Tests whether demographic/personality predictors vary across LLMs
-
-### Phase 4 — Viz with Real Data ✅ COMPLETE
-- `viz/data/real/` populated, analytics and town views rendering with real data
-
-### Phase 5 — Paper Writing
-- Methods: probe design, 21 configs, temperature decisions, OLS approach
-- Results: mobility curve figures + OLS regression table
-- Discussion: connect to Papers 1 & 2, implications for LLM-based ABMs
+### Phase 5 — Paper Writing 🔄 ACTIVE
+- Live in `viz/paper.html` (top-level page reachable from site nav: *Introduction /
+  Methodology / Simulation / Analytics / Paper*).
+- §1–§3, §6–§7 are placeholders.
+- §4 Methods drafted in journal-paper prose.
+- §5 Results scaffolded; Key Findings TBD.
+- §8 Appendices map to dashboard appendices.
+- §9 References uses numeric `[N]` format; starter entries in place.
 
 ---
 
-## The Research Figures (analytics.html — 37 figures)
+## The Research Figures (current dashboard layout)
 
-| Tab | Figures | Key question |
-|-----|---------|-------------|
-| Reasoning | 1–2 | GPT-5.2 + Gemini 3 Flash reasoning ladders (off→high) |
-| Size | 3–4 | Anthropic (Haiku/Sonnet/Opus) + Gemini (Lite/Flash) size tiers |
-| Evolution | 5–7 | Generational progression per provider (off only) |
-| Provider | 8–9 | Cross-provider flagship comparison + Paper 1 baseline |
-| Agent Analysis | 10 | Agent-level heatmap + concordance |
-| Knowledge Cutoff | 11–15 | Models grouped by training data recency (timelines + curves) |
-| Release Date | 16–19 | Models grouped by release era (timelines + curves) |
-| Comparison Tool | 20 | Pairwise dummy variable OLS (interactive) |
-
-Methodology page (`methodology.html`) provides research design context for all figures.
-
----
-
-## Statistical Approach
-
-- **Primary**: OLS `pct_stay_home ~ infection_level` per model → compare β (slope) and α (intercept)
-- **Alternative**: logistic sigmoid `logit(p) ~ infection_level` (more principled for probability)
-- **Uncertainty**: Wilson CI per data point; bootstrap CI for regression parameters (resample 100 agents, 1000×)
-- 100 agents gives adequate precision: SE ≈ 5% at p=0.5, detects large LLM differences easily
+| Tab | Figures | Topic |
+|-----|---------|-------|
+| Mobility Curves | 1–7 | Reasoning, size, evolution comparisons |
+| Mobility Curves | 8–9 | Cross-provider flagship + variation |
+| Mobility Curves | 10–14 | Knowledge-cutoff comparisons |
+| Mobility Curves | 15–18 | Release-date comparisons |
+| Mobility Curves | 19–21 | Agent decision heatmap, rep agreement, comparison tool |
+| Persona Analysis | 22–24 | Sample demographics, regression, ranking accuracy |
+| Persona Analysis | 25–27 | Decision anatomy, log-odds landscape, cross-model trait effects |
+| Persona Analysis | 28–30 | Per-trait power ratio, importance ranking, agent consistency |
+| Response Analysis | 31 | Agent spotlight |
+| Response Analysis | 32–34 | Trait mentions, mention-flag regression, mention-effects forest |
+| Response Analysis | 35–36 | Verbosity by model, verbosity × infection level |
+| Response Analysis | 37 | Decision themes (concept frequency) |
+| Response Analysis | 38–40 | Rep-to-rep agreement, response text similarity, persona individuation |
 
 ---
 
-## 4 Research Dimensions
+## 16 Research Questions (5 themes)
 
-| DIM | Question | Models |
-|-----|----------|--------|
-| 1 | Cross-provider reasoning sweep | gpt-5.2 vs gemini-3-flash (off/low/med/high) |
-| 2 | Reasoning intensity within OpenAI | gpt-5.1 off, gpt-5.2 off→high, o3 required |
-| 3 | Generational change (off only, all providers) | gpt-3.5→4o→5.1→5.2; haiku-3→sonnet-4-0→haiku/sonnet-4-5→opus-4-5; 2.0-flash→2.5-flash→3-flash |
-| 4 | Model size within generation (off only) | haiku/sonnet/opus-4-5; 2.5-flash-lite→3-flash |
+See dashboard Research Questions tab for the live table. Summary:
+
+- **Theme A — Comparing LLM Mobility Curves** (RQ1–6): Does provider / reasoning level / size /
+  evolution / provider / knowledge cutoff / release date affect mobility curves?
+- **Theme B — Trait Interpretation** (RQ7–8): How do agent traits affect mobility
+  curves? Are personality effects larger than infection effects?
+- **Theme C — Cross-Model Consistency** (RQ9–10): Do LLMs agree on which predictors
+  matter? Do they agree on which agents are most cautious?
+- **Theme D — Reasoning Text Analysis** (RQ11–13): How do trait mentions shape the
+  decision? Which concept categories dominate stay-home vs. go-out reasoning? How
+  does reasoning length vary across LLMs and infection levels?
+- **Theme E — Response Heterogeneity** (RQ14–16): Do models give the same decision
+  across repetitions? Same reasoning text? Is reasoning persona-specific or templated?
 
 ---
 
 ## Connection to Papers 1 & 2
 
-**Paper 1** (arXiv 2307.04986): GPT-3.5 only, full epidemic simulation → established the GABM method.
-Agents stayed home when infection rose; epidemic curves were realistic.
-
-**Paper 2**: Prompt sensitivity analysis → showed LLM behavior is sensitive to prompt design.
-Raises question: is it also sensitive to which LLM you use?
-
-**Paper 3 (this)**: Controlled probe across 21 LLM configs → answers the question.
-Same agents, same prompts, same infection levels — only the LLM changes.
-Primary claims: (1) different LLMs produce meaningfully different mobility curves,
-(2) reasoning level affects behavior differently across providers.
-
----
-
-## Key Locked Decisions
-
-See `docs/STATUS.md` → Key Decisions Made table for full list.
-Do not change these without discussion — they define the study's scientific validity.
+- **Paper 1** (arXiv:2307.04986): GPT-3.5 only, full epidemic simulation — established the GABM method.
+- **Paper 2**: Prompt sensitivity analysis — showed LLM behavior is sensitive to prompt design.
+- **Paper 3 (this)**: Controlled probe across 21 LLM configs — same agents, same prompts,
+  same infection levels; only the LLM changes. Primary claims target between-LLM
+  variation in mobility behavior, persona interpretation, cross-model consistency,
+  and reasoning-text content.
 
 ---
 
 ## Repo Structure
 
 ```
-GABM mobility curve/          ← THIS REPO (Paper 3)
-├── probe_mobility.py         ← main data collection script
-├── combine_data.py           ← populates viz/data/real/ from data/
-├── validate_data.py          ← checks all 21 configs for completeness
-├── agents/agents.json        ← frozen agent pool (DO NOT MODIFY)
+GABM mobility curve/                  ← THIS REPO (Paper 3)
+├── probe_mobility.py                 ← main data collection script
+├── combine_data.py                   ← per-config CSVs → viz/data/real/all_macro.csv
+├── validate_data.py                  ← checks all 21 configs for completeness
+├── agents/
+│   ├── agents.json                   ← frozen agent pool (DO NOT MODIFY)
+│   └── generate_agents.py            ← seed-42 generator (50/50 Big Five, age weights from census.gov/popclock)
+├── analysis/
+│   ├── compute_regressions.R         ← all three logit specifications
+│   ├── compute_trait_mentions.py     ← trait/context mention rates (with yes/no/diff splits)
+│   ├── compute_decision_drivers.py   ← Fig 37 concept-category mentions
+│   ├── compute_verbosity_stats.py    ← Figs 35/36 token distributions
+│   ├── compute_response_text_similarity.py  ← Figs 38/39 rep agreement + Jaccard
+│   └── compute_persona_similarity.py ← Fig 40 5/5-unanimity within-vs-across cosine
 ├── data/
 │   ├── {provider}_{model}_{reasoning}/   ← per-config probe results
 │   │   ├── probe_results_macro.csv
 │   │   └── probe_results_micro.csv
-│   └── metadata/models.csv   ← alias, pinned version, dates, pricing
-├── viz/                      ← interactive visualizations
-│   ├── town.html             ← Phaser 3 town view
-│   ├── methodology.html      ← research design, prompt, configs, analysis approach
-│   ├── analytics.html        ← academic research dashboard (37 figures)
-│   └── data/real/            ← real probe data (populated by combine_data.py)
-├── site/coverage.html        ← model coverage matrix
+│   └── metadata/models.csv           ← alias, pinned version, dates, pricing
+├── viz/                              ← interactive site
+│   ├── index.html                    ← Introduction
+│   ├── methodology.html              ← Methodology page
+│   ├── town.html                     ← Phaser 3 town view (Simulation)
+│   ├── analytics.html                ← Dashboard (Research Questions / Mobility / Persona / Response / Appendix)
+│   ├── paper.html                    ← Paper outline (Methods drafted; Results scaffolded)
+│   ├── nav.js                        ← Top-level page nav
+│   ├── analytics-shared.js           ← Shared globals + utilities
+│   ├── analytics-curves.js           ← Mobility Curves tab
+│   ├── analytics-cohort.js           ← Persona Analysis tab (largest file)
+│   ├── analytics-responses.js        ← Response Analysis tab
+│   ├── analytics-author.js           ← Statistical-reference renderers (Appendix D)
+│   ├── analytics-init.js             ← Tab switching + lazy-render entry points
+│   ├── config.js                     ← 21 models, colors, infection levels
+│   └── data/real/                    ← real probe data (populated by combine_data.py)
+├── site/coverage.html                ← model coverage matrix
 └── docs/
-    ├── ROADMAP.md            ← this file
-    ├── STATUS.md             ← phase tracker
-    ├── MODEL_CARD.md         ← all 21 configs with versions, dates, pricing
-    ├── SETUP.md              ← new machine setup instructions
-    ├── SAMPLING.md           ← 40-level design justification
-    └── DESIGN.md             ← scientific rationale for probe design
+    ├── ROADMAP.md                    ← this file
+    ├── STATUS.md                     ← phase tracker
+    ├── MODEL_CARD.md                 ← all 21 configs with versions, dates, pricing
+    ├── SETUP.md                      ← new machine setup instructions
+    ├── SAMPLING.md                   ← 40-level design justification
+    └── DESIGN.md                     ← scientific rationale for probe design
 
-../GABM-Epidemic/             ← provider infrastructure (NOT Paper 3)
-├── providers/                ← imported by probe_mobility.py
-├── venv/                     ← shared virtual environment
-└── .env                      ← API keys (copy manually, never commit)
+../GABM-Epidemic/                     ← provider infrastructure (NOT Paper 3)
+├── providers/                        ← imported by probe_mobility.py
+├── venv/                             ← shared virtual environment
+└── .env                              ← API keys (copy manually, never commit)
 ```

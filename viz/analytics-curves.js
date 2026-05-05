@@ -87,89 +87,67 @@ function renderS1() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Figure A: GPT-5.2 — Reasoning Level Comparison
-// Okabe-Ito blue sequential: dark → light
+// Reasoning Level Ladder — combined two-panel facet figure.
+// One panel for OpenAI's GPT-5.2 (blue sequential), one for Google's
+// Gemini 3 Flash Preview (green sequential). Used by both the dashboard
+// (#figA-facets) and paper.html.
 // ═══════════════════════════════════════════════════════════════
-function renderFigA() {
-  const el       = document.getElementById('figA-chart');
-  const legendEl = document.getElementById('figA-legend');
-  const w = FIG_CW, h = FIG_CH, pad = FIG_PAD;
-  const grouped  = groupByModel(macroData);
+function renderReasoningLadderFacets(targetId) {
+  const facets = document.getElementById(targetId || 'figA-facets');
+  if (!facets) return;
+  const grouped = groupByModel(macroData);
+  const w = MED_CW, h = MED_CH, pad = MED_PAD;
 
-  const reasoningOrder = ['off', 'low', 'medium', 'high'];
+  const reasoningOrder  = ['off', 'low', 'medium', 'high'];
   const reasoningLabels = { off: 'Off', low: 'Low', medium: 'Medium', high: 'High' };
-  // Okabe blue sequential (dark → light), dashed for medium/high
-  const colors = ['#003f6b', '#0072B2', '#56B4E9', '#a8d5f0'];
-  const dashes = { off: null, low: null, medium: '6,3', high: '6,3' };
+  const dashes          = { off: null, low: null, medium: '6,3', high: '6,3' };
 
-  const models = CONFIG.MODELS
-    .filter(m => m.model === 'gpt-5.2')
-    .sort((a, b) => reasoningOrder.indexOf(a.reasoning) - reasoningOrder.indexOf(b.reasoning));
+  const groups = [
+    {
+      title: 'OpenAI — GPT-5.2',
+      modelKey: 'gpt-5.2',
+      colors: ['#003f6b', '#0072B2', '#56B4E9', '#a8d5f0'],
+    },
+    {
+      title: 'Google — Gemini 3 Flash Preview',
+      modelKey: 'gemini-3-flash-preview',
+      colors: ['#004d38', '#009E73', '#47c9a2', '#a3e4d0'],
+    },
+  ];
 
-  let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
-  const legendItems = [];
+  facets.innerHTML = groups.map(g => {
+    const models = CONFIG.MODELS
+      .filter(m => m.model === g.modelKey)
+      .sort((a, b) => reasoningOrder.indexOf(a.reasoning) - reasoningOrder.indexOf(b.reasoning));
 
-  models.forEach((m, i) => {
-    const k    = modelKey(m);
-    const rows = grouped[k];
-    if (!rows || rows.length === 0) return;
-    const pts   = makePolyline(rows, w, h, pad);
-    const color = colors[i] || m.color;
-    const dash  = dashes[m.reasoning];
-    const dashAttr = dash ? ` stroke-dasharray="${dash}"` : '';
-    inner += `<polyline points="${pts}" stroke="${color}" stroke-width="2" fill="none" opacity="0.92"${dashAttr}/>`;
-    inner += `<polyline points="${pts}" stroke="transparent" stroke-width="14" fill="none" class="hit-target" data-label="GPT-5.2 (reasoning: ${reasoningLabels[m.reasoning]})" data-color="${color}"/>`;
-    legendItems.push({ label: `Reasoning: ${reasoningLabels[m.reasoning]}`, color, dash });
-  });
+    let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
+                axisLabels(w, h, pad, 'New cases (%)', 'Mobility');
+    let hitTargets = '';
+    const legendItems = [];
 
-  el.innerHTML = makeSVG(w, h, inner);
-  wireTooltips(el);
-  legendEl.innerHTML = legendHTML(legendItems);
-  document.getElementById('figA-section').style.display = 'block';
-}
+    models.forEach((m, i) => {
+      const k    = modelKey(m);
+      const rows = grouped[k];
+      if (!rows || rows.length === 0) return;
+      const pts      = makePolyline(rows, w, h, pad);
+      const color    = g.colors[i] || m.color;
+      const dash     = dashes[m.reasoning];
+      const dashAttr = dash ? ` stroke-dasharray="${dash}"` : '';
+      inner      += `<polyline points="${pts}" stroke="${color}" stroke-width="1.8" fill="none" opacity="0.92"${dashAttr}/>`;
+      hitTargets += `<polyline points="${pts}" stroke="transparent" stroke-width="12" fill="none" class="hit-target" data-label="Reasoning: ${reasoningLabels[m.reasoning]}" data-color="${color}"/>`;
+      legendItems.push({ label: `Reasoning: ${reasoningLabels[m.reasoning]}`, color, dash });
+    });
 
-// ═══════════════════════════════════════════════════════════════
-// Figure B: Gemini 3 Flash — Reasoning Level Comparison
-// Okabe-Ito green sequential: dark → light
-// ═══════════════════════════════════════════════════════════════
-function renderFigB() {
-  const el       = document.getElementById('figB-chart');
-  const legendEl = document.getElementById('figB-legend');
-  const w = FIG_CW, h = FIG_CH, pad = FIG_PAD;
-  const grouped  = groupByModel(macroData);
+    return `<div class="facet-panel">
+      <div class="facet-title">${g.title}</div>
+      <div class="chart-container">${makeSVG(w, h, inner + hitTargets)}</div>
+      <div class="legend" style="margin-top:6px;font-size:11px">${legendHTML(legendItems)}</div>
+    </div>`;
+  }).join('');
 
-  const reasoningOrder = ['off', 'low', 'medium', 'high'];
-  const reasoningLabels = { off: 'Off', low: 'Low', medium: 'Medium', high: 'High' };
-  // Okabe green sequential (dark → light), dashed for medium/high
-  const colors = ['#004d38', '#009E73', '#47c9a2', '#a3e4d0'];
-  const dashes = { off: null, low: null, medium: '6,3', high: '6,3' };
-
-  const models = CONFIG.MODELS
-    .filter(m => m.model === 'gemini-3-flash-preview')
-    .sort((a, b) => reasoningOrder.indexOf(a.reasoning) - reasoningOrder.indexOf(b.reasoning));
-
-  let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
-              axisLabels(w, h, pad, 'New cases (% population)', 'Mobility');
-  const legendItems = [];
-
-  models.forEach((m, i) => {
-    const k    = modelKey(m);
-    const rows = grouped[k];
-    if (!rows || rows.length === 0) return;
-    const pts   = makePolyline(rows, w, h, pad);
-    const color = colors[i] || m.color;
-    const dash  = dashes[m.reasoning];
-    const dashAttr = dash ? ` stroke-dasharray="${dash}"` : '';
-    inner += `<polyline points="${pts}" stroke="${color}" stroke-width="2" fill="none" opacity="0.92"${dashAttr}/>`;
-    inner += `<polyline points="${pts}" stroke="transparent" stroke-width="14" fill="none" class="hit-target" data-label="Gemini 3 Flash (reasoning: ${reasoningLabels[m.reasoning]})" data-color="${color}"/>`;
-    legendItems.push({ label: `Reasoning: ${reasoningLabels[m.reasoning]}`, color, dash });
-  });
-
-  el.innerHTML = makeSVG(w, h, inner);
-  wireTooltips(el);
-  legendEl.innerHTML = legendHTML(legendItems);
-  document.getElementById('figB-section').style.display = 'block';
+  facets.querySelectorAll('.chart-container').forEach(wireTooltips);
+  const section = document.getElementById('figA-section');
+  if (section) section.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -202,58 +180,129 @@ function renderModelCompFig(chartId, legendId, sectionId, targets) {
   if (sectionId) document.getElementById(sectionId).style.display = 'block';
 }
 
-function renderFigC() {
-  renderModelCompFig('figC-chart', 'figC-legend', 'figC-section', [
-    { provider: 'openai', model: 'gpt-3.5-turbo', reasoning: 'off', label: 'GPT-3.5 Turbo', color: '#000000' },
-    { provider: 'openai', model: 'gpt-4o',        reasoning: 'off', label: 'GPT-4o',        color: '#E69F00' },
-    { provider: 'openai', model: 'gpt-5.1',       reasoning: 'off', label: 'GPT-5.1',       color: '#0072B2' },
-    { provider: 'openai', model: 'gpt-5.2',       reasoning: 'off', label: 'GPT-5.2',       color: '#009E73' },
-  ]);
+// ═══════════════════════════════════════════════════════════════
+// Model Evolution — combined three-panel facet figure.
+// One panel per provider, showing the generational sequence within that provider.
+// All configurations evaluated with reasoning off.
+// ═══════════════════════════════════════════════════════════════
+function renderEvolutionFacets(targetId) {
+  const facets = document.getElementById(targetId || 'figEvolution-facets');
+  if (!facets) return;
+  const grouped = groupByModel(macroData);
+  const w = SMALL_CW, h = SMALL_CH, pad = SMALL_PAD;
+
+  const groups = [
+    {
+      title: 'Anthropic',
+      models: [
+        { provider: 'anthropic', model: 'claude-sonnet-4-0', reasoning: 'off', label: 'Claude Sonnet 4.0', color: '#6B7280' },
+        { provider: 'anthropic', model: 'claude-sonnet-4-5', reasoning: 'off', label: 'Claude Sonnet 4.5', color: '#14B8A6' },
+      ],
+    },
+    {
+      title: 'OpenAI',
+      models: [
+        { provider: 'openai', model: 'gpt-3.5-turbo', reasoning: 'off', label: 'GPT-3.5 Turbo', color: '#000000' },
+        { provider: 'openai', model: 'gpt-4o',        reasoning: 'off', label: 'GPT-4o',        color: '#E69F00' },
+        { provider: 'openai', model: 'gpt-4.1',       reasoning: 'off', label: 'GPT-4.1',       color: '#56B4E9' },
+        { provider: 'openai', model: 'gpt-5.1',       reasoning: 'off', label: 'GPT-5.1',       color: '#0072B2' },
+        { provider: 'openai', model: 'gpt-5.2',       reasoning: 'off', label: 'GPT-5.2',       color: '#009E73' },
+      ],
+    },
+    {
+      title: 'Google',
+      models: [
+        { provider: 'gemini', model: 'gemini-2.0-flash',        reasoning: 'off', label: 'Gemini 2.0 Flash',       color: '#000000' },
+        { provider: 'gemini', model: 'gemini-2.5-flash',        reasoning: 'off', label: 'Gemini 2.5 Flash',       color: '#D55E00' },
+        { provider: 'gemini', model: 'gemini-3-flash-preview', reasoning: 'off', label: 'Gemini 3 Flash Preview', color: '#0072B2' },
+      ],
+    },
+  ];
+
+  facets.innerHTML = groups.map(g => {
+    let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad, { sparse: true }) +
+                axisLabels(w, h, pad, 'New cases (%)', 'Mobility');
+    let hitTargets = '';
+    const legendItems = [];
+
+    g.models.forEach(t => {
+      const k    = `${t.provider}|${t.model}|${t.reasoning}`;
+      const rows = grouped[k];
+      if (!rows || rows.length === 0) return;
+      const pts      = makePolyline(rows, w, h, pad);
+      inner      += `<polyline points="${pts}" stroke="${t.color}" stroke-width="1.5" fill="none" opacity="0.92"/>`;
+      hitTargets += `<polyline points="${pts}" stroke="transparent" stroke-width="12" fill="none" class="hit-target" data-label="${esc(t.label)}" data-color="${t.color}"/>`;
+      legendItems.push({ label: t.label, color: t.color });
+    });
+
+    return `<div class="facet-panel">
+      <div class="facet-title">${g.title}</div>
+      <div class="chart-container">${makeSVG(w, h, inner + hitTargets)}</div>
+      <div class="legend" style="margin-top:6px;font-size:11px">${legendHTML(legendItems)}</div>
+    </div>`;
+  }).join('');
+
+  facets.querySelectorAll('.chart-container').forEach(wireTooltips);
+  const section = document.getElementById('figEvolution-section');
+  if (section) section.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Figure D: Gemini Generational Progression (reasoning = off, no Lite)
-// 3 distinct Okabe-Ito colors
+// Size Ladder — combined two-panel facet figure.
+// Anthropic: Haiku 4.5 → Sonnet 4.5 → Opus 4.5 (purple/pink sequential).
+// Google: Gemini 2.5 Flash Lite → Flash (rose/teal pair).
+// All configurations evaluated with reasoning off.
 // ═══════════════════════════════════════════════════════════════
-function renderFigD() {
-  renderModelCompFig('figD-chart', 'figD-legend', 'figD-section', [
-    { provider: 'gemini', model: 'gemini-2.0-flash',       reasoning: 'off', label: 'Gemini 2.0 Flash',      color: '#000000' },
-    { provider: 'gemini', model: 'gemini-2.5-flash',       reasoning: 'off', label: 'Gemini 2.5 Flash',      color: '#D55E00' },
-    { provider: 'gemini', model: 'gemini-3-flash-preview', reasoning: 'off', label: 'Gemini 3 Flash Preview', color: '#0072B2' },
-  ]);
-}
+function renderSizeFacets(targetId) {
+  const facets = document.getElementById(targetId || 'figSize-facets');
+  if (!facets) return;
+  const grouped = groupByModel(macroData);
+  const w = MED_CW, h = MED_CH, pad = MED_PAD;
 
-// ═══════════════════════════════════════════════════════════════
-// Figure 3: Anthropic Model Comparison (reasoning = off)
-// Haiku 4.5 → Sonnet 4.5 → Opus 4.5
-// ═══════════════════════════════════════════════════════════════
-function renderFigAnthro() {
-  renderModelCompFig('figAnthro-chart', 'figAnthro-legend', 'figAnthro-section', [
-    { provider: 'anthropic', model: 'claude-haiku-4-5',  reasoning: 'off', label: 'Claude Haiku 4.5',  color: '#EC4899' },
-    { provider: 'anthropic', model: 'claude-sonnet-4-5', reasoning: 'off', label: 'Claude Sonnet 4.5', color: '#A855F7' },
-    { provider: 'anthropic', model: 'claude-opus-4-5',   reasoning: 'off', label: 'Claude Opus 4.5',   color: '#7C3AED' },
-  ]);
-}
+  const groups = [
+    {
+      title: 'Anthropic — Claude 4.5 family',
+      models: [
+        { provider: 'anthropic', model: 'claude-haiku-4-5',  reasoning: 'off', label: 'Claude Haiku 4.5 (small)',    color: '#EC4899' },
+        { provider: 'anthropic', model: 'claude-sonnet-4-5', reasoning: 'off', label: 'Claude Sonnet 4.5 (middle)',  color: '#14B8A6' },
+        { provider: 'anthropic', model: 'claude-opus-4-5',   reasoning: 'off', label: 'Claude Opus 4.5 (large)',     color: '#7C3AED' },
+      ],
+    },
+    {
+      title: 'Google — Gemini 2.5 family',
+      models: [
+        { provider: 'gemini', model: 'gemini-2.5-flash-lite', reasoning: 'off', label: 'Gemini 2.5 Flash Lite (small)',  color: '#F43F5E' },
+        { provider: 'gemini', model: 'gemini-2.5-flash',      reasoning: 'off', label: 'Gemini 2.5 Flash (middle)',     color: '#06B6D4' },
+      ],
+    },
+  ];
 
-// ═══════════════════════════════════════════════════════════════
-// Figure 5: Gemini Flash Lite vs Flash (reasoning = off)
-// ═══════════════════════════════════════════════════════════════
-function renderFigGeminiLite() {
-  renderModelCompFig('figGeminiLite-chart', 'figGeminiLite-legend', 'figGeminiLite-section', [
-    { provider: 'gemini', model: 'gemini-2.5-flash-lite', reasoning: 'off', label: 'Gemini 2.5 Flash Lite', color: '#F43F5E' },
-    { provider: 'gemini', model: 'gemini-2.5-flash',      reasoning: 'off', label: 'Gemini 2.5 Flash',      color: '#06B6D4' },
-  ]);
-}
+  facets.innerHTML = groups.map(g => {
+    let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
+                axisLabels(w, h, pad, 'New cases (%)', 'Mobility');
+    let hitTargets = '';
+    const legendItems = [];
 
-// ═══════════════════════════════════════════════════════════════
-// Figure 6: Anthropic Sonnet Generational Progression (reasoning = off)
-// Sonnet 4.0 → Sonnet 4.5
-// ═══════════════════════════════════════════════════════════════
-function renderFigAnthroGen() {
-  renderModelCompFig('figAnthroGen-chart', 'figAnthroGen-legend', 'figAnthroGen-section', [
-    { provider: 'anthropic', model: 'claude-sonnet-4-0', reasoning: 'off', label: 'Claude Sonnet 4.0', color: '#000000' },
-    { provider: 'anthropic', model: 'claude-sonnet-4-5', reasoning: 'off', label: 'Claude Sonnet 4.5', color: '#A855F7' },
-  ]);
+    g.models.forEach(t => {
+      const k    = `${t.provider}|${t.model}|${t.reasoning}`;
+      const rows = grouped[k];
+      if (!rows || rows.length === 0) return;
+      const pts      = makePolyline(rows, w, h, pad);
+      inner      += `<polyline points="${pts}" stroke="${t.color}" stroke-width="1.8" fill="none" opacity="0.92"/>`;
+      hitTargets += `<polyline points="${pts}" stroke="transparent" stroke-width="12" fill="none" class="hit-target" data-label="${esc(t.label)}" data-color="${t.color}"/>`;
+      legendItems.push({ label: t.label, color: t.color });
+    });
+
+    return `<div class="facet-panel">
+      <div class="facet-title">${g.title}</div>
+      <div class="chart-container">${makeSVG(w, h, inner + hitTargets)}</div>
+      <div class="legend" style="margin-top:6px;font-size:11px">${legendHTML(legendItems)}</div>
+    </div>`;
+  }).join('');
+
+  facets.querySelectorAll('.chart-container').forEach(wireTooltips);
+  const section = document.getElementById('figSize-section');
+  if (section) section.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -269,74 +318,148 @@ function renderFigFlagship() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Figures 11–13: Knowledge Cutoff Groupings
+// Knowledge-cutoff era facets — combined four-panel figure (2×2 grid).
 // ═══════════════════════════════════════════════════════════════
-function renderFigCutPre24() {
-  renderModelCompFig('figCutPre24-chart', 'figCutPre24-legend', 'figCutPre24-section', [
-    { provider: 'openai',    model: 'gpt-3.5-turbo',          reasoning: 'off', label: 'GPT-3.5 Turbo (Sep 2021)',  color: '#000000' },
-    { provider: 'anthropic', model: 'claude-3-haiku-20240307', reasoning: 'off', label: 'Claude 3 Haiku (Aug 2023)', color: '#E69F00' },
-    { provider: 'openai',    model: 'gpt-4o',                  reasoning: 'off', label: 'GPT-4o (Oct 2023)',         color: '#0072B2' },
-  ]);
-}
+function renderCutoffEraFacets(targetId) {
+  const facets = document.getElementById(targetId || 'figCutEras-facets');
+  if (!facets) return;
+  const grouped = groupByModel(macroData);
+  const w = SMALL_CW, h = SMALL_CH, pad = SMALL_PAD;
 
-function renderFigCutMid24() {
-  renderModelCompFig('figCutMid24-chart', 'figCutMid24-legend', 'figCutMid24-section', [
-    { provider: 'openai', model: 'gpt-4.1',            reasoning: 'off',      label: 'GPT-4.1 (Jun 2024)',           color: '#000000' },
-    { provider: 'openai', model: 'o3',                  reasoning: 'required', label: 'o3 (Jun 2024)',                color: '#E69F00' },
-    { provider: 'gemini', model: 'gemini-2.0-flash',    reasoning: 'off',      label: 'Gemini 2.0 Flash (Jun 2024)', color: '#0072B2' },
-    { provider: 'openai', model: 'gpt-5.1',             reasoning: 'off',      label: 'GPT-5.1 (Sep 2024)',          color: '#009E73' },
-  ]);
-}
+  const groups = [
+    {
+      title: 'Pre-2024 cutoff',
+      models: [
+        { provider: 'openai',    model: 'gpt-3.5-turbo',           reasoning: 'off', label: 'GPT-3.5 Turbo (Sep 2021)',  color: '#000000' },
+        { provider: 'anthropic', model: 'claude-3-haiku-20240307', reasoning: 'off', label: 'Claude 3 Haiku (Aug 2023)', color: '#E69F00' },
+        { provider: 'openai',    model: 'gpt-4o',                  reasoning: 'off', label: 'GPT-4o (Oct 2023)',         color: '#0072B2' },
+      ],
+    },
+    {
+      title: 'Mid-2024 cutoff (Jun–Sep)',
+      models: [
+        { provider: 'openai', model: 'gpt-4.1',          reasoning: 'off',      label: 'GPT-4.1 (Jun 2024)',          color: '#000000' },
+        { provider: 'openai', model: 'o3',               reasoning: 'required', label: 'o3 (Jun 2024)',               color: '#E69F00' },
+        { provider: 'gemini', model: 'gemini-2.0-flash', reasoning: 'off',      label: 'Gemini 2.0 Flash (Jun 2024)', color: '#0072B2' },
+        { provider: 'openai', model: 'gpt-5.1',          reasoning: 'off',      label: 'GPT-5.1 (Sep 2024)',          color: '#009E73' },
+      ],
+    },
+    {
+      title: 'Early 2025 cutoff (Jan–Mar)',
+      models: [
+        { provider: 'anthropic', model: 'claude-sonnet-4-5',       reasoning: 'off', label: 'Sonnet 4.5 (Jan 2025)',           color: '#000000' },
+        { provider: 'anthropic', model: 'claude-haiku-4-5',        reasoning: 'off', label: 'Haiku 4.5 (Feb 2025)',            color: '#E69F00' },
+        { provider: 'anthropic', model: 'claude-sonnet-4-0',       reasoning: 'off', label: 'Sonnet 4.0 (Mar 2025)',           color: '#56B4E9' },
+        { provider: 'gemini',    model: 'gemini-2.5-flash',        reasoning: 'off', label: 'Gemini 2.5 Flash (Jan 2025)',      color: '#009E73' },
+        { provider: 'gemini',    model: 'gemini-2.5-flash-lite',   reasoning: 'off', label: 'Gemini 2.5 Flash Lite (Jan 2025)', color: '#D55E00' },
+        { provider: 'gemini',    model: 'gemini-3-flash-preview',  reasoning: 'off', label: 'Gemini 3 Flash (Jan 2025)',        color: '#CC79A7' },
+      ],
+    },
+    {
+      title: 'Late 2025 cutoff (Aug)',
+      models: [
+        { provider: 'anthropic', model: 'claude-opus-4-5', reasoning: 'off', label: 'Claude Opus 4.5 (Aug 2025)', color: '#000000' },
+        { provider: 'openai',    model: 'gpt-5.2',         reasoning: 'off', label: 'GPT-5.2 (Aug 2025)',         color: '#E69F00' },
+      ],
+    },
+  ];
 
-function renderFigCutEarly25() {
-  renderModelCompFig('figCutEarly25-chart', 'figCutEarly25-legend', 'figCutEarly25-section', [
-    { provider: 'anthropic', model: 'claude-sonnet-4-5',       reasoning: 'off', label: 'Sonnet 4.5 (Jan 2025)',    color: '#000000' },
-    { provider: 'anthropic', model: 'claude-haiku-4-5',        reasoning: 'off', label: 'Haiku 4.5 (Feb 2025)',     color: '#E69F00' },
-    { provider: 'anthropic', model: 'claude-sonnet-4-0',       reasoning: 'off', label: 'Sonnet 4.0 (Mar 2025)',    color: '#56B4E9' },
-    { provider: 'gemini',    model: 'gemini-2.5-flash',        reasoning: 'off', label: 'Gemini 2.5 Flash (Jan 2025)',      color: '#009E73' },
-    { provider: 'gemini',    model: 'gemini-2.5-flash-lite',   reasoning: 'off', label: 'Gemini 2.5 Flash Lite (Jan 2025)', color: '#D55E00' },
-    { provider: 'gemini',    model: 'gemini-3-flash-preview',  reasoning: 'off', label: 'Gemini 3 Flash (Jan 2025)',        color: '#CC79A7' },
-  ]);
-}
+  facets.innerHTML = groups.map(g => {
+    let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad, { sparse: true }) +
+                axisLabels(w, h, pad, 'New cases (%)', 'Mobility');
+    let hitTargets = '';
+    const legendItems = [];
 
-function renderFigCutLate25() {
-  renderModelCompFig('figCutLate25-chart', 'figCutLate25-legend', 'figCutLate25-section', [
-    { provider: 'anthropic', model: 'claude-opus-4-5', reasoning: 'off', label: 'Claude Opus 4.5 (Aug 2025)', color: '#000000' },
-    { provider: 'openai',    model: 'gpt-5.2',         reasoning: 'off', label: 'GPT-5.2 (Aug 2025)',         color: '#E69F00' },
-  ]);
+    g.models.forEach(t => {
+      const k    = `${t.provider}|${t.model}|${t.reasoning}`;
+      const rows = grouped[k];
+      if (!rows || rows.length === 0) return;
+      const pts      = makePolyline(rows, w, h, pad);
+      inner      += `<polyline points="${pts}" stroke="${t.color}" stroke-width="1.5" fill="none" opacity="0.92"/>`;
+      hitTargets += `<polyline points="${pts}" stroke="transparent" stroke-width="12" fill="none" class="hit-target" data-label="${esc(t.label)}" data-color="${t.color}"/>`;
+      legendItems.push({ label: t.label, color: t.color });
+    });
+
+    return `<div class="facet-panel">
+      <div class="facet-title">${g.title}</div>
+      <div class="chart-container">${makeSVG(w, h, inner + hitTargets)}</div>
+      <div class="legend" style="margin-top:6px;font-size:11px">${legendHTML(legendItems)}</div>
+    </div>`;
+  }).join('');
+
+  facets.querySelectorAll('.chart-container').forEach(wireTooltips);
+  const section = document.getElementById('figCutEras-section');
+  if (section) section.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Figures 16–19: Release Date Groupings
+// Release-date era facets — combined three-panel figure (1×3 row).
 // ═══════════════════════════════════════════════════════════════
-function renderFigRelLegacy() {
-  renderModelCompFig('figRelLegacy-chart', 'figRelLegacy-legend', 'figRelLegacy-section', [
-    { provider: 'openai',    model: 'gpt-3.5-turbo',          reasoning: 'off', label: 'GPT-3.5 Turbo',  color: '#000000' },
-    { provider: 'anthropic', model: 'claude-3-haiku-20240307', reasoning: 'off', label: 'Claude 3 Haiku', color: '#E69F00' },
-    { provider: 'openai',    model: 'gpt-4o',                  reasoning: 'off', label: 'GPT-4o',         color: '#0072B2' },
-  ]);
-}
+function renderReleaseEraFacets(targetId) {
+  const facets = document.getElementById(targetId || 'figRelEras-facets');
+  if (!facets) return;
+  const grouped = groupByModel(macroData);
+  const w = SMALL_CW, h = SMALL_CH, pad = SMALL_PAD;
 
-function renderFigRelSpring() {
-  renderModelCompFig('figRelSpring-chart', 'figRelSpring-legend', 'figRelSpring-section', [
-    { provider: 'gemini',    model: 'gemini-2.0-flash',       reasoning: 'off',      label: 'Gemini 2.0 Flash',  color: '#000000' },
-    { provider: 'openai',    model: 'gpt-4.1',                reasoning: 'off',      label: 'GPT-4.1',           color: '#E69F00' },
-    { provider: 'openai',    model: 'o3',                     reasoning: 'required', label: 'o3',                 color: '#56B4E9' },
-    { provider: 'anthropic', model: 'claude-sonnet-4-0',      reasoning: 'off',      label: 'Claude Sonnet 4.0', color: '#009E73' },
-    { provider: 'gemini',    model: 'gemini-2.5-flash',       reasoning: 'off',      label: 'Gemini 2.5 Flash',  color: '#D55E00' },
-    { provider: 'gemini',    model: 'gemini-2.5-flash-lite',  reasoning: 'off',      label: 'Gemini 2.5 Flash Lite',  color: '#CC79A7' },
-  ]);
-}
+  const groups = [
+    {
+      title: 'Legacy era (pre-2025)',
+      models: [
+        { provider: 'openai',    model: 'gpt-3.5-turbo',           reasoning: 'off', label: 'GPT-3.5 Turbo (Jan 2024)',  color: '#000000' },
+        { provider: 'anthropic', model: 'claude-3-haiku-20240307', reasoning: 'off', label: 'Claude 3 Haiku (Mar 2024)', color: '#E69F00' },
+        { provider: 'openai',    model: 'gpt-4o',                  reasoning: 'off', label: 'GPT-4o (Nov 2024)',         color: '#0072B2' },
+      ],
+    },
+    {
+      title: 'Early 2025 (Feb–Jun)',
+      models: [
+        { provider: 'gemini',    model: 'gemini-2.0-flash',       reasoning: 'off',      label: 'Gemini 2.0 Flash (Feb 2025)',     color: '#000000' },
+        { provider: 'openai',    model: 'gpt-4.1',                reasoning: 'off',      label: 'GPT-4.1 (Apr 2025)',              color: '#E69F00' },
+        { provider: 'openai',    model: 'o3',                     reasoning: 'required', label: 'o3 (Apr 2025)',                   color: '#56B4E9' },
+        { provider: 'anthropic', model: 'claude-sonnet-4-0',      reasoning: 'off',      label: 'Claude Sonnet 4.0 (May 2025)',    color: '#009E73' },
+        { provider: 'gemini',    model: 'gemini-2.5-flash',       reasoning: 'off',      label: 'Gemini 2.5 Flash (May 2025)',     color: '#D55E00' },
+        { provider: 'gemini',    model: 'gemini-2.5-flash-lite',  reasoning: 'off',      label: 'Gemini 2.5 Flash Lite (Jun 2025)', color: '#CC79A7' },
+      ],
+    },
+    {
+      title: 'Late 2025 (Sep–Dec)',
+      models: [
+        { provider: 'anthropic', model: 'claude-sonnet-4-5',      reasoning: 'off', label: 'Claude Sonnet 4.5 (Sep 2025)', color: '#000000' },
+        { provider: 'anthropic', model: 'claude-haiku-4-5',       reasoning: 'off', label: 'Claude Haiku 4.5 (Oct 2025)',  color: '#E69F00' },
+        { provider: 'anthropic', model: 'claude-opus-4-5',        reasoning: 'off', label: 'Claude Opus 4.5 (Nov 2025)',   color: '#56B4E9' },
+        { provider: 'openai',    model: 'gpt-5.1',                reasoning: 'off', label: 'GPT-5.1 (Nov 2025)',           color: '#009E73' },
+        { provider: 'openai',    model: 'gpt-5.2',                reasoning: 'off', label: 'GPT-5.2 (Dec 2025)',           color: '#D55E00' },
+        { provider: 'gemini',    model: 'gemini-3-flash-preview', reasoning: 'off', label: 'Gemini 3 Flash (Dec 2025)',    color: '#CC79A7' },
+      ],
+    },
+  ];
 
-function renderFigRelLate() {
-  renderModelCompFig('figRelLate-chart', 'figRelLate-legend', 'figRelLate-section', [
-    { provider: 'anthropic', model: 'claude-sonnet-4-5',      reasoning: 'off', label: 'Claude Sonnet 4.5', color: '#000000' },
-    { provider: 'anthropic', model: 'claude-haiku-4-5',       reasoning: 'off', label: 'Claude Haiku 4.5',  color: '#E69F00' },
-    { provider: 'anthropic', model: 'claude-opus-4-5',        reasoning: 'off', label: 'Claude Opus 4.5',   color: '#56B4E9' },
-    { provider: 'openai',    model: 'gpt-5.1',                reasoning: 'off', label: 'GPT-5.1',           color: '#009E73' },
-    { provider: 'openai',    model: 'gpt-5.2',                reasoning: 'off', label: 'GPT-5.2',           color: '#D55E00' },
-    { provider: 'gemini',    model: 'gemini-3-flash-preview', reasoning: 'off', label: 'Gemini 3 Flash',    color: '#CC79A7' },
-  ]);
+  facets.innerHTML = groups.map(g => {
+    let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad, { sparse: true }) +
+                axisLabels(w, h, pad, 'New cases (%)', 'Mobility');
+    let hitTargets = '';
+    const legendItems = [];
+
+    g.models.forEach(t => {
+      const k    = `${t.provider}|${t.model}|${t.reasoning}`;
+      const rows = grouped[k];
+      if (!rows || rows.length === 0) return;
+      const pts      = makePolyline(rows, w, h, pad);
+      inner      += `<polyline points="${pts}" stroke="${t.color}" stroke-width="1.5" fill="none" opacity="0.92"/>`;
+      hitTargets += `<polyline points="${pts}" stroke="transparent" stroke-width="12" fill="none" class="hit-target" data-label="${esc(t.label)}" data-color="${t.color}"/>`;
+      legendItems.push({ label: t.label, color: t.color });
+    });
+
+    return `<div class="facet-panel">
+      <div class="facet-title">${g.title}</div>
+      <div class="chart-container">${makeSVG(w, h, inner + hitTargets)}</div>
+      <div class="legend" style="margin-top:6px;font-size:11px">${legendHTML(legendItems)}</div>
+    </div>`;
+  }).join('');
+
+  facets.querySelectorAll('.chart-container').forEach(wireTooltips);
+  const section = document.getElementById('figRelEras-section');
+  if (section) section.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -359,7 +482,7 @@ function renderS3() {
 
   facets.innerHTML = groups.map(g => {
     const models = CONFIG.MODELS.filter(g.filter);
-    let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad) +
+    let inner = yAxisTicks(w, h, pad) + xAxisTicks(w, h, pad, { sparse: true }) +
                 axisLabels(w, h, pad, 'New cases (%)', 'Mobility');
     let hitTargets = '';
     const legendItems = [];

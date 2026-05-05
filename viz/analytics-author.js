@@ -606,7 +606,8 @@ function renderReleaseTimeline() {
     { label: 'Early 2025',         startDate: '2025-02-05', endDate: '2025-06-17' },
     { label: 'Late 2025',          startDate: '2025-09-29', endDate: '2025-12-17' },
   ]);
-  document.getElementById('s-release-timeline').style.display = 'block';
+  const section = document.getElementById('s-release-timeline');
+  if (section) section.style.display = 'block';
 }
 
 function renderCutoffTimeline() {
@@ -616,5 +617,6 @@ function renderCutoffTimeline() {
     { label: 'Early 2025',  startDate: '2025-01', endDate: '2025-03' },
     { label: 'Late 2025',   startDate: '2025-08', endDate: '2025-08' },
   ]);
-  document.getElementById('s-cutoff-timeline').style.display = 'block';
+  const section = document.getElementById('s-cutoff-timeline');
+  if (section) section.style.display = 'block';
 }

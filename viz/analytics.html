@@ -96,10 +96,11 @@
     .summary-stat .lbl { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.4; }
 
     /* ── Charts ──────────────────────────────────── */
-    .chart-container { position: relative; width: 100%; overflow-x: auto; }
-    .chart-container svg { display: block; }
+    .chart-container { position: relative; width: 100%; }
+    .chart-container svg { display: block; max-width: 100%; height: auto; }
 
     .facet-row   { display: flex; gap: 20px; flex-wrap: wrap; }
+    .facet-grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .facet-panel { flex: 1; min-width: 240px; }
     .facet-title { font-size: 12px; font-weight: bold; color: #333; margin-bottom: 6px; text-align: center; }
 
@@ -438,7 +439,7 @@
     <span class="tab-sep">|</span>
     <a href="#" class="tab-link active" data-tab="curves">Mobility Curves</a>
     <span class="tab-sep">|</span>
-    <a href="#" class="tab-link" data-tab="agents">Cohort Analysis</a>
+    <a href="#" class="tab-link" data-tab="agents">Persona Analysis</a>
     <span class="tab-sep">|</span>
     <a href="#" class="tab-link" data-tab="responses">Response Analysis</a>
     <span class="tab-sep">|</span>
@@ -464,12 +465,12 @@
         <table class="ols-table" style="width:100%;margin-bottom:8px">
           <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
           <tbody>
-            <tr><td>RQ1</td><td>Does LLM reasoning budget affect mobility curves?</td><td>Figs 1, 2</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ2</td><td>Does LLM size affect mobility curves?</td><td>Figs 3, 4</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ3</td><td>Does LLM evolution affect mobility curves?</td><td>Figs 5, 6, 7</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ4</td><td>Does LLM provider affect mobility curves?</td><td>Figs 8, 9</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ5</td><td>Does LLM knowledge cutoff affect mobility curves?</td><td>Figs 10, 11&ndash;14</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ6</td><td>Does LLM release date affect mobility curves?</td><td>Figs 15, 16&ndash;18</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ1</td><td>Does LLM provider affect mobility curves?</td><td>Figs 8, 9</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ2</td><td>Does LLM reasoning level affect mobility curves?</td><td>Fig 1</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ3</td><td>Does LLM size affect mobility curves?</td><td>Fig 3</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ4</td><td>Does LLM evolution affect mobility curves?</td><td>Fig 5</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ5</td><td>Does LLM knowledge cutoff affect mobility curves?</td><td>Figs 10, 11</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ6</td><td>Does LLM release date affect mobility curves?</td><td>Figs 15, 16</td><td><em>TBD</em></td></tr>
           </tbody>
         </table>
 
@@ -556,105 +557,62 @@
 
     <div id="section-reasoning" class="curve-section-header">Reasoning</div>
 
-    <!-- Figure 1: GPT-5.2 Reasoning -->
+    <!-- Figure 1: Reasoning Level Effect (combined two-panel) -->
     <div class="section" id="figA-section" data-section="reasoning" style="display:none">
       <div class="fig-num">Figure 1</div>
-      <div class="fig-title">GPT-5.2 &mdash; Effect of Reasoning Budget</div>
-      <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high). N&thinsp;=&thinsp;100 agents &times; 5 repetitions &times; 40 infection levels per configuration.</div>
-      <div class="chart-container" id="figA-chart"></div>
-      <div class="legend" id="figA-legend"></div>
+      <div class="fig-title">Effect of Reasoning Level on Mobility</div>
+      <div class="fig-caption">Mobility curves for the two configurations sampled across all four reasoning levels (off / low / medium / high): GPT-5.2 (OpenAI) and Gemini 3 Flash Preview (Google). N&thinsp;=&thinsp;100 agents &times; 5 repetitions &times; 40 infection levels per configuration.</div>
+      <div class="facet-row" id="figA-facets" style="min-height:280px"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
       <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-gpt52">Show Regression ▾</button>
+        <button class="reg-toggle-btn" data-target="reg-gpt52">Show GPT-5.2 Regression ▾</button>
         <div class="reg-table-panel" id="reg-gpt52" style="display:none"></div>
       </div>
-    </div>
-
-    <!-- Figure 2: Gemini 3 Flash Reasoning -->
-    <div class="section" id="figB-section" data-section="reasoning" style="display:none">
-      <div class="fig-num">Figure 2</div>
-      <div class="fig-title">Gemini 3 Flash Preview &mdash; Effect of Reasoning Budget</div>
-      <div class="fig-caption">Mobility (% going outside) across four reasoning budgets (off / low / medium / high).</div>
-      <div class="chart-container" id="figB-chart"></div>
-      <div class="legend" id="figB-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
       <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-gemini3flash">Show Regression ▾</button>
+        <button class="reg-toggle-btn" data-target="reg-gemini3flash">Show Gemini 3 Flash Regression ▾</button>
         <div class="reg-table-panel" id="reg-gemini3flash" style="display:none"></div>
       </div>
     </div>
 
     <div id="section-within" class="curve-section-header">Size</div>
 
-    <!-- Figure 3: Anthropic Model Comparison -->
-    <div class="section" id="figAnthro-section" data-section="within" style="display:none">
+    <!-- Figure 3: Model Size Effect (combined two-panel) -->
+    <div class="section" id="figSize-section" data-section="within" style="display:none">
       <div class="fig-num">Figure 3</div>
-      <div class="fig-title">Anthropic &mdash; Model Size Comparison: Haiku &middot; Sonnet &middot; Opus (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves across three model size tiers — Claude Haiku 4.5 (small), Sonnet 4.5 (mid), and Opus 4.5 (large) — all with reasoning off. Tests whether model size predicts behavioral sensitivity within the same model generation.</div>
-      <div class="chart-container" id="figAnthro-chart"></div>
-      <div class="legend" id="figAnthro-legend"></div>
+      <div class="fig-title">Effect of Model Size on Mobility</div>
+      <div class="fig-caption">Mobility curves for the two providers with multiple model sizes within a single generation: Anthropic&rsquo;s Claude 4.5 family (Haiku, Sonnet, Opus) and Google&rsquo;s Gemini 2.5 family (Flash Lite, Flash). All configurations evaluated with reasoning off.</div>
+      <div class="facet-row" id="figSize-facets" style="min-height:280px"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
       <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figAnthro">Show Regression ▾</button>
+        <button class="reg-toggle-btn" data-target="reg-figAnthro">Show Anthropic Regression ▾</button>
         <div class="reg-table-panel" id="reg-figAnthro" style="display:none"></div>
       </div>
-    </div>
-
-    <!-- Figure 4: Gemini Model Comparison -->
-    <div class="section" id="figGeminiLite-section" data-section="within" style="display:none">
-      <div class="fig-num">Figure 4</div>
-      <div class="fig-title">Gemini &mdash; Model Size Comparison: Flash Lite &middot; Flash (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves across two model size tiers — Gemini 2.5 Flash Lite (smaller) and Gemini 2.5 Flash (larger) — both with reasoning off. Tests whether model size predicts behavioral sensitivity within the same model generation.</div>
-      <div class="chart-container" id="figGeminiLite-chart"></div>
-      <div class="legend" id="figGeminiLite-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
       <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figGeminiLite">Show Regression ▾</button>
+        <button class="reg-toggle-btn" data-target="reg-figGeminiLite">Show Gemini Regression ▾</button>
         <div class="reg-table-panel" id="reg-figGeminiLite" style="display:none"></div>
       </div>
     </div>
 
     <div id="section-generational" class="curve-section-header">Evolution</div>
 
-    <!-- Figure 5: Gemini Generational -->
-    <div class="section" id="figD-section" data-section="generational" style="display:none">
+    <!-- Figure 5: Model Evolution (combined three-panel) -->
+    <div class="section" id="figEvolution-section" data-section="generational" style="display:none">
       <div class="fig-num">Figure 5</div>
-      <div class="fig-title">Gemini &mdash; Model Evolution (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves for Gemini 2.0 Flash through Gemini 3 Flash Preview, all at reasoning = off.</div>
-      <div class="chart-container" id="figD-chart"></div>
-      <div class="legend" id="figD-legend"></div>
+      <div class="fig-title">Effect of Model Evolution on Mobility</div>
+      <div class="fig-caption">Mobility curves for the generational sequence within each provider: OpenAI (GPT-3.5 Turbo through GPT-5.2), Anthropic (Claude Sonnet 4.0 and 4.5), and Google (Gemini 2.0 Flash through Gemini 3 Flash Preview). All configurations evaluated with reasoning off.</div>
+      <div class="facet-row" id="figEvolution-facets" style="min-height:280px"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
       <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figD">Show Regression ▾</button>
-        <div class="reg-table-panel" id="reg-figD" style="display:none"></div>
+        <button class="reg-toggle-btn" data-target="reg-figC">Show OpenAI Regression ▾</button>
+        <div class="reg-table-panel" id="reg-figC" style="display:none"></div>
       </div>
-    </div>
-
-    <!-- Figure 6: Anthropic Model Evolution -->
-    <div class="section" id="figAnthroGen-section" data-section="generational" style="display:none">
-      <div class="fig-num">Figure 6</div>
-      <div class="fig-title">Anthropic &mdash; Model Evolution (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves for Claude Sonnet 4.0 and Claude Sonnet 4.5, both at reasoning = off.</div>
-      <div class="chart-container" id="figAnthroGen-chart"></div>
-      <div class="legend" id="figAnthroGen-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
       <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figAnthroGen">Show Regression ▾</button>
+        <button class="reg-toggle-btn" data-target="reg-figAnthroGen">Show Anthropic Regression ▾</button>
         <div class="reg-table-panel" id="reg-figAnthroGen" style="display:none"></div>
       </div>
-    </div>
-
-    <!-- Figure 7: OpenAI Generational -->
-    <div class="section" id="figC-section" data-section="generational" style="display:none">
-      <div class="fig-num">Figure 7</div>
-      <div class="fig-title">OpenAI &mdash; Model Evolution (reasoning = off)</div>
-      <div class="fig-caption">Mobility curves for GPT-3.5 Turbo through GPT-5.2, all at reasoning = off. Illustrates how behavioral responses have shifted across model generations.</div>
-      <div class="chart-container" id="figC-chart"></div>
-      <div class="legend" id="figC-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
       <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figC">Show Regression ▾</button>
-        <div class="reg-table-panel" id="reg-figC" style="display:none"></div>
+        <button class="reg-toggle-btn" data-target="reg-figD">Show Gemini Regression ▾</button>
+        <div class="reg-table-panel" id="reg-figD" style="display:none"></div>
       </div>
     </div>
 
@@ -693,60 +651,13 @@
       <div id="cutoff-timeline-chart"></div>
     </div>
 
-    <!-- Figure 11: Knowledge Cutoff — Pre-2024 -->
-    <div class="section" id="figCutPre24-section" data-section="cutoff" style="display:none">
+    <!-- Figure 11: Knowledge Cutoff Eras (combined four-panel) -->
+    <div class="section" id="figCutEras-section" data-section="cutoff" style="display:none">
       <div class="fig-num">Figure 11</div>
-      <div class="fig-title">Knowledge Cutoff &mdash; Pre-2024</div>
-      <div class="fig-caption">Models with the oldest knowledge cutoffs: GPT-3.5 Turbo (Sep 2021), Claude 3 Haiku (Aug 2023), and GPT-4o (Oct 2023). All reasoning = off.</div>
-      <div class="chart-container" id="figCutPre24-chart"></div>
-      <div class="legend" id="figCutPre24-legend"></div>
+      <div class="fig-title">Mobility Curves by Knowledge-Cutoff Era</div>
+      <div class="fig-caption">Configurations grouped by knowledge cutoff era: Pre-2024, Mid-2024 (Jun&ndash;Sep), Early 2025 (Jan&ndash;Mar), and Late 2025 (Aug). All reasoning = off (o3 reasoning = required, only mode available).</div>
+      <div class="facet-grid-2x2" id="figCutEras-facets" style="min-height:560px"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
-      <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figCutPre24">Show Regression &#x25BE;</button>
-        <div class="reg-table-panel" id="reg-figCutPre24" style="display:none"></div>
-      </div>
-    </div>
-
-    <!-- Figure 12: Knowledge Cutoff — Mid-2024 -->
-    <div class="section" id="figCutMid24-section" data-section="cutoff" style="display:none">
-      <div class="fig-num">Figure 12</div>
-      <div class="fig-title">Knowledge Cutoff &mdash; Mid-2024 (Jun&ndash;Sep)</div>
-      <div class="fig-caption">Models with mid-2024 knowledge cutoffs: GPT-4.1 (Jun 2024), o3 (Jun 2024), Gemini 2.0 Flash (Jun 2024), and GPT-5.1 (Sep 2024). o3 uses reasoning = required (only available mode); all others reasoning = off.</div>
-      <div class="chart-container" id="figCutMid24-chart"></div>
-      <div class="legend" id="figCutMid24-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
-      <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figCutMid24">Show Regression &#x25BE;</button>
-        <div class="reg-table-panel" id="reg-figCutMid24" style="display:none"></div>
-      </div>
-    </div>
-
-    <!-- Figure 13: Knowledge Cutoff — Early 2025 -->
-    <div class="section" id="figCutEarly25-section" data-section="cutoff" style="display:none">
-      <div class="fig-num">Figure 13</div>
-      <div class="fig-title">Knowledge Cutoff &mdash; Early 2025 (Jan&ndash;Mar)</div>
-      <div class="fig-caption">Six models with Jan&ndash;Mar 2025 knowledge cutoffs across Anthropic and Gemini: Sonnet 4.5, Haiku 4.5, Sonnet 4.0 (Anthropic) and Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemini 3 Flash (Gemini). All reasoning = off.</div>
-      <div class="chart-container" id="figCutEarly25-chart"></div>
-      <div class="legend" id="figCutEarly25-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
-      <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figCutEarly25">Show Regression &#x25BE;</button>
-        <div class="reg-table-panel" id="reg-figCutEarly25" style="display:none"></div>
-      </div>
-    </div>
-
-    <!-- Figure 14: Knowledge Cutoff — Late 2025 -->
-    <div class="section" id="figCutLate25-section" data-section="cutoff" style="display:none">
-      <div class="fig-num">Figure 14</div>
-      <div class="fig-title">Knowledge Cutoff &mdash; Late 2025 (Aug)</div>
-      <div class="fig-caption">The two models with the most recent knowledge cutoffs in the study (Aug 2025): Claude Opus 4.5 (Anthropic) and GPT-5.2 (OpenAI). All reasoning = off.</div>
-      <div class="chart-container" id="figCutLate25-chart"></div>
-      <div class="legend" id="figCutLate25-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
-      <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figCutLate25">Show Regression &#x25BE;</button>
-        <div class="reg-table-panel" id="reg-figCutLate25" style="display:none"></div>
-      </div>
     </div>
 
     <div id="section-release" class="curve-section-header">Release Date</div>
@@ -759,46 +670,13 @@
       <div id="release-timeline-chart"></div>
     </div>
 
-    <!-- Figure 16: Release Date — Legacy Era -->
-    <div class="section" id="figRelLegacy-section" data-section="release" style="display:none">
+    <!-- Figure 16: Release Date Eras (combined three-panel) -->
+    <div class="section" id="figRelEras-section" data-section="release" style="display:none">
       <div class="fig-num">Figure 16</div>
-      <div class="fig-title">Release Date &mdash; Legacy Era (pre-2025)</div>
-      <div class="fig-caption">The three oldest models in the study by release date: GPT-3.5 Turbo (Jan 2024), Claude 3 Haiku (Mar 2024), and GPT-4o (Nov 2024). All reasoning = off.</div>
-      <div class="chart-container" id="figRelLegacy-chart"></div>
-      <div class="legend" id="figRelLegacy-legend"></div>
+      <div class="fig-title">Mobility Curves by Release-Date Era</div>
+      <div class="fig-caption">Configurations grouped by release-date era: Legacy (pre-2025), Early 2025 (Feb&ndash;Jun), and Late 2025 (Sep&ndash;Dec). All reasoning = off (o3 reasoning = required, only mode available).</div>
+      <div class="facet-row" id="figRelEras-facets" style="min-height:280px"></div>
       <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
-      <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figRelLegacy">Show Regression &#x25BE;</button>
-        <div class="reg-table-panel" id="reg-figRelLegacy" style="display:none"></div>
-      </div>
-    </div>
-
-    <!-- Figure 17: Release Date — Early 2025 -->
-    <div class="section" id="figRelSpring-section" data-section="release" style="display:none">
-      <div class="fig-num">Figure 17</div>
-      <div class="fig-title">Release Date &mdash; Early 2025 (Feb&ndash;Jun)</div>
-      <div class="fig-caption">Six models released Feb&ndash;Jun 2025 across all three providers: Gemini 2.0 Flash, GPT-4.1, o3, Claude Sonnet 4.0, Gemini 2.5 Flash, and Gemini 2.5 Flash Lite. o3 uses reasoning = required (only available mode); all others reasoning = off.</div>
-      <div class="chart-container" id="figRelSpring-chart"></div>
-      <div class="legend" id="figRelSpring-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
-      <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figRelSpring">Show Regression &#x25BE;</button>
-        <div class="reg-table-panel" id="reg-figRelSpring" style="display:none"></div>
-      </div>
-    </div>
-
-    <!-- Figure 18: Release Date — Late 2025 -->
-    <div class="section" id="figRelLate-section" data-section="release" style="display:none">
-      <div class="fig-num">Figure 18</div>
-      <div class="fig-title">Release Date &mdash; Late 2025 (Sep&ndash;Dec)</div>
-      <div class="fig-caption">Six flagship-era models released Sep&ndash;Dec 2025: Claude Sonnet 4.5, Haiku 4.5, Opus 4.5 (Anthropic), GPT-5.1, GPT-5.2 (OpenAI), and Gemini 3 Flash (Gemini). All reasoning = off.</div>
-      <div class="chart-container" id="figRelLate-chart"></div>
-      <div class="legend" id="figRelLate-legend"></div>
-      <div class="fig-note">Each line = mean mobility across 5 repetitions per infection level.</div>
-      <div class="reg-toggle-wrap">
-        <button class="reg-toggle-btn" data-target="reg-figRelLate">Show Regression &#x25BE;</button>
-        <div class="reg-table-panel" id="reg-figRelLate" style="display:none"></div>
-      </div>
     </div>
 
     <div id="section-agent-curve" class="curve-section-header">Agent Curve</div>
@@ -1148,21 +1026,21 @@
       <div class="fig-caption">For each mobility curve comparison, an OLS regression quantifies cross-configuration differences using dummy-variable coding (one configuration as baseline, others as contrasts). Baseline = reasoning off unless otherwise noted.</div>
     </div>
 
-    <!-- A.1 Reasoning Budget -->
+    <!-- A.1 Reasoning Level -->
     <div class="section" data-section="mobility" style="margin-bottom:8px">
-      <div class="fig-num">A.1 &mdash; Reasoning Budget Comparisons</div>
+      <div class="fig-num">A.1 &mdash; Reasoning Level Comparisons</div>
     </div>
 
     <div class="section" data-section="mobility" style="margin-bottom:18px">
       <div class="fig-num">Figure A.1.1</div>
-      <div class="fig-title">GPT-5.2 &mdash; Reasoning Budget (off / low / medium / high)</div>
+      <div class="fig-title">GPT-5.2 &mdash; Reasoning Level (off / low / medium / high)</div>
       <div class="fig-caption">Corresponds to Figure 1. Baseline = reasoning off.</div>
       <div class="reg-table-panel" id="reg-gpt52-app"></div>
     </div>
 
     <div class="section" data-section="mobility" style="margin-bottom:18px">
       <div class="fig-num">Figure A.1.2</div>
-      <div class="fig-title">Gemini 3 Flash Preview &mdash; Reasoning Budget (off / low / medium / high)</div>
+      <div class="fig-title">Gemini 3 Flash Preview &mdash; Reasoning Level (off / low / medium / high)</div>
       <div class="fig-caption">Corresponds to Figure 2. Baseline = reasoning off.</div>
       <div class="reg-table-panel" id="reg-gemini3flash-app"></div>
     </div>
@@ -1689,7 +1567,7 @@
           <li><strong>95% CI</strong> &mdash; the 95% confidence interval, &beta;&nbsp;&plusmn;&nbsp;1.96&middot;SE</li>
           <li><strong>Sig</strong> &mdash; significance markers (<code>***</code> p&nbsp;&lt;&nbsp;0.001, <code>**</code> p&nbsp;&lt;&nbsp;0.01, <code>*</code> p&nbsp;&lt;&nbsp;0.05)</li>
         </ul>
-        <p>One model&rsquo;s table is shown interactively in <strong>Figure 23</strong> (Cohort Analysis); per-model tables for all 21 LLM configurations are in <strong>Appendix B</strong>.</p>
+        <p>One model&rsquo;s table is shown interactively in <strong>Figure 23</strong> (Persona Analysis); per-model tables for all 21 LLM configurations are in <strong>Appendix B</strong>.</p>
 
         <h4 style="margin:18px 0 8px;font-size:14px;color:#111">4. Fixed-effects vs. random-effects</h4>
         <p>The 100 agents are not interchangeable: each has its own personality, age, and gender. There are two ways the regression can handle that:</p>

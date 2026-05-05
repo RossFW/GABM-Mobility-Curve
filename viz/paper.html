@@ -63,6 +63,17 @@
 
     p { font-size: 13px; line-height: 1.6; color: #333; }
     strong { color: #111; }
+
+    /* Imported chart styles (subset of analytics.html — paper context only) */
+    .chart-container { position: relative; width: 100%; overflow-x: auto; }
+    .chart-container svg { display: block; max-width: 100%; height: auto; }
+    .facet-row    { display: flex; gap: 20px; flex-wrap: wrap; }
+    .facet-grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .facet-panel  { flex: 1; min-width: 240px; }
+    .facet-title  { font-size: 12px; font-weight: bold; color: #333; margin-bottom: 6px; text-align: center; }
+    .legend       { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 12px; color: #333; justify-content: center; }
+    .legend-item  { display: flex; align-items: center; gap: 6px; }
+    .legend-swatch{ width: 24px; height: 3px; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -87,94 +98,386 @@
     <!-- ─────────── 2. Introduction ─────────── -->
     <section>
       <h2>2. Introduction</h2>
-      <ul>
-        <li>Motivation: LLMs as agents in social simulations; persona-driven decision-making.</li>
-        <li>Gap addressed: how do LLMs differ across providers, sizes, and reasoning configurations when simulating persona-driven behavior?</li>
-        <li>Research questions (high-level): see <a href="analytics.html">Research Questions tab</a>.</li>
-        <li>Contributions:
-          <ul>
-            <li>21-LLM-configuration probe under matched conditions (100 personas &times; 40 infection levels &times; 5 reps).</li>
-            <li>Direct comparison of provider, size, evolution, reasoning budget, and training-data recency on a controlled task.</li>
-            <li>Joint behavioral + textual analysis (mobility decisions and reasoning text).</li>
-          </ul>
-        </li>
-      </ul>
+
+      <p>Generative artificial intelligence has matured rapidly over the past three years, and large language models (LLMs) are now routinely used as proxies for human agents in social-science modeling [<span class="tbd">CITE: generative-agent surveys; Park et al. 2023</span>]. A <em>generative agent</em> combines a persona description with an LLM&rsquo;s text-generation capability to produce contextually grounded behavior [<span class="tbd">CITE: Park et al.</span>]. Where a traditional agent-based model encodes behavior in hand-coded rules, a generative agent delegates each decision to an LLM, opening up more flexible and humanlike responses [<span class="tbd">CITE: Wang et al. or related survey</span>].</p>
+
+      <p>Generative agents have been applied to information diffusion [<span class="tbd">CITE: Park et al. 2023</span>], game theory [<span class="tbd">CITE: prisoner&rsquo;s dilemma / Battle of the Sexes papers</span>], social networks [<span class="tbd">CITE: S3, Reddit-style sims</span>], and epidemic dynamics. The first application of generative agents to an epidemic was Williams et al. [1], who simulated the spread of a fictional virus through a town of generative-agent residents and observed each agent&rsquo;s decisions to stay home in response to community infection levels. A subsequent study by Williams et al. [3] tested the robustness of those mobility curves to prompt modifications. Both relied on a single LLM (GPT-3.5).</p>
+
+      <p>Since those studies, the LLM landscape has expanded dramatically. A researcher building a generative-agent-based model (GABM) today chooses from dozens of LLMs spanning multiple providers (OpenAI, Anthropic, Google), multiple generations within each provider (e.g., GPT-3.5 through GPT-5.2; Claude 3 through Claude Opus 4.5), distinct training-data eras, and configurable parameters such as reasoning level. Whether and how this choice affects simulated behavior &mdash; and therefore the conclusions a GABM study can support &mdash; has not been systematically characterized under matched experimental conditions. <span class="tbd">[TBD: refine gap claim; possibly cite related work that has noted LLM-as-agent heterogeneity.]</span></p>
+
+      <p>This paper provides that characterization. We hold 100 frozen personas, the prompt template, and 40 sampled infection levels constant, and we vary only the LLM configuration. Twenty-one configurations span six lenses for cross-LLM comparison: provider, model size within a family, model evolution within a family across time, knowledge cutoff, release date, and reasoning level. For each (persona, infection level, configuration), five independent responses are collected, yielding 420,000 responses in total. We analyze these responses through three progressively deeper analyses: aggregate mobility curves at the configuration level, logistic regressions at the response level, and content analysis of the free-text reasoning passages that accompany each decision.</p>
+
+      <p>The investigation is organized around sixteen research questions, grouped by the three analyses. Table 2 lists each question alongside the section in which its results are presented and the figures that bear on it.</p>
+
+      <figure style="margin:14px 0 6px">
+        <figcaption style="margin-bottom:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Table 2.</strong> The sixteen research questions investigated in this paper, grouped by the three analyses described in &sect;4.7. Figure numbers reference dashboard figures; paper-figure numbering will be locked once Results prose is finalized.
+        </figcaption>
+        <table style="border-collapse:collapse;width:100%;font-size:12px;line-height:1.5">
+          <thead>
+            <tr style="border-top:1.5px solid #222;border-bottom:1px solid #222;background:#f7f7f7">
+              <th style="text-align:left;padding:7px 10px;width:6%">RQ</th>
+              <th style="text-align:left;padding:7px 10px;width:62%">Research question</th>
+              <th style="text-align:left;padding:7px 10px;width:14%">Results</th>
+              <th style="text-align:left;padding:7px 10px;width:18%">Figures</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#f3f3f3"><td colspan="4" style="padding:6px 10px;font-style:italic"><strong>Mobility Curve Analysis</strong> &mdash; does the choice of LLM affect aggregate mobility behavior?</td></tr>
+            <tr><td style="padding:6px 10px">1</td><td style="padding:6px 10px">Does LLM provider affect mobility curves?</td><td style="padding:6px 10px">&sect;5.1.1</td><td style="padding:6px 10px">Figs 8, 9</td></tr>
+            <tr><td style="padding:6px 10px">2</td><td style="padding:6px 10px">Does LLM reasoning level affect mobility curves?</td><td style="padding:6px 10px">&sect;5.1.2</td><td style="padding:6px 10px">Fig 1</td></tr>
+            <tr><td style="padding:6px 10px">3</td><td style="padding:6px 10px">Does LLM size affect mobility curves?</td><td style="padding:6px 10px">&sect;5.1.3</td><td style="padding:6px 10px">Fig 3</td></tr>
+            <tr><td style="padding:6px 10px">4</td><td style="padding:6px 10px">Does LLM evolution affect mobility curves?</td><td style="padding:6px 10px">&sect;5.1.4</td><td style="padding:6px 10px">Fig 5</td></tr>
+            <tr><td style="padding:6px 10px">5</td><td style="padding:6px 10px">Does LLM knowledge cutoff affect mobility curves?</td><td style="padding:6px 10px">&sect;5.1.5</td><td style="padding:6px 10px">Figs 10, 11</td></tr>
+            <tr style="border-bottom:1px solid #ddd"><td style="padding:6px 10px">6</td><td style="padding:6px 10px">Does LLM release date affect mobility curves?</td><td style="padding:6px 10px">&sect;5.1.6</td><td style="padding:6px 10px">Figs 15, 16</td></tr>
+            <tr style="background:#f3f3f3"><td colspan="4" style="padding:6px 10px;font-style:italic"><strong>Persona Analysis</strong> &mdash; how does each LLM weigh agent attributes, and do LLMs agree on what matters?</td></tr>
+            <tr><td style="padding:6px 10px">7</td><td style="padding:6px 10px">How do agent traits affect mobility curves?</td><td style="padding:6px 10px">&sect;5.2.1</td><td style="padding:6px 10px">Figs 22, 23, 25, 27</td></tr>
+            <tr><td style="padding:6px 10px">8</td><td style="padding:6px 10px">Are personality effects larger than infection effects?</td><td style="padding:6px 10px">&sect;5.2.2</td><td style="padding:6px 10px">Fig 26</td></tr>
+            <tr><td style="padding:6px 10px">9</td><td style="padding:6px 10px">Do LLMs agree on which predictors matter?</td><td style="padding:6px 10px">&sect;5.2.3</td><td style="padding:6px 10px">Figs 28, 29</td></tr>
+            <tr style="border-bottom:1px solid #ddd"><td style="padding:6px 10px">10</td><td style="padding:6px 10px">Do LLMs agree on which agents are most cautious?</td><td style="padding:6px 10px">&sect;5.2.4</td><td style="padding:6px 10px">Fig 30</td></tr>
+            <tr style="background:#f3f3f3"><td colspan="4" style="padding:6px 10px;font-style:italic"><strong>Response Analysis</strong> &mdash; what does the reasoning passage reveal, and how heterogeneous are responses?</td></tr>
+            <tr><td style="padding:6px 10px">11</td><td style="padding:6px 10px">How do trait mentions shape the decision?</td><td style="padding:6px 10px">&sect;5.3.1</td><td style="padding:6px 10px">Figs 32, 33, 34</td></tr>
+            <tr><td style="padding:6px 10px">12</td><td style="padding:6px 10px">Beyond trait mentions, which concept categories dominate stay-home vs. go-out reasoning?</td><td style="padding:6px 10px">&sect;5.3.2</td><td style="padding:6px 10px">Fig 37</td></tr>
+            <tr><td style="padding:6px 10px">13</td><td style="padding:6px 10px">How does reasoning length vary across LLMs and infection levels?</td><td style="padding:6px 10px">&sect;5.3.3</td><td style="padding:6px 10px">Figs 35, 36</td></tr>
+            <tr><td style="padding:6px 10px">14</td><td style="padding:6px 10px">When asked the same question five times, do models give the same decision?</td><td style="padding:6px 10px">&sect;5.3.4</td><td style="padding:6px 10px">Fig 38</td></tr>
+            <tr><td style="padding:6px 10px">15</td><td style="padding:6px 10px">When models give the same decision, do they also produce the same reasoning text?</td><td style="padding:6px 10px">&sect;5.3.5</td><td style="padding:6px 10px">Fig 39</td></tr>
+            <tr style="border-bottom:1.5px solid #222"><td style="padding:6px 10px">16</td><td style="padding:6px 10px">Does the LLM produce genuinely persona-specific reasoning, or use the same template regardless of who the agent is?</td><td style="padding:6px 10px">&sect;5.3.6</td><td style="padding:6px 10px">Fig 40</td></tr>
+          </tbody>
+        </table>
+      </figure>
+
+      <p style="margin-top:14px"><strong>Contributions.</strong> <span class="tbd">[TBD &mdash; placeholder bullets, to be sharpened once §5 Key Findings are committed.]</span></p>
+      <ol style="margin:4px 0 8px 0;padding-left:24px">
+        <li><span class="tbd">A controlled empirical characterization of how LLM choice affects simulated behavior in a GABM, across 21 configurations and 420,000 responses under matched conditions.</span></li>
+        <li><span class="tbd">A layered analytical framework that separates aggregate behavior (mobility curves), per-response trait/context effects (logistic regressions), and reasoning-text content (mention counts, mention-flag logit, embedding similarity).</span></li>
+        <li><span class="tbd">A public dataset of 420,000 responses with paired binary decisions and free-text reasoning, enabling further analyses of LLM-as-agent behavior.</span></li>
+      </ol>
     </section>
 
     <!-- ─────────── 3. Background / Related Work ─────────── -->
     <section>
       <h2>3. Background &amp; Related Work</h2>
-      <ul>
-        <li>Generative agent-based models (GABM) &mdash; trace back to Park et al.; Paper 1 of this dissertation.</li>
-        <li>LLM benchmarking literature &mdash; standard benchmarks vs. behavioral probes.</li>
-        <li>Big Five personality theory &mdash; brief; cite empirical compliance findings (Conscientiousness &harr; health-protective behavior) without overclaiming theoretical predictions.</li>
-        <li>Paper 1 (original GABM epidemic) and Paper 2 (prompt sensitivity) as direct precedents.</li>
-        <li><em class="tbd">TBD: specific references.</em></li>
-      </ul>
+
+      <h3>3.1 Generative agent-based modeling</h3>
+      <p>A generative agent-based model (GABM) replaces the hand-coded behavioral rules of a traditional agent-based simulation with calls to a large language model. At each decision point the model is fed a textual description of the agent&rsquo;s persona and the current environmental state, and the model&rsquo;s text response is parsed into a behavioral action. The approach was popularized by Park et al. [<span class="tbd">CITE: Park et al. 2023</span>] in an information-diffusion model and extended to epidemic dynamics by Williams et al. [1]. Subsequent work has applied GABMs to game-theoretic settings [<span class="tbd">CITE</span>], social networks [<span class="tbd">CITE</span>], and prompt sensitivity [3]. Across this literature, the LLM behind the agent has been treated as a fixed component of the simulation, and how the choice of LLM affects simulated behavior has not been characterized under matched experimental conditions.</p>
+
+      <h3>3.2 LLM dimensions varied in this study</h3>
+      <p>This paper varies the LLM along six dimensions. The first three describe <em>which</em> model is chosen; the remaining three describe how the model was made or how it is configured at inference time. Each dimension is defined here and revisited in &sect;5.1, where the corresponding subsection reports its empirical effect.</p>
+
+      <p><strong>Provider.</strong> The company that built and offers the LLM. Different providers train models on different data, with different alignment techniques and architectural choices [<span class="tbd">CITE: provider technical reports / overview survey</span>]. The three providers used in this study are OpenAI, Anthropic, and Google.</p>
+
+      <p><strong>Model size.</strong> Within a single provider&rsquo;s family of releases, the relative scale tier of the model. Providers typically expose a small / middle / large tier (for example, Haiku, Sonnet, and Opus in Anthropic&rsquo;s nomenclature; Lite and Flash in Google&rsquo;s) [<span class="tbd">CITE: Anthropic / Google product docs</span>]. Exact parameter counts and training-compute budgets are not publicly disclosed.</p>
+
+      <p><strong>Model evolution.</strong> The sequence of major releases within a single provider&rsquo;s family over time (for example, GPT-3.5 Turbo, GPT-4o, GPT-4.1, GPT-5.1, and GPT-5.2 for OpenAI). Successive releases typically incorporate new training data, refined alignment, and architectural improvements [<span class="tbd">CITE: provider technical reports</span>].</p>
+
+      <p><strong>Knowledge cutoff.</strong> The date through which the model&rsquo;s training data extends. Models with later cutoffs have been exposed to more recent text from the public internet and other training corpora [<span class="tbd">CITE: provider model cards</span>].</p>
+
+      <p><strong>Release date.</strong> The date the model was made publicly available via API. Independent of knowledge cutoff: a model can be released months or years after the cutoff date of its training data [<span class="tbd">CITE</span>].</p>
+
+      <p><strong>Reasoning level.</strong> A model-side configuration parameter that controls how much hidden &ldquo;thinking&rdquo; the model performs before producing its final response. Higher reasoning levels (off &rarr; low &rarr; medium &rarr; high) typically increase response quality and latency [<span class="tbd">CITE: OpenAI o-series reasoning paper; Anthropic extended thinking docs; Google Gemini thinking docs</span>]. Among the 21 configurations used here, two (GPT-5.2 and Gemini 3 Flash Preview) support all four reasoning levels and are run at each.</p>
+
+      <h3>3.3 Cross-LLM evaluation</h3>
+      <p><span class="tbd">[TBD &mdash; placeholder paragraph. Brief survey of LLM-evaluation literature: capability benchmarks (e.g., MMLU [CITE], HumanEval [CITE]), reasoning benchmarks [CITE], instruction-following and behavioral evaluations [CITE]. Position this paper relative to that literature: rather than benchmark capability, this paper characterizes how LLM choice affects the output of a generative agent-based simulation under matched conditions.]</span></p>
     </section>
 
     <!-- ─────────── 4. Methods ─────────── -->
     <section>
       <h2>4. Methods</h2>
-      <ul>
-        <li><strong>4.1 Simulation setup.</strong> Dewberry Hollow town; single decision per agent per condition (stay home / go out).</li>
-        <li><strong>4.2 Agent population (Fig 22).</strong> 100 frozen personas with Big Five traits, gender, age. Sampled to balance trait combinations.</li>
-        <li><strong>4.3 Probe design.</strong> 40 infection levels (0%&ndash;7%) &times; 5 repetitions per (agent, level) cell.</li>
-        <li><strong>4.4 LLM configurations.</strong> 21 configs spanning OpenAI, Anthropic, Google: provider, model size, generation, reasoning budget. Cost / token bookkeeping summarized.</li>
-        <li><strong>4.5 Response collection.</strong> Structured JSON outputs (decision + reasoning text). 0 format errors across 420,000 responses.</li>
-        <li><strong>4.6 Analytical methods.</strong>
-          <ul>
-            <li>Mobility curves: mean stay-home rate per infection level per config; OLS dummy-variable comparisons.</li>
-            <li>Logistic regression: fixed-effects (infection-curve only) and random-effects (with traits, gender, age, random intercept per agent). Diagnostics in Appendix C.</li>
-            <li>Logistic regression with mention flags: extends random-effects logit with yes/no flags for whether the response mentions each trait label or context category.</li>
-            <li>Spearman &rho;: rank-based agreement on predictor importance and on per-agent stay-home rates.</li>
-            <li>Embedding cosine similarity: OpenAI <code>text-embedding-3-large</code>; persona individuation via within- vs. across-agent same-decision pairs.</li>
-            <li>Mention keyword construction and validation.</li>
-          </ul>
-        </li>
-      </ul>
+
+      <h3>4.1 Simulation setup</h3>
+      <p>The probe is a simplified extension of the generative agent-based model of Williams et al. [1]. Two simplifications make each response cleanly attributable to the agent&rsquo;s persona and the perceived infection level. First, each query is treated as an independent, one-shot decision: where Williams et al. [1] simulated disease spread within an agent population over many days, the present probe samples each agent and infection level directly, with no inter-agent contagion. Second, agent health is held constant &mdash; each agent is told &ldquo;You feel healthy and well.&rdquo; &mdash; rather than evolving with a disease state, so behavioral variation reflects persona and the perceived community-infection rate alone. The town setting (Dewberry Hollow), occupational role, and disease (the fictional <em>Catasat</em> virus) carry over from Williams et al. [1].</p>
+
+      <h3>4.2 Agent population</h3>
+      <p>The probe uses 100 frozen personas generated by the procedure of Williams et al. [1]. The five Big Five trait labels are each sampled independently with 50/50 probability between the dimension&rsquo;s two opposing labels: extraverted or introverted (Extraversion); agreeable or antagonistic (Agreeableness); conscientious or unconscientious (Conscientiousness); emotionally stable or neurotic (Neuroticism); and open to experience or closed to experience (Openness). Ages are drawn between 18 and 65 from a probability distribution that mirrors the 2023 U.S. working-age population [2]. Names and gender are paired by sampling without replacement from the top male and female U.S. names, balanced to produce 50 female and 50 male agents. The full procedure is run with a fixed random seed (42) for reproducibility. Sample demographics are summarized in Figure 2.</p>
+
+      <figure style="margin:14px 0 6px">
+        <!-- Same chart container as dashboard Figure 22; renderFig21Demographics() targets this element ID. -->
+        <div id="fig21-chart" style="min-height:320px"></div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 2.</strong> Sample demographics of the 100 frozen personas: age distribution, gender split, and the frequency of each Big Five trait label.
+        </figcaption>
+      </figure>
+
+      <h3>4.3 Probe design</h3>
+      <p>Each agent is queried at 40 infection levels with 5 repetitions for each combination of agent and infection level. Infection levels are sampled densely in the low range, with 0.1 percentage-point steps from 0% to 3.5%, then larger steps at 4%, 5%, 6%, and 7%. Each LLM configuration therefore produces 100 &times; 40 &times; 5 = 20,000 responses; across 21 configurations the full corpus is 420,000 responses.</p>
+
+      <h3>4.4 LLM configurations</h3>
+      <p>The 21 configurations were chosen to span six lenses for cross-LLM comparison: reasoning level, model size within a family, model evolution within a family across time, provider, knowledge cutoff, and release date. To support the reasoning-level lens, GPT-5.2 and Gemini 3 Flash Preview were each run at four reasoning levels (off, low, medium, high), with each level treated as a separate configuration; all other models were run with reasoning off (or, for OpenAI&rsquo;s o3, with reasoning required by the API). Data collection across the 21 configurations cost approximately $840 in total API charges (~$464 OpenAI, ~$263 Anthropic, ~$113 Google). Across providers, the configurations span 9 from OpenAI, 5 from Anthropic, and 7 from Google; the full list is given in Table 1.</p>
+
+      <p>Sampling temperature is set to 0 for non-reasoning configurations where the API allows it; reasoning-capable models use a temperature of 1 (required by Anthropic; recommended by Google). The OpenAI o-series accepts no temperature parameter.</p>
+
+      <figure style="margin:14px 0 6px">
+        <figcaption style="margin-bottom:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Table 1.</strong> The 21 LLM configurations used in this study. Each model with multiple reasoning levels contributes one configuration per level. Pinned model versions, pricing, and additional metadata are listed in Appendix [TBD].
+        </figcaption>
+        <table style="border-collapse:collapse;width:100%;font-size:12px;line-height:1.5">
+          <thead>
+            <tr style="border-top:1.5px solid #222;border-bottom:1px solid #222;background:#f7f7f7">
+              <th style="text-align:left;padding:7px 10px;width:14%">Provider</th>
+              <th style="text-align:left;padding:7px 10px;width:32%">Model</th>
+              <th style="text-align:left;padding:7px 10px;width:24%">Reasoning levels</th>
+              <th style="text-align:left;padding:7px 10px;width:15%">Release date</th>
+              <th style="text-align:left;padding:7px 10px;width:15%">Knowledge cutoff</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-3.5 Turbo</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Jan 2024</td><td style="padding:6px 10px">Sep 2021</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-4o</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2024</td><td style="padding:6px 10px">Oct 2023</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-4.1</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Apr 2025</td><td style="padding:6px 10px">Jun 2024</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-5.1</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2025</td><td style="padding:6px 10px">Sep 2024</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-5.2</td><td style="padding:6px 10px">off, low, medium, high</td><td style="padding:6px 10px">Dec 2025</td><td style="padding:6px 10px">Aug 2025</td></tr>
+            <tr style="border-bottom:1px solid #ddd"><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">o3</td><td style="padding:6px 10px">required</td><td style="padding:6px 10px">Apr 2025</td><td style="padding:6px 10px">Jun 2024</td></tr>
+            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude 3 Haiku</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Mar 2024</td><td style="padding:6px 10px">Aug 2023</td></tr>
+            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Sonnet 4.0</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">May 2025</td><td style="padding:6px 10px">Mar 2025</td></tr>
+            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Sonnet 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Sep 2025</td><td style="padding:6px 10px">Jan 2025</td></tr>
+            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Haiku 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Oct 2025</td><td style="padding:6px 10px">Feb 2025</td></tr>
+            <tr style="border-bottom:1px solid #ddd"><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Opus 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2025</td><td style="padding:6px 10px">Aug 2025</td></tr>
+            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.0 Flash</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Feb 2025</td><td style="padding:6px 10px">Jun 2024</td></tr>
+            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.5 Flash Lite</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Jun 2025</td><td style="padding:6px 10px">Jan 2025</td></tr>
+            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.5 Flash</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">May 2025</td><td style="padding:6px 10px">Jan 2025</td></tr>
+            <tr style="border-bottom:1.5px solid #222"><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 3 Flash Preview</td><td style="padding:6px 10px">off, low, medium, high</td><td style="padding:6px 10px">Dec 2025</td><td style="padding:6px 10px">Jan 2025</td></tr>
+          </tbody>
+        </table>
+      </figure>
+
+      <h3>4.5 Prompt template</h3>
+      <p>Every query uses the same template, identical across the 21 configurations. Each query substitutes four variables into the template: the agent&rsquo;s first name, the agent&rsquo;s age in years, the agent&rsquo;s comma-separated Big Five trait list, and the day&rsquo;s perceived community-infection rate. The full template is reproduced below.</p>
+
+      <figure style="margin:14px 0 6px">
+        <pre style="font-family:'SF Mono','Menlo',monospace;font-size:11px;line-height:1.55;margin:0;padding:14px 18px;background:#f3f3f3;white-space:pre-wrap;color:#222">You are {name}. You are {age} years old.
+You are a person who is {traits_str}.
+You live in the town of Dewberry Hollow. You have a job and go to the office
+for work every day.
+You feel healthy and well.
+You know about the Catasat virus spreading across the country. It is an
+airborne virus causing an infectious disease that spreads from human to
+human. The deadliness of the virus is unknown.
+You check the newspaper and find that {infection_pct}% of Dewberry Hollow's
+population were diagnosed with new infections of the Catasat virus yesterday.
+Should you stay at home for the entire day? Please provide your reasoning.
+
+If the answer is "Yes", please state your reasoning as
+"Reasoning: [explanation]."
+If the answer is "No", please state your reasoning as
+"Reasoning: [explanation]."
+
+The format should be as follows:
+Reasoning:
+Response:
+
+Example:
+Reasoning: You are tired.
+Response: Yes
+
+You have to provide Response in a single word; it must be either
+"Yes" or "No".</pre>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 1.</strong> The prompt template. The placeholders in braces are filled per query: the name placeholder takes the agent&rsquo;s first name, the age placeholder the agent&rsquo;s age in years, the trait placeholder the agent&rsquo;s comma-separated Big Five trait list (with &ldquo;and&rdquo; before the final item), and the infection-rate placeholder the day&rsquo;s perceived community-infection rate. For agent Luis (age 54; introverted, agreeable, conscientious, emotionally stable, and closed to experience) at infection level 3.2%, the first two lines and the newspaper line read &ldquo;You are Luis. You are 54 years old. You are a person who is introverted, agreeable, conscientious, emotionally stable, and closed to experience.&rdquo; and &ldquo;You check the newspaper and find that 3.2% of Dewberry Hollow&rsquo;s population were diagnosed with new infections of the Catasat virus yesterday.&rdquo;
+        </figcaption>
+      </figure>
+
+      <h3>4.6 Response collection and parsing</h3>
+      <p>Each response is required to be a free-text reasoning passage followed by a single-word yes/no decision, in the format specified at the end of the prompt template (Figure 1). A parser extracts the two components and rejects any response that does not conform; 0 of 420,000 responses required rejection. The reasoning text is preserved for the downstream textual analysis.</p>
+
+      <h3>4.7 Analytical methods</h3>
+      <p>We perform three analyses on the 420,000 responses, each progressively deeper into the data:</p>
+      <ol style="margin:6px 0 10px 0;padding-left:24px">
+        <li><strong>Mobility Curve Analysis</strong> &mdash; summarize each LLM configuration&rsquo;s aggregate behavior by plotting mobility against infection level, and compare these curves across configurations with multilinear regression.</li>
+        <li><strong>Persona Analysis</strong> &mdash; gain insight into the agent-level predictors that affect the binary stay-home decision. We examine Big Five trait labels, gender, age, and infection level via two logistic regressions, and we compare results across configurations using Spearman rank correlations.</li>
+        <li><strong>Response Analysis</strong> &mdash; investigate what the reasoning passage that accompanies each decision actually contains: which concepts it invokes, whether mentioning a trait amplifies that trait&rsquo;s behavioral effect, and whether the reasoning differs meaningfully from one agent to another. We measure these through mention counts of curated keyword and concept lists, a third logistic regression that incorporates mention flags as predictors, and embedding-based similarity.</li>
+      </ol>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.7.1 Mobility Curve Analysis</h4>
+      <p>For each LLM configuration, the stay-home rate at a given infection level is computed by averaging 500 binary decisions &mdash; 5 repetitions for each of the 100 agents. The mobility curve plots mobility (the complement of the stay-home rate, mobility = 1 &minus; stay-home rate) on the <em>y</em>-axis against the 40 sampled infection levels (0 to 3.5% in 0.1 percentage-point steps, plus 4%, 5%, 6%, and 7%) on the <em>x</em>-axis.</p>
+
+      <p>To discern differences between mobility curves, we employ multilinear regression in the same style as Williams et al. [3]. For each set of configurations being compared (e.g., the four GPT-5.2 reasoning levels), we fit two models. Both take mobility as the dependent variable and use the infection level, the infection level squared, and one dummy variable per non-baseline configuration as predictors; the dummy is set to 1 if the data is from the configuration being tested and 0 if it is from the baseline. The first model, a <em>baseline-shift</em> model, stops there; a statistically significant dummy coefficient indicates that the configuration produces a level shift in the mobility curve relative to the baseline. The second model, a <em>baseline-plus-slope-shift</em> model, additionally includes interactions between each dummy and the infection level; a statistically significant interaction indicates that the configuration&rsquo;s slope of response to infection level differs from the baseline&rsquo;s. Per-comparison tables for both models are reported in Appendix A.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.7.2 Persona Analysis</h4>
+      <p>To examine systematically how agent traits, gender, age, and infection level influence the stay-home decision, we fit two logistic regressions per LLM configuration on the 20,000 individual responses, in the same style as Williams et al. [1]. The dependent variable is a binary variable of the agent&rsquo;s decision to stay home (equal to 1 if the agent stays home and 0 otherwise). The fixed-effect logit absorbs each agent&rsquo;s average tendency to stay home through agent dummies, isolating how the decision responds to changes in infection level. The random-effect logit replaces the agent dummies with a single random intercept per agent, freeing up the model to estimate trait, gender, age, and infection effects together. The reference categories are <em>female</em>, <em>introverted</em>, <em>antagonistic</em>, <em>unconscientious</em>, <em>neurotic</em>, and <em>closed to experience</em>; age is in raw years. Per-configuration coefficient tables for both specifications are reported in Appendix B.1; diagnostics &mdash; calibration, residual Q-Q, random-intercept normality, BLUPs versus predictors, and residual fit by infection and age &mdash; are in Appendix C.</p>
+
+      <p>We also use these regressions to compare LLMs in two ways. First, we ask whether different LLMs agree on which predictors matter most. Within each configuration, the eight predictors (five Big Five labels, gender, age, infection level) are ranked by the size of their effect on the stay-home decision, and Spearman&rsquo;s rank correlation then compares these rankings across configurations. Second, we ask whether different LLMs agree on which agents are most cautious. Within each configuration, the 100 agents are ranked by their mean stay-home rate across all 200 decisions, and Spearman&rsquo;s rank correlation again compares these rankings across configurations.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.7.3 Response Analysis</h4>
+      <p>Each query asks the agent to provide its reasoning before stating its yes/no decision, so the reasoning likely shapes the decision rather than merely justifying it after the fact. From this text we want to learn which concepts each LLM invokes, whether mentioning a trait amplifies that trait&rsquo;s behavioral effect, and how the text varies &mdash; in length, in word choice, and in semantic content &mdash; across repetitions and across agents. We approach these questions in three ways: counting mentions of curated keyword and concept lists, adding those mentions as predictors to a logistic regression, and applying several textual measures (length, decision agreement, word-overlap, and embedding-based similarity) to the reasoning passages.</p>
+
+      <p>First, we count mentions in the reasoning text. For each Big Five trait label, age, and infection level, we define a curated list of keywords and flag whether each response contains any term from that list. A separate, broader concept dictionary covering six themes (Traits, Work, Community, Virus Properties, Self Health, Virus Prevalence) drives the decision-themes analysis (Figure 37).</p>
+
+      <p>Second, we use these mention flags as predictors in a third logistic regression, which we will refer to as the <em>mention-flag logit</em>. It extends the random-effect logit from &sect;4.7.2 with one binary indicator per Big Five trait label, one for age mentions, and one for infection mentions. A flag enters the model only when its overall mention rate falls within [15%, 85%]; outside this window the flag carries no usable variation. The mention-flag coefficients answer the question of whether mentioning a trait amplifies or dampens its behavioral effect, holding the agent&rsquo;s own trait label fixed. Per-configuration coefficient tables are in Appendix B.2; diagnostics are in Appendix C.</p>
+
+      <p>Third, we apply several textual measures to the reasoning passages. Token length per response is summarized by configuration and by infection level (Figures 35, 36). Across the 5 reps for each (agent, infection level), we compute decision agreement &mdash; the share of groups whose reps all chose the same direction (Figure 38) &mdash; and, for unanimous groups, two text-overlap metrics: an exact-match rate and Jaccard word-overlap (Figure 39). Finally, we compute embedding-based cosine similarity using OpenAI&rsquo;s text-embedding-3-large model (3,072 dimensions): for each agent at each infection level, we compare same-agent similarity (averaged across rep pairs) to across-agent similarity (averaged across pairs of agents that chose the same direction at the same level); the gap measures whether the configuration produces persona-specific reasoning rather than templated text (Figure 40).</p>
     </section>
 
     <!-- ─────────── 5. Results ─────────── -->
     <section>
       <h2>5. Results</h2>
-      <p class="note">Paper-order presentation: lead with the largest source of variation (provider), then drill into within-provider modulators. This order differs from the dashboard navigation but uses the same figures.</p>
 
-      <h3>5.1 Aggregate behavior across LLM configurations</h3>
-      <ul>
-        <li><strong>5.1.1 Cross-provider differences (RQ4).</strong> Figs 8, 9. <em class="tbd">Lead finding: providers differ by ~80 pp in baseline mobility before any other lever is pulled.</em></li>
-        <li><strong>5.1.2 Reasoning budget (RQ1).</strong> Figs 1, 2. <em class="tbd">~8&ndash;9 pp shift; opposite directions across providers; small relative to the between-LLM gap.</em></li>
-        <li><strong>5.1.3 Model size (RQ2).</strong> Figs 3, 4. <em class="tbd">TBD.</em></li>
-        <li><strong>5.1.4 Model evolution (RQ3).</strong> Figs 5, 6, 7. <em class="tbd">TBD.</em></li>
-        <li><strong>5.1.5 Knowledge cutoff (RQ5).</strong> Figs 10, 11&ndash;14. <em class="tbd">TBD.</em></li>
-        <li><strong>5.1.6 Release date (RQ6).</strong> Figs 15, 16&ndash;18. <em class="tbd">TBD.</em></li>
-      </ul>
+      <p>This section presents the results of the three analyses introduced in &sect;4.7. Within each subsection, results are presented in the paper order described in Table 2.</p>
 
-      <h3>5.2 What drives the decision: trait effects</h3>
-      <ul>
-        <li><strong>5.2.1 Trait interpretation (RQ7).</strong> Figs 22, 23, 25, 27. <em class="tbd">TBD.</em></li>
-        <li><strong>5.2.2 Personality vs. infection magnitude (RQ8).</strong> Fig 26. <em class="tbd">TBD.</em></li>
-      </ul>
+      <h3>5.1 Mobility Curve Results</h3>
 
-      <h3>5.3 Cross-model consistency</h3>
-      <ul>
-        <li><strong>5.3.1 Predictor importance agreement (RQ9).</strong> Figs 28, 29. <em class="tbd">TBD.</em></li>
-        <li><strong>5.3.2 Agent identity agreement (RQ10).</strong> Fig 30. <em class="tbd">TBD.</em></li>
-      </ul>
+      <p>The 21 mobility curves vary dramatically: average stay-home rates span nearly the full 0&ndash;100% range across the 21 configurations. The six subsections below examine cross-LLM variation from six different angles. &sect;5.1.1 examines the role of the LLM provider; &sect;5.1.2 the role of reasoning level; &sect;5.1.3 the role of model size within a provider family; &sect;5.1.4 the role of model evolution within a family across time; &sect;5.1.5 the role of knowledge cutoff; and &sect;5.1.6 the role of release date.</p>
 
-      <h3>5.4 What&rsquo;s in the reasoning text</h3>
-      <ul>
-        <li><strong>5.4.1 Trait mentions and behavioral effect (RQ11).</strong> Figs 32, 33, 34. <em class="tbd">TBD.</em></li>
-        <li><strong>5.4.2 Decision themes (RQ12).</strong> Fig 37. <em class="tbd">TBD.</em></li>
-        <li><strong>5.4.3 Reasoning length (RQ13).</strong> Figs 35, 36. <em class="tbd">TBD.</em></li>
-      </ul>
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.1.1 Cross-provider differences (RQ1)</h4>
 
-      <h3>5.5 Response heterogeneity</h3>
-      <ul>
-        <li><strong>5.5.1 Decision repeatability (RQ14).</strong> Fig 38. <em class="tbd">TBD.</em></li>
-        <li><strong>5.5.2 Reasoning text repeatability (RQ15).</strong> Fig 39. <em class="tbd">TBD.</em></li>
-        <li><strong>5.5.3 Persona individuation (RQ16).</strong> Fig 40. <em class="tbd">TBD.</em></li>
-      </ul>
+      <p>The mobility-curve landscape within each provider is itself wide. Figure 3 overlays all configurations from each of the three providers, showing the spread of mobility responses across the configurations included in this study. Within OpenAI alone, mobility ranges from near-100% stay-home (GPT-3.5 Turbo, GPT-5.2 off) to near-0% stay-home (GPT-4o); within Anthropic, from Claude 3 Haiku at the cautious end to Claude Haiku 4.5 at the mobile end; within Google, the spread is narrower but still spans the lower half of the mobility range. There is no single &ldquo;Anthropic look&rdquo; or &ldquo;OpenAI look&rdquo; to a mobility curve once different models within each provider are considered.</p>
+
+      <figure style="margin:14px 0 6px">
+        <div id="s3-section" style="display:block"><div id="s3-facets" class="facet-row" style="min-height:280px"></div></div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 3.</strong> Within-provider model variation. All configurations are overlaid within each provider panel.
+        </figcaption>
+      </figure>
+
+      <p>To make a controlled cross-provider comparison, we hold model size (flagship within each provider, as of the December 2025 data-collection window) and reasoning level (off) constant. Figure 4 shows the resulting flagship mobility curves: GPT-5.2 (OpenAI), Claude Opus 4.5 (Anthropic), and Gemini 3 Flash Preview (Google). All three start near 100% mobility at 0% infection, but the curves diverge sharply as soon as any community infection is reported. GPT-5.2 becomes risk-averse almost immediately &mdash; its mobility drops to near zero by 0.3% infection and stays there across the rest of the range. Claude Opus 4.5 and Gemini 3 Flash Preview, in contrast, behave as relatively risk-prone agents across the full range; their mobility hovers in the 75&ndash;90% band and declines only gradually as infection rises. The multilinear regression confirms this pattern: GPT-5.2 differs significantly from the other two flagships, while Claude Opus 4.5 and Gemini 3 Flash Preview are not statistically distinguishable from each other (Appendix A).</p>
+
+      <figure style="margin:14px 0 6px">
+        <div id="figFlagship-section" style="display:block">
+          <div id="figFlagship-chart" class="chart-container" style="min-height:300px"></div>
+          <div id="figFlagship-legend" class="legend"></div>
+        </div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 4.</strong> Cross-provider flagship comparison. One flagship model per provider, all evaluated with reasoning off: GPT-5.2 (OpenAI), Claude Opus 4.5 (Anthropic), Gemini 3 Flash Preview (Google).
+        </figcaption>
+      </figure>
+
+      <p>The two figures together suggest that the choice of LLM matters along multiple dimensions. Within each provider, model variants span a wide mobility range; across providers, even matched flagships occupy distinct regions of the mobility space. For a researcher building a generative-agent simulation, neither &ldquo;pick any provider&rdquo; nor &ldquo;pick the flagship&rdquo; produces interchangeable behavior.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.1.2 Reasoning level (RQ2)</h4>
+
+      <p>Reasoning level is a configurable LLM parameter controlling how much hidden deliberation the model performs before producing its final response (see &sect;3.2). Two configurations span the full reasoning-level ladder (off, low, medium, high): GPT-5.2 (OpenAI) and Gemini 3 Flash Preview (Google). Figure 5 places these two reasoning ladders side by side, with each panel showing how the same model&rsquo;s mobility curve responds to changes in reasoning level.</p>
+
+      <figure style="margin:14px 0 6px">
+        <div id="paper-fig5-section" style="display:block">
+          <div id="paper-fig5-facets" class="facet-row" style="min-height:280px"></div>
+        </div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 5.</strong> Effect of reasoning level on mobility, for the two configurations sampled across all four reasoning levels: GPT-5.2 (left) and Gemini 3 Flash Preview (right).
+        </figcaption>
+      </figure>
+
+      <p>For GPT-5.2, increasing reasoning shifts the mobility curve modestly upward &mdash; mobility rises by roughly 9 percentage points from reasoning off to reasoning high. For Gemini 3 Flash Preview, the direction is opposite: enabling any non-zero reasoning level shifts the curve downward by roughly 9 percentage points relative to reasoning off, with little additional change between low, medium, and high. The multilinear regression in Appendix A reports which configurations differ significantly.</p>
+
+      <p>Reasoning is a real but minor lever, and its sign differs between the two LLMs tested. Both shifts are roughly 9 percentage points and small compared to the cross-provider gap reported in &sect;5.1.1. The result complicates any general claim that more reasoning makes a generative agent uniformly more or less cautious.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.1.3 Model size (RQ3)</h4>
+
+      <p>Model size refers to a provider&rsquo;s relative scale tier within a single family of releases (see &sect;3.2). Two providers in the data have multiple model sizes within a single generation: Anthropic&rsquo;s Claude 4.5 family (Haiku [small], Sonnet [middle], Opus [large]) and Google&rsquo;s Gemini 2.5 family (Flash Lite [small], Flash [middle]). All five configurations are evaluated with reasoning off. Figure 6 places the two size ladders side by side.</p>
+
+      <figure style="margin:14px 0 6px">
+        <div id="paper-fig6-section" style="display:block">
+          <div id="paper-fig6-facets" class="facet-row" style="min-height:280px"></div>
+        </div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 6.</strong> Effect of model size on mobility, for the two providers with multiple sizes in a single generation: Anthropic&rsquo;s Claude 4.5 family (left) and Google&rsquo;s Gemini 2.5 family (right). All configurations evaluated with reasoning off.
+        </figcaption>
+      </figure>
+
+      <p>For the Anthropic Claude 4.5 family, mobility does not change monotonically with size. Going from Haiku (small) to Sonnet (middle) shifts the curve substantially downward &mdash; Sonnet sits well below Haiku across the full infection range. But going from Sonnet to Opus (large) reverses direction: Opus tracks close to Haiku rather than continuing further down. For the Google Gemini 2.5 family, Gemini 2.5 Flash sits well above Gemini 2.5 Flash Lite across most of the infection range. Flash Lite itself shows an unusual within-curve pattern &mdash; its mobility starts moderate at 0% infection, dips between roughly 0% and 1%, then recovers above 50% from 1.5% onward. The multilinear regression in Appendix A reports which configurations differ significantly.</p>
+
+      <p>Across both providers&rsquo; size ladders, the data shows substantial variation but no consistent direction of effect attributable to size.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.1.4 Model evolution (RQ4)</h4>
+
+      <p>Model evolution refers to the sequence of major releases within a single provider&rsquo;s family over time, where each successive release typically incorporates new training data, refined alignment, and architectural improvements (see &sect;3.2). All three providers contribute model evolution data: Anthropic from Claude Sonnet 4.0 to Claude Sonnet 4.5; OpenAI from GPT-3.5 Turbo through GPT-4o, GPT-4.1, GPT-5.1, and GPT-5.2; and Google from Gemini 2.0 Flash through Gemini 2.5 Flash to Gemini 3 Flash Preview. All configurations are evaluated with reasoning off. Figure 7 places the three evolution sequences side by side.</p>
+
+      <figure style="margin:14px 0 6px">
+        <div id="paper-fig7-section" style="display:block">
+          <div id="paper-fig7-facets" class="facet-row" style="min-height:280px"></div>
+        </div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 7.</strong> Effect of model evolution on mobility, one panel per provider: Anthropic, OpenAI, and Google. Each panel shows the evolution sequence within that provider, all at reasoning off.
+        </figcaption>
+      </figure>
+
+      <p>The Anthropic sequence has only two points: Claude Sonnet 4.5 sits modestly above Claude Sonnet 4.0 across the infection range. The OpenAI sequence shows wide swings between successive releases &mdash; GPT-3.5 Turbo and GPT-5.2 sit near the cautious end of the mobility range; GPT-4o sits at the mobile end; GPT-4.1 and GPT-5.1 sit at intermediate positions. Going from one release to the next does not move the OpenAI curve in a consistent direction. The Google sequence shows a large upward shift from Gemini 2.0 Flash to Gemini 2.5 Flash, then almost no further change between Gemini 2.5 Flash and Gemini 3 Flash Preview. The multilinear regression in Appendix A reports which configurations differ significantly.</p>
+
+      <p>Across the three providers, model evolution does not produce a consistent direction of effect on mobility, and the within-provider patterns differ from each other.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.1.5 Knowledge cutoff (RQ5)</h4>
+
+      <p>Knowledge cutoff is the date through which the model&rsquo;s training data extends; models with later cutoffs have been exposed to more recent text from the public internet (see &sect;3.2). The 21 configurations span knowledge cutoffs from September 2021 (GPT-3.5 Turbo) to August 2025 (Claude Opus 4.5 and GPT-5.2). Figure 8 plots each configuration on a knowledge-cutoff timeline, showing the four era groupings used in the analysis below: pre-2024, mid-2024 (Jun&ndash;Sep), early 2025 (Jan&ndash;Mar), and late 2025 (Aug). Figure 9 then shows the mobility curves within each era.</p>
+
+      <figure style="margin:14px 0 6px">
+        <div id="cutoff-timeline-chart" style="min-height:240px"></div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 8.</strong> Knowledge-cutoff timeline. Each configuration is plotted by knowledge cutoff date, grouped by provider; bracketed segments mark the four era groupings used in Figure 9.
+        </figcaption>
+      </figure>
+
+      <figure style="margin:14px 0 6px">
+        <div id="paper-fig9-section" style="display:block">
+          <div id="paper-fig9-facets" class="facet-grid-2x2" style="min-height:560px"></div>
+        </div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 9.</strong> Mobility curves within each knowledge-cutoff era: pre-2024 (top left), mid-2024 (top right), early 2025 (bottom left), and late 2025 (bottom right). All configurations evaluated with reasoning off; o3 uses reasoning = required (its only available mode).
+        </figcaption>
+      </figure>
+
+      <p>Within each era panel, the curves do not cluster by knowledge cutoff. Models with the same or near-identical training-data cutoff date land at very different positions on the mobility axis: in the pre-2024 panel, GPT-3.5 Turbo and GPT-4o sit at opposite ends of the mobility range despite cutoffs only two years apart; in the mid-2024 panel, four configurations with cutoffs in a 3-month window (Jun&ndash;Sep 2024) span nearly the full mobility range; in the early-2025 panel, six configurations with cutoffs within a 3-month window again span the full range; in the late-2025 panel, Claude Opus 4.5 and GPT-5.2 share an August 2025 cutoff but produce distinctly different curves. The multilinear regression in Appendix A reports which configurations differ significantly.</p>
+
+      <p>Knowledge cutoff does not predict mobility curve placement in this data. Whatever drives the cross-LLM variation reported in &sect;5.1.1, it is not the recency of training data alone.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.1.6 Release date (RQ6)</h4>
+
+      <p>Release date is the date the model was made publicly available via API; it is generally independent of the model&rsquo;s knowledge cutoff (see &sect;3.2). The 21 configurations span release dates from January 2024 (GPT-3.5 Turbo) to December 2025 (GPT-5.2 and Gemini 3 Flash Preview). Figure 10 plots each configuration on a release-date timeline, showing the three era groupings used in the analysis below: legacy (pre-2025), early 2025 (Feb&ndash;Jun), and late 2025 (Sep&ndash;Dec). Figure 11 then shows the mobility curves within each era.</p>
+
+      <figure style="margin:14px 0 6px">
+        <div id="release-timeline-chart" style="min-height:240px"></div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 10.</strong> Release-date timeline. Each configuration is plotted by API release date, grouped by provider; bracketed segments mark the three era groupings used in Figure 11.
+        </figcaption>
+      </figure>
+
+      <figure style="margin:14px 0 6px">
+        <div id="paper-fig11-section" style="display:block">
+          <div id="paper-fig11-facets" class="facet-row" style="min-height:280px"></div>
+        </div>
+        <figcaption style="margin-top:10px;font-size:12px;color:#333;line-height:1.55">
+          <strong>Figure 11.</strong> Mobility curves within each release-date era: legacy era / pre-2025 (left), early 2025 (middle), and late 2025 (right). All configurations evaluated with reasoning off; o3 uses reasoning = required (its only available mode).
+        </figcaption>
+      </figure>
+
+      <p>As with knowledge cutoff, configurations sharing a release-date era do not cluster on the mobility axis. The legacy panel shows GPT-3.5 Turbo and GPT-4o at opposite ends of the range despite release dates within a year of each other. The early-2025 panel shows six configurations released within a five-month window spanning the full mobility range. The late-2025 panel shows six configurations released within a four-month window also spanning a wide range. The multilinear regression in Appendix A reports which configurations differ significantly.</p>
+
+      <p>Release date does not predict mobility curve placement in this data, and the same applies in combination with knowledge cutoff (&sect;5.1.5): when a model was trained and when a model was released both fail to explain the cross-LLM variation observed in &sect;5.1.1.</p>
+
+      <h3>5.2 Persona Results</h3>
+
+      <p>The four subsections below examine the agent-level predictors of the stay-home decision and how the 21 LLMs vary in their treatment of those predictors. &sect;5.2.1 examines the effects of agent traits, gender, and age on the decision; &sect;5.2.2 the magnitude of these persona effects relative to the infection-level effect; &sect;5.2.3 cross-LLM agreement on which predictors matter most; and &sect;5.2.4 cross-LLM agreement on which individual agents are most cautious.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.2.1 Trait effects (RQ7)</h4>
+      <p class="tbd">TBD. Dashboard Figs 22, 23, 25, 27.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.2.2 Persona vs. infection magnitude (RQ8)</h4>
+      <p class="tbd">TBD. Dashboard Fig 26.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.2.3 Predictor importance agreement (RQ9)</h4>
+      <p class="tbd">TBD. Dashboard Figs 28, 29.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.2.4 Agent identity agreement (RQ10)</h4>
+      <p class="tbd">TBD. Dashboard Fig 30.</p>
+
+      <h3>5.3 Response Results</h3>
+
+      <p>The six subsections below examine the content of the reasoning passage and the heterogeneity of responses across repetitions and across agents. &sect;5.3.1 examines how trait mentions shape the stay-home decision; &sect;5.3.2 which concept categories dominate stay-home versus go-out reasoning; &sect;5.3.3 how reasoning length varies across LLMs and infection levels; &sect;5.3.4 whether models give the same decision when asked the same question multiple times; &sect;5.3.5 whether they produce the same reasoning text when they agree on the decision; and &sect;5.3.6 whether the reasoning is genuinely persona-specific or templated.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.3.1 Trait mentions and behavioral effect (RQ11)</h4>
+      <p class="tbd">TBD. Dashboard Figs 32, 33, 34.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.3.2 Decision themes (RQ12)</h4>
+      <p class="tbd">TBD. Dashboard Fig 37.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.3.3 Reasoning length (RQ13)</h4>
+      <p class="tbd">TBD. Dashboard Figs 35, 36.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.3.4 Decision repeatability (RQ14)</h4>
+      <p class="tbd">TBD. Dashboard Fig 38.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.3.5 Text repeatability (RQ15)</h4>
+      <p class="tbd">TBD. Dashboard Fig 39.</p>
+
+      <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.3.6 Persona individuation (RQ16)</h4>
+      <p class="tbd">TBD. Dashboard Fig 40.</p>
     </section>
 
     <!-- ─────────── 6. Discussion ─────────── -->
@@ -199,7 +502,7 @@
     <section>
       <h2>8. Appendices</h2>
       <ul>
-        <li><strong>A.</strong> Mobility-curve OLS regressions (per Theme A figure pair). See dashboard Appendix A.</li>
+        <li><strong>A.</strong> Mobility-curve OLS regressions (per &sect;5.1 figure pair). See dashboard Appendix A.</li>
         <li><strong>B.1.</strong> Per-model fixed-effects + random-effects logit tables (21 configs). See dashboard Appendix B.1.</li>
         <li><strong>B.2.</strong> Per-model random-effects logit with mention flags (21 configs). See dashboard Appendix B.2.</li>
         <li><strong>C.</strong> Model diagnostics (DHARMa Q-Q, calibration, residual plots). See dashboard Appendix C.</li>
@@ -207,6 +510,71 @@
       </ul>
     </section>
 
+    <!-- ─────────── 9. References ─────────── -->
+    <section>
+      <h2>9. References</h2>
+      <p class="note">Numbered list of references cited throughout the manuscript. To grow as the draft fills in.</p>
+      <ol style="font-size:12px;line-height:1.6;color:#333;padding-left:28px;margin-top:6px">
+        <li id="ref-1" style="margin-bottom:8px">
+          Williams, R., Hosseinichimeh, N., Majumdar, A., &amp; Ghaffarzadegan, N. (2023).
+          <em>Epidemic modeling with generative agents.</em>
+          arXiv preprint arXiv:2307.04986.
+          <a href="https://arxiv.org/abs/2307.04986" target="_blank" rel="noopener">https://arxiv.org/abs/2307.04986</a>
+        </li>
+        <li id="ref-2" style="margin-bottom:8px">
+          U.S. Census Bureau. <em>U.S. and World Population Clock.</em> Retrieved from
+          <a href="https://www.census.gov/popclock/" target="_blank" rel="noopener">https://www.census.gov/popclock/</a>.
+          (Source of the per-year age weights used to sample agent ages 18&ndash;65; carried over from Williams et al. [1].)
+        </li>
+        <li id="ref-3" style="margin-bottom:8px">
+          Williams, R., &amp; Hosseinichimeh, N. <em>Prompt Sensitivity of Generative Agents: Evidence from an Epidemic Model.</em>
+          <span class="tbd">[Citation placeholder &mdash; please replace with the published / preprint reference for Paper 2.]</span>
+        </li>
+      </ol>
+    </section>
+
   </div>
+
+  <!-- Shared dashboard renderers — load Figure 2 from the same code path as
+       dashboard Figure 22 so any edit to the renderer or to agents.json
+       updates both pages. -->
+  <script src="papaparse.min.js"></script>
+  <script src="config.js"></script>
+  <script src="analytics-shared.js"></script>
+  <script src="analytics-cohort.js"></script>
+  <script src="analytics-curves.js"></script>
+  <script src="analytics-author.js"></script>
+  <script>
+    // Figure 2 (demographics): render via the dashboard's renderFig21Demographics().
+    // Figures 3 + 4 (within-provider variation, cross-provider flagship):
+    // load all_macro.csv with PapaParse, then call renderS3() and renderFigFlagship().
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof loadAgentsJSON === 'function' && typeof renderFig21Demographics === 'function') {
+        loadAgentsJSON(renderFig21Demographics);
+      }
+      Papa.parse(CONFIG.ALL_MACRO, {
+        download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+        complete({ data }) {
+          macroData = data;
+          if (typeof renderS3 === 'function')                    renderS3();
+          if (typeof renderFigFlagship === 'function')           renderFigFlagship();
+          if (typeof renderReasoningLadderFacets === 'function') renderReasoningLadderFacets('paper-fig5-facets');
+          if (typeof renderSizeFacets === 'function')            renderSizeFacets('paper-fig6-facets');
+          if (typeof renderEvolutionFacets === 'function')       renderEvolutionFacets('paper-fig7-facets');
+          if (typeof renderCutoffEraFacets === 'function')       renderCutoffEraFacets('paper-fig9-facets');
+          if (typeof renderReleaseEraFacets === 'function')      renderReleaseEraFacets('paper-fig11-facets');
+        }
+      });
+      // Timelines need model metadata (release_date / knowledge_cutoff per config).
+      Papa.parse('data/metadata/models.csv', {
+        download: true, header: true, dynamicTyping: true, skipEmptyLines: true,
+        complete({ data }) {
+          modelMetadata = data;
+          if (typeof renderCutoffTimeline === 'function')  renderCutoffTimeline();
+          if (typeof renderReleaseTimeline === 'function') renderReleaseTimeline();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
