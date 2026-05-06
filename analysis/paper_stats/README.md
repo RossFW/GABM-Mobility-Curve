@@ -10,8 +10,8 @@ summary against the underlying data.
 |--------|--------------------|-------|
 | `section_5_1.py` | All numerical claims in §5.1 (Mobility Curve Results, RQ1–6) | `viz/data/real/all_macro.csv`, `viz/data/metadata/models.csv` |
 | `section_5_2.py` | All numerical claims in §5.2 (Persona Results, RQ7–10) | `viz/data/real/regressions/*.json`, `viz/data/real/agent_consistency.json` |
-
-A `section_5_3.py` will be added when §5.3 (Response Results) is drafted.
+| `section_5_3.py` | All numerical claims in §5.3 (Response Results, RQ11–13) | `viz/data/real/trait_mentions.json`, `viz/data/real/regressions/*.json`, `viz/data/real/decision_drivers.json`, `viz/data/real/response_persona_similarity.json` |
+| `cosine_examples.py` | Generates `cosine_examples.json` (three reference response pairs from Claude Opus 4.5 at known cosine similarities) used by Figure 20 in §5.3.3 | `viz/data/real/anthropic_claude-opus-4-5_off/response_embeddings.npz`, `viz/data/real/anthropic_claude-opus-4-5_off/probe_results_micro.csv` |
 
 ## How they relate to the rest of `analysis/`
 
@@ -30,6 +30,8 @@ From the project root (`GABM mobility curve/`):
 ```bash
 python analysis/paper_stats/section_5_1.py
 python analysis/paper_stats/section_5_2.py
+python analysis/paper_stats/section_5_3.py
+python analysis/paper_stats/cosine_examples.py   # writes viz/data/real/cosine_examples.json
 ```
 
 Output is plain text, organized by paper subsection. Each printed value
