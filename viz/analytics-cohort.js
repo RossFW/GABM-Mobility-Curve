@@ -165,11 +165,15 @@ function renderAgentAnalysis() {
         _cohortConsistencyData = consistencyData;
         renderFig29CrossModelPrediction(allRegs, consistencyData);
 
-        // Fig 28 initial render + filter pills
+        // Fig 30 (Spearman matrix) initial render + filter pills
         renderFig27ConsistencyMatrix(consistencyData);
         buildFilterPills('fig28-filters', 'fig28', filter => {
           renderFig27ConsistencyMatrix(_cohortConsistencyData, 'fig27-chart', filter);
         });
+
+        // Fig 30B (median + IQR + full range) and Fig 30C (mean ± 95% CI, comparison)
+        if (typeof renderAgentRankCleveland === 'function') renderAgentRankCleveland(consistencyData, 'fig30b-chart', 'range');
+        if (typeof renderAgentRankCleveland === 'function') renderAgentRankCleveland(consistencyData, 'fig30c-chart', 'ci');
       });
     });
   });
@@ -2241,18 +2245,8 @@ function renderFig26ForestPlot(allRegs, elId, modelFilter) {
     });
   });
 
-  // Footnotes
-  const footY = totalH + 16;
-  const footnotes = [
-    'Source: random-effects logistic regression \u03B2 coefficients. \u03B2 > 0 = higher log-odds of staying home.',
-    'Dummy coding: positive pole = 1 (reference = opposite pole \u2014 introverted, antagonistic, unconscientious, neurotic, closed). Male = 1 (reference = female). Age = raw years (18\u201365), \u03B2 is per-year increment.',
-    '95% CIs = \u03B2 \u00B1 1.96 \u00D7 SE. 20,000 obs per config.',
-  ];
-  footnotes.forEach((f, i) => {
-    svg += `<text x="10" y="${footY + i * 12}" font-size="7.5" fill="#aaa" font-family="${SERIF}">${f}</text>`;
-  });
-
-  const svgH = footY + footnotes.length * 12 + 8;
+  // Footnotes removed: redundant with paper body text (\u00A75.2.1) and dashboard caption.
+  const svgH = totalH + 8;
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${svgH}" viewBox="0 0 ${W} ${svgH}" style="display:block;background:${SVG_BG};border:1px solid #ccc">${svg}</svg>`;
 
   // Wire tooltips (same pattern as Figure 27) — unique ID per instance
@@ -6417,3 +6411,114 @@ function renderFig27ConsistencyMatrix(data, elId, modelFilter) {
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
 }
+
+
+// ── RQ10 helpers ────────────────────────────────────────────────────────
+function _rq10WithinConfigRanks(rates) {
+  // Returns ranks[c][a] in 1..100, with average-rank tie handling.
+  // Higher stay-home rate → rank 1 (most cautious in that config).
+  const nC = rates.length, nA = rates[0].length;
+  const ranks = [];
+  for (let c = 0; c < nC; c++) {
+    const sorted = rates[c].map((v, i) => ({ i, v })).sort((a, b) => b.v - a.v);
+    const r = new Array(nA);
+    let i = 0;
+    while (i < nA) {
+      let j = i;
+      while (j + 1 < nA && sorted[j + 1].v === sorted[i].v) j++;
+      const avgRank = (i + 1 + j + 1) / 2;
+      for (let k = i; k <= j; k++) r[sorted[k].i] = avgRank;
+      i = j + 1;
+    }
+    ranks.push(r);
+  }
+  return ranks;
+}
+
+// Shared layout helper — y-axis label, x-axis ticks, x-axis title.
+function _rq10DrawAxes(svg, W, H, padL, padR, padT, plotH) {
+  const plotW = W - padL - padR;
+  const xS = v => padL + ((v - 1) / 99) * plotW;
+  let s = svg;
+  // X gridlines + dual labels (top + bottom)
+  [1, 25, 50, 75, 100].forEach(g => {
+    s += `<line x1="${xS(g)}" y1="${padT}" x2="${xS(g)}" y2="${padT + plotH}" stroke="#eee"/>`;
+    s += `<text x="${xS(g)}" y="${padT - 6}" font-size="10" fill="#666" font-family="${SERIF}" text-anchor="middle">${g}</text>`;
+    s += `<text x="${xS(g)}" y="${padT + plotH + 16}" font-size="10" fill="#666" font-family="${SERIF}" text-anchor="middle">${g}</text>`;
+  });
+  // X axis title
+  s += `<text x="${padL + plotW / 2}" y="${H - 18}" font-size="11" fill="#333" font-family="${SERIF}" text-anchor="middle">Within-config rank (1 = most cautious, 100 = most mobile)</text>`;
+  // Y axis title (rotated)
+  const yMid = padT + plotH / 2;
+  s += `<text x="20" y="${yMid}" font-size="11" fill="#333" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90, 20, ${yMid})">Agent (sorted by median rank, n = 100)</text>`;
+  return s;
+}
+
+// ── Cleveland forest plot of agent ranks, all 21 configs ───────────────
+// `barMode`:
+//   'iqr'   → dot=median, bar=IQR (25th–75th percentile)
+//   'range' → dot=median, IQR bar overlaid on a pale full-range whisker (default for 30B)
+//   'ci'    → dot=mean,   bar=95% CI of the mean (mean ± 1.96·SE), faint full-range whisker
+function renderAgentRankCleveland(data, elId, barMode) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!data || !data.rates) { el.innerHTML = '<div style="color:#c00;padding:20px">No data.</div>'; return; }
+  const mode = (barMode === 'range' || barMode === 'ci') ? barMode : 'iqr';
+
+  const ranks = _rq10WithinConfigRanks(data.rates);
+  const nC = ranks.length, nA = ranks[0].length;
+
+  const stats = [];
+  for (let a = 0; a < nA; a++) {
+    const arr = [];
+    for (let c = 0; c < nC; c++) arr.push(ranks[c][a]);
+    arr.sort((x, y) => x - y);
+    const median = arr[Math.floor(arr.length * 0.5)];
+    const p25 = arr[Math.floor(arr.length * 0.25)];
+    const p75 = arr[Math.floor((arr.length - 1) * 0.75)];
+    const min = arr[0];
+    const max = arr[arr.length - 1];
+    const mean = arr.reduce((s, v) => s + v, 0) / arr.length;
+    const variance = arr.reduce((s, v) => s + (v - mean) * (v - mean), 0) / (arr.length - 1);
+    const sd = Math.sqrt(variance);
+    const se = sd / Math.sqrt(arr.length);
+    const ci_lo = mean - 1.96 * se;
+    const ci_hi = mean + 1.96 * se;
+    stats.push({ a, median, p25, p75, min, max, mean, sd, ci_lo, ci_hi });
+  }
+  // sort by median for IQR/range modes; by mean for CI mode
+  stats.sort((x, y) => (mode === 'ci' ? x.mean - y.mean : x.median - y.median));
+
+  const W = 720;
+  const padL = 70, padT = 30, padR = 30, padB = 50;
+  const rowH = 6;
+  const plotH = nA * rowH;
+  const H = padT + plotH + padB;
+  const xS = v => padL + ((v - 1) / 99) * (W - padL - padR);
+
+  let svg = '';
+  svg = _rq10DrawAxes(svg, W, H, padL, padR, padT, plotH);
+
+  stats.forEach((s, r) => {
+    const y = padT + r * rowH + rowH / 2;
+    if (mode === 'range') {
+      // thin pale whisker for full range
+      svg += `<line x1="${xS(s.min)}" y1="${y}" x2="${xS(s.max)}" y2="${y}" stroke="#e6e6e6" stroke-width="1"/>`;
+      // thicker bar for IQR on top
+      svg += `<line x1="${xS(s.p25)}" y1="${y}" x2="${xS(s.p75)}" y2="${y}" stroke="#7a7a7a" stroke-width="2.4"/>`;
+      svg += `<circle cx="${xS(s.median)}" cy="${y}" r="2.6" fill="#3d7e9c"><title>agent ${s.a}: median rank ${s.median.toFixed(1)}, IQR ${s.p25.toFixed(1)}–${s.p75.toFixed(1)}, range ${s.min.toFixed(1)}–${s.max.toFixed(1)}</title></circle>`;
+    } else if (mode === 'ci') {
+      // pale full-range whisker for context
+      svg += `<line x1="${xS(s.min)}" y1="${y}" x2="${xS(s.max)}" y2="${y}" stroke="#ececec" stroke-width="1"/>`;
+      // 95% CI of the mean
+      svg += `<line x1="${xS(s.ci_lo)}" y1="${y}" x2="${xS(s.ci_hi)}" y2="${y}" stroke="#7a7a7a" stroke-width="2.4"/>`;
+      svg += `<circle cx="${xS(s.mean)}" cy="${y}" r="2.6" fill="#b2592a"><title>agent ${s.a}: mean rank ${s.mean.toFixed(1)}, SD ${s.sd.toFixed(1)}, 95% CI ${s.ci_lo.toFixed(1)}–${s.ci_hi.toFixed(1)}, range ${s.min.toFixed(1)}–${s.max.toFixed(1)}</title></circle>`;
+    } else {
+      svg += `<line x1="${xS(s.p25)}" y1="${y}" x2="${xS(s.p75)}" y2="${y}" stroke="#bbb" stroke-width="2"/>`;
+      svg += `<circle cx="${xS(s.median)}" cy="${y}" r="2.6" fill="#3d7e9c"><title>agent ${s.a}: median rank ${s.median.toFixed(1)}, IQR ${s.p25.toFixed(1)}–${s.p75.toFixed(1)}, range ${s.min.toFixed(1)}–${s.max.toFixed(1)}</title></circle>`;
+    }
+  });
+
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+}
+

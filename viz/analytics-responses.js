@@ -74,8 +74,11 @@ function initResponseAnalysisFigures() {
 /* ── Figure 32: Trait Mention Heatmap (10 poles + 2 context) ──
    Modes: 'overall' | 'yes' (stay-home only) | 'no' (go-out only) |
    'diff' (yes − no, diverging color). */
-function renderRATraitHeatmap(data, modelFilter = null) {
-  const el = document.getElementById('ra-fig33-chart');
+// `staticMode` (optional): when set to 'overall' | 'yes' | 'no' | 'diff', the
+// renderer skips the interactive mode-toggle radios and renders that single
+// mode. Used in paper.html where the figure must be static.
+function renderRATraitHeatmap(data, modelFilter = null, elId = 'ra-fig33-chart', staticMode = null) {
+  const el = document.getElementById(elId);
   if (!el) return;
   let configs = data.configs.slice();
   let labels = data.labels.slice();
@@ -142,7 +145,7 @@ function renderRATraitHeatmap(data, modelFilter = null) {
   function build(mode) {
     const nBigFiveCols = 10;
     const nCols = cols.length;
-    const pad = { l: labelW + 10, t: topH, r: 30, b: 24 };
+    const pad = { l: labelW + 10, t: topH, r: 30, b: 60 };
     const W = pad.l + nBigFiveCols * cellW + gapW + 2 * cellW + pad.r;
     const H = pad.t + nRows * cellH + pad.b;
 
@@ -215,8 +218,13 @@ function renderRATraitHeatmap(data, modelFilter = null) {
           textColor = intensity > 0.6 ? '#fff' : '#333';
           display = Math.round(rate * 100) + '%';
         }
+        // Gate emphasis (overall mode only): dim cells whose mention rate falls
+        // outside the [15%, 85%] inclusion window for the mention-flag logit
+        // in Figure 17. In-gate cells render at full opacity.
+        const inGate = rate >= 0.15 && rate <= 0.85;
+        const textOpacity = (mode === 'overall' && !inGate) ? '0.45' : '1';
         svg += `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" fill="${fill}" stroke="#eee" stroke-width="0.5"/>`;
-        svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 4}" font-size="10" fill="${textColor}" font-family="${SERIF}" text-anchor="middle">${display}</text>`;
+        svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 4}" font-size="10" fill="${textColor}" font-family="${SERIF}" opacity="${textOpacity}" text-anchor="middle">${display}</text>`;
       }
     }
 
@@ -231,6 +239,40 @@ function renderRATraitHeatmap(data, modelFilter = null) {
     // Vertical divider between Infection and Age
     const divX = colX(nBigFiveCols + 1);
     svg += `<line x1="${divX}" y1="${pad.t}" x2="${divX}" y2="${pad.t + nRows * cellH}" stroke="#ddd" stroke-width="0.5"/>`;
+
+    // Color-scale legend at the bottom
+    const legW = 220, legH = 10;
+    const legX = pad.l + ((nBigFiveCols * cellW + gapW + 2 * cellW) - legW) / 2;
+    const legY = pad.t + nRows * cellH + 22;
+    const nSteps = 60;
+    if (mode === 'diff') {
+      // Diverging blue → white → red, range −50% to +50%
+      for (let s = 0; s < nSteps; s++) {
+        const t = s / (nSteps - 1) * 2 - 1;  // −1 .. +1
+        const a = Math.min(1, Math.abs(t));
+        const fillCol = t > 0 ? `rgba(229, 57, 53, ${a})` : `rgba(33, 150, 243, ${a})`;
+        svg += `<rect x="${(legX + s * legW / nSteps).toFixed(2)}" y="${legY}" width="${(legW / nSteps + 0.5).toFixed(2)}" height="${legH}" fill="${fillCol}"/>`;
+      }
+      svg += `<rect x="${legX}" y="${legY}" width="${legW}" height="${legH}" fill="none" stroke="#ccc" stroke-width="0.5"/>`;
+      svg += `<text x="${legX}"          y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="start">&minus;50 pp</text>`;
+      svg += `<text x="${legX + legW/2}" y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle">0</text>`;
+      svg += `<text x="${legX + legW}"   y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="end">+50 pp</text>`;
+      svg += `<text x="${legX + legW/2}" y="${legY + legH + 24}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle" font-style="italic">stay-home rate &minus; go-out rate (red = more in stay-home)</text>`;
+    } else {
+      // Sequential white → blue (matches the cell fill for overall/yes/no)
+      for (let s = 0; s < nSteps; s++) {
+        const intensity = s / (nSteps - 1);
+        const rr = Math.round(255 - intensity * 200);
+        const gg = Math.round(255 - intensity * 180);
+        const bb = Math.round(255 - intensity * 60);
+        svg += `<rect x="${(legX + s * legW / nSteps).toFixed(2)}" y="${legY}" width="${(legW / nSteps + 0.5).toFixed(2)}" height="${legH}" fill="rgb(${rr},${gg},${bb})"/>`;
+      }
+      svg += `<rect x="${legX}" y="${legY}" width="${legW}" height="${legH}" fill="none" stroke="#ccc" stroke-width="0.5"/>`;
+      svg += `<text x="${legX}"          y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="start">0%</text>`;
+      svg += `<text x="${legX + legW/2}" y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle">50%</text>`;
+      svg += `<text x="${legX + legW}"   y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="end">100%</text>`;
+      svg += `<text x="${legX + legW/2}" y="${legY + legH + 24}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle" font-style="italic">% of responses that mention each topic</text>`;
+    }
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
   }
@@ -255,6 +297,12 @@ function renderRATraitHeatmap(data, modelFilter = null) {
   }
 
   function draw(mode) {
+    if (staticMode) {
+      // No mode-toggle radios and no subtitle — the paper figure caption
+      // explains what the cells show.
+      el.innerHTML = build(mode);
+      return;
+    }
     el.innerHTML = `<div style="margin-bottom:6px">
       <label style="font-size:11px;margin-right:10px"><input type="radio" name="trait-heatmap-mode" value="overall" ${mode==='overall'?'checked':''}> Overall</label>
       <label style="font-size:11px;margin-right:10px"><input type="radio" name="trait-heatmap-mode" value="yes" ${mode==='yes'?'checked':''}> Stay-home only</label>
@@ -266,12 +314,12 @@ function renderRATraitHeatmap(data, modelFilter = null) {
     el.querySelectorAll('input[name="trait-heatmap-mode"]').forEach(r =>
       r.addEventListener('change', e => draw(e.target.value)));
   }
-  draw('overall');
+  draw(staticMode || 'overall');
 }
 
 /* ── Figure 35: Output Token Landscape (box plots) ─────────── */
-function renderRAVerbosityBox(data, modelFilter = null) {
-  const el = document.getElementById('ra-fig34-chart');
+function renderRAVerbosityBox(data, modelFilter = null, elId = 'ra-fig34-chart') {
+  const el = document.getElementById(elId);
   if (!el) return;
   let configs = data.configs.slice();
   let labels = data.labels.slice();
@@ -349,8 +397,8 @@ function renderRAVerbosityBox(data, modelFilter = null) {
 }
 
 /* ── Figure 36: Verbosity × Infection Level ────────────────── */
-function renderRAVerbosityByLevel(data, modelFilter = null) {
-  const el = document.getElementById('ra-fig35-chart');
+function renderRAVerbosityByLevel(data, modelFilter = null, elId = 'ra-fig35-chart') {
+  const el = document.getElementById(elId);
   if (!el) return;
   let configs = data.configs.slice();
   let labels = data.labels.slice();
@@ -460,8 +508,8 @@ function renderRAVerbosityByLevel(data, modelFilter = null) {
 }
 
 /* ── Figure 37: Rep-to-Rep Decision Agreement ──────────────── */
-function renderRARepAgreement(data, modelFilter = null) {
-  const el = document.getElementById('ra-fig37-chart');
+function renderRARepAgreement(data, modelFilter = null, elId = 'ra-fig37-chart') {
+  const el = document.getElementById(elId);
   if (!el) return;
 
   // Sort by agreement rate (descending)
@@ -511,8 +559,8 @@ function renderRARepAgreement(data, modelFilter = null) {
 }
 
 /* ── Figure 38: Response Text Similarity ───────────────────── */
-function renderRATextSimilarity(data, modelFilter = null) {
-  const el = document.getElementById('ra-fig38-chart');
+function renderRATextSimilarity(data, modelFilter = null, elId = 'ra-fig38-chart') {
+  const el = document.getElementById(elId);
   if (!el) return;
 
   let items = data.configs.map((cfg, i) => ({
@@ -947,8 +995,8 @@ function renderRAModel3Table(allRegs, traitData) {
    Rows where neither pole mention flag was included (both failed the
    Fig-32 15–85% gate) are omitted from the panel. Filled markers are
    omitted individually when their pole's mention flag is not in the model. */
-function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null) {
-  const chartEl = document.getElementById('ra-xmodel-chart');
+function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null, elId = 'ra-xmodel-chart') {
+  const chartEl = document.getElementById(elId);
   if (!chartEl) return;
 
   const PANELS = [
@@ -1407,7 +1455,9 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null)
 function renderRAPersonaSimilarityAuthor(data, simData) { renderRAPersonaSimilarity(data, simData, 'ra-persona-sim-author-chart'); }
 function renderRAReasoningDiversityAuthor(data)  { renderRAReasoningDiversity(data,  'ra-diversity-author-chart');  }
 
-function renderRAPersonaSimilarity(data, simData, elId = 'ra-persona-sim-chart', modelFilter = null) {
+// `sortMode`: 'delta' (default — most-individuating LLMs first) or 'provider'
+// (Anthropic → OpenAI → Gemini, preserving CONFIG.MODELS order within each).
+function renderRAPersonaSimilarity(data, simData, elId = 'ra-persona-sim-chart', modelFilter = null, sortMode = 'delta') {
   const el = document.getElementById(elId);
   if (!el) return;
 
@@ -1433,8 +1483,22 @@ function renderRAPersonaSimilarity(data, simData, elId = 'ra-persona-sim-chart',
       within: r.within_mean, across: r.across_mean, delta: r.delta,
     });
   });
-  // Sort by Δ descending — most individuating models first.
-  rows.sort((a, b) => b.delta - a.delta);
+  if (sortMode === 'provider') {
+    // Provider order matches Figure 18: Anthropic → OpenAI → Gemini.
+    // Within each provider, preserve CONFIG.MODELS order (which the rows
+    // were pushed in) — assign each row its index, then stable-sort.
+    const provRank = { anthropic: 0, openai: 1, gemini: 2 };
+    rows.forEach((r, i) => { r._idx = i; });
+    rows.sort((a, b) => {
+      const pa = provRank[a.provider] ?? 99;
+      const pb = provRank[b.provider] ?? 99;
+      if (pa !== pb) return pa - pb;
+      return a._idx - b._idx;
+    });
+  } else {
+    // Default: by Δ descending — most individuating models first.
+    rows.sort((a, b) => b.delta - a.delta);
+  }
 
   const W = Math.min(el.parentElement?.offsetWidth || 900, 900);
   const rowH = 20;
@@ -1503,6 +1567,38 @@ function renderRAPersonaSimilarity(data, simData, elId = 'ra-persona-sim-chart',
 
   el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
   wireTooltips(el);
+}
+
+
+/* ── Figure 20 (paper §5.3.3): Cosine-similarity reference pairs ──
+   Static three-row panel showing example response pairs from one LLM at
+   three different cosine values, anchoring the cosine scale for the
+   reader. Data from analysis/paper_stats/cosine_examples.py. */
+function renderCosineExamples(data, elId) {
+  const el = document.getElementById(elId);
+  if (!el || !data || !data.pairs) return;
+
+  const fmtMeta = (r) => {
+    const dec = r.decision === 'yes' ? 'stay home' : 'go out';
+    return `${esc(r.agent_name)} (agent ${r.agent_id}, age ${r.age}, rep ${r.rep}) &mdash; chose <em>${dec}</em>`;
+  };
+
+  let html = `<div style="font-family:${SERIF};font-size:11px;line-height:1.5;color:#222;border:1px solid #ccc;background:${SVG_BG}">`;
+  data.pairs.forEach((pair, i) => {
+    const sep = i > 0 ? 'border-top:1px solid #ddd;' : '';
+    html += `<div style="${sep}padding:10px 12px">`;
+    html += `<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">`;
+    html += `<div style="font-size:14px;font-weight:bold;color:#1f4d63;min-width:120px">cosine = ${pair.cosine.toFixed(2)}</div>`;
+    html += `<div style="font-size:11px;font-style:italic;color:#666">${esc(pair.label)}</div>`;
+    html += `</div>`;
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">`;
+    html += `<div><div style="font-size:10px;color:#666;margin-bottom:3px">${fmtMeta(pair.response_a)}</div><div style="font-size:11px;color:#333">${esc(pair.response_a.reasoning)}</div></div>`;
+    html += `<div><div style="font-size:10px;color:#666;margin-bottom:3px">${fmtMeta(pair.response_b)}</div><div style="font-size:11px;color:#333">${esc(pair.response_b.reasoning)}</div></div>`;
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+
+  el.innerHTML = html;
 }
 
 
@@ -1617,8 +1713,8 @@ function renderRAReasoningDiversity(data, elId = 'ra-diversity-chart') {
    reasoning) for one (model, concept). Darker = more frequent. A toggle
    (radio) lets the reader split by decision (yes vs no) to see which
    concepts differentiate "stay home" from "go out" reasoning. */
-function renderRADecisionDrivers(data, modelFilter = null) {
-  const el = document.getElementById('ra-drivers-chart');
+function renderRADecisionDrivers(data, modelFilter = null, elId = 'ra-drivers-chart', staticMode = null) {
+  const el = document.getElementById(elId);
   if (!el) return;
 
   const concepts = data.concepts;
@@ -1666,7 +1762,8 @@ function renderRADecisionDrivers(data, modelFilter = null) {
     const nameLineH = 12;
     const titleBlockH = 8;  // small top buffer (title + subtitle now live OUTSIDE the SVG)
     const headerH = titleBlockH + 2 * nameLineH + 8 + KW_LINES * kwLineH + 8;
-    const pad = { l: labelW, t: headerH, r: 16, b: 56 };
+    // bottom padding includes legend bar (only drawn in static mode)
+    const pad = { l: labelW, t: headerH, r: 16, b: staticMode ? 80 : 56 };
     const H = pad.t + rows.length * cellH + pad.b;
 
     let svg = '';
@@ -1744,6 +1841,40 @@ function renderRADecisionDrivers(data, modelFilter = null) {
       });
     });
 
+    if (staticMode) {
+      // Color-scale legend at the bottom of the static SVG.
+      const gridBottom = pad.t + rows.length * cellH;
+      const legW = 240, legH = 10;
+      const legX = pad.l + (concepts.length * cellW - legW) / 2;
+      const legY = gridBottom + 22;
+      const nSteps = 60;
+      if (mode === 'diff') {
+        for (let s = 0; s < nSteps; s++) {
+          const tt = s / (nSteps - 1) * 2 - 1;
+          const a = Math.min(1, Math.abs(tt) * 2);
+          const fillCol = tt > 0 ? `rgba(229, 57, 53, ${a})` : `rgba(33, 150, 243, ${a})`;
+          svg += `<rect x="${(legX + s * legW / nSteps).toFixed(2)}" y="${legY}" width="${(legW / nSteps + 0.5).toFixed(2)}" height="${legH}" fill="${fillCol}"/>`;
+        }
+        svg += `<rect x="${legX}" y="${legY}" width="${legW}" height="${legH}" fill="none" stroke="#ccc" stroke-width="0.5"/>`;
+        svg += `<text x="${legX}"          y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="start">&minus;50 pp</text>`;
+        svg += `<text x="${legX + legW/2}" y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle">0</text>`;
+        svg += `<text x="${legX + legW}"   y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="end">+50 pp</text>`;
+        svg += `<text x="${legX + legW/2}" y="${legY + legH + 24}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle" font-style="italic">stay-home rate &minus; go-out rate (red = more in stay-home)</text>`;
+      } else {
+        for (let s = 0; s < nSteps; s++) {
+          const a = s / (nSteps - 1);
+          svg += `<rect x="${(legX + s * legW / nSteps).toFixed(2)}" y="${legY}" width="${(legW / nSteps + 0.5).toFixed(2)}" height="${legH}" fill="rgba(60, 64, 177, ${a})"/>`;
+        }
+        svg += `<rect x="${legX}" y="${legY}" width="${legW}" height="${legH}" fill="none" stroke="#ccc" stroke-width="0.5"/>`;
+        svg += `<text x="${legX}"          y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="start">0%</text>`;
+        svg += `<text x="${legX + legW/2}" y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle">50%</text>`;
+        svg += `<text x="${legX + legW}"   y="${legY + legH + 11}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="end">100%</text>`;
+        svg += `<text x="${legX + legW/2}" y="${legY + legH + 24}" font-size="9" fill="#666" font-family="${SERIF}" text-anchor="middle" font-style="italic">% of responses that mention each concept</text>`;
+      }
+      // No mode-toggle radios and no subtitle in paper context.
+      el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;background:${SVG_BG};border:1px solid #ccc;max-width:100%;overflow:visible">${svg}</svg>`;
+      return;
+    }
     el.innerHTML = `<div style="margin-bottom:6px">
       <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="overall" ${mode==='overall'?'checked':''}> Overall</label>
       <label style="font-size:11px;margin-right:10px"><input type="radio" name="drv-mode" value="yes" ${mode==='yes'?'checked':''}> Stay-home only</label>
@@ -1755,5 +1886,5 @@ function renderRADecisionDrivers(data, modelFilter = null) {
     el.querySelectorAll('input[name="drv-mode"]').forEach(r => r.addEventListener('change', e => draw(e.target.value)));
   }
 
-  draw('overall');
+  draw(staticMode || 'overall');
 }

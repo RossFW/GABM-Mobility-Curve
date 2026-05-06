@@ -1,0 +1,77 @@
+{
+  "config": "anthropic_claude-opus-4-5_off",
+  "config_label": "Claude Opus 4.5",
+  "infection_level": 3.5,
+  "embedding_model": "text-embedding-3-large",
+  "pairs": [
+    {
+      "cosine": 0.99,
+      "cosine_target": 0.99,
+      "label": "Within-agent (two reps of the same agent)",
+      "response_a": {
+        "agent_id": 62,
+        "agent_name": "Christina",
+        "rep": 0,
+        "decision": "no",
+        "traits": "extroverted|agreeable|unconscientious|emotionally stable|open to experience",
+        "age": "31",
+        "reasoning": "As an extroverted person who is emotionally stable and not particularly conscientious, I'm not overly worried about the virus despite the 3.5% infection rate. I feel healthy and well, and I have a job that requires me to go to the office. My extroverted nature makes me want to be around people, and my low conscientiousness means I'm less likely to take precautionary measures seriously. The deadliness of the virus is unknown, so I'm not going to assume the worst. I'll continue with my normal routine and go to work."
+      },
+      "response_b": {
+        "agent_id": 62,
+        "agent_name": "Christina",
+        "rep": 3,
+        "decision": "no",
+        "traits": "extroverted|agreeable|unconscientious|emotionally stable|open to experience",
+        "age": "31",
+        "reasoning": "As an extroverted person who is emotionally stable and not particularly conscientious, I'm not overly worried about the virus despite the 3.5% infection rate. I feel healthy and well, and I have a job that requires me to go to the office. My extroverted nature makes me want to be around people, and my low conscientiousness means I'm less likely to take strict precautions. While I'm aware of the virus, the deadliness is unknown, and I don't feel compelled to dramatically change my routine. I'll likely continue going to work as usual."
+      }
+    },
+    {
+      "cosine": 0.85,
+      "cosine_target": 0.85,
+      "label": "Across agents, same decision",
+      "response_a": {
+        "agent_id": 45,
+        "agent_name": "Donna",
+        "rep": 0,
+        "decision": "no",
+        "traits": "extroverted|antagonistic|unconscientious|emotionally stable|closed to experience",
+        "age": "22",
+        "reasoning": "As an extroverted, emotionally stable person who is closed to experience and unconscientious, I'm not particularly worried about the virus. 3.5% infection rate doesn't seem that alarming to me, and I feel healthy. I'm not the type to be overly cautious or change my routine based on potential risks. I have a job to go to, and staying home all day would be boring for someone as extroverted as me. I'm not going to let some virus scare me into isolation when I feel perfectly fine."
+      },
+      "response_b": {
+        "agent_id": 54,
+        "agent_name": "Adriana",
+        "rep": 4,
+        "decision": "no",
+        "traits": "extroverted|agreeable|conscientious|emotionally stable|closed to experience",
+        "age": "23",
+        "reasoning": "As someone who is conscientious and emotionally stable, I would carefully consider the situation. With 3.5% of the population newly infected yesterday, that's a notable infection rate. However, I am extroverted and value my work routine. I feel healthy, and while I'm aware of the virus, my closed-to-experience nature means I prefer sticking to my established routines. I have responsibilities at work and tend to be agreeable and reliable. The infection rate, while concerning, isn't extremely high, and I can take precautions. My conscientious nature means I'll be careful, but my emotional stability prevents me from panicking. I'll likely go to work while being cautious."
+      }
+    },
+    {
+      "cosine": 0.65,
+      "cosine_target": 0.65,
+      "label": "Across agents, opposite decisions",
+      "response_a": {
+        "agent_id": 66,
+        "agent_name": "Nancy",
+        "rep": 3,
+        "decision": "yes",
+        "traits": "introverted|agreeable|conscientious|emotionally stable|open to experience",
+        "age": "62",
+        "reasoning": "As a 62-year-old person, I am in a higher risk age group for potential complications from viral infections. With 3.5% of the town's population being diagnosed with new infections just yesterday, this represents a significant and concerning spread of the Catasat virus. Given that it's airborne and spreads human to human, going to the office would expose me to potential infection. While I am conscientious and typically committed to my work responsibilities, my emotional stability and openness to experience allow me to rationally assess this situation. The prudent choice, considering my age and the unknown deadliness of the virus combined with the notable infection rate, is to prioritize my health and stay home today."
+      },
+      "response_b": {
+        "agent_id": 71,
+        "agent_name": "William",
+        "rep": 0,
+        "decision": "no",
+        "traits": "extroverted|antagonistic|conscientious|neurotic|closed to experience",
+        "age": "59",
+        "reasoning": "As William, I am conscientious which means I take my responsibilities seriously, including my job. I go to the office every day and have a strong work ethic. While 3.5% infection rate is concerning, I feel healthy and well. Being antagonistic and closed to experience, I'm likely skeptical of overreacting to this virus situation and resistant to changing my established routine. My extroverted nature also makes me less inclined to isolate myself at home. I would likely view staying home as unnecessary when I feel fine and have work obligations to fulfill. The deadliness is unknown, so I might downplay the risk."
+      }
+    }
+  ]
+}

@@ -429,15 +429,21 @@ function renderDateTimeline(containerId, dateField, parseFunc, brackets) {
   const el = document.getElementById(containerId);
   if (!el || !modelMetadata.length) return;
 
-  const W = FIG_CW, rowH = 72;
+  const W = 720, rowH = 72;
   const providers = ['anthropic', 'openai', 'gemini'];
-  const padL = 88, padR = 32, padT = 24, padB = 44;
+  const padL = 70, padR = 28, padT = 24, padB = 44;
   const bracketH = (brackets && brackets.length) ? 36 : 0;
   const H = rowH * providers.length + padT + padB + bracketH;
 
-  // Build point list (include raw date string for tooltip)
+  // Build point list (include raw date string for tooltip).
+  // Reasoning level is orthogonal to release/cutoff date — all reasoning
+  // variants of the same base model share the same date, so they would stack
+  // as redundant dots. Filter to one canonical reasoning rung per base model:
+  // skip "low", "medium", "high" variants; keep "off" (and o3 at "required").
   const points = [];
   modelMetadata.forEach(meta => {
+    const r = String(meta.reasoning).toLowerCase();
+    if (r === 'low' || r === 'medium' || r === 'high') return;
     const x = parseFunc(meta[dateField]);
     if (x == null) return;
     const cfg = CONFIG.MODELS.find(m =>
@@ -553,11 +559,21 @@ function renderDateTimeline(containerId, dateField, parseFunc, brackets) {
     !(pos.sx + pos.width < prev.sx || pos.sx > prev.sx + prev.width)
   );
   labelCandidates.forEach(lbl => {
-    // Option 1: right of dot (default — no leader line)
+    // Option 1a: right of dot (default — no leader line)
     const right = { sx: lbl.sx, sy: lbl.sy, width: lbl.width };
-    if (!collides(right)) {
+    const rightOverflows = right.sx + right.width > W - padR;
+    if (!collides(right) && !rightOverflows) {
       inner += `<text x="${right.sx}" y="${right.sy}" fill="#333333" font-size="9" font-family="${SERIF}">${esc(lbl.text)}</text>`;
       visibleLabels.push(right);
+      return;
+    }
+    // Option 1b: left of dot (used when right-of-dot would overflow the chart)
+    const leftX = lbl.dotX - 8;
+    const leftZone = { sx: leftX - lbl.width, sy: lbl.sy, width: lbl.width };
+    const leftOverflows = leftZone.sx < padL;
+    if (!collides(leftZone) && !leftOverflows) {
+      inner += `<text x="${leftX}" y="${lbl.sy}" text-anchor="end" fill="#333333" font-size="9" font-family="${SERIF}">${esc(lbl.text)}</text>`;
+      visibleLabels.push(leftZone);
       return;
     }
     // Option 2: leader-line callout — try shelf positions above/below dot
@@ -577,7 +593,7 @@ function renderDateTimeline(containerId, dateField, parseFunc, brackets) {
     // All options collide — rely on tooltip
   });
 
-  el.innerHTML = `<svg width="${W}" height="${H}" style="overflow:visible;display:block">${inner}</svg>`;
+  el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="overflow:visible;display:block;max-width:100%;height:auto">${inner}</svg>`;
 
   // Wire custom mouseover tooltip (SVG <title> unreliable in Chrome)
   let tipEl = document.getElementById('tl-tooltip');

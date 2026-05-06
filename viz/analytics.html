@@ -96,7 +96,7 @@
     .summary-stat .lbl { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.4; }
 
     /* ── Charts ──────────────────────────────────── */
-    .chart-container { position: relative; width: 100%; }
+    .chart-container { position: relative; width: 100%; display: flex; justify-content: center; }
     .chart-container svg { display: block; max-width: 100%; height: auto; }
 
     .facet-row   { display: flex; gap: 20px; flex-wrap: wrap; }
@@ -478,8 +478,8 @@
         <table class="ols-table" style="width:100%;margin-bottom:8px">
           <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
           <tbody>
-            <tr><td>RQ7</td><td>How do agent traits affect mobility curves?</td><td>Figs 22, 23, 25, 27</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ8</td><td>Are personality effects larger than infection effects?</td><td>Fig 26</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ7</td><td>What is the direction of each persona predictor&rsquo;s effect on the stay-home decision?</td><td>Fig 27</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ8</td><td>Which persona predictors most strongly drive the stay-home decision?</td><td>Fig 28</td><td><em>TBD</em></td></tr>
           </tbody>
         </table>
 
@@ -487,8 +487,8 @@
         <table class="ols-table" style="width:100%;margin-bottom:8px">
           <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
           <tbody>
-            <tr><td>RQ9</td><td>Do LLMs agree on which predictors matter?</td><td>Figs 28, 29</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ10</td><td>Do LLMs agree on which agents are most cautious?</td><td>Fig 30</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ9</td><td>Are personality effects larger than infection effects?</td><td>Fig 26</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ10</td><td>Do LLMs agree on which agent personas are most cautious?</td><td>Fig 30B</td><td><em>TBD</em></td></tr>
           </tbody>
         </table>
 
@@ -497,7 +497,7 @@
           <thead><tr><th style="width:60px">RQ</th><th>Question</th><th style="width:160px">Evidence</th><th style="width:200px">Key Finding</th></tr></thead>
           <tbody>
             <tr><td>RQ11</td><td>How do trait mentions shape the decision?</td><td>Figs 32, 33, 34</td><td><em>TBD</em></td></tr>
-            <tr><td>RQ12</td><td>Beyond trait mentions, which concept categories dominate stay-home vs. go-out reasoning?</td><td>Fig 37</td><td><em>TBD</em></td></tr>
+            <tr><td>RQ12</td><td>Which concept categories are cited in stay-home vs. go-out reasoning?</td><td>Fig 37</td><td><em>TBD</em></td></tr>
             <tr><td>RQ13</td><td>How does reasoning length vary across LLMs and infection levels?</td><td>Figs 35, 36</td><td><em>TBD</em></td></tr>
           </tbody>
         </table>
@@ -837,6 +837,24 @@
       <div class="fig-caption">For each model, the 100 agents are ranked by their average stay-home rate (across all infection levels and reps). Each cell shows the Spearman &rho; between two models&rsquo; rankings &mdash; high &rho; means both models agree on <em>which agents</em> are most cautious, even if their absolute rates differ.</div>
       <div id="fig28-filters"></div>
       <div class="chart-container" id="fig27-chart"></div>
+    </div>
+
+    <!-- Figure 30B: Agent Rank Cleveland Plot (median, IQR, full range) -->
+    <div class="section" id="fig30b-section" data-section="cross-model">
+      <div class="fig-num">Figure 30B</div>
+      <div class="fig-title">Agent Rank Cleveland Plot (median, IQR, full range)</div>
+      <div class="fig-caption">Each row is one of the 100 frozen agents. Within each LLM configuration, the 100 agents are independently ranked by their average stay-home rate (rank 1 = most cautious in that configuration). Each row shows three nested elements summarizing that agent&rsquo;s 21 within-config ranks: a pale whisker spans the full <em>range</em> (min&ndash;max), a darker bar spans the <em>IQR</em> (25th&ndash;75th percentile), and the dot marks the <em>median</em>. Agents are sorted top-to-bottom by median rank. A tight central bar with short whiskers = LLMs agree; a wide bar or long whisker = LLMs disagree.</div>
+      <div class="chart-container" id="fig30b-chart"></div>
+      <div class="fig-note">Within-config rankings use average-rank tie handling: when several agents tie at the same stay-home rate within a configuration, each receives the average of the ranks they would have occupied if they had been distinguishable. This is the standard non-parametric convention and is also what Spearman&rsquo;s rank correlation uses internally.</div>
+    </div>
+
+    <!-- Figure 30C: Same chart but mean ± 95% CI instead of median + IQR (comparison) -->
+    <div class="section" id="fig30c-section" data-section="cross-model">
+      <div class="fig-num">Figure 30C</div>
+      <div class="fig-title">Agent Rank Cleveland Plot (mean &plusmn; 95% CI)</div>
+      <div class="fig-caption">Same data as Fig 30B, but the dot is the <strong>mean</strong> rank across the 21 LLMs and the dark bar spans the <strong>95% confidence interval of the mean</strong> (mean &plusmn; 1.96&middot;SE, where SE = SD&nbsp;&divide;&nbsp;&radic;21). The pale whisker still spans the full min&ndash;max range. Agents sorted by mean rank. The 95% CI here is the statistical interval for the mean estimate; with only 21 configs, it is roughly &nbsp;&plusmn;0.43&middot;SD wide &mdash; about a third of an IQR. Compare bar widths against Fig 30B to see what each summary tells you.</div>
+      <div class="chart-container" id="fig30c-chart"></div>
+      <div class="fig-note">The 95% CI treats the 21 LLM configurations as a sample from a population. They aren&rsquo;t literally that &mdash; they were chosen, not sampled &mdash; so this CI is best read as a sanity check on the stability of the mean estimate rather than a population-inference interval.</div>
     </div>
 
     <!-- (misc section retired — figDelta promoted to Logit Regression as Fig 23) -->
