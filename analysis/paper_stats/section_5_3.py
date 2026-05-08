@@ -61,10 +61,14 @@ regs          = load_regs()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §5.3.1 — Trait mentions and behavioral effect (RQ11)
+# §5.3.1 — Trait mention rates (RQ11)
+# §5.3.2 — Mention amplification (RQ12)
+# (computed in one block since both subsections share the same mention-rate
+#  and mention-flag-logit data sources)
 # ─────────────────────────────────────────────────────────────────────────────
 print("=" * 78)
-print("§5.3.1 — Trait mentions and behavioral effect (RQ11)")
+print("§5.3.1 — Trait mention rates (RQ11)")
+print("§5.3.2 — Mention amplification (RQ12)")
 print("=" * 78)
 print()
 
@@ -138,11 +142,11 @@ for sh, mob in PAIRS:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §5.3.2 — Decision themes (RQ12)
+# §5.3.3 — Decision themes (RQ13)
 # ─────────────────────────────────────────────────────────────────────────────
 print()
 print("=" * 78)
-print("§5.3.2 — Decision themes (RQ12)")
+print("§5.3.3 — Decision themes (RQ13)")
 print("=" * 78)
 print()
 
@@ -178,11 +182,11 @@ for c in concepts:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §5.3.3 — Persona individuation (RQ13, was RQ16)
+# §5.3.4 — Persona individuation (RQ14, was dashboard's RQ16)
 # ─────────────────────────────────────────────────────────────────────────────
 print()
 print("=" * 78)
-print("§5.3.3 — Persona individuation (RQ13)")
+print("§5.3.4 — Persona individuation (RQ14)")
 print("=" * 78)
 print()
 

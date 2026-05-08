@@ -14,9 +14,14 @@ Run from the GABM mobility curve project root:
   python analysis/paper_stats/cosine_examples.py
 
 The three example pairs span:
-  - within-agent (same agent, two reps): cosine ≈ 0.99
-  - across-agent, same decision:           cosine ≈ 0.85
-  - across-agent, opposite decisions:      cosine ≈ 0.65
+  - within-agent (same agent, two reps):   cosine ≈ 0.99
+  - across-agent, same decision (mid):     cosine ≈ 0.85
+  - across-agent, same decision (low):     cosine ≈ 0.65
+
+All three pairs are constrained to the same go-out decision (the dominant
+decision at infection 3.5%) so they reflect the population Fig 21's persona-
+individuation calculation actually operates on (within unanimous-direction
+subsets).
 
 The infection level is held fixed at 3.5% (mid-range) for comparability.
 """
@@ -36,11 +41,11 @@ OUT_PATH = os.path.join(ROOT, 'viz', 'data', 'real', 'cosine_examples.json')
 INFECTION_TARGET = 3.5
 TARGETS = [
     {'cosine_target': 0.99, 'label': 'Within-agent (two reps of the same agent)',
-     'require_same_agent': True, 'require_same_decision': True},
+     'require_same_agent': True, 'require_same_decision': True, 'require_decision': 'no'},
     {'cosine_target': 0.85, 'label': 'Across agents, same decision',
-     'require_same_agent': False, 'require_same_decision': True},
-    {'cosine_target': 0.65, 'label': 'Across agents, opposite decisions',
-     'require_same_agent': False, 'require_same_decision': False},
+     'require_same_agent': False, 'require_same_decision': True, 'require_decision': 'no'},
+    {'cosine_target': 0.65, 'label': 'Across agents, same decision (low cosine)',
+     'require_same_agent': False, 'require_same_decision': True, 'require_decision': 'no'},
 ]
 
 
@@ -100,6 +105,9 @@ def main():
                 tb = texts[int(row_idx[b])]
                 same_decision = ta['decision'] == tb['decision']
                 if tgt['require_same_decision'] != same_decision:
+                    continue
+                req_dec = tgt.get('require_decision')
+                if req_dec is not None and (ta['decision'] != req_dec or tb['decision'] != req_dec):
                     continue
                 c = float(cos_full[i, j])
                 diff = abs(c - tgt['cosine_target'])

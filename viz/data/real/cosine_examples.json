@@ -53,24 +53,24 @@
     {
       "cosine": 0.65,
       "cosine_target": 0.65,
-      "label": "Across agents, opposite decisions",
+      "label": "Across agents, same decision (low cosine)",
       "response_a": {
-        "agent_id": 66,
-        "agent_name": "Nancy",
-        "rep": 3,
-        "decision": "yes",
-        "traits": "introverted|agreeable|conscientious|emotionally stable|open to experience",
-        "age": "62",
-        "reasoning": "As a 62-year-old person, I am in a higher risk age group for potential complications from viral infections. With 3.5% of the town's population being diagnosed with new infections just yesterday, this represents a significant and concerning spread of the Catasat virus. Given that it's airborne and spreads human to human, going to the office would expose me to potential infection. While I am conscientious and typically committed to my work responsibilities, my emotional stability and openness to experience allow me to rationally assess this situation. The prudent choice, considering my age and the unknown deadliness of the virus combined with the notable infection rate, is to prioritize my health and stay home today."
+        "agent_id": 22,
+        "agent_name": "Jaime",
+        "rep": 2,
+        "decision": "no",
+        "traits": "extroverted|antagonistic|conscientious|emotionally stable|closed to experience",
+        "age": "49",
+        "reasoning": "As someone who is emotionally stable and not prone to anxiety, I'm not going to panic over a 3.5% infection rate. I'm conscientious about my work responsibilities and need to go to the office. I feel healthy and well, and as someone who is closed to experience, I prefer sticking to my routine. The deadliness of the virus is unknown, so there's no confirmed severe threat. Being antagonistic, I'm not easily swayed by what others might think I should do. My job is important, and I don't see a compelling reason to abandon my responsibilities based on this information."
       },
       "response_b": {
-        "agent_id": 71,
-        "agent_name": "William",
-        "rep": 0,
+        "agent_id": 73,
+        "agent_name": "Jessica",
+        "rep": 3,
         "decision": "no",
-        "traits": "extroverted|antagonistic|conscientious|neurotic|closed to experience",
-        "age": "59",
-        "reasoning": "As William, I am conscientious which means I take my responsibilities seriously, including my job. I go to the office every day and have a strong work ethic. While 3.5% infection rate is concerning, I feel healthy and well. Being antagonistic and closed to experience, I'm likely skeptical of overreacting to this virus situation and resistant to changing my established routine. My extroverted nature also makes me less inclined to isolate myself at home. I would likely view staying home as unnecessary when I feel fine and have work obligations to fulfill. The deadliness is unknown, so I might downplay the risk."
+        "traits": "extroverted|antagonistic|unconscientious|emotionally stable|open to experience",
+        "age": "21",
+        "reasoning": "As Jessica, I'm extroverted and emotionally stable, which means I'm not easily frightened and I crave social interaction. I'm also antagonistic and unconscientious, meaning I'm not particularly concerned about following rules or being careful about others' wellbeing. While 3.5% infection rate is notable, I feel healthy and well. My personality traits suggest I would downplay the risk, prioritize my desire to go out and socialize, and not want to be cooped up at home. I have a job to go to, and my unconscientious nature means I'm unlikely to take extra precautions or sacrifice my routine for a virus with unknown deadliness."
       }
     }
   ]

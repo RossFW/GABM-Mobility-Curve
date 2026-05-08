@@ -66,12 +66,20 @@ function initResponseAnalysisFigures() {
       // Fig 34: Cross-Model Amplification
       buildFilterPills('ra-xmodel-filters', 'raXmodel', f => renderRACrossModelAmplification(allRegs, t, f));
       renderRACrossModelAmplification(allRegs, t);
-      // Fig 36 (renderRAAmplificationMatrix) removed — superseded by Fig 35.
+      // Fig 34B: mention/trait ratio per LLM, panels per Big Five trait
+      if (typeof renderRAMentionTraitRatio === 'function') {
+        buildFilterPills('ra-mt-ratio-filters', 'raMtRatio', f => renderRAMentionTraitRatio(allRegs, 'ra-mt-ratio-chart', f));
+        renderRAMentionTraitRatio(allRegs);
+      }
+      // Fig 34C: per-pole summary (12 rows aggregating across LLMs)
+      if (typeof renderRAMentionAmpSummary === 'function') {
+        renderRAMentionAmpSummary(allRegs);
+      }
     });
   });
 }
 
-/* ── Figure 32: Trait Mention Heatmap (10 poles + 2 context) ──
+/* ── Figure 32: Mention Rate Heatmap (10 Big Five poles + Infection + Age) ──
    Modes: 'overall' | 'yes' (stay-home only) | 'no' (go-out only) |
    'diff' (yes − no, diverging color). */
 // `staticMode` (optional): when set to 'overall' | 'yes' | 'no' | 'diff', the
@@ -147,7 +155,11 @@ function renderRATraitHeatmap(data, modelFilter = null, elId = 'ra-fig33-chart',
     const nCols = cols.length;
     const pad = { l: labelW + 10, t: topH, r: 30, b: 60 };
     const W = pad.l + nBigFiveCols * cellW + gapW + 2 * cellW + pad.r;
-    const H = pad.t + nRows * cellH + pad.b;
+    // Reserve room for a Median summary row at the bottom (separated from
+    // the per-LLM rows by a small gap and a divider line).
+    const summaryGap = 8;
+    const summaryH = cellH;
+    const H = pad.t + nRows * cellH + summaryGap + summaryH + pad.b;
 
     function colX(c) {
       if (c < nBigFiveCols) return pad.l + c * cellW;
@@ -165,18 +177,25 @@ function renderRATraitHeatmap(data, modelFilter = null, elId = 'ra-fig33-chart',
       svg += `<text x="${cx}" y="${pad.t - 92}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${dimNames[d]}</text>`;
       svg += `<line x1="${x1 + 4}" y1="${pad.t - 86}" x2="${x2 - 4}" y2="${pad.t - 86}" stroke="#bbb" stroke-width="1"/>`;
     }
-    // Context group bracket
-    const ctxX1 = colX(nBigFiveCols);
-    const ctxX2 = ctxX1 + 2 * cellW;
-    const ctxCx = (ctxX1 + ctxX2) / 2;
-    svg += `<text x="${ctxCx}" y="${pad.t - 92}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">Context</text>`;
-    svg += `<line x1="${ctxX1 + 4}" y1="${pad.t - 86}" x2="${ctxX2 - 4}" y2="${pad.t - 86}" stroke="#bbb" stroke-width="1"/>`;
+    // Infection and Age sit at the same top-line tier as the Big Five group
+    // labels — they're top-level categories, not a subordinate group. Each
+    // gets a bold label + a short grey bracket beneath it (parallel to the
+    // Big Five group brackets). The column-header tier below is suppressed
+    // for these so the label only appears once.
+    for (let c = nBigFiveCols; c < nCols; c++) {
+      const x1 = colX(c);
+      const cx = x1 + cellW / 2;
+      svg += `<text x="${cx}" y="${pad.t - 92}" font-size="10" fill="#333" font-family="${SERIF}" text-anchor="middle" font-weight="bold">${esc(cols[c].label)}</text>`;
+      svg += `<line x1="${x1 + 4}" y1="${pad.t - 86}" x2="${x1 + cellW - 4}" y2="${pad.t - 86}" stroke="#bbb" stroke-width="1"/>`;
+    }
 
-    // Column headers
+    // Column headers (Big Five only — Infection/Age are labeled above)
     for (let c = 0; c < nCols; c++) {
       const x = colX(c) + cellW / 2;
       const col = cols[c];
-      if (col.label2) {
+      if (c >= nBigFiveCols) {
+        // Skip duplicate label; only render synonyms below.
+      } else if (col.label2) {
         svg += `<text x="${x}" y="${pad.t - 76}" font-size="9.5" fill="#333" font-family="${SERIF}" text-anchor="middle" font-style="italic">${esc(col.label)}</text>`;
         svg += `<text x="${x}" y="${pad.t - 65}" font-size="9.5" fill="#333" font-family="${SERIF}" text-anchor="middle" font-style="italic">${esc(col.label2)}</text>`;
       } else {
@@ -208,7 +227,7 @@ function renderRATraitHeatmap(data, modelFilter = null, elId = 'ra-fig33-chart',
           else fill = `rgba(33, 150, 243, ${Math.min(1, Math.abs(t))})`;
           textColor = Math.abs(t) > 0.55 ? '#fff' : '#333';
           const pct = Math.round(rate * 100);
-          display = (pct >= 0 ? '+' : '') + pct + '%';
+          display = (pct >= 0 ? '+' : '') + pct + ' pp';
         } else {
           const intensity = Math.min(Math.max(rate, 0), 1);
           const rr = Math.round(255 - intensity * 200);
@@ -228,22 +247,64 @@ function renderRATraitHeatmap(data, modelFilter = null, elId = 'ra-fig33-chart',
       }
     }
 
-    // Grid borders + dividers
-    svg += `<rect x="${pad.l}" y="${pad.t}" width="${nBigFiveCols * cellW}" height="${nRows * cellH}" fill="none" stroke="#999" stroke-width="1"/>`;
-    svg += `<rect x="${colX(nBigFiveCols)}" y="${pad.t}" width="${2 * cellW}" height="${nRows * cellH}" fill="none" stroke="#999" stroke-width="1"/>`;
+    // ── Median summary row ──
+    // Aggregates each column across all 21 LLMs. Sits below the per-LLM rows
+    // with a small gap so it reads as summary, not as another row.
+    const medianY = pad.t + nRows * cellH + summaryGap;
+    function medianOf(arr) {
+      const s = arr.slice().sort((a, b) => a - b);
+      if (s.length === 0) return 0;
+      const m = Math.floor(s.length / 2);
+      return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+    }
+    // Faint divider line above the median row
+    svg += `<line x1="${pad.l - 8}" y1="${medianY - summaryGap / 2}" x2="${colX(nCols - 1) + cellW}" y2="${medianY - summaryGap / 2}" stroke="#bbb" stroke-width="0.7"/>`;
+    // Row label
+    svg += `<text x="${pad.l - labelW + 10}" y="${medianY + summaryH / 2 + 4}" font-size="10" font-weight="bold" fill="#333" font-family="${SERIF}">Median</text>`;
+    // Cells
+    for (let c = 0; c < nCols; c++) {
+      const x = colX(c);
+      const col = cols[c];
+      const colVals = configs.map(cfg => rateFor(cfg, col, mode));
+      const med = medianOf(colVals);
+      let fill, textColor, display;
+      if (mode === 'diff') {
+        const t = Math.max(-1, Math.min(1, med * 2));
+        if (t > 0) fill = `rgba(229, 57, 53, ${Math.min(1, Math.abs(t))})`;
+        else fill = `rgba(33, 150, 243, ${Math.min(1, Math.abs(t))})`;
+        textColor = Math.abs(t) > 0.55 ? '#fff' : '#333';
+        const pct = Math.round(med * 100);
+        display = (pct >= 0 ? '+' : '') + pct + ' pp';
+      } else {
+        const intensity = Math.min(Math.max(med, 0), 1);
+        const rr = Math.round(255 - intensity * 200);
+        const gg = Math.round(255 - intensity * 180);
+        const bb = Math.round(255 - intensity * 60);
+        fill = `rgb(${rr},${gg},${bb})`;
+        textColor = intensity > 0.6 ? '#fff' : '#333';
+        display = Math.round(med * 100) + '%';
+      }
+      svg += `<rect x="${x}" y="${medianY}" width="${cellW}" height="${summaryH}" fill="${fill}" stroke="#bbb" stroke-width="0.7"/>`;
+      svg += `<text x="${x + cellW / 2}" y="${medianY + summaryH / 2 + 4}" font-size="10" font-weight="bold" fill="${textColor}" font-family="${SERIF}" text-anchor="middle">${display}</text>`;
+    }
+
+    // Grid borders + dividers — extended to wrap the median row too
+    const gridH = nRows * cellH + summaryGap + summaryH;
+    svg += `<rect x="${pad.l}" y="${pad.t}" width="${nBigFiveCols * cellW}" height="${gridH}" fill="none" stroke="#999" stroke-width="1"/>`;
+    svg += `<rect x="${colX(nBigFiveCols)}" y="${pad.t}" width="${2 * cellW}" height="${gridH}" fill="none" stroke="#999" stroke-width="1"/>`;
     // Vertical dividers between Big Five dimension pairs
     for (let d = 1; d < 5; d++) {
       const x = colX(d * 2);
-      svg += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t + nRows * cellH}" stroke="#999" stroke-width="1"/>`;
+      svg += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${pad.t + gridH}" stroke="#999" stroke-width="1"/>`;
     }
     // Vertical divider between Infection and Age
     const divX = colX(nBigFiveCols + 1);
-    svg += `<line x1="${divX}" y1="${pad.t}" x2="${divX}" y2="${pad.t + nRows * cellH}" stroke="#ddd" stroke-width="0.5"/>`;
+    svg += `<line x1="${divX}" y1="${pad.t}" x2="${divX}" y2="${pad.t + gridH}" stroke="#ddd" stroke-width="0.5"/>`;
 
     // Color-scale legend at the bottom
     const legW = 220, legH = 10;
     const legX = pad.l + ((nBigFiveCols * cellW + gapW + 2 * cellW) - legW) / 2;
-    const legY = pad.t + nRows * cellH + 22;
+    const legY = pad.t + nRows * cellH + summaryGap + summaryH + 22;
     const nSteps = 60;
     if (mode === 'diff') {
       // Diverging blue → white → red, range −50% to +50%
@@ -1090,24 +1151,6 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null,
     };
   }
 
-  // Infection log-odds range per config (for ratio columns).
-  //   range = max_{lv ∈ 0..7}(β1·lv + β2·lv²) − min_{lv ∈ 0..7}(β1·lv + β2·lv²)
-  // Anchors each config to its own "full infection effect" so mention / trait
-  // effects are reported as multiples of how much infection alone moves behavior.
-  const infRange = {};
-  configs.forEach(c => {
-    const coefs = allRegs[c.key].model3.coefficients;
-    const b1 = coefs.infection_pct ? coefs.infection_pct.estimate : 0;
-    const b2 = coefs.infection_pct_sq ? coefs.infection_pct_sq.estimate : 0;
-    let mn = Infinity, mx = -Infinity;
-    for (let lv = 0; lv <= 7; lv++) {
-      const lo = b1 * lv + b2 * lv * lv;
-      if (lo < mn) mn = lo;
-      if (lo > mx) mx = lo;
-    }
-    infRange[c.key] = Math.max(1e-6, mx - mn);
-  });
-
   // Pre-compute per-panel row set.
   //   B5 panels: include any config with at least one mention coefficient.
   //   Ctx panels: include only configs whose mention coef is significant (p<0.05),
@@ -1137,18 +1180,17 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null,
   absMax = Math.max(1, absMax * 1.1);
   const gMin = -absMax, gMax = absMax;
 
-  // Layout — two side-by-side sub-panels per dim (low-pole | high-pole)
-  // Plus three right-side ratio columns (mention_low / inf, mention_high+trait / inf, trait / inf).
+  // Layout — two side-by-side sub-panels per dim (low-pole | high-pole).
+  // No right-side ratio column: trait-magnitude is already covered in §5.2.1
+  // (Fig 12/13), and the companion magnitude figure that previously anchored
+  // its ratio here was dropped from the paper.
   const W = Math.min(chartEl.parentElement?.offsetWidth || 980, 980);
   const rowH = 14;
   const labelW = 150;
-  const ratioColW = 56;           // each ratio column width
-  const ratioColsTotal = ratioColW * 3;
-  const panelPad = { t: 40, b: 40, l: labelW + 10, r: ratioColsTotal + 16 };
+  const panelPad = { t: 40, b: 40, l: labelW + 10, r: 24 };
   const subGap = 30;  // gap between low/high sub-panels
   const subPlotW = (W - panelPad.l - panelPad.r - subGap) / 2;
   const panelGap = 24;
-  const ratioX0 = W - panelPad.r + 8;  // x-origin of ratio columns
 
   // Each panel's own inner height depends on how many rows it has (plus provider gaps)
   const gapProv = 5;
@@ -1159,7 +1201,7 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null,
   }
   const panelSizes = panelRows.map(rows => rows.length * rowH + providerGapCount(rows) * gapProv);
   const panelHs = panelSizes.map(s => panelPad.t + s + panelPad.b);
-  const headerLegendH = 42;
+  const headerLegendH = 8;
   const totalH = headerLegendH + panelHs.reduce((a, b) => a + b + panelGap, 0) - panelGap + 16;
 
   // Each sub-panel has its own local X scale (same value range, different origin x)
@@ -1182,22 +1224,9 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null,
 
   let svg = '';
 
-  // ── Top-of-figure legend strip ──
-  // Explains marker semantics + significance fading, since the convention is
-  // non-obvious and the per-panel headers are just the dim name.
-  const legY = 16;
-  const legItemGap = 170;
-  let lx = panelPad.l;
-  const legColor = '#666';
-  // ○ baseline
-  svg += `<circle cx="${lx}" cy="${legY}" r="3.5" fill="white" stroke="${legColor}" stroke-width="1.4"/>`;
-  svg += `<text x="${lx + 9}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">Without mention (baseline)</text>`;
-  lx += legItemGap;
-  // ● solid = significant mention effect
-  svg += `<circle cx="${lx}" cy="${legY}" r="3.5" fill="${legColor}"/>`;
-  svg += `<text x="${lx + 9}" y="${legY + 3}" font-size="9" fill="#444" font-family="${SERIF}">With mention, <tspan font-weight="bold">p &lt; 0.05</tspan> only</text>`;
-  // Row-below: positional semantics
-  svg += `<text x="${panelPad.l}" y="${legY + 22}" font-size="8.5" fill="#888" font-family="${SERIF}" font-style="italic">Each row = one LLM. Within each Big Five panel: left side = agents at one label of the trait (e.g., Introverted), right side = agents at the other label (e.g., Extraverted). Filled dot = shift from mentioning that label (significant only).</text>`;
+  // No in-figure legend — marker / position semantics are described in the
+  // figure caption (paper) and dashboard accompanying text. Keeping the chart
+  // clean lets the data own the visual real estate.
 
   let py = headerLegendH;
 
@@ -1207,8 +1236,11 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null,
     const panelTop = py + panelPad.t;
     const panelBot = panelTop + panelSizes[pi];
 
-    // Panel title
-    svg += `<text x="${W / 2}" y="${py + 18}" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">${panel.dim}</text>`;
+    // Panel title — centered over the plot area (not the full SVG width,
+    // which would sit left because the model-label margin and the right-side
+    // ratio column are asymmetric).
+    const titleCx = panelPad.l + ctxPlotW / 2;
+    svg += `<text x="${titleCx}" y="${py + 18}" font-size="12" font-weight="bold" fill="#111" font-family="${SERIF}" text-anchor="middle">${panel.dim}</text>`;
 
     // Sub-panel column headers (B5) OR single centered header (ctx)
     if (panel.type === 'b5') {
@@ -1220,45 +1252,6 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null,
       // ctx panel: single centered subheader
       const ctxMidX = panelPad.l + ctxPlotW / 2;
       svg += `<text x="${ctxMidX}" y="${py + 34}" font-size="10" fill="#333" font-family="${SERIF}" font-style="italic" text-anchor="middle">All agents · ${panel.dim.toLowerCase()} mention shift</text>`;
-    }
-
-    // Ratio column headers — Fig 26/27 style: "β [label]" / "Infection" stacked
-    // with a horizontal dividing line (visual fraction). Columns:
-    //   col 1: |β mention_low| / inf_range  — mention effect for the low-pole agent
-    //   col 2: |β trait + β mention_high| / inf_range  — total position for the high-pole mentioner
-    //   col 3: |β trait| / inf_range  — trait alone (always shown)
-    const rc1 = ratioX0 + ratioColW * 0.5;
-    const rc2 = ratioX0 + ratioColW * 1.5;
-    const rc3 = ratioX0 + ratioColW * 2.5;
-    // Multi-line numerator stacked above a fraction bar, with "Infection" below.
-    // Two numerator lines = room for "β <Pole>" on top and "+ Mention" below.
-    const hLine1Y = py + 8;
-    const hLine2Y = py + 18;
-    const hBarY   = py + 22;
-    const hDenY   = py + 32;
-    function ratioHeader(cx, line1, line2) {
-      // Shrink font when the label is too long to fit in the column width.
-      const maxChars = Math.max(line1.length, (line2 || '').length);
-      const fs = maxChars > 12 ? 7.5 : maxChars > 10 ? 8 : 8.5;
-      if (line2) {
-        svg += `<text x="${cx}" y="${hLine1Y}" font-size="${fs}" fill="#555" font-family="${SERIF}" text-anchor="middle">${line1}</text>`;
-        svg += `<text x="${cx}" y="${hLine2Y}" font-size="${fs}" fill="#555" font-family="${SERIF}" text-anchor="middle">${line2}</text>`;
-      } else {
-        const midY = (hLine1Y + hLine2Y) / 2 + 4;
-        svg += `<text x="${cx}" y="${midY}" font-size="${fs}" fill="#555" font-family="${SERIF}" text-anchor="middle">${line1}</text>`;
-      }
-      svg += `<line x1="${cx - ratioColW / 2 + 4}" y1="${hBarY}" x2="${cx + ratioColW / 2 - 4}" y2="${hBarY}" stroke="#888" stroke-width="0.7"/>`;
-      svg += `<text x="${cx}" y="${hDenY}" font-size="8.5" fill="#555" font-family="${SERIF}" text-anchor="middle">Infection</text>`;
-    }
-    if (panel.type === 'b5') {
-      ratioHeader(rc1, `&#946; Mentioned`, esc(panel.lowLabel));
-      ratioHeader(rc2, `&#946; Mentioned`, esc(panel.highLabel));
-      ratioHeader(rc3, `&#946; Trait`, '');
-    } else {
-      // ctx: always show col 1 (mention). Skip col 3 for Infection panel since
-      // its trait span equals the denominator (trivially 1.0×).
-      ratioHeader(rc1, `&#946; Mentioned`, esc(panel.dim));
-      if (panel.dim !== 'Infection') ratioHeader(rc3, `&#946; Trait`, '');
     }
 
     // Per sub-panel: zero line (at v=0), grid + ticks.
@@ -1314,20 +1307,6 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null,
         svg += `<circle cx="${px0}" cy="${cy}" r="3.3" fill="white" stroke="${c.color}" stroke-width="1.4"/>`;
         // ● mention
         svg += `<circle cx="${pxM}" cy="${cy}" r="3.3" fill="${c.color}"/>`;
-
-        // Ratios: col 1 = |β_mentioned|/inf_range; col 3 = |β_trait_span|/inf_range
-        const range = infRange[c.key];
-        const r1 = Math.abs(pos.mention) / range;
-        const r3 = Math.abs(pos.traitSpan) / range;
-        function fmtRatioCtx(v) {
-          if (v == null || !isFinite(v)) return '';
-          if (v < 0.05) return v.toFixed(2) + '×';
-          return v.toFixed(v < 1 ? 2 : 1) + '×';
-        }
-        svg += `<text x="${rc1}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatioCtx(r1)}</text>`;
-        if (panel.dim !== 'Infection') {
-          svg += `<text x="${rc3}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatioCtx(r3)}</text>`;
-        }
 
         // Tooltip
         const tt = `○ no mention: 0.00<br>● + mention: ${pos.mention.toFixed(2)}<br>${esc(panel.traitLabel)} span = ${pos.traitSpan.toFixed(2)}`;
@@ -1398,29 +1377,6 @@ function renderRACrossModelAmplification(allRegs, traitData, modelFilter = null,
         }
         svg += `<rect x="${panelPad.l + subPlotW + subGap}" y="${(cy - rowH / 2).toFixed(1)}" width="${subPlotW}" height="${rowH}" fill="transparent" class="hit-target" data-label="${esc(c.label)} — ${panel.dim} / ${esc(panel.highLabel)}" data-color="${c.color}" data-extra="${ttHigh}" style="cursor:default"/>`;
       }
-
-      // ── Ratio columns (right of the plot) ──
-      // All ratios are absolute values (|x|) divided by this config's infection
-      // log-odds range. Cells are only rendered when the underlying coefficient
-      // exists and (for mention columns) is significant at p < 0.05.
-      const range = infRange[c.key];
-      function fmtRatio(v) {
-        if (v == null || !isFinite(v)) return '';
-        const av = Math.abs(v);
-        if (av < 0.05) return av.toFixed(2) + '×';
-        return av.toFixed(av < 1 ? 2 : 1) + '×';
-      }
-      // Col 1: |β_mention_low| / inf_range — pure mention effect for the low pole.
-      // Not the combined low-pole baseline + mention position — just the shift.
-      if (showLow && sigLow) {
-        svg += `<text x="${rc1}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatio(pos.betaLow / range)}</text>`;
-      }
-      // Col 2: |β_mention_high| / inf_range — pure mention effect for the high pole.
-      if (showHigh && sigHigh) {
-        svg += `<text x="${rc2}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatio(pos.betaHigh / range)}</text>`;
-      }
-      // Col 3: |β_trait| / inf_range — trait effect alone (always shown).
-      svg += `<text x="${rc3}" y="${cy + 3}" font-size="9" fill="${c.color}" font-family="${SERIF}" text-anchor="middle">${fmtRatio(pos.betaTrait / range)}</text>`;
 
       rowIdx++;
     });
@@ -1602,6 +1558,402 @@ function renderCosineExamples(data, elId) {
 }
 
 
+/* ── Figure 34B: Mention/Trait Ratio (Fig 17 layout) ──
+   Same visual structure as Figure 17 (rows = LLMs grouped by provider,
+   panels per Big Five trait), but the x-axis is β_mention / β_trait
+   (signed). Vertical guides at 0 (no mention effect) and ±1 (mention
+   equal to ±trait). Two markers per row: low pole (triangle), high pole
+   (circle). Faded markers = mention not significant.
+
+   Replaces the earlier scatter (Fig 34A) version, which was discarded. */
+
+const _MENTION_TRAITS = [
+  { dim: 'Extraversion',     trait: 'extraverted',   lowLabel: 'Introverted',     highLabel: 'Extraverted',
+    lowMention: 'mentioned_introverted',     highMention: 'mentioned_extroverted' },
+  { dim: 'Agreeableness',    trait: 'agreeable',     lowLabel: 'Antagonistic',    highLabel: 'Agreeable',
+    lowMention: 'mentioned_antagonistic',    highMention: 'mentioned_agreeable' },
+  { dim: 'Conscientiousness',trait: 'conscientious', lowLabel: 'Unconscientious', highLabel: 'Conscientious',
+    lowMention: 'mentioned_unconscientious', highMention: 'mentioned_conscientious' },
+  { dim: 'Neuroticism',      trait: 'emot_stable',   lowLabel: 'Neurotic',        highLabel: 'Emot. stable',
+    lowMention: 'mentioned_neurotic',        highMention: 'mentioned_emot_stable' },
+  { dim: 'Openness',         trait: 'open_to_exp',   lowLabel: 'Closed',          highLabel: 'Open',
+    lowMention: 'mentioned_closed',          highMention: 'mentioned_open' },
+];
+
+function _mentionTraitPoints(allRegs) {
+  const points = [];
+  CONFIG.MODELS.forEach(m => {
+    const key = configDirKey(m);
+    const c = allRegs[key]?.model3?.coefficients;
+    if (!c || !c.infection_pct || !c.infection_pct_sq) return;
+    const bI = c.infection_pct.estimate;
+    const bI2 = c.infection_pct_sq.estimate;
+    let mn = Infinity, mx = -Infinity;
+    for (let lv = 0; lv <= 7; lv++) {
+      const v = bI * lv + bI2 * lv * lv;
+      if (v < mn) mn = v;
+      if (v > mx) mx = v;
+    }
+    const infRange = Math.max(1e-6, mx - mn);
+    _MENTION_TRAITS.forEach(tr => {
+      if (!c[tr.trait]) return;
+      const bT = c[tr.trait].estimate;
+      [['low', tr.lowMention, tr.lowLabel], ['high', tr.highMention, tr.highLabel]].forEach(([side, mKey, mLabel]) => {
+        if (!c[mKey]) return;
+        const bM = c[mKey].estimate;
+        const pM = c[mKey].p ?? 1.0;
+        points.push({
+          cfgKey: key, label: m.label, provider: m.provider,
+          color: CONFIG.PROVIDER_COLORS[m.provider] || '#999',
+          dim: tr.dim, pole: side, mLabel,
+          beta_trait: bT, beta_mention: bM,
+          inf_range: infRange,
+          x: bT / infRange, y: bM / infRange,
+          mention_to_trait: bT === 0 ? null : bM / bT,
+          sig: pM < 0.05,
+          p: pM,
+        });
+      });
+    });
+  });
+  return points;
+}
+
+function renderRAMentionTraitRatio(allRegs, elId = 'ra-mt-ratio-chart', modelFilter = null) {
+  const chartEl = document.getElementById(elId);
+  if (!chartEl) return;
+
+  // Tabular replacement for the earlier panel-chart Fig 18. One row per
+  // (LLM, pole) where the mention flag passed the [15%, 85%] gate AND is
+  // significant at p < 0.05. Three magnitude views per row anchored to that
+  // LLM's full infection log-odds range (the same anchor used in §5.2.1):
+  //   • β trait / Inf       — signed trait-dummy effect (constant across poles
+  //                           within an LLM × dimension)
+  //   • Combined / Inf      — signed position with mention:
+  //                             low pole  = β_mention_low / Inf
+  //                             high pole = (β_trait + β_mention_high) / Inf
+  //                             Infection = (span + β_mention_infection) / Inf
+  //                             Age       = (β_age·47 + β_mention_age) / Inf
+  //   • Ratio (β mention / |β trait|) — signed mention shift as a multiple of
+  //                                     the trait coefficient's magnitude
+
+  const POLES = [
+    // dim, traitKey (regression coef name), poleSide, poleLabel, mentionKey
+    ['Extraversion',     'extraverted',   'low',  'Introverted',     'mentioned_introverted'],
+    ['Extraversion',     'extraverted',   'high', 'Extraverted',     'mentioned_extroverted'],
+    ['Agreeableness',    'agreeable',     'low',  'Antagonistic',    'mentioned_antagonistic'],
+    ['Agreeableness',    'agreeable',     'high', 'Agreeable',       'mentioned_agreeable'],
+    ['Conscientiousness','conscientious', 'low',  'Unconscientious', 'mentioned_unconscientious'],
+    ['Conscientiousness','conscientious', 'high', 'Conscientious',   'mentioned_conscientious'],
+    ['Neuroticism',      'emot_stable',   'low',  'Neurotic',        'mentioned_neurotic'],
+    ['Neuroticism',      'emot_stable',   'high', 'Emot. stable',    'mentioned_emot_stable'],
+    ['Openness',         'open_to_exp',   'low',  'Closed',          'mentioned_closed'],
+    ['Openness',         'open_to_exp',   'high', 'Open',            'mentioned_open'],
+  ];
+
+  // Build infection log-odds range per LLM (denominator for all magnitudes).
+  function infRangeOf(coefs) {
+    const b1 = coefs.infection_pct ? coefs.infection_pct.estimate : 0;
+    const b2 = coefs.infection_pct_sq ? coefs.infection_pct_sq.estimate : 0;
+    let mn = Infinity, mx = -Infinity;
+    for (let lv = 0; lv <= 7; lv++) {
+      const v = b1 * lv + b2 * lv * lv;
+      if (v < mn) mn = v;
+      if (v > mx) mx = v;
+    }
+    return Math.max(1e-6, mx - mn);
+  }
+
+  // Collect rows
+  const rows = [];
+  CONFIG.MODELS.forEach(m => {
+    const key = configDirKey(m);
+    if (modelFilter && !modelFilter.has(key)) return;
+    const reg = allRegs[key];
+    if (!reg || !reg.model3 || reg.model3.error || !reg.model3.coefficients) return;
+    const c = reg.model3.coefficients;
+    const inf = infRangeOf(c);
+    const provColor = CONFIG.PROVIDER_COLORS[m.provider] || '#999';
+
+    // Big Five poles
+    POLES.forEach(([dim, traitKey, side, poleLabel, mKey]) => {
+      const bT = c[traitKey];
+      const bM = c[mKey];
+      if (!bT || !bM) return;
+      if ((bM.p ?? 1) >= 0.05) return;
+      const tEst = bT.estimate;
+      const tAbs = Math.abs(tEst);
+      if (tAbs < 1e-9) return;
+      const mEst = bM.estimate;
+      const traitOverInf = tEst / inf;
+      const combinedOverInf = side === 'high' ? (tEst + mEst) / inf : mEst / inf;
+      const ratio = mEst / tAbs;
+      rows.push({
+        cfgKey: key, label: m.label, provider: m.provider, color: provColor,
+        dim, pole: poleLabel, traitOverInf, combinedOverInf, ratio, p: bM.p,
+      });
+    });
+
+    // Infection ctx row
+    const bMInf = c.mentioned_infection;
+    if (bMInf && (bMInf.p ?? 1) < 0.05) {
+      const span = inf;                       // trait-span for infection ≡ inf range
+      const traitOverInf = span / inf;        // = 1.0 by construction
+      const combinedOverInf = (span + bMInf.estimate) / inf;
+      const ratio = bMInf.estimate / Math.abs(span);
+      rows.push({
+        cfgKey: key, label: m.label, provider: m.provider, color: provColor,
+        dim: 'Infection', pole: '—', traitOverInf, combinedOverInf, ratio, p: bMInf.p,
+      });
+    }
+
+    // Age ctx row
+    const bMAge = c.mentioned_age;
+    if (bMAge && (bMAge.p ?? 1) < 0.05) {
+      const ageSpan = c.age ? c.age.estimate * 47 : 0;
+      if (Math.abs(ageSpan) > 1e-9) {
+        const traitOverInf = ageSpan / inf;
+        const combinedOverInf = (ageSpan + bMAge.estimate) / inf;
+        const ratio = bMAge.estimate / Math.abs(ageSpan);
+        rows.push({
+          cfgKey: key, label: m.label, provider: m.provider, color: provColor,
+          dim: 'Age', pole: '—', traitOverInf, combinedOverInf, ratio, p: bMAge.p,
+        });
+      }
+    }
+  });
+
+  if (rows.length === 0) {
+    chartEl.innerHTML = '<div style="color:#999;padding:20px">No significant mention coefficients available.</div>';
+    return;
+  }
+
+  // Sort to match Figure 17's reading order: trait dimension top-to-bottom,
+  // pole left-to-right (low before high), then LLMs in CONFIG.MODELS order
+  // (which matches Fig 17's row order). Reader scans by pole and sees only
+  // the LLMs whose mention for that pole was significant.
+  const DIM_ORDER = { 'Extraversion': 0, 'Agreeableness': 1, 'Conscientiousness': 2, 'Neuroticism': 3, 'Openness': 4, 'Infection': 5, 'Age': 6 };
+  const POLE_ORDER = {};
+  POLES.forEach(([, , side, label]) => { POLE_ORDER[label] = side === 'low' ? 0 : 1; });
+  POLE_ORDER['—'] = 0;
+  const LLM_ORDER = {};
+  CONFIG.MODELS.forEach((m, i) => { LLM_ORDER[configDirKey(m)] = i; });
+  rows.sort((a, b) => {
+    if (DIM_ORDER[a.dim] !== DIM_ORDER[b.dim]) return DIM_ORDER[a.dim] - DIM_ORDER[b.dim];
+    const pa = POLE_ORDER[a.pole] ?? 0, pb = POLE_ORDER[b.pole] ?? 0;
+    if (pa !== pb) return pa - pb;
+    return (LLM_ORDER[a.cfgKey] ?? 99) - (LLM_ORDER[b.cfgKey] ?? 99);
+  });
+
+  function fmt(v) {
+    if (v == null || !isFinite(v)) return '';
+    const sign = v >= 0 ? '+' : '−';
+    const a = Math.abs(v);
+    const num = a < 0.05 ? a.toFixed(2) : a.toFixed(a < 1 ? 2 : 1);
+    return `${sign}${num}×`;
+  }
+  function fmtP(p) {
+    if (p == null) return '';
+    if (p < 0.001) return '<0.001';
+    return p.toFixed(3);
+  }
+
+  // Build HTML table
+  let html = '';
+  html += '<table style="border-collapse:collapse;width:100%;font-size:12px">';
+  html += '<thead><tr style="border-bottom:2px solid #333;color:#333">';
+  ['Trait', 'Pole', 'LLM',
+   '<span style="white-space:nowrap">β trait / Inf</span>',
+   '<span style="white-space:nowrap">Combined / Inf</span>',
+   '<span style="white-space:nowrap">β mention / |β trait|</span>',
+   'p'].forEach(h => {
+    html += `<th style="text-align:left;padding:6px 10px;font-weight:bold">${h}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  // Suppress repeated trait+pole cells so the reader sees the (dim, pole)
+  // group header once, with the relevant LLMs stacked underneath. New
+  // (dim, pole) groups get a thicker top border for visual separation.
+  let lastDim = '', lastPole = '';
+  rows.forEach((r, i) => {
+    const groupChange = (r.dim !== lastDim) || (r.pole !== lastPole);
+    const dimCell  = groupChange ? esc(r.dim)  : '';
+    const poleCell = groupChange ? esc(r.pole) : '';
+    const topBorder = groupChange && i > 0 ? 'border-top:1.5px solid #ccc;' : '';
+    const provBg = i % 2 === 0 ? '#fbfbfb' : '#ffffff';
+    html += `<tr style="background:${provBg};${topBorder}border-bottom:1px solid #eee">`;
+    html += `<td style="padding:5px 10px;color:#444;font-weight:${dimCell ? 'bold' : 'normal'}">${dimCell}</td>`;
+    html += `<td style="padding:5px 10px;color:#444;font-style:italic">${poleCell}</td>`;
+    html += `<td style="padding:5px 10px;color:${r.color};font-weight:bold">${esc(r.label)}</td>`;
+    html += `<td style="padding:5px 10px;text-align:right;color:${r.traitOverInf >= 0 ? '#1f6feb' : '#d97706'}">${fmt(r.traitOverInf)}</td>`;
+    html += `<td style="padding:5px 10px;text-align:right;color:${r.combinedOverInf >= 0 ? '#1f6feb' : '#d97706'}">${fmt(r.combinedOverInf)}</td>`;
+    html += `<td style="padding:5px 10px;text-align:right;color:${r.ratio >= 0 ? '#1f6feb' : '#d97706'};font-weight:bold">${fmt(r.ratio)}</td>`;
+    html += `<td style="padding:5px 10px;text-align:right;color:#888">${fmtP(r.p)}</td>`;
+    html += '</tr>';
+    lastDim = r.dim; lastPole = r.pole;
+  });
+  html += '</tbody></table>';
+
+  chartEl.innerHTML = html;
+}
+
+
+/* ── Figure 34C: Mention Amplification Summary (per pole, 12 rows) ──
+   Aggregate view: for each Big Five pole + Infection + Age, summarize across
+   the LLMs whose mention coefficient was estimable AND significant. */
+function renderRAMentionAmpSummary(allRegs, elId = 'ra-mt-summary-chart') {
+  const chartEl = document.getElementById(elId);
+  if (!chartEl) return;
+
+  const POLES = [
+    ['Extraversion',     'extraverted',   'Introverted',     'mentioned_introverted'],
+    ['Extraversion',     'extraverted',   'Extraverted',     'mentioned_extroverted'],
+    ['Agreeableness',    'agreeable',     'Antagonistic',    'mentioned_antagonistic'],
+    ['Agreeableness',    'agreeable',     'Agreeable',       'mentioned_agreeable'],
+    ['Conscientiousness','conscientious', 'Unconscientious', 'mentioned_unconscientious'],
+    ['Conscientiousness','conscientious', 'Conscientious',   'mentioned_conscientious'],
+    ['Neuroticism',      'emot_stable',   'Neurotic',        'mentioned_neurotic'],
+    ['Neuroticism',      'emot_stable',   'Emot. stable',    'mentioned_emot_stable'],
+    ['Openness',         'open_to_exp',   'Closed',          'mentioned_closed'],
+    ['Openness',         'open_to_exp',   'Open',            'mentioned_open'],
+  ];
+
+  function infRangeOf(coefs) {
+    const b1 = coefs.infection_pct ? coefs.infection_pct.estimate : 0;
+    const b2 = coefs.infection_pct_sq ? coefs.infection_pct_sq.estimate : 0;
+    let mn = Infinity, mx = -Infinity;
+    for (let lv = 0; lv <= 7; lv++) {
+      const v = b1 * lv + b2 * lv * lv;
+      if (v < mn) mn = v;
+      if (v > mx) mx = v;
+    }
+    return Math.max(1e-6, mx - mn);
+  }
+  function median(arr) {
+    if (arr.length === 0) return null;
+    const s = arr.slice().sort((a, b) => a - b);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+
+  // Collect ratios + trait/inf magnitudes per (dim, pole) across LLMs
+  const groups = [];
+  POLES.forEach(([dim, traitKey, poleLabel, mKey]) => {
+    const ratios = [];
+    const traitMags = [];
+    CONFIG.MODELS.forEach(m => {
+      const reg = allRegs[configDirKey(m)];
+      if (!reg || !reg.model3 || reg.model3.error || !reg.model3.coefficients) return;
+      const c = reg.model3.coefficients;
+      const bT = c[traitKey], bM = c[mKey];
+      if (!bT || !bM) return;
+      if ((bM.p ?? 1) >= 0.05) return;
+      const tAbs = Math.abs(bT.estimate);
+      if (tAbs < 1e-9) return;
+      const inf = infRangeOf(c);
+      ratios.push(bM.estimate / tAbs);
+      traitMags.push(Math.abs(bT.estimate) / inf);
+    });
+    groups.push({ dim, pole: poleLabel, ratios, traitMags });
+  });
+
+  // Infection ctx group
+  {
+    const ratios = [], traitMags = [];
+    CONFIG.MODELS.forEach(m => {
+      const reg = allRegs[configDirKey(m)];
+      if (!reg || !reg.model3 || reg.model3.error || !reg.model3.coefficients) return;
+      const c = reg.model3.coefficients;
+      const bM = c.mentioned_infection;
+      if (!bM || (bM.p ?? 1) >= 0.05) return;
+      const inf = infRangeOf(c);
+      ratios.push(bM.estimate / inf);     // β_trait_span = inf, so |β_trait| = inf
+      traitMags.push(1.0);                // by construction
+    });
+    groups.push({ dim: 'Infection', pole: '—', ratios, traitMags });
+  }
+  // Age ctx group
+  {
+    const ratios = [], traitMags = [];
+    CONFIG.MODELS.forEach(m => {
+      const reg = allRegs[configDirKey(m)];
+      if (!reg || !reg.model3 || reg.model3.error || !reg.model3.coefficients) return;
+      const c = reg.model3.coefficients;
+      const bM = c.mentioned_age;
+      if (!bM || (bM.p ?? 1) >= 0.05) return;
+      const span = c.age ? c.age.estimate * 47 : 0;
+      if (Math.abs(span) < 1e-9) return;
+      const inf = infRangeOf(c);
+      ratios.push(bM.estimate / Math.abs(span));
+      traitMags.push(Math.abs(span) / inf);
+    });
+    groups.push({ dim: 'Age', pole: '—', ratios, traitMags });
+  }
+
+  function fmtSigned(v) {
+    if (v == null || !isFinite(v)) return '—';
+    const sign = v >= 0 ? '+' : '−';
+    const a = Math.abs(v);
+    return sign + (a < 1 ? a.toFixed(2) : a.toFixed(1)) + '×';
+  }
+  function fmtAbs(v) {
+    if (v == null || !isFinite(v)) return '—';
+    const a = Math.abs(v);
+    return (a < 1 ? a.toFixed(2) : a.toFixed(1)) + '×';
+  }
+
+  let html = '';
+  html += '<table style="border-collapse:collapse;width:100%;font-size:13px">';
+  html += '<thead><tr style="border-bottom:2px solid #333;color:#333">';
+  ['Trait', 'Pole',
+   '<span style="white-space:nowrap">N sig</span>',
+   '<span style="white-space:nowrap">Median |ratio|</span>',
+   '<span style="white-space:nowrap">|r|&nbsp;&gt;&nbsp;1</span>',
+   '<span style="white-space:nowrap">Min &hellip; Max</span>',
+   '<span style="white-space:nowrap">Median β trait / Inf</span>'].forEach(h => {
+    html += `<th style="text-align:left;padding:7px 10px;font-weight:bold">${h}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  let lastDim = '';
+  groups.forEach((g, i) => {
+    const groupChange = g.dim !== lastDim;
+    const dimCell = groupChange ? esc(g.dim) : '';
+    const topBorder = groupChange && i > 0 ? 'border-top:1.5px solid #ccc;' : '';
+    const bg = i % 2 === 0 ? '#fbfbfb' : '#ffffff';
+    const n = g.ratios.length;
+    if (n === 0) {
+      html += `<tr style="background:${bg};${topBorder}border-bottom:1px solid #eee">`;
+      html += `<td style="padding:6px 10px;color:#444;font-weight:${dimCell ? 'bold' : 'normal'}">${dimCell}</td>`;
+      html += `<td style="padding:6px 10px;color:#444;font-style:italic">${esc(g.pole)}</td>`;
+      html += `<td colspan="5" style="padding:6px 10px;color:#999;font-style:italic">no significant LLMs</td>`;
+      html += '</tr>';
+      lastDim = g.dim;
+      return;
+    }
+    const absRatios = g.ratios.map(r => Math.abs(r));
+    const medAbs = median(absRatios);
+    const minR = Math.min(...g.ratios);
+    const maxR = Math.max(...g.ratios);
+    const gt1 = absRatios.filter(r => r > 1).length;
+    const medTrait = median(g.traitMags);
+    html += `<tr style="background:${bg};${topBorder}border-bottom:1px solid #eee">`;
+    html += `<td style="padding:6px 10px;color:#444;font-weight:${dimCell ? 'bold' : 'normal'}">${dimCell}</td>`;
+    html += `<td style="padding:6px 10px;color:#444;font-style:italic">${esc(g.pole)}</td>`;
+    html += `<td style="padding:6px 10px;text-align:right;color:#333">${n}</td>`;
+    html += `<td style="padding:6px 10px;text-align:right;color:${medAbs >= 1 ? '#1f6feb' : '#333'};font-weight:${medAbs >= 1 ? 'bold' : 'normal'}">${fmtAbs(medAbs)}</td>`;
+    html += `<td style="padding:6px 10px;text-align:right;color:#333">${gt1}/${n}</td>`;
+    html += `<td style="padding:6px 10px;text-align:right;color:#444;font-variant-numeric:tabular-nums"><span style="color:${minR >= 0 ? '#1f6feb' : '#d97706'}">${fmtSigned(minR)}</span> &hellip; <span style="color:${maxR >= 0 ? '#1f6feb' : '#d97706'}">${fmtSigned(maxR)}</span></td>`;
+    html += `<td style="padding:6px 10px;text-align:right;color:#333">${fmtAbs(medTrait)}</td>`;
+    html += '</tr>';
+    lastDim = g.dim;
+  });
+  html += '</tbody></table>';
+
+  chartEl.innerHTML = html;
+}
+
+
 /* ── Figure 42: Effective Reasoning Modes — K-Means by Decision ── */
 /* For each model: best K chosen by silhouette score run separately on
    yes-only and no-only embeddings (K ∈ [2, 20], PCA-128, n=3000 subsample).
@@ -1764,7 +2116,10 @@ function renderRADecisionDrivers(data, modelFilter = null, elId = 'ra-drivers-ch
     const headerH = titleBlockH + 2 * nameLineH + 8 + KW_LINES * kwLineH + 8;
     // bottom padding includes legend bar (only drawn in static mode)
     const pad = { l: labelW, t: headerH, r: 16, b: staticMode ? 80 : 56 };
-    const H = pad.t + rows.length * cellH + pad.b;
+    // Reserve space for a Median summary row at the bottom of the grid.
+    const summaryGap = 8;
+    const summaryH = cellH;
+    const H = pad.t + rows.length * cellH + summaryGap + summaryH + pad.b;
 
     let svg = '';
 
@@ -1832,7 +2187,7 @@ function renderRADecisionDrivers(data, modelFilter = null, elId = 'ra-drivers-ch
         }
         svg += `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" fill="${fill}" stroke="#eee" stroke-width="0.5"/>`;
         const display = mode === "diff"
-          ? (val >= 0 ? '+' : '') + Math.round(val * 100) + '%'
+          ? (val >= 0 ? '+' : '') + Math.round(val * 100) + ' pp'
           : Math.round(val * 100) + '%';
         const textColor = mode === "diff"
           ? (Math.abs(val) > 0.4 ? '#fff' : '#333')
@@ -1841,9 +2196,49 @@ function renderRADecisionDrivers(data, modelFilter = null, elId = 'ra-drivers-ch
       });
     });
 
+    // ── Median summary row ──
+    const medianY = pad.t + rows.length * cellH + summaryGap;
+    function medianOf(arr) {
+      const s = arr.slice().sort((a, b) => a - b);
+      if (s.length === 0) return 0;
+      const m = Math.floor(s.length / 2);
+      return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+    }
+    // Faint divider above
+    svg += `<line x1="${pad.l - 24}" y1="${medianY - summaryGap / 2}" x2="${pad.l + concepts.length * cellW}" y2="${medianY - summaryGap / 2}" stroke="#bbb" stroke-width="0.7"/>`;
+    // Row label
+    svg += `<text x="${pad.l - 20}" y="${medianY + summaryH / 2 + 3}" font-size="9" font-weight="bold" fill="#333" font-family="${SERIF}" text-anchor="end">Median</text>`;
+    concepts.forEach((c, ci) => {
+      const x = pad.l + ci * cellW;
+      const colVals = rows.map(r => {
+        if (mode === 'overall') return r.data.overall[c];
+        if (mode === 'yes')     return r.data.by_decision.yes[c];
+        if (mode === 'no')      return r.data.by_decision.no[c];
+        return r.data.by_decision.yes[c] - r.data.by_decision.no[c];
+      });
+      const med = medianOf(colVals);
+      let fill;
+      if (mode === 'diff') {
+        const t = Math.max(-1, Math.min(1, med));
+        const a = Math.min(1, Math.abs(t) * 2);
+        fill = t > 0 ? `rgba(229, 57, 53, ${a})` : `rgba(33, 150, 243, ${a})`;
+      } else {
+        const a = Math.max(0, Math.min(1, med));
+        fill = `rgba(60, 64, 177, ${a})`;
+      }
+      const display = mode === 'diff'
+        ? (med >= 0 ? '+' : '') + Math.round(med * 100) + ' pp'
+        : Math.round(med * 100) + '%';
+      const textColor = mode === 'diff'
+        ? (Math.abs(med) > 0.4 ? '#fff' : '#333')
+        : (med > 0.6 ? '#fff' : '#333');
+      svg += `<rect x="${x}" y="${medianY}" width="${cellW}" height="${summaryH}" fill="${fill}" stroke="#bbb" stroke-width="0.7"/>`;
+      svg += `<text x="${x + cellW / 2}" y="${medianY + summaryH / 2 + 3}" font-size="8" font-weight="bold" fill="${textColor}" font-family="${SERIF}" text-anchor="middle">${display}</text>`;
+    });
+
     if (staticMode) {
       // Color-scale legend at the bottom of the static SVG.
-      const gridBottom = pad.t + rows.length * cellH;
+      const gridBottom = pad.t + rows.length * cellH + summaryGap + summaryH;
       const legW = 240, legH = 10;
       const legX = pad.l + (concepts.length * cellW - legW) / 2;
       const legY = gridBottom + 22;

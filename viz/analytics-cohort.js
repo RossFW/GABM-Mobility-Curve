@@ -134,9 +134,8 @@ function renderAgentAnalysis() {
       renderLogOddsLandscape(allRegs);
       renderAuthorComparisons();
 
-      // Fig 24b: Calibration (overlay + small multiples + DHARMa-style Q-Q)
-      renderFigCalibration(allRegs);
-      initFigCalibrationToggle(allRegs);
+      // Appendix C: Model Diagnostics (expanded into per-figure sub-panels)
+      renderAppendixC(allRegs);
 
       // Fig 29 filter pills (also drives per-trait power ratio)
       buildFilterPills('fig29-filters', 'fig29', filter => {
@@ -1801,6 +1800,37 @@ function initFigCalibrationToggle(allRegs) {
   // Wire up M1 + M3 toggles in the same init path
   initFigM1Toggle(allRegs);
   initFigM3Toggle(allRegs);
+}
+
+// ── Appendix C: render each diagnostic to its own per-figure container ──
+function renderAppendixC(allRegs) {
+  const data = computeCalibrationData(allRegs);
+  if (!data) return;
+  const into = (id, fn) => {
+    const el = document.getElementById(id);
+    if (el) fn(data, el);
+  };
+
+  // C.1 — Fixed-Effects Logit
+  into('figC11-chart', renderM1Calibration);
+  into('figC12-chart', renderM1DharmaQQ);
+  into('figC13-chart', renderM1RateDiffByInfection);
+
+  // C.2 — Random-Effects Logit
+  into('figC21-chart', renderCalibMultiples);
+  into('figC22-chart', renderCalibQQ);
+  into('figC23-chart', renderM2RENormalQQ);
+  into('figC24-chart', renderM2BLUPsVsPredictors);
+  into('figC25a-chart', renderM2RateDiffByAge);
+  into('figC25b-chart', renderM2RateDiffByInfection);
+
+  // C.3 — Random-Effects Logit with Mention Flags
+  into('figC31-chart', renderM3Calibration);
+  into('figC32-chart', renderM3DharmaQQ);
+  into('figC33-chart', renderM3RENormalQQ);
+  into('figC34-chart', renderM3BLUPsVsPredictors);
+  into('figC35a-chart', renderM3RateDiffByAge);
+  into('figC35b-chart', renderM3RateDiffByInfection);
 }
 
 // ── Fig 25: Agent-Level Logistic Regression (pre-computed from R) ──
