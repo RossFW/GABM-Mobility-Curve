@@ -550,6 +550,10 @@ function initViz() {
   scrubber.value = 0;
   updateInfoDisplay();
   updateChartPlayheads();
+
+  // Auto-play on initial load — agents start moving without the user clicking play.
+  // Phaser scene needs a tick to settle, hence the small delay.
+  setTimeout(() => { if (typeof startPlay === 'function') startPlay(); }, 200);
 }
 
 // ===============================================================

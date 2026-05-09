@@ -392,10 +392,39 @@
       #bio-panel { max-height: 200px; padding: 10px; }
       .ui-tip { display: none !important; }
     }
+
+    /* ─── Background mode (when iframed from index.html with ?bg=1) ──── */
+    body.bg-mode { background: transparent !important; }
+    body.bg-mode #site-nav,
+    body.bg-mode #header,
+    body.bg-mode #model-selector-row,
+    body.bg-mode #scrubber-row,
+    body.bg-mode #controls,
+    body.bg-mode #zoom-row,
+    body.bg-mode #hint,
+    body.bg-mode #agent-grid,
+    body.bg-mode #chart-section,
+    body.bg-mode #model-breakdown,
+    body.bg-mode #bio-panel,
+    body.bg-mode .ui-tip,
+    body.bg-mode #agent-tooltip,
+    body.bg-mode #loading,
+    body.bg-mode #error-msg { display: none !important; }
+    body.bg-mode #app { padding: 0 !important; max-width: none; }
+    body.bg-mode #game-row { display: block !important; margin: 0 !important; padding: 0 !important; }
   </style>
 </head>
 
 <body>
+<script>
+  // Background-only mode: when iframed (e.g., from index.html?bg=1), strip the
+  // UI chrome and just render the Phaser town scene as a decorative backdrop.
+  if (new URLSearchParams(window.location.search).get('bg') === '1') {
+    document.body && document.body.classList.add('bg-mode');
+    // Run again after DOM ready in case body wasn't available yet
+    document.addEventListener('DOMContentLoaded', () => document.body.classList.add('bg-mode'));
+  }
+</script>
 <div id="app">
 
   <!-- ─── Header ─────────────────────────────────────── -->
@@ -479,9 +508,6 @@
 
   <!-- ─── Model Breakdown Panel ──────────────────────── -->
   <div id="model-breakdown" style="width:1156px;margin-top:8px"></div>
-
-  <!-- ─── Concordance Chart (stacked area) ──────────── -->
-  <div id="concordance-chart" style="width:1156px;margin-top:8px;position:relative"></div>
 
 
 </div><!-- #app -->

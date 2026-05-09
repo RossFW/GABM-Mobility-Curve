@@ -6,11 +6,10 @@
 (function() {
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const links = [
-    { href: 'index.html',       label: 'INTRODUCTION' },
-    { href: 'methodology.html', label: 'METHODOLOGY' },
-    { href: 'town.html',        label: 'SIMULATION' },
-    { href: 'analytics.html',   label: 'ANALYTICS' },
-    { href: 'paper.html',       label: 'PAPER' },
+    { href: 'index.html',     label: 'HOME' },
+    { href: 'town.html',      label: 'SIMULATION' },
+    { href: 'paper.html',     label: 'PAPER' },
+    { href: 'analytics.html', label: 'ANALYTICS' },
   ];
 
   const nav = document.createElement('nav');
