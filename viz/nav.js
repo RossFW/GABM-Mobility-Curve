@@ -13,10 +13,6 @@
     { href: 'index.html',     label: 'HOME' },
     { href: 'town.html',      label: 'SIMULATION' },
     { href: 'paper.html',     label: 'PAPER' },
-    { href: 'analytics.html', label: 'ANALYTICS' },
-    { href: 'citations.html', label: 'CITATIONS' },
-    { href: 'reading-list.html', label: 'READING' },
-    { href: 'intro-compare.html', label: '§1 COMPARE' },
   ];
 
   const nav = document.createElement('nav');
