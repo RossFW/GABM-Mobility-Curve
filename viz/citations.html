@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citation Library — Paper 1 & Paper 2 references</title>
+  <script src="nav.js" defer></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #ffffff;
+      color: #111111;
+      font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+      padding: 40px 0 100px;
+      line-height: 1.55;
+    }
+    #app {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+    .page-header { border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 22px; }
+    h1 { font-size: 20px; font-weight: bold; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #555; font-style: italic; }
+    .legend-bar {
+      display: flex; flex-wrap: wrap; gap: 18px;
+      font-size: 11px; color: #555;
+      padding: 14px 16px;
+      background: #f7f7f4;
+      border: 1px solid #e6e3da;
+      border-radius: 4px;
+      margin: 18px 0 28px;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .tag-gabm        { background:#1e40af; color:#fff; }
+    .tag-llm-eval    { background:#7c3aed; color:#fff; }
+    .tag-behavior    { background:#0e7490; color:#fff; }
+    .tag-survey      { background:#b45309; color:#fff; }
+    .tag-epi         { background:#15803d; color:#fff; }
+    .tag-foundational{ background:#374151; color:#fff; }
+    .tag-misc        { background:#9ca3af; color:#fff; }
+
+    /* Search + filter bar */
+    .controls {
+      display: flex; gap: 12px; align-items: center;
+      margin-bottom: 24px; padding: 14px 16px;
+      background: #f9f9f7; border: 1px solid #e6e3da; border-radius: 4px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .controls input[type=search] {
+      flex: 1;
+      font-family: inherit; font-size: 13px;
+      padding: 6px 10px;
+      border: 1px solid #ccc; border-radius: 3px;
+      background: #fff;
+    }
+    .controls .filter-group {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .filter-btn {
+      font-family: inherit; font-size: 11px;
+      padding: 4px 10px; border-radius: 12px;
+      border: 1px solid #ccc; background: #fff; color: #333;
+      cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .filter-btn:hover    { background: #f0f0ec; }
+    .filter-btn.active   { background: #111; color: #fff; border-color: #111; }
+    .source-badge {
+      font-size: 10px; padding: 2px 6px;
+      border-radius: 3px; background: #eaeaea; color: #555;
+      letter-spacing: 0.4px; margin-right: 6px; font-family: monospace;
+    }
+    .source-badge.p1 { background: #fde68a; color: #78350f; }
+    .source-badge.p2 { background: #c7d2fe; color: #312e81; }
+    .source-badge.p3 { background: #bbf7d0; color: #14532d; }
+
+    h2.paper-section {
+      font-size: 16px; font-weight: bold;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 6px; margin: 32px 0 14px;
+    }
+    .ref-card {
+      border-left: 3px solid #ccc;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      background: #fafafa;
+      border-radius: 0 3px 3px 0;
+    }
+    .ref-card.has-snippet { border-left-color: #1e40af; background: #f5f7ff; }
+    .ref-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; flex-wrap: wrap; }
+    .ref-num { font-weight: bold; font-family: monospace; font-size: 12px; color: #444; }
+    .ref-citation { font-size: 12.5px; line-height: 1.55; color: #1f1f1f; }
+    .ref-citation em { font-style: italic; }
+    .ref-snippet {
+      font-size: 11.5px; color: #555;
+      font-style: italic;
+      background: #fff; padding: 7px 10px;
+      border-left: 2px solid #aaa;
+      margin-top: 7px;
+      line-height: 1.5;
+    }
+    .ref-snippet strong { color: #1e40af; font-style: normal; }
+    .ref-note {
+      font-size: 11px; color: #666;
+      margin-top: 6px; line-height: 1.5;
+    }
+    .ref-note strong { color: #b45309; }
+    .ref-card.hide { display: none; }
+    .empty-state { padding: 40px; text-align: center; color: #999; font-style: italic; }
+    .count-pill {
+      font-size: 11px; color: #555;
+      background: #eee; padding: 2px 8px; border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="page-header">
+      <h1>Citation Library</h1>
+      <div class="subtitle">References from Paper 1 (GABM Epidemic) and Paper 2 (Prompt Sensitivity), with the in-text snippets they originally appeared in. Used as a reuse pool for Paper 3. <strong>Recent additions</strong> (green P3 badge) are sourced from Li &amp; Wu 2025 (<em>System Dynamics Review</em>) and other 2024&ndash;2026 GABM literature.</div>
+    </div>
+
+    <div class="legend-bar">
+      <span><span class="tag tag-gabm">GABM</span> generative agent-based modeling</span>
+      <span><span class="tag tag-llm-eval">LLM-eval</span> capability / robustness eval</span>
+      <span><span class="tag tag-behavior">Behavior</span> behavioral / silicon-sample work</span>
+      <span><span class="tag tag-survey">Survey</span> survey / lit-review</span>
+      <span><span class="tag tag-epi">Epi</span> epidemic / behavioral epi</span>
+      <span><span class="tag tag-foundational">Foundational</span> ABM / SIR / personality</span>
+      <span><span class="tag tag-misc">Misc</span> other</span>
+    </div>
+
+    <div class="controls">
+      <input type="search" id="search-input" placeholder="Search authors, title, year, snippet…" autocomplete="off">
+      <div class="filter-group" id="filter-group">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="p1">Paper 1</button>
+        <button class="filter-btn" data-filter="p2">Paper 2</button>
+        <button class="filter-btn" data-filter="p3">Recent (2024–26)</button>
+        <button class="filter-btn" data-filter="gabm">GABM</button>
+        <button class="filter-btn" data-filter="llm-eval">LLM-eval</button>
+        <button class="filter-btn" data-filter="behavior">Behavior</button>
+        <button class="filter-btn" data-filter="survey">Survey</button>
+        <button class="filter-btn" data-filter="epi">Epi</button>
+        <button class="filter-btn" data-filter="foundational">Foundational</button>
+        <button class="filter-btn" data-filter="reuse">Likely-reuse for §2</button>
+      </div>
+      <span class="count-pill"><span id="visible-count">0</span> shown</span>
+    </div>
+
+    <h2 class="paper-section">Recent additions for Paper 3 (2024–2026) <span class="count-pill" style="font-weight:normal;font-size:11px">11 references</span></h2>
+    <p style="font-size:12px;color:#666;font-style:italic;margin-bottom:12px;line-height:1.6">
+      Sourced primarily from Li &amp; Wu (2025) <em>System Dynamics Review</em> &mdash; the most recent SDR publication on GABM methodology since Williams 2023 (Paper 1). High-priority adds for §2.1 (GABM lit review), §2.2 (LLM evaluation), and the §6 Conclusion's claim about fine-tuned-on-human-data agents.
+    </p>
+    <div id="paper3-refs"></div>
+
+    <h2 class="paper-section">Paper 1 — GABM Epidemic <span class="count-pill" style="font-weight:normal;font-size:11px">26 references</span></h2>
+    <div id="paper1-refs"></div>
+
+    <h2 class="paper-section">Paper 2 — Prompt Sensitivity Analysis <span class="count-pill" style="font-weight:normal;font-size:11px">30 references</span></h2>
+    <div id="paper2-refs"></div>
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────────────────────────────
+    // CITATION DATA
+    // Tags drive filtering; reuseForPaper3 marks high-priority §2 candidates.
+    // snippet: original in-text usage (verbatim where known).
+    // ─────────────────────────────────────────────────────────────────────
+    const PAPER1_REFS = [
+      { num: 1,  tags: ['epi'], reuse: false,
+        cite: 'Behaviour fuels, and fights, pandemics. <em>Nature Human Behaviour.</em> 2020;4(5):435-.',
+        snippet: '"...practices such as social distancing, wearing masks, and vaccination, in shaping the trajectory of the disease (1, 2)."' },
+      { num: 2,  tags: ['epi'], reuse: false,
+        cite: 'Kraemer MUG, Yang C-H, Gutierrez B, et al. The effect of human mobility and control measures on the COVID-19 epidemic in China. <em>Science.</em> 2020;368(6490):493-7.',
+        snippet: 'See snippet for ref 1.' },
+      { num: 3,  tags: ['epi'], reuse: false,
+        cite: 'Rahmandad H, Xu R, Ghaffarzadegan N. A missing behavioural feedback in COVID-19 models is the key to several puzzles. <em>BMJ Global Health.</em> 2022;7(10):e010463.',
+        snippet: '"People&#39;s responses to perceived risks create a feedback loop that influences the pandemic&#39;s future course (3)."' },
+      { num: 4,  tags: ['epi'], reuse: false,
+        cite: 'Ferguson N. Capturing human behaviour. <em>Nature.</em> 2007;446(7137):733-.',
+        snippet: '"Despite widespread recognition of the importance of incorporating changes in human behavior in epidemic models (4-6)..."' },
+      { num: 5,  tags: ['epi'], reuse: false,
+        cite: 'Bauch C, T., Galvani A, P. Social Factors in Epidemiology. <em>Science.</em> 2013;342(6154):47-9.',
+        snippet: 'See snippet for ref 4.' },
+      { num: 6,  tags: ['epi','survey'], reuse: false,
+        cite: 'Funk S, Salathé M, Jansen VAA. Modelling the influence of human behaviour on the spread of infectious diseases: a review. <em>Journal of The Royal Society Interface.</em> 2010;7(50):1247-56.',
+        snippet: 'See snippet for ref 4.' },
+      { num: 7,  tags: ['epi','survey'], reuse: false,
+        cite: 'Bedson J, Skrip LA, Pedi D, et al. A review and agenda for integrated disease models including social and behavioural factors. <em>Nature Human Behaviour.</em> 2021;5(7):834-46.',
+        snippet: '"...many modelers have yet to comprehensively address this crucial aspect (6, 7)."' },
+      { num: 8,  tags: ['epi'], reuse: false,
+        cite: 'Xu R, Rahmandad H, Gupta M, et al. Weather, air pollution, and SARS-CoV-2 transmission: a global analysis. <em>The Lancet Planetary Health.</em> 2021;5(10):e671-e80.',
+        snippet: '"...some empirically grounded models have integrated past human behavior data... by exogenously feeding time series data (8)."' },
+      { num: 9,  tags: ['epi'], reuse: false,
+        cite: 'Rahmandad H, Lim TY, Sterman J. Behavioral dynamics of COVID-19: estimating underreporting, multiple waves, and adherence fatigue across 92 nations. <em>System Dynamics Review.</em> 2021;37(1):5-31.',
+        snippet: '"...only a limited number of models have endogenously formulated the dynamic nature of human behavior (9, 10)."' },
+      { num: 10, tags: ['epi'], reuse: false,
+        cite: 'Rahmandad H, Xu R, Ghaffarzadegan N. Enhancing Long-term Forecasting: Learning from COVID-19 Models. <em>PLOS Computational Biology.</em> 2022.',
+        snippet: '"The lack of endogenous formulations have resulted in biases in long-term projections (10)."' },
+      { num: 11, tags: ['epi'], reuse: false,
+        cite: 'Rahmandad H. Behavioral Responses to Risk Promote Vaccinating High-contact Individuals First. <em>medRxiv.</em> 2021:2021.02.05.21251215.',
+        snippet: null },
+      { num: 12, tags: ['epi','survey'], reuse: false,
+        cite: 'Funk S, Bansal S, Bauch CT, et al. Nine challenges in incorporating the dynamics of behaviour in infectious diseases models. <em>Epidemics.</em> 2015;10:21-5.',
+        snippet: null },
+      { num: 13, tags: ['epi','survey'], reuse: false,
+        cite: 'Weston D, Ip A, Amlôt R. Examining the application of behaviour change theories in the context of infectious disease outbreaks and emergency response: a review of reviews. <em>BMC Public Health.</em> 2020;20(1):1483.',
+        snippet: null },
+      { num: 14, tags: ['epi','survey'], reuse: false,
+        cite: 'Verelst F, Willem L, Beutels P. Behavioural change models for infectious disease transmission: a systematic review (2010–2015). <em>Journal of The Royal Society Interface.</em> 2016;13(125):20160820.',
+        snippet: null },
+      { num: 15, tags: ['llm-eval','misc'], reuse: false,
+        cite: 'Cooper G. Examining Science Education in ChatGPT: An Exploratory Study of Generative Artificial Intelligence. <em>Journal of Science Education and Technology.</em> 2023;32(3):444-52.',
+        snippet: '"...revolutionizing various domains of science and research (15-17)."' },
+      { num: 16, tags: ['llm-eval','survey'], reuse: false,
+        cite: 'Mondal S, Das S, Vrana VG. How to Bell the Cat? A Theoretical Review of Generative Artificial Intelligence towards Digital Disruption in All Walks of Life. <em>Technologies.</em> 2023;11(2):44.',
+        snippet: 'See snippet for ref 15.' },
+      { num: 17, tags: ['gabm'], reuse: true,
+        cite: 'Park JS, O&#39;Brien JC, Cai CJ, Morris MR, Liang P, Bernstein MS. Generative Agents: Interactive Simulacra of Human Behavior. arXiv 2023.',
+        snippet: '"Park and colleagues (17) have provided a groundbreaking contribution by developing and using a memory architecture for their models."',
+        note: '<strong>Slam dunk for §2.1</strong> — same paper as Paper 2 [#2] (arXiv:2304.03442). Use to introduce GABM.' },
+      { num: 18, tags: ['llm-eval','survey'], reuse: false,
+        cite: 'Cao Y, Li S, Liu Y, et al. A Comprehensive Survey of AI-Generated Content (AIGC): A History of Generative AI from GAN to ChatGPT. arXiv 2023.',
+        snippet: 'See snippet for ref 15.' },
+      { num: 19, tags: ['misc'], reuse: false,
+        cite: 'Metz C. OpenAI Plans to Up the Ante in Tech&#39;s A.I. Race. <em>The New York Times.</em> 2023 March 14.',
+        snippet: null },
+      { num: 20, tags: ['foundational'], reuse: true,
+        cite: 'Goldberg LR. An alternative "description of personality": The Big-Five factor structure. <em>Journal of Personality and Social Psychology.</em> 1990;59(6):1216-29.',
+        snippet: '"individual personalities (20), information about the virus, their own..."',
+        note: '<strong>Reuse for Methods §3.2 (persona generation)</strong> — Big Five trait labels.' },
+      { num: 21, tags: ['epi'], reuse: false,
+        cite: 'Ghaffarzadegan N. Simulation-based what-if analysis for controlling the spread of Covid-19 in universities. <em>PLOS ONE.</em> 2021;16(2):e0246323.',
+        snippet: '"...prevalence or daily death rate (9, 21)."' },
+      { num: 22, tags: ['foundational','epi'], reuse: false,
+        cite: 'Kermack WO, McKendrick AG, Walker GT. A contribution to the mathematical theory of epidemics. <em>Proceedings of the Royal Society of London A.</em> 1927;115(772):700-21.',
+        snippet: '"modeling (22) by proving a new epidemic modeling approach."' },
+      { num: 23, tags: ['epi'], reuse: false,
+        cite: 'Qiu Z, Espinoza B, Vasconcelos VV, et al. Understanding the coevolution of mask wearing and epidemics: A network perspective. <em>PNAS.</em> 2022;119(26):e2123355119.',
+        snippet: '"...path (23, 24). Our research contributes to this body of literature..."' },
+      { num: 24, tags: ['epi'], reuse: false,
+        cite: 'Rahmandad H, Sterman J. Quantifying the COVID-19 endgame: Is a new normal within reach? <em>System Dynamics Review.</em> 2022;38(4):329-53.',
+        snippet: 'See snippet for ref 23.' },
+      { num: 25, tags: ['foundational'], reuse: false,
+        cite: 'Richardson GP. Reflections on the foundations of system dynamics. <em>System Dynamics Review.</em> 2011;27(3):219-43.',
+        snippet: null },
+      { num: 26, tags: ['foundational'], reuse: false,
+        cite: 'Kazil J, Masad D, Crooks A, editors. Utilizing Python for Agent-Based Modeling: The Mesa Framework. Springer 2020.',
+        snippet: null,
+        note: 'Could be cited for ABM-as-a-method context if §2 needs a baseline ABM ref.' },
+    ];
+
+    const PAPER2_REFS = [
+      { num: 1,  tags: ['gabm','behavior'], reuse: true,
+        cite: 'Han, X., Wu, Z., &amp; Xiao, C. (2023). "Guinea Pig Trials" Utilizing GPT: A Novel Smart Agent-Based Modeling Approach for Studying Firm Competition and Collusion. arXiv:2308.10974.',
+        snippet: '"From exploring tacit collusion (1) to creating more humanistic thinking chatbots (2-8)..."',
+        note: '<strong>Reuse for §2.1 — game-theoretic / firm-collusion GABM example.</strong>' },
+      { num: 2,  tags: ['gabm'], reuse: true,
+        cite: 'Park, J. S., O&#39;Brien, J. C., Cai, C. J., Morris, M. R., Liang, P., &amp; Bernstein, M. S. (2023). Generative agents: Interactive simulacra of human behavior. arXiv:2304.03442.',
+        snippet: '"A generative agent is an entity that uses LLMs to personify itself and simulate realistic human behavior (2)."',
+        note: '<strong>Slam dunk — canonical GABM citation.</strong> Same paper as Paper 1 [#17].' },
+      { num: 3,  tags: ['llm-eval'], reuse: false,
+        cite: 'Khattab, O., Santhanam, K., Li, X. L., Hall, D., Liang, P., Potts, C., &amp; Zaharia, M. (2022). Demonstrate-Search-Predict: Composing retrieval and language models for knowledge-intensive NLP. arXiv:2212.14024.',
+        snippet: 'See ref 1 snippet (cited inside the (2-8) range).' },
+      { num: 4,  tags: ['llm-eval'], reuse: false,
+        cite: 'Wei, J., Wang, X., Schuurmans, D., et al. (2022). Chain-of-thought prompting elicits reasoning in large language models. <em>NeurIPS</em> 35, 24824-24837.',
+        snippet: 'See ref 1 snippet.',
+        note: 'Could support §2.2 if discussing reasoning-mode lineage.' },
+      { num: 5,  tags: ['llm-eval','foundational'], reuse: true,
+        cite: 'Brown, T., Mann, B., Ryder, N., et al. (2020). Language models are few-shot learners. <em>NeurIPS</em> 33, 1877-1901.',
+        snippet: '"Since these models are trained on massive amounts of human-generated data (5)..."',
+        note: '<strong>Could anchor §2.2 (foundational LLM ref) or §1 intro.</strong>' },
+      { num: 6,  tags: ['llm-eval'], reuse: false,
+        cite: 'Huang, W., Xia, F., Xiao, T., et al. (2022). Inner monologue: Embodied reasoning through planning with language models. arXiv:2207.05608.',
+        snippet: 'See ref 1 snippet.' },
+      { num: 7,  tags: ['llm-eval'], reuse: false,
+        cite: 'Wu, T., Terry, M., &amp; Cai, C. J. (2022). AI chains: Transparent and controllable human-AI interaction by chaining large language model prompts. <em>CHI 2022</em>.',
+        snippet: 'See ref 1 snippet.' },
+      { num: 8,  tags: ['behavior'], reuse: true,
+        cite: 'Jiang, H., Zhang, X., Cao, X., Kabbara, J., &amp; Roy, D. (2023). PersonaLLM: Investigating the ability of GPT-3.5 to express personality traits and gender differences. arXiv:2305.02547.',
+        snippet: 'See ref 1 snippet (cited inside (2-8)).',
+        note: '<strong>Highly relevant for §2.1</strong> — directly probes Big-Five trait expression in an LLM, which is what our agents do.' },
+      { num: 9,  tags: ['behavior','llm-eval'], reuse: true,
+        cite: 'Hutson, M. (2023). Can AI chatbots replace human subjects in behavioral experiments? <em>Science</em>, 381(6654).',
+        snippet: '"...the possibilities of modeling human behavior using agents powered by LLMs seems increasingly likely (9)."',
+        note: 'Useful framing piece for §2.2.' },
+      { num: 10, tags: ['gabm','epi'], reuse: true,
+        cite: 'Williams, R., Hosseinichimeh, N., Majumdar, A., &amp; Ghaffarzadegan, N. (2023). Epidemic Modeling with Generative Agents. arXiv:2307.04986.',
+        snippet: '"researchers have conducted dynamic experiments with generative agents on... epidemic models (10)..."',
+        note: 'Already cited as [1] in Paper 3.' },
+      { num: 11, tags: ['gabm','behavior'], reuse: true,
+        cite: 'Akata, E., Schulz, L., Coda-Forno, J., Oh, S. J., Bethge, M., &amp; Schulz, E. (2023). Playing repeated games with Large Language Models. arXiv:2305.16867.',
+        snippet: '"In some game theory applications, generative agents compete against each other in the Prisoner&#39;s Dilemma (11, 12)..."',
+        note: '<strong>Reuse for §2.1 — game-theoretic GABMs.</strong>' },
+      { num: 12, tags: ['gabm','behavior'], reuse: true,
+        cite: 'Phelps, S., &amp; Russell, Y. I. (2023). Investigating emergent goal-like behaviour in large language models using experimental economics. arXiv:2305.07970.',
+        snippet: 'See ref 11 snippet.',
+        note: '<strong>Reuse for §2.1 — game-theoretic GABMs.</strong>' },
+      { num: 13, tags: ['behavior'], reuse: true,
+        cite: 'Binz, M., &amp; Schulz, E. (2023). Using cognitive psychology to understand GPT-3. <em>PNAS</em>, 120(6), e2218523120.',
+        snippet: '"...the survey-like experiment ends there, and the output responses are analyzed (13, 14, 18-20)."',
+        note: '<strong>Reuse for §2.1 (or §2.2)</strong> — landmark cog-psych eval of an LLM.' },
+      { num: 14, tags: ['gabm','behavior'], reuse: true,
+        cite: 'Horton, J. J. (2023). Large language models as simulated economic agents: What can we learn from homo silicus? NBER w31122.',
+        snippet: 'See ref 13 snippet.',
+        note: '<strong>Reuse for §2.1</strong> — Homo Silicus framing of LLM-as-agent.' },
+      { num: 15, tags: ['survey','gabm'], reuse: true,
+        cite: 'Wang, L., Ma, C., Feng, X., Zhang, Z., et al. (2023). A Survey on Large Language Model based Autonomous Agents. arXiv:2308.11432.',
+        snippet: '"...according to Wang et al.&#39;s comprehensive literature review of generative agents, there is no unified way to prompt LLMs nor to conduct prompt sensitivity analysis (15)."',
+        note: '<strong>Best survey to cite</strong> — directly relevant umbrella ref for §2.1. Pair with a 2024-2026 follow-up.' },
+      { num: 16, tags: ['gabm'], reuse: true,
+        cite: 'Park, J. S., Popowski, L., Cai, C., Morris, M. R., Liang, P., &amp; Bernstein, M. S. (2022). Social simulacra: Creating populated prototypes for social computing systems. <em>UIST 2022</em>.',
+        snippet: '"researchers have agents dynamically react to each others&#39; posts and comments in a Reddit-like setting (16)."',
+        note: '<strong>Reuse for §2.1</strong> — predecessor to Park 2023; social-computing GABM.' },
+      { num: 17, tags: ['gabm'], reuse: true,
+        cite: 'Gao, C., Lan, X., Lu, Z., Mao, J., Piao, J., Wang, H., et al. (2023). S³: Social-network Simulation System with Large Language Model-Empowered Agents. arXiv:2307.14984.',
+        snippet: '"...another model named S³ creates a social-network as well as realistic human-personas from data-sources (17)."',
+        note: '<strong>Reuse for §2.1</strong> — social-network GABM.' },
+      { num: 18, tags: ['behavior','llm-eval'], reuse: true,
+        cite: 'Dillion, D., Tandon, N., Gu, Y., &amp; Gray, K. (2023). Can AI language models replace human participants? <em>Trends in Cognitive Sciences.</em>',
+        snippet: 'See ref 13 snippet.',
+        note: 'Reuse for §2.2 — debate piece on LLMs as participants.' },
+      { num: 19, tags: ['gabm','behavior'], reuse: true,
+        cite: 'Argyle, L. P., Busby, E. C., Fulda, N., Gubler, J. R., Rytting, C., &amp; Wingate, D. (2023). Out of one, many: Using language models to simulate human samples. <em>Political Analysis</em>, 31(3), 337-351.',
+        snippet: 'See ref 13 snippet.',
+        note: '<strong>Reuse for §2.1</strong> — silicon samples / political-opinion simulation. Frequently cited GABM-adjacent paper.' },
+      { num: 20, tags: ['gabm'], reuse: true,
+        cite: 'Hamilton, S. (2023). Blind judgement: Agent-based supreme court modelling with GPT. arXiv:2301.05327.',
+        snippet: 'See ref 13 snippet.',
+        note: '<strong>Reuse for §2.1</strong> — institutional-decision GABM.' },
+      { num: 21, tags: ['llm-eval'], reuse: false,
+        cite: 'Gekhman, Z., Oved, N., Keller, O., Szpektor, I., &amp; Reichart, R. (2023). On the robustness of dialogue history representation in conversational question answering. <em>TACL</em>, 11, 351-366.',
+        snippet: '"concerns about their sensitivity to text-input have emerged (21, 22)."' },
+      { num: 22, tags: ['llm-eval'], reuse: false,
+        cite: 'Zhuo, T. Y., Li, Z., Huang, Y., et al. (2023). On robustness of prompt-based semantic parsing with large pre-trained language model. arXiv:2301.12868.',
+        snippet: 'See ref 21 snippet.' },
+      { num: 23, tags: ['misc'], reuse: false,
+        cite: 'Zou, J., &amp; Schiebinger, L. (2018). AI can be sexist and racist—it&#39;s time to make it fair.',
+        snippet: '"racial and sex biases (23)."' },
+      { num: 24, tags: ['misc'], reuse: false,
+        cite: 'Dastin, J. (2018). Amazon scraps secret AI recruiting tool that showed bias against women. <em>Reuters.</em>',
+        snippet: '"Amazon shut down its recruiting AI tool as it was found to be biased against women (24)."' },
+      { num: 25, tags: ['misc'], reuse: false,
+        cite: 'Kayser-Bril, N. (2020). Google apologizes after its vision AI produced racist results. <em>AlgorithmWatch.</em>',
+        snippet: '"...different objects for lighter-skinned individuals (25)."' },
+      { num: 26, tags: ['misc'], reuse: false,
+        cite: 'Electronic Arts. 2009. The Sims 3. Video game.',
+        snippet: null },
+      { num: 27, tags: ['misc'], reuse: false,
+        cite: 'OpenAI. 2022. Introducing ChatGPT.',
+        snippet: '"the study of generative artificial intelligence (AI) has seen significant advances (27)."' },
+      { num: 28, tags: ['misc'], reuse: false,
+        cite: 'Majumdar, A. GABM-Epidemic. GitHub repo.',
+        snippet: '"epidemic model code was altered (28)."' },
+      { num: 29, tags: ['gabm','survey'], reuse: true,
+        cite: 'Ghaffarzadegan, N., Majumdar, A., Williams, R., &amp; Hosseinichimeh, N. (2023). Generative Agent-Based Modeling: Unveiling Social System Dynamics through Coupling Mechanistic Models with Generative Artificial Intelligence.',
+        snippet: null,
+        note: '<strong>SUPERSEDED &mdash; cite the 2024 published version instead</strong> (see "Ghaffarzadegan et al. 2024" in Recent Additions). Same author lineup, peer-reviewed in <em>System Dynamics Review</em> 40(1):e1761.' },
+      { num: 30, tags: ['foundational','gabm'], reuse: true,
+        cite: 'Epstein, J. M. (2007). <em>Generative Social Science.</em> Princeton University Press.',
+        snippet: '"While traditional agent-based models have long emphasized the importance of sensitivity analysis (30)..."',
+        note: '<strong>Slam dunk for §6 conclusion</strong> — the "ABM has long been expected to demonstrate sensitivity" claim sits exactly here. Also useful as ABM/CSS foundational ref in §2.1.' },
+    ];
+
+    // ─────────────────────────────────────────────────────────────────────
+    // RENDER
+    // ─────────────────────────────────────────────────────────────────────
+    function tagsHTML(tags) {
+      const labels = { gabm:'GABM', 'llm-eval':'LLM-eval', behavior:'Behavior', survey:'Survey', epi:'Epi', foundational:'Foundational', misc:'Misc' };
+      return tags.map(t => `<span class="tag tag-${t}">${labels[t]||t}</span>`).join('');
+    }
+
+    function renderCard(ref, src) {
+      const reuseAttr = ref.reuse ? ' data-reuse="1"' : '';
+      const tagAttrs = ref.tags.map(t => `data-tag-${t}="1"`).join(' ');
+      const hasSnip = ref.snippet && !ref.snippet.startsWith('See ');
+      return `<div class="ref-card ${hasSnip ? 'has-snippet' : ''}" data-source="${src}" ${tagAttrs}${reuseAttr}>
+        <div class="ref-meta">
+          <span class="source-badge ${src}">${src.toUpperCase()} #${ref.num}</span>
+          ${tagsHTML(ref.tags)}
+          ${ref.reuse ? '<span class="tag" style="background:#fde68a;color:#78350f">★ §2 candidate</span>' : ''}
+        </div>
+        <div class="ref-citation">${ref.cite}</div>
+        ${ref.snippet ? `<div class="ref-snippet"><strong>In-text:</strong> ${ref.snippet}</div>` : ''}
+        ${ref.note ? `<div class="ref-note">${ref.note}</div>` : ''}
+      </div>`;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Recent additions for Paper 3 — sourced primarily from Li & Wu 2025
+    // (System Dynamics Review). All marked reuse:true since they are being
+    // added specifically for §2 (Background) of Paper 3.
+    // ─────────────────────────────────────────────────────────────────────
+    const PAPER3_REFS = [
+      { num: 1, tags: ['gabm','survey'], reuse: true,
+        cite: 'Li, Z., &amp; Wu, Q. (2025). Let It Go or Control It All? The Dilemma of Prompt Engineering in Generative Agent-Based Models. <em>System Dynamics Review</em>, 41(3), e70008. https://doi.org/10.1002/sdr.70008',
+        snippet: 'Williams et al. 2023 cited in §3.2.3 ("selective information feeding directly influences agent decisions") and §3.5.1 ("highly controlled environment where almost every aspect of agent decision-making is influenced by researcher design choices").',
+        note: '<strong>Companion ref for §2.1 + §6 framing.</strong> Most recent SDR paper on GABM since Williams 2023. Argues prompts over-control GABM outcomes; cites your Paper 1 as a primary case. <strong>Rhetorical opening for your Discussion:</strong> their concern about distinguishing emergent behavior from prompt artifacts is real, and your frozen-task probe design is precisely the methodology that <em>isolates</em> LLM-choice effects from the emergent-vs-engineered ambiguity they raise.' },
+
+      { num: 2, tags: ['gabm','behavior'], reuse: true,
+        cite: 'Park, J. S., Zou, C. Q., Shaw, A., et al. (2024). Generative Agent Simulations of 1,000 People. arXiv:2411.10109.',
+        snippet: null,
+        note: '<strong>Slam dunk for §6 Conclusion.</strong> Fills the missing reference for "recent work fine-tunes general-purpose LLMs on real human-action traces." Park et al. construct agents from deep interviews of 1,000 real people to better simulate individual attitudes. Direct successor to Park 2023.' },
+
+      { num: 3, tags: ['gabm','survey'], reuse: true,
+        cite: 'Ghaffarzadegan, N., Majumdar, A., Williams, R., &amp; Hosseinichimeh, N. (2024). Generative Agent-Based Modeling: An Introduction and Tutorial. <em>System Dynamics Review</em>, 40(1), e1761.',
+        snippet: null,
+        note: '<strong>PUBLISHED VERSION of P2-#29.</strong> You are a co-author. Use this in §2.1 instead of the 2023 preprint; peer-reviewed in SDR. Tutorial framing of GABM &mdash; canonical methodological reference for your group.' },
+
+      { num: 4, tags: ['gabm','survey'], reuse: true,
+        cite: 'Mou, X., Wang, Z., Zhou, X., et al. (2024). From Individual to Society: A Survey on Social Simulation Driven by Large Language Model-Based Agents. arXiv:2412.03563.',
+        snippet: null,
+        note: '<strong>Pairs with Wang 2023 [P2-#15]</strong> as a more recent (2024) survey. Particularly useful for §2.1 framing of GABM as a four-component (profile/memory/planning/action) prompt-driven system &mdash; that conceptual scaffold appears prominently in Li &amp; Wu 2025.' },
+
+      { num: 5, tags: ['gabm','behavior'], reuse: true,
+        cite: 'Lorè, N., &amp; Heydari, B. (2024). Strategic Behavior of Large Language Models and the Role of Game Structure Versus Contextual Framing. <em>Scientific Reports</em>, 14(1), 18490.',
+        snippet: null,
+        note: '<strong>Peer-reviewed game-theoretic GABM.</strong> Stronger venue than the arXiv-only refs in P2 (Akata, Phelps, Hamilton). Use in §2.1 alongside or in place of those for the game-theoretic application bucket.' },
+
+      { num: 6, tags: ['gabm'], reuse: true,
+        cite: 'Hua, W., Fan, L., Li, L., et al. (2023). War and Peace (WarAgent): Large Language Model-Based Multi-Agent Simulation of World Wars. arXiv:2311.17227.',
+        snippet: null,
+        note: '<strong>International-conflict GABM.</strong> Adds breadth to the §2.1 GABM-applications taxonomy beyond the social/economic/game-theoretic buckets you already have. Frequently cited as a reference example in Li &amp; Wu 2025.' },
+
+      { num: 7, tags: ['gabm','behavior'], reuse: true,
+        cite: 'Dai, G., Zhang, W., Li, J., et al. (2024). Artificial Leviathan: Exploring Social Evolution of LLM Agents Through the Lens of Hobbesian Social Contract Theory. arXiv:2406.14373.',
+        snippet: null,
+        note: 'Social-philosophy GABM (emergent social-contract dynamics). Useful as one entry in §2.1\'s catalogue of GABM applications. Also a useful methodological example: Li &amp; Wu cite it for prompt-induced over-control of agent motivations.' },
+
+      { num: 8, tags: ['gabm','behavior'], reuse: true,
+        cite: 'Li, N., Gao, C., Li, M., Li, Y., &amp; Liao, Q. (2024). EconAgent: Large Language Model-Empowered Agents for Simulating Macroeconomic Activities. <em>Proceedings of the 62nd Annual Meeting of the ACL</em>, 1, 15523–15536.',
+        snippet: null,
+        note: '<strong>Peer-reviewed (ACL 2024) economic-simulation GABM.</strong> Closest "different domain, same methodology" companion to your epidemic GABM. Strong addition to §2.1. (Different first author from the Li &amp; Wu 2025 review &mdash; this is Li, N., not Li, Z.)' },
+
+      { num: 9, tags: ['llm-eval','survey'], reuse: true,
+        cite: 'Naveed, H., Khan, A. U., Qiu, S., et al. (2023). A Comprehensive Overview of Large Language Models. <em>ACM Transactions on Intelligent Systems and Technology.</em>',
+        snippet: null,
+        note: '<strong>Foundational LLM survey for §2.2.</strong> Use to anchor "the space of available LLMs has expanded dramatically" claims in §1 and to introduce LLMs as statistical sequence predictors in §2.2 (a framing both Li &amp; Wu and Mou et al. lean on).' },
+
+      { num: 10, tags: ['gabm','survey'], reuse: true,
+        cite: 'Larooij, M., &amp; Törnberg, P. (2025). Validation is the central challenge for generative social simulation: a critical review of LLMs in agent-based modeling. <em>Artificial Intelligence Review</em>, 59(1), 15. https://doi.org/10.1007/s10462-025-11412-6',
+        snippet: null,
+        note: '<strong>Companion ref to Li &amp; Wu 2025 — peer-reviewed critical review</strong> (AI Review, Springer). Argues that LLMs may exacerbate rather than resolve ABM validation challenges given their black-box structure, cultural biases, and stochastic outputs. <strong>Strong rhetorical anchor for §1 / §2.1:</strong> your Paper 3 directly probes one facet of their concern — quantifying how LLM choice itself drives output variation. Pair with Li &amp; Wu 2025 to position your work as evidentiary contribution to two concurrent 2025 reviews flagging GABM credibility issues.' },
+
+      { num: 11, tags: ['gabm','survey'], reuse: true,
+        cite: 'Gao, C., Lan, X., Li, N., Yuan, Y., Ding, J., Zhou, Z., Xu, F., &amp; Li, Y. (2024). Large language models empowered agent-based modeling and simulation: a survey and perspectives. <em>Humanities and Social Sciences Communications</em>, 11(1). https://doi.org/10.1057/s41599-024-03611-3',
+        snippet: null,
+        note: '<strong>Peer-reviewed survey (Nature HSS Communications), 2024.</strong> Same first author as S³ [P2-#17] but a different, much broader paper. Maps the LLM-ABM landscape across individual and collective behavior. Pair with Mou 2024 [P3-#4] and Wang 2023 [P2-#15] as the three "current state of GABM" survey citations for §2.1.' },
+    ];
+
+    document.getElementById('paper1-refs').innerHTML = PAPER1_REFS.map(r => renderCard(r, 'p1')).join('');
+    document.getElementById('paper2-refs').innerHTML = PAPER2_REFS.map(r => renderCard(r, 'p2')).join('');
+    document.getElementById('paper3-refs').innerHTML = PAPER3_REFS.map(r => renderCard(r, 'p3')).join('');
+
+    // ─────────────────────────────────────────────────────────────────────
+    // FILTER + SEARCH
+    // ─────────────────────────────────────────────────────────────────────
+    let activeFilter = 'all';
+    const searchInput = document.getElementById('search-input');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        applyFilters();
+      });
+    });
+    searchInput.addEventListener('input', applyFilters);
+
+    function applyFilters() {
+      const q = searchInput.value.trim().toLowerCase();
+      const cards = document.querySelectorAll('.ref-card');
+      let visible = 0;
+      cards.forEach(card => {
+        let show = true;
+        // Source / tag filter
+        if (activeFilter === 'p1') show = card.dataset.source === 'p1';
+        else if (activeFilter === 'p2') show = card.dataset.source === 'p2';
+        else if (activeFilter === 'p3') show = card.dataset.source === 'p3';
+        else if (activeFilter === 'reuse') show = card.dataset.reuse === '1';
+        else if (activeFilter !== 'all') show = card.hasAttribute(`data-tag-${activeFilter}`);
+        // Free-text search
+        if (show && q) show = card.textContent.toLowerCase().includes(q);
+        card.classList.toggle('hide', !show);
+        if (show) visible++;
+      });
+      document.getElementById('visible-count').textContent = visible;
+    }
+    applyFilters();
+  </script>
+</body>
+</html>

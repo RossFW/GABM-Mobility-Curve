@@ -4,12 +4,19 @@
 'use strict';
 
 (function() {
+  // Skip nav injection when this page is being loaded inside an iframe
+  // (e.g., town.html embedded as a backdrop or interactive panel on index.html).
+  if (window.parent !== window) return;
+
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const links = [
     { href: 'index.html',     label: 'HOME' },
     { href: 'town.html',      label: 'SIMULATION' },
     { href: 'paper.html',     label: 'PAPER' },
     { href: 'analytics.html', label: 'ANALYTICS' },
+    { href: 'citations.html', label: 'CITATIONS' },
+    { href: 'reading-list.html', label: 'READING' },
+    { href: 'intro-compare.html', label: '§1 COMPARE' },
   ];
 
   const nav = document.createElement('nav');

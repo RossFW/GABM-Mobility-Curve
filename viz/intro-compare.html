@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>§2 Background — Editable First Stab</title>
+  <script src="nav.js" defer></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #ffffff;
+      color: #111;
+      font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+      padding: 40px 0 100px;
+      line-height: 1.55;
+    }
+    #app {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+    .page-header {
+      border-bottom: 2px solid #111;
+      padding-bottom: 16px;
+      margin-bottom: 22px;
+    }
+    h1 { font-size: 22px; font-weight: bold; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #555; font-style: italic; }
+
+    /* Toolbar */
+    .toolbar {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 20;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 22px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .toolbar button {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 6px 12px;
+      border: 1px solid #999;
+      border-radius: 3px;
+      background: #f7f7f7;
+      cursor: pointer;
+    }
+    .toolbar button:hover { background: #e8e8e8; }
+    .toolbar button.primary { background: #1e40af; color: #fff; border-color: #1e40af; }
+    .toolbar button.primary:hover { background: #1e3a8a; }
+    .toolbar button.danger { color: #b91c1c; border-color: #fecaca; }
+    .toolbar button.danger:hover { background: #fef2f2; }
+    .toolbar .status {
+      font-size: 11px; color: #555; margin-left: auto; font-style: italic;
+    }
+    .toolbar .status .edit-count { color: #047857; font-weight: bold; font-style: normal; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #047857; color: #fff;
+      padding: 10px 18px; border-radius: 4px;
+      font-size: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; }
+
+    /* Plan box */
+    .plan-box {
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      border-radius: 4px;
+      padding: 13px 18px;
+      margin-bottom: 22px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: #1e3a8a;
+    }
+    .plan-box h3 {
+      font-size: 12px; margin-bottom: 6px;
+      letter-spacing: 0.6px; text-transform: uppercase;
+      color: #1e40af;
+    }
+    .plan-box ul { margin-left: 18px; }
+    .plan-box li { margin-bottom: 3px; }
+
+    /* Edit hint */
+    .edit-hint {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 4px;
+      padding: 11px 16px;
+      margin-bottom: 24px;
+      font-size: 12px;
+      line-height: 1.65;
+      color: #78350f;
+    }
+    .edit-hint kbd {
+      background: #fff; border: 1px solid #fcd34d;
+      border-radius: 3px; padding: 1px 5px;
+      font-family: 'SF Mono', monospace; font-size: 11px;
+      color: #78350f;
+    }
+    .edit-hint code {
+      background: #fef3c7; padding: 1px 4px; border-radius: 2px;
+      font-family: 'SF Mono', monospace; font-size: 11px;
+      color: #78350f;
+    }
+
+    /* Section headings */
+    .section-heading {
+      font-size: 16px; font-weight: bold;
+      margin: 30px 0 8px; padding-top: 18px;
+      border-top: 1px solid #ccc;
+    }
+    .subsection-heading {
+      font-size: 14px; font-weight: bold;
+      margin: 22px 0 10px;
+      color: #111;
+    }
+    .subsection-tag {
+      font-size: 10px;
+      color: #6b7280;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-weight: normal;
+      margin-left: 8px;
+    }
+
+    /* Editable prose */
+    .intro-prose p {
+      font-size: 13.5px;
+      line-height: 1.75;
+      color: #1f1f1f;
+      margin-bottom: 14px;
+      padding: 8px 12px;
+      border-left: 3px solid transparent;
+      border-radius: 0 3px 3px 0;
+      transition: background 0.15s, border-left-color 0.15s;
+      outline: none;
+    }
+    .intro-prose p[contenteditable="true"]:hover {
+      background: #f9fafb;
+      border-left-color: #cbd5e1;
+    }
+    .intro-prose p[contenteditable="true"]:focus {
+      background: #fffbeb;
+      border-left-color: #d97706;
+    }
+    .intro-prose p.edited {
+      border-left-color: #059669;
+      background: #f0fdf4;
+    }
+
+    /* Export pane */
+    .export-pane {
+      margin-top: 32px;
+      padding-top: 18px;
+      border-top: 1px solid #ccc;
+    }
+    .export-pane h3 { font-size: 13px; margin-bottom: 8px; color: #111; }
+    .export-pane textarea {
+      width: 100%;
+      min-height: 240px;
+      font-family: 'SF Mono', Menlo, monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #f9fafb;
+      color: #111;
+      resize: vertical;
+    }
+    .export-pane .hint {
+      font-size: 11px; color: #666;
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    /* Refs block */
+    .refs-block {
+      margin-top: 32px;
+      padding-top: 18px;
+      border-top: 1px solid #ccc;
+      font-size: 12px;
+      line-height: 1.7;
+      color: #333;
+    }
+    .refs-block h3 { font-size: 13px; margin-bottom: 10px; color: #111; }
+    .refs-block ul { padding-left: 20px; list-style-type: none; }
+    .refs-block li { margin-bottom: 6px; }
+    .refs-block .ref-key {
+      font-family: 'SF Mono', monospace;
+      font-size: 11px;
+      background: #ede9fe;
+      color: #5b21b6;
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-right: 8px;
+    }
+    .refs-block .ref-tag {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      margin-left: 6px;
+      letter-spacing: 0.4px;
+      font-weight: bold;
+    }
+    .ref-tag.existing { background: #dcfce7; color: #14532d; }
+    .ref-tag.new { background: #dbeafe; color: #1e3a8a; }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <div class="page-header">
+      <h1>§2 Background &amp; Related Work &mdash; Editable First Stab</h1>
+      <div class="subtitle">My first stab at §2, ready for your reaction. Click any paragraph to edit. When you&rsquo;re happy, hit <strong>Copy edited prose</strong> and paste back &mdash; I&rsquo;ll apply it to paper.html.</div>
+    </div>
+
+    <div class="toolbar">
+      <button id="copy-btn" class="primary">📋 Copy edited prose</button>
+      <button id="refresh-export-btn">↻ Refresh export pane</button>
+      <button id="reset-btn" class="danger">⟲ Reset all edits</button>
+      <span class="status">
+        <span class="edit-count" id="edit-count">0</span> paragraph<span id="edit-count-s">s</span> edited
+        &middot; saved locally
+      </span>
+    </div>
+
+    <div class="plan-box">
+      <h3>§2 plan (three subsections, GABM/social-sim/evaluation taxonomy)</h3>
+      <ul>
+        <li><strong>2.1 Generative agent-based modeling</strong> &mdash; strict GABM definition (LLM-in-the-loop, environment-coupled, multi-step), canonical examples including Williams 2023 (Paper 1, cited as a GABM in two independent reviews), and alternative-LLM work (Kolluri, Park-1000, Simile).</li>
+        <li><strong>2.2 LLM-based social simulation and LLM-as-human-subject experiments</strong> &mdash; the broader literature that uses LLMs as social-science instruments but doesn&rsquo;t embed them in a GABM loop (Park 2023 Smallville, S<sup>3</sup>, Akata) plus one-shot subject experiments (Argyle, Horton, Binz &amp; Schulz).</li>
+        <li><strong>2.3 LLM evaluations</strong> &mdash; broad &rarr; narrow funnel: capability benchmarks &rarr; cross-LLM comparison in shallow behavioral probes (Dominguez-Olmedo, Leng, Kim, Park-Wei) &rarr; this paper as the natural extension &mdash; cross-LLM comparison embedded in a full GABM.</li>
+      </ul>
+      <p style="font-style:italic;color:#666;font-size:11px;margin-top:8px">Restructure notes: §2 intro sentence dropped. Old q21_2 (which lumped Park 2023, S<sup>3</sup>, Akata, Horton, Argyle as &ldquo;GABMs&rdquo;) replaced with proper GABM examples (Williams 2023, Wu et al. SABM, Concordia, CRSEC). Old q22_2 (behavioral-fidelity strand &mdash; Argyle, Horton, Binz) dissolved into the new §2.2 since those papers are LLM-as-subject experiments. The &ldquo;six lenses&rdquo; framework previously drafted as §2.3 lives in §3.4 (Methods).</p>
+    </div>
+
+    <div class="edit-hint">
+      <strong>Citation markers:</strong> shown as <code>[author_year]</code> plain text inline (e.g. <code>[park2023]</code>, <code>[wang2023, mou2024]</code> for multi-cite). Edit them like normal text. When I apply your edits to paper.html, I convert plain-text keys to the cite-renderer markup. <kbd>⌘Z</kbd> / <kbd>Ctrl-Z</kbd> for undo within a paragraph.
+    </div>
+
+    <div class="section-heading">2. Background &amp; Related Work</div>
+
+    <div class="intro-prose" id="prose-root">
+
+      <div class="subsection-heading">2.1 Generative agent-based modeling <span class="subsection-tag">2 paragraphs</span></div>
+
+      <p contenteditable="true" data-pid="q21_1">In a generative agent-based modeling (GABM) simulation, agents&rsquo; decisions are produced by an LLM rather than by hand-coded behavioral rules [ghaffarzadegan2024]. At every step the LLM is prompted with the agent&rsquo;s persona and the current state of the simulation. Then, the LLM&rsquo;s response is parsed into a structured action that updates that state for the next step. Ghaffarzadegan et al. formalized this loop as a methodology for combining LLM-driven decisions with classical agent-based modeling [ghaffarzadegan2024].</p>
+
+      <p contenteditable="true" data-pid="q21_2">Existing GABMs span a range of domains. Williams et al. modeled an epidemic in which agents decide each day whether to stay home or go out [williams2023], a study cited as a canonical GABM example in subsequent reviews [lu_aleta_moreno2024, adornetto2025]. Wu et al. introduce Smart Agent-Based Modeling, a general GABM framework demonstrated across economics, finance, and engineering case studies [wu_sabm2023]. Vezhnevets et al. propose Concordia, a library for grounding GABM actions in physical, social, and digital spaces using a game-master that mediates state transitions [vezhnevets_concordia2023]. Lan et al. deploy LLM agents as players in the social-deduction game Avalon, observing emergent collaboration, confrontation, leadership, persuasion, and camouflage behaviors across multi-round gameplay [lan_avalon2024]. Across these systems the common pattern is the same: many agents, many timesteps, environment-coupled decisions, with collective dynamics emerging from individual LLM-driven choices.</p>
+
+      <div class="subsection-heading">2.2 LLM social simulation <span class="subsection-tag">2 paragraphs</span></div>
+
+      <p contenteditable="true" data-pid="q22sim_1">A broader literature uses LLMs as social-science instruments without embedding them inside a multi-step GABM loop. Park et al.&rsquo;s generative-agents architecture introduced the memory-stream, reflection, and planning pattern in a virtual-town sandbox of 25 agents pursuing daily goals and exchanging messages [park2023]. Gao et al.&rsquo;s S<sup>3</sup> social-network simulator deploys LLM agents that observe content, adjust attitudes, and produce posts, reproducing empirical patterns of emotion and attitude propagation around two news events [gao_s3_2023]. Akata et al. have LLM agents play repeated games against one another to study cooperation [akata2023]. Argyle et al. introduced &ldquo;algorithmic fidelity&rdquo; as the property by which prompted LLMs reproduce demographic-conditional opinion distributions [argyle2023]. Horton showed that LLM agents exhibit behaviors consistent with classical economic-agent assumptions [horton2023]. Binz and Schulz applied cognitive-psychology paradigms to GPT-3 and found human-like response patterns alongside human-like biases [binz_schulz2023]. These studies provide individual-level behavioral evidence for the use of LLMs in social-science settings.</p>
+
+      <p contenteditable="true" data-pid="q21_4">A separate line of recent work develops methods for raising the fidelity with which an LLM reproduces a specific human or human population. Park et al.&rsquo;s 1,000-personas study prompts agents with detailed interview transcripts from real participants to align each agent with its human counterpart [park2024_1000]. Kolluri et al. fine-tune LLMs directly on human-behavior traces from social-science experiments [kolluri2025]. Efforts such as Simile.ai go further still, training purpose-built models for population-level diversity rather than the single polished persona of a chat assistant [simile_ai]. The present study uses general-purpose chat models with light persona prompts; whether richer prompting, fine-tuning, or purpose-built models reduce the model-to-model variability documented here is left as future work.</p>
+
+      <div class="subsection-heading">2.3 LLM evaluations <span class="subsection-tag">3 paragraphs &mdash; broad to narrow funnel</span></div>
+
+      <p contenteditable="true" data-pid="q23_1">LLMs are routinely evaluated on standardized benchmarks of capability &mdash; multi-domain knowledge (MMLU [mmlu_hendrycks2021]), program synthesis (HumanEval [humaneval_chen2021]), broad task suites (BIG-Bench [bigbench_srivastava2022]) &mdash; and on large-N head-to-head rankings via crowdsourced human preference (Chatbot Arena [chatbot_arena_chiang2024]). These evaluations measure what an LLM can do in isolation. They have established that frontier models differ measurably from earlier or smaller predecessors along most capability dimensions, with several capabilities emerging only above particular scale thresholds [wei_emergent2022].</p>
+
+      <p contenteditable="true" data-pid="q23_2">A second strand of work uses shallow behavioral probes &mdash; short, persona-conditioned tasks &mdash; to test how the LLM affects an agent&rsquo;s behavior. Dominguez-Olmedo et al. [dominguez_olmedo2024] administer multiple-choice survey instruments to 43 LLMs and report that apparent cross-model differences in opinion distributions are largely artifacts of response-ordering bias; once corrected, models collapse toward near-uniform random responding regardless of size or training corpus. Leng et al. [leng2025] run a matched dictator-game probe across nine LLMs from seven providers with systematic prompt variations and find substantial cross-model divergence in giving rates and prompt sensitivity. Mooney et al. [mooney2025] generate roughly five thousand demographic agents and test behavioral coherence across nine models, finding that while surface-level survey-style responses align broadly with each agent&rsquo;s stated profile, behavior in subsequent agent-to-agent interactions departs from that profile, and both model family and model size shape how often the coherence breaks down. Park-Wei et al. [parkwei2026] track nine LLM configurations daily through the 2024 U.S. presidential election and report systematic, model-specific over-prediction of one candidate&rsquo;s favorability by ten to forty percentage points. These studies establish that LLM choice can move behavioral output measurably.</p>
+
+      <p contenteditable="true" data-pid="q23_3">The present study is another such probe, applied specifically to the persona-conditioned decision that feeds an epidemic GABM. The same 100 personas are presented at 40 infection levels to 21 LLM configurations, holding the prompt, persona, and scenario fixed, varying only the underlying model. Where capability benchmarks ask what an LLM can do and behavioral-fidelity experiments ask whether it acts like a human, the analysis here asks how much the LLM shapes the agent&rsquo;s stay-or-go decision at the moment a GABM would query its agent. LLMs that perform similarly on capability benchmarks may still produce different mobility curves for the same population.</p>
+
+    </div>
+
+    <div class="export-pane">
+      <h3>Edited prose (plain text, ready to paste)</h3>
+      <textarea id="export-text" readonly></textarea>
+      <div class="hint">Reflects whatever&rsquo;s currently in your edited paragraphs. Click <strong>Refresh export pane</strong> to update after editing.</div>
+    </div>
+
+    <div class="refs-block">
+      <h3>Citation keys used in §2</h3>
+      <p style="font-style:italic;color:#666;font-size:11px;margin-bottom:12px">Reused keys (already in paper.html&rsquo;s §8 from §1 work) and new keys (need to be added when applying §2 to paper.html).</p>
+      <ul>
+        <li><span class="ref-key">williams2023</span> Williams et al. 2023 (epidemic GABM, Paper 1) <a href="https://arxiv.org/abs/2307.04986" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">ghaffarzadegan2024</span> Ghaffarzadegan et al. 2024 (GABM intro &amp; tutorial, SDR) <a href="https://doi.org/10.1002/sdr.1761" target="_blank" rel="noopener">[doi]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">lu_aleta_moreno2024</span> Lu, Aleta, Du, Shi, Moreno 2024 (LLMs and GABMs for complex systems, Physics of Life Reviews) <a href="https://doi.org/10.1016/j.plrev.2024.10.013" target="_blank" rel="noopener">[doi]</a> <span class="ref-tag new">NEW</span> &mdash; <em>cites Williams 2023 as canonical GABM</em></li>
+        <li><span class="ref-key">adornetto2025</span> Adornetto, Mora, Hu, Izquierdo Garcia, Atchade-Adelomou, Greco, Alonso Pastor, Larson 2025 (Generative Agents in ABM: Overview, Validation, Challenges, IEEE TAI) <a href="https://doi.org/10.1109/TAI.2025.3566362" target="_blank" rel="noopener">[doi]</a> <span class="ref-tag new">NEW</span> &mdash; <em>cites Williams 2023 as canonical GABM</em></li>
+        <li><span class="ref-key">wu_sabm2023</span> Wu, Peng, Han, Zheng, Zhang, Xiao 2023 (Smart Agent-Based Modeling) <a href="https://arxiv.org/abs/2311.06330" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">vezhnevets_concordia2023</span> Vezhnevets et al. 2023 (Concordia: GABMs grounded in physical/social/digital spaces) <a href="https://arxiv.org/abs/2312.03664" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span> &mdash; <em>verify full author list</em></li>
+        <li><span class="ref-key">lan_avalon2024</span> Lan, Hu, Wang, Wang, Ye, Zhao, Lim, Xiong, Wang 2024 (LLM-Based Agent Society Investigation: Collaboration and Confrontation in Avalon Gameplay, EMNLP) <a href="https://aclanthology.org/2024.emnlp-main.7/" target="_blank" rel="noopener">[acl anthology]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">akata2023</span> Akata et al. 2023 (repeated games with LLMs) <a href="https://arxiv.org/abs/2305.16867" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">larooij_tornberg2025</span> Larooij &amp; Törnberg 2025 (validation review, AI Review) <a href="https://doi.org/10.1007/s10462-025-11412-6" target="_blank" rel="noopener">[doi]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">liwu2025</span> Li &amp; Wu 2025 (prompt over-control, SDR) <a href="https://doi.org/10.1002/sdr.70008" target="_blank" rel="noopener">[doi]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">wang2023</span> Wang et al. 2023 (LLM agents survey) <a href="https://arxiv.org/abs/2308.11432" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">mou2024</span> Mou et al. 2024 (individual-to-society survey) <a href="https://arxiv.org/abs/2412.03563" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">gao2024hss</span> Gao et al. 2024 (LLM-ABM survey, Nature HSS Comm) <a href="https://doi.org/10.1057/s41599-024-03611-3" target="_blank" rel="noopener">[doi]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">wei_emergent2022</span> Wei et al. 2022 (Emergent Abilities, TMLR) <a href="https://arxiv.org/abs/2206.07682" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag existing">REUSED</span></li>
+        <li><span class="ref-key">park2023</span> Park, O&rsquo;Brien, Cai, Morris, Liang, Bernstein 2023 (Generative Agents, UIST) <a href="https://arxiv.org/abs/2304.03442" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">gao_s3_2023</span> Gao, Lan, Lu, Mao, Piao, Wang, Jin, Li 2023 (S³ Social-Network Simulation) <a href="https://arxiv.org/abs/2307.14984" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">horton2023</span> Horton 2023 (Homo Silicus, NBER) <a href="https://www.nber.org/papers/w31122" target="_blank" rel="noopener">[nber]</a> <a href="https://arxiv.org/abs/2301.07543" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">argyle2023</span> Argyle, Busby, Fulda, Gubler, Rytting, Wingate 2023 (Out of one, many; Political Analysis) <a href="https://doi.org/10.1017/pan.2023.2" target="_blank" rel="noopener">[doi]</a> <a href="https://arxiv.org/abs/2209.06899" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">park2024_1000</span> Park, Zou, Shaw, et al. 2024 (Generative agent simulations of 1,000 people) <a href="https://arxiv.org/abs/2411.10109" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">binz_schulz2023</span> Binz &amp; Schulz 2023 (cognitive psychology &amp; GPT-3, PNAS) <a href="https://doi.org/10.1073/pnas.2218523120" target="_blank" rel="noopener">[doi]</a> <a href="https://arxiv.org/abs/2206.14576" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">mmlu_hendrycks2021</span> Hendrycks et al. 2021 (Measuring Massive Multitask Language Understanding, ICLR) <a href="https://arxiv.org/abs/2009.03300" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">humaneval_chen2021</span> Chen et al. 2021 (Evaluating Large Language Models Trained on Code, arXiv) <a href="https://arxiv.org/abs/2107.03374" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">bigbench_srivastava2022</span> Srivastava et al. 2022 (Beyond the Imitation Game / BIG-Bench, TMLR) <a href="https://arxiv.org/abs/2206.04615" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">chatbot_arena_chiang2024</span> Chiang et al. 2024 (Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference, ICML) <a href="https://arxiv.org/abs/2403.04132" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">simile_ai</span> Simile.ai (purpose-built behavioral simulation models &mdash; URL/website cite, no paper) <a href="https://simile.ai/" target="_blank" rel="noopener">[site &mdash; please verify URL]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">kolluri2025</span> Kolluri, Wu, Park, Bernstein 2025 (Finetuning LLMs for Human Behavior Prediction in Social Science Experiments, EMNLP) <a href="https://aclanthology.org/2025.emnlp-main.1530/" target="_blank" rel="noopener">[acl anthology]</a> <a href="https://stanfordhci.github.io/socrates" target="_blank" rel="noopener">[code &amp; data]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">dominguez_olmedo2024</span> Dominguez-Olmedo, Hardt, Mendler-D&uuml;nner 2024 (Questioning the Survey Responses of LLMs, NeurIPS Oral) <a href="https://arxiv.org/abs/2306.07951" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">leng2025</span> Leng et al. 2025 (Benevolent Dictators? On LLM Agent Behavior in Dictator Games) <a href="https://arxiv.org/abs/2511.08721" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span> &mdash; <em>verify full author list</em></li>
+        <li><span class="ref-key">mooney2025</span> Mooney, Woldense, Jia, Hayati, Nguyen, Raheja, Kang 2025 (Are LLM Agents Behaviorally Coherent? Latent Profiles for Social Simulation) <a href="https://arxiv.org/abs/2509.03736" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span></li>
+        <li><span class="ref-key">parkwei2026</span> Park-Wei et al. 2026 (Do LLMs Track Public Opinion? Multi-Model Study of Favorability Predictions in the 2024 U.S. Election) <a href="https://arxiv.org/abs/2602.06302" target="_blank" rel="noopener">[arxiv]</a> <span class="ref-tag new">NEW</span> &mdash; <em>verify first author and full author list</em></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast">Copied!</div>
+
+  <script>
+    'use strict';
+    const STORAGE_KEY = 'section2_edits_v1';
+
+    const originals = {};
+    document.querySelectorAll('[contenteditable="true"][data-pid]').forEach(el => {
+      originals[el.dataset.pid] = el.innerHTML;
+    });
+
+    function loadEdits() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+      catch { return {}; }
+    }
+    function saveEdits(edits) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
+    }
+
+    const saved = loadEdits();
+    for (const [pid, html] of Object.entries(saved)) {
+      const el = document.querySelector(`[data-pid="${pid}"]`);
+      if (el && originals[pid] !== html) {
+        el.innerHTML = html;
+        el.classList.add('edited');
+      }
+    }
+    updateEditCount();
+
+    document.querySelectorAll('[contenteditable="true"][data-pid]').forEach(el => {
+      el.addEventListener('input', () => {
+        const pid = el.dataset.pid;
+        const current = el.innerHTML;
+        const edits = loadEdits();
+        if (current !== originals[pid]) {
+          edits[pid] = current;
+          el.classList.add('edited');
+        } else {
+          delete edits[pid];
+          el.classList.remove('edited');
+        }
+        saveEdits(edits);
+        updateEditCount();
+      });
+      el.addEventListener('paste', e => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, text);
+      });
+    });
+
+    function updateEditCount() {
+      const count = document.querySelectorAll('.intro-prose p.edited').length;
+      document.getElementById('edit-count').textContent = count;
+      document.getElementById('edit-count-s').style.display = count === 1 ? 'none' : 'inline';
+    }
+
+    function buildPlaintext() {
+      const root = document.getElementById('prose-root');
+      const children = Array.from(root.children);
+      const out = [];
+      let currentSubsection = '';
+      children.forEach(el => {
+        if (el.classList.contains('subsection-heading')) {
+          // Strip the subsection-tag span when grabbing text
+          const tmp = el.cloneNode(true);
+          tmp.querySelectorAll('.subsection-tag').forEach(n => n.remove());
+          out.push('### ' + (tmp.textContent || '').trim());
+        } else if (el.tagName === 'P' && el.hasAttribute('contenteditable')) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = el.innerHTML;
+          let text = tmp.textContent || '';
+          text = text.replace(/\s+/g, ' ').trim();
+          out.push(text);
+        }
+      });
+      return out.join('\n\n');
+    }
+    function refreshExport() {
+      document.getElementById('export-text').value = buildPlaintext();
+    }
+    refreshExport();
+
+    document.getElementById('refresh-export-btn').addEventListener('click', () => {
+      refreshExport();
+      showToast('Export pane refreshed');
+    });
+
+    document.getElementById('copy-btn').addEventListener('click', async () => {
+      refreshExport();
+      const text = document.getElementById('export-text').value;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Copied! Paste back to me in chat.');
+      } catch {
+        document.getElementById('export-text').select();
+        document.execCommand('copy');
+        showToast('Copied (fallback)');
+      }
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      if (!confirm('Reset all your §2 edits and restore the first stab?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      for (const [pid, html] of Object.entries(originals)) {
+        const el = document.querySelector(`[data-pid="${pid}"]`);
+        if (el) {
+          el.innerHTML = html;
+          el.classList.remove('edited');
+        }
+      }
+      updateEditCount();
+      refreshExport();
+      showToast('Reset to first stab');
+    });
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+  </script>
+</body>
+</html>

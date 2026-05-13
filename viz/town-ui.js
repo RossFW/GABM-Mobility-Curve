@@ -339,8 +339,13 @@ function buildModelBreakdownPanel() {
   const hmXLabel = `<text x="${hmL + hmW / 2}" y="${hmB + 32}" fill="#555" font-size="10" font-family="Georgia, serif" text-anchor="middle">New Cases (% population)</text>`;
 
   // Legend — 6-item confidence spectrum: Out (high→low) · Home (low→high)
+  // In embed mode (home page), collapse to a 2-item Home/Out legend.
   const lgY = hmT - 4;
-  const lgItems = [
+  const isEmbed = document.body.classList.contains('embed-mode');
+  const lgItems = isEmbed ? [
+    { color: '#3B82F6',  label: 'Out' },
+    { color: '#F97316',  label: 'Home' },
+  ] : [
     { color: '#3B82F6',  label: 'Out 5/5' },
     { color: '#60A5FA',  label: 'Out 4/5' },
     { color: '#93C5FD',  label: 'Out 3/5' },

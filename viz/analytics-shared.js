@@ -164,7 +164,11 @@ function makePolyline(rows, w, h, pad) {
 }
 
 // ── Tooltip wiring ───────────────────────────────────────────
+// Skipped entirely in paper context (window.__paperStatic === true), so the
+// paper figures never gain an overlay tooltip div or mousemove listeners.
 function wireTooltips(container) {
+  if (typeof window !== 'undefined' && window.__paperStatic) return;
+
   const tooltip = document.createElement('div');
   tooltip.className = 'svg-tooltip';
   container.style.position = 'relative';

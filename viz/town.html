@@ -412,18 +412,45 @@
     body.bg-mode #error-msg { display: none !important; }
     body.bg-mode #app { padding: 0 !important; max-width: none; }
     body.bg-mode #game-row { display: block !important; margin: 0 !important; padding: 0 !important; }
+
+    /* ─── Embed mode (lighter strip — used by index.html?embed=1) ──── */
+    /* Hide chrome and the controls the home-page version doesn't need.    */
+    /* Keep: model picker, scrubber, sim canvas, bio panel, mobility       */
+    /* curve and model breakdown panels.                                    */
+    body.embed-mode #site-nav,
+    body.embed-mode #header,
+    body.embed-mode #controls,
+    body.embed-mode #zoom-row,
+    body.embed-mode #hint,
+    body.embed-mode #agent-grid,
+    body.embed-mode .ui-tip { display: none !important; }
+    body.embed-mode { background: #faf9f7; }
+    body.embed-mode #app {
+      padding: 16px 16px 24px !important;
+      max-width: none;
+    }
+    body.embed-mode #model-selector-row { padding-top: 4px; }
   </style>
 </head>
 
 <body>
 <script>
-  // Background-only mode: when iframed (e.g., from index.html?bg=1), strip the
-  // UI chrome and just render the Phaser town scene as a decorative backdrop.
-  if (new URLSearchParams(window.location.search).get('bg') === '1') {
-    document.body && document.body.classList.add('bg-mode');
-    // Run again after DOM ready in case body wasn't available yet
-    document.addEventListener('DOMContentLoaded', () => document.body.classList.add('bg-mode'));
-  }
+  // URL-driven layout modes:
+  //   ?bg=1    → background-only (just the Phaser scene, no UI). Used by
+  //               index.html as the hero backdrop.
+  //   ?embed=1 → "fun" embedded view: keeps the simulation, model picker,
+  //               scrubber, bio panel, and the two summary charts; hides
+  //               header, play/pause, speed buttons, zoom row, hint, etc.
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const apply = () => {
+      if (!document.body) return;
+      if (params.get('bg') === '1')    document.body.classList.add('bg-mode');
+      if (params.get('embed') === '1') document.body.classList.add('embed-mode');
+    };
+    apply();
+    document.addEventListener('DOMContentLoaded', apply);
+  })();
 </script>
 <div id="app">
 

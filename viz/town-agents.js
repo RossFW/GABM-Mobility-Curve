@@ -43,6 +43,9 @@ const agentNameLabels  = [];  // full first name labels
 const agentLocKey      = [];
 const agentDestPos     = [];
 const agentSettled     = new Array(100).fill(true);
+// Pairing: agentPairOf[id] = partnerId when agent is paired in a building this substep.
+// Used to override final facing so partners face each other instead of back-to-back.
+let agentPairOf = {};
 
 // ═══════════════════════════════════════════════════════════════
 // ANIMATIONS
@@ -232,6 +235,8 @@ function moveAgents(animate) {
       pairOf[shuffled[i + 1]] = shuffled[i];
     }
   }
+  // Expose pairing info so chainWalkTimed / instant-arrival can face partners.
+  agentPairOf = pairOf;
 
   // Assign unique tiles per building
   for (const [locKey, ids] of Object.entries(buildingAgents)) {
@@ -307,7 +312,9 @@ function moveAgents(animate) {
       agentLocKey[id]  = toKey;
       agentDestPos[id] = toPos;
       agentSettled[id] = true;
-      agentSprites[id].anims.play(`${agentCharNames[id]}_down`, false);
+      // Face partner if paired; otherwise default down.
+      const facing = facePartnerDir(id) || 'down';
+      agentSprites[id].anims.play(`${agentCharNames[id]}_${facing}`, false);
       if (agentStatusTexts[id]) {
         const emoji = toKey === 'home' ? '🏠' : (LOCATIONS[toKey]?.emoji || '');
         agentStatusTexts[id].setText(emoji);
@@ -335,6 +342,34 @@ function moveAgents(animate) {
       pendingAgentTimeouts.push(tid);
     }
   }
+
+  // Pass 4 — instant case only: re-run the partner-facing override now that
+  // every agent's destPos has been set in Pass 3. (For the walked case,
+  // markArrived inside chainWalkTimed handles this when each agent arrives.)
+  if (subStepMs === 0) {
+    for (let id = 0; id < agentContainers.length; id++) {
+      const facing = facePartnerDir(id);
+      if (facing && agentSprites[id]) {
+        agentSprites[id].anims.play(`${agentCharNames[id]}_${facing}`, false);
+      }
+    }
+  }
+}
+
+// Returns 'left'/'right'/'up'/'down' if this agent has a paired partner —
+// the direction the agent should face to look at the partner. Uses
+// agentDestPos (final positions) so partners always face each other regardless
+// of which one arrived first. Returns null if not paired.
+function facePartnerDir(id) {
+  const partnerId = agentPairOf[id];
+  if (partnerId === undefined) return null;
+  const me = agentDestPos[id] || agentContainers[id];
+  const them = agentDestPos[partnerId] || agentContainers[partnerId];
+  if (!me || !them) return null;
+  const dx = them.x - me.x;
+  const dy = them.y - me.y;
+  if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return null;
+  return getWalkDir(dx, dy);
 }
 
 function chainWalkTimed(agentId, container, sprite, charName, waypoints, totalMs, toKey) {
@@ -342,6 +377,9 @@ function chainWalkTimed(agentId, container, sprite, charName, waypoints, totalMs
     container.x = agentDestPos[agentId].x;
     container.y = agentDestPos[agentId].y;
     agentSettled[agentId] = true;
+    // If this agent is paired in their building, face the partner.
+    const facing = facePartnerDir(agentId);
+    if (facing) sprite.anims.play(`${charName}_${facing}`, false);
     if (agentStatusTexts[agentId]) {
       const emoji = toKey === 'home' ? '🏠' : (LOCATIONS[toKey]?.emoji || '');
       agentStatusTexts[agentId].setText(emoji);
@@ -377,7 +415,9 @@ function chainWalkTimed(agentId, container, sprite, charName, waypoints, totalMs
       const prevIdx = waypoints.length - 1;
       const dx = waypoints[prevIdx].x - starts[prevIdx].x;
       const dy = waypoints[prevIdx].y - starts[prevIdx].y;
-      sprite.anims.play(`${charName}_${getWalkDir(dx, dy)}`, false);
+      // Prefer facing the partner if paired; otherwise face the last walk direction.
+      const facing = facePartnerDir(agentId) || getWalkDir(dx, dy);
+      sprite.anims.play(`${charName}_${facing}`, false);
       markArrived();
       return;
     }

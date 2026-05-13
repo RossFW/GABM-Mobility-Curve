@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Paper Outline — GABM Mobility Curve</title>
+  <title>LLM Sensitivity of Generative Agents: Evidence from an Epidemic Model</title>
   <script src="nav.js" defer></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -108,15 +108,54 @@
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       /* Hide the top-of-page site navigation */
       #site-nav { display: none !important; }
-      /* Hide §2 (still in draft) from the print export */
-      #section-2 { display: none !important; }
       /* Hide elements marked online-only (the "1. Title & Abstract" header) */
       .hide-in-print { display: none !important; }
       /* Keep main-paper <figure> blocks together; appendix <div class="section"> can flow */
       figure { page-break-inside: avoid; break-inside: avoid; }
       /* Start the Appendices section on a fresh page */
       #section-appendices { page-break-before: always; break-before: page; }
+      /* Start the References section on a fresh page too */
+      #section-references,
+      #section-references > h2 { page-break-before: always; break-before: page; }
+      /* Empty break div as a backup (some Chrome versions ignore section-level breaks) */
+      .page-break-before-print { page-break-before: always !important; break-before: page !important; display: block; height: 0; }
+      /* Keep individual reference entries together (no awkward mid-entry breaks) */
+      ol[data-refs="cites"] > li { page-break-inside: avoid; break-inside: avoid; }
+
+      /* ── Static-figure hardening ──────────────────────────────
+         Hide every interactive element that survives in the DOM,
+         so the printed PDF (and any PDF→Word converter downstream)
+         only sees the data layer of each chart. */
+      .svg-tooltip,
+      [id$="-tooltip"],
+      [id$="-tip"],
+      .chart-tooltip,
+      [class*="ftip-"] { display: none !important; }
+      svg .hit-target,
+      svg rect[fill="transparent"][data-tip-id],
+      svg rect[fill="transparent"][data-ftip-id],
+      svg rect[fill="transparent"][data-li],
+      svg rect[fill="transparent"][data-label],
+      svg rect[fill="transparent"][data-key],
+      svg polyline[stroke="transparent"] { display: none !important; }
+      /* Reset cursors so highlighted text/figures behave like plain content */
+      * { cursor: default !important; }
+      /* Hide any "Show Regression" toggles or filter pills that survive into print */
+      .reg-toggle-wrap, .reg-toggle-btn,
+      .filter-pill, .filter-pills,
+      [id$="-filters"] { display: none !important; }
+      /* Auto-expand any panels hidden by toggle buttons (so they print) */
+      .reg-table-panel { display: block !important; }
     }
+
+    /* ── Static-figure hardening (screen-too) ──────────────────
+       Mirror of print rules so the on-screen DOM also reflects
+       the static intent. Prevents accidentally inheriting
+       interactive cursors/hover states from analytics CSS. */
+    body.paper-static .svg-tooltip,
+    body.paper-static [id$="-tooltip"],
+    body.paper-static .chart-tooltip { display: none !important; }
+    body.paper-static * { cursor: default !important; }
   </style>
 </head>
 <body>
@@ -132,7 +171,7 @@
       </div>
 
       <h3 class="abstract-heading">Abstract</h3>
-      <p>Generative agent-based modeling (GABM) replaces the rule-based decision-making of classical agent-based models with LLM-mediated decisions, enabling researchers to simulate human behavior that resists mathematical specification. The original epidemic GABM and its follow-on prompt-sensitivity study both used GPT-3.5, leaving the generalizability of GABM findings to other LLMs untested. We address this with a frozen-task probe study: 100 personas, 40 community-infection levels, and 5 repetitions across 21 LLM configurations from OpenAI, Anthropic, and Google, totaling 420,000 binary stay-home decisions during a simulated epidemic. Most LLMs agree on the direction of persona effects, but magnitudes vary several-fold by provider (Gemini &raquo; Anthropic &raquo; OpenAI). The model attributes a researcher would typically use to choose an LLM (size, generation, training cutoff, release date) give no insight into where any given configuration&rsquo;s behavior lands. The reasoning text accompanying each decision encodes substantive predictive signal beyond the decision itself, and reveals an other-focused-vs-self-focused framing of the stay-home choice. We argue that LLM choice is itself a parameterization of agent behavior: GABM with general-purpose LLMs is most defensible for qualitative claims about agent behavior and weakest for the quantitative claims modelers most often want to make. LLM sensitivity should become a routine evidentiary expectation in GABM publications.</p>
+      <p>Generative agent-based modeling (GABM) replaces the rule-based decision-making of classical agent-based models with LLM-mediated decisions, enabling researchers to simulate human behavior that resists mathematical specification. The original epidemic GABM and its follow-on prompt-sensitivity study both used GPT-3.5, leaving the generalizability of GABM findings to other LLMs untested. We address this with a frozen-task probe study: 100 personas, 40 community-infection levels, and 5 repetitions across 21 LLM configurations from OpenAI, Anthropic, and Google, totaling 420,000 binary stay-home decisions during a simulated epidemic. Most LLMs agree on the direction of persona effects, but magnitudes vary several-fold by provider: largest in Gemini agents, intermediate in Claude, smallest in GPT. The model attributes a researcher would typically use to choose an LLM (size, generation, knowledge cutoff, release date) give no insight into where any given configuration&rsquo;s behavior lands. The reasoning text accompanying each decision encodes substantive predictive signal beyond the decision itself, and reveals an other-focused-vs-self-focused framing of the stay-home choice. We argue that LLM choice is itself a parameterization of agent behavior: GABM with general-purpose LLMs is most defensible for qualitative claims about agent behavior and weakest for the quantitative claims modelers most often want to make. LLM sensitivity should become a routine evidentiary expectation in GABM publications.</p>
 
       <p style="margin-top:20px"><strong>One-Sentence Summary:</strong> Across 21 LLM configurations from three providers, generative agents agree on the direction of persona effects but diverge on magnitude, making the LLM itself a parameter of any GABM result.</p>
 
@@ -143,19 +182,25 @@
     <section>
       <h2>1. Introduction</h2>
 
-      <p>Generative agent-based modeling (GABM) was introduced as a paradigm for incorporating human behavior into simulations of complex social systems [1]. Where a traditional agent-based model relies on the modeler to write decision rules and tune their parameters, a GABM connects each agent to a large language model (LLM) and lets the LLM decide. This sidesteps a long-standing barrier: human behavior in many domains resists clean mathematical specification, and a modeler&rsquo;s hand-coded rules typically capture only a thin slice of what real people consider when making a decision. The original GABM application showed that agents driven this way produce realistic individual decisions and emergent population-level dynamics in an epidemic context, including multiple infection waves and an endemic period [1].</p>
+      <p>Generative agent-based modeling (GABM) was introduced as a paradigm for incorporating human behavior into simulations of complex social systems <span class="cite-group">ghaffarzadegan2024</span>. Where a traditional agent-based model relies on the modeler to write decision rules and tune their parameters, a GABM connects each agent to a large language model (LLM) and lets the LLM decide the agent&rsquo;s actions. This sidesteps a long-standing barrier: human behavior in many domains resists clean mathematical specification, and a modeler&rsquo;s hand-coded rules typically capture only a thin slice of what real people consider when making a decision.</p>
 
-      <p>The original epidemic GABM [1] used GPT-3.5, as did the follow-on prompt-sensitivity study [2]. Both papers relied on a single LLM, leaving the generalizability of their findings to other LLMs untested. Since those publications, the space of available LLMs has expanded dramatically: dozens of models span three major providers (OpenAI, Anthropic, Google), multiple generations within each provider, distinct training-data eras, and configurable parameters such as reasoning level. Therefore, characterizing whether GABM findings generalize across LLMs is especially important now, as each LLM configuration is a plausible decision engine for a generative agent.</p>
+      <p>In the two years since GABM was introduced, the LLM landscape has expanded dramatically: dozens of models span three major providers, multiple generations within each provider, distinct training-data eras, and configurable parameters such as reasoning level. As these models have scaled, they have acquired emergent reasoning and behavioral capabilities that smaller predecessors lacked &mdash; generalizing arithmetic <span class="cite-group">wei_emergent2022</span>, performing multi-step inference <span class="cite-group">wei_cot2022</span>, and learning new tasks from in-context examples <span class="cite-group">brown2020</span> &mdash; only above certain training thresholds. As the LLMs that drive generative agents have evolved across this period, have they converged on consistent simulated behavior, or does the LLM choice itself remain a parameter of any GABM result?</p>
 
-      <p>The answer determines what GABM can credibly claim. If LLM choice does not materially shape simulated behavior, LLMs are interchangeable and GABM as currently practiced is a robust technique. If LLM choice does shape simulated behavior, the LLM itself becomes a parameter of the model: any GABM result is implicitly conditional on which LLM was used, complicating the method&rsquo;s claim that generative-agent decision-making removes behavioral parameterization.</p>
+      <p>The answer determines what GABM as a method can credibly claim. If LLM choice does not materially shape simulated behavior, LLMs are interchangeable and GABM is a robust technique that can be applied regardless of the model a researcher selects. If LLM choice does shape simulated behavior, every published GABM result is implicitly conditional on the LLM that produced it &mdash; complicating the method&rsquo;s foundational claim that LLM decision-making removes the explicit behavioral parameterization characteristic of classical agent-based modeling <span class="cite-group">epstein2007</span>.</p>
 
-      <p>We address the question with a frozen-task probe study. 100 personas (covering Big Five trait combinations and a population-clock-weighted age distribution), 40 community-infection levels (0% to 7%), and 5 independent repetitions are held constant across 21 LLM configurations from three providers, yielding 420,000 binary decisions. The 21 configurations span six lenses for comparison across LLMs: provider, reasoning level, model size within a family, model evolution across releases, knowledge cutoff, and release date. Each response includes a free-text reasoning passage alongside the binary decision, allowing both quantitative comparison of decision distributions and content analysis of how the agents reason. We analyze the responses through three progressively deeper analyses: aggregate mobility curves at the configuration level, persona-level random-effects logistic regressions that test how each persona attribute shapes the binary decision, and content analysis of the reasoning passages.</p>
+      <p>Two recent peer-reviewed reviews of GABM have raised convergent concerns about the field&rsquo;s credibility. Larooij and Törnberg <span class="cite-group">larooij_tornberg2026</span> argue that the integration of LLMs may exacerbate rather than resolve ABM&rsquo;s long-standing challenges of empirical validation, given the black-box structure, stochastic outputs, and cultural biases of language models. Li and Wu <span class="cite-group">liwu2025</span> argue that prompt-engineering choices in current GABM studies over-control simulation outcomes to the point that emergent behavior often reflects researcher design rather than agent dynamics. Both reviews flag the LLM as a source of methodological concern, but neither systematically measures how LLM choice propagates into simulated agent behavior. Recent surveys of the GABM literature <span class="cite-group">wang2023, mou2024, gao2024hss</span> catalog the proliferation of applications while treating the LLM as a black-box backend whose specific identity often does not enter the analytical frame. A growing body of work probes LLM-driven agents across many models in survey <span class="cite-group">dominguez_olmedo2024, mooney2025</span>, game-theoretic <span class="cite-group">einwiller2025</span>, and forecasting <span class="cite-group">parikh2026</span> settings, but none has been conducted inside a GABM-style decision loop.</p>
 
-      <p>The investigation is organized around fourteen research questions, grouped by the three analyses. Table 2 lists each question alongside the section in which its results are presented and the figures that bear on it.</p>
+      <p>To address this empirical gap, we revisit the GABM epidemic model of Williams et al. <span class="cite-group">williams2023</span> as our probe domain. The setting is well-suited to systematic probing across LLMs: the agent decision is binary (stay home or go out), allowing clean statistical comparison across models; each decision is accompanied by a free-text reasoning passage, enabling content analysis alongside quantitative measurement; agent personas vary along the Big Five trait dimensions, supporting persona-level regression at the individual-decision level; and the model is itself a published GABM whose sensitivity to LLM choice is precisely the kind of question this study seeks to answer.</p>
+
+      <p>Two prior studies have used this model. Williams et al. <span class="cite-group">williams2023</span> introduced it on GPT-3.5, demonstrating that generative agents could produce realistic individual decisions and emergent population-level dynamics, including multiple infection waves and an endemic period. Williams <span class="cite-group">williams_prompt2023</span> then characterized the model&rsquo;s sensitivity to prompt design &mdash; how different expressions, names, and situations shape agent behavior. The present study characterizes its sensitivity to the LLM itself.</p>
+
+      <p>The probe design holds the same 100 personas (name, age, and Big Five trait combination) and 40 community-infection levels (0% to 7%) constant across 21 LLM configurations from three providers, prompting each agent at each infection level 5 times to account for LLM stochasticity, yielding 420,000 binary decisions. The 21 configurations span six lenses for comparison across LLMs: provider, reasoning level, model size within a family, model evolution across releases, knowledge cutoff, and release date. Each response includes a free-text reasoning passage alongside the binary decision, allowing both quantitative comparison of decision distributions and content analysis of how the agents reason. We analyze the responses through three progressively deeper analyses: aggregate mobility curves at the configuration level, persona-level random-effects logistic regressions that test how each persona attribute shapes the binary decision, and content analysis of the reasoning passages.</p>
+
+      <p>The investigation is organized around fourteen research questions, grouped by the three analyses. Table 1 lists each question alongside the section in which its results are presented and the figures that bear on it.</p>
 
       <figure style="margin:14px 0 6px">
         <figcaption style="margin-bottom:10px;font-size:12px;color:#333;line-height:1.55">
-          <strong>Table 2.</strong> The fourteen research questions investigated in this paper, grouped by the three analyses described in &sect;3.7. Each row lists the section in which the question is answered and the paper figures that bear on it.
+          <strong>Table 1.</strong> The fourteen research questions investigated in this paper, grouped by the three analyses described in &sect;3.7. Each row lists the section in which the question is answered and the paper figures that bear on it.
         </figcaption>
         <table style="border-collapse:collapse;width:100%;font-size:12px;line-height:1.5">
           <thead>
@@ -188,35 +233,33 @@
         </table>
       </figure>
 
-      <p style="margin-top:14px">Across the 21 configurations, most LLMs agree on the direction of persona effects but disagree several-fold on magnitude. None of the model attributes a researcher would typically use to choose an LLM (size, generation, training cutoff, release date) gives any insight into where the configuration&rsquo;s behavior lands. The reasoning text encodes substantive predictive signal beyond the decision itself. We argue these findings reframe what GABM with general-purpose LLMs can credibly claim: the method is well-suited to qualitative claims about agent behavior, but the LLM choice itself functions as a parameterization for any quantitative claim.</p>
+      <p style="margin-top:14px">Across the 21 configurations, the results indicate most LLMs agree on the direction of persona effects but disagree several-fold on magnitude. None of the model attributes of an LLM &mdash; size, generation, knowledge cutoff, release date &mdash; give any insight into where the configuration&rsquo;s behavior lands. The reasoning text encodes substantive predictive signal beyond the decision itself. We argue these findings reframe what GABM with general-purpose LLMs can credibly claim: the method is well-suited to qualitative claims about agent behavior, but the LLM choice itself functions as a parameterization for any quantitative claim. Over this two-year LLM evolution arc, generative-agent behavior has not converged.</p>
     </section>
 
     <!-- ─────────── 3. Background / Related Work ─────────── -->
     <section id="section-2">
       <h2>2. Background &amp; Related Work</h2>
 
-      <p class="tbd">[Section 2 in draft &mdash; to be revised after committee feedback. Hidden from the PDF export.]</p>
-
       <h3>2.1 Generative agent-based modeling</h3>
-      <p>GABM replaces the hand-coded behavioral rules of a traditional agent-based simulation with calls to an LLM. At each decision point the LLM is fed a textual description of the agent&rsquo;s persona and the current environmental state, and the LLM&rsquo;s text response is parsed into a behavioral action. The approach was popularized by Park et al. [<span class="tbd">CITE: Park et al. 2023</span>] in an information-diffusion model and extended to epidemic dynamics by Williams et al. [1]. Subsequent work has applied GABMs to game-theoretic settings [<span class="tbd">CITE</span>], social networks [<span class="tbd">CITE</span>], and prompt sensitivity [3]. Across this literature, the LLM behind the agent has been treated as a fixed component of the simulation, and how the choice of LLM affects simulated behavior has not been characterized under matched experimental conditions.</p>
 
-      <h3>2.2 LLM dimensions varied in this study</h3>
-      <p>This paper varies the LLM along six dimensions. The first three describe <em>which</em> model is chosen; the remaining three describe how the model was made or how it is configured at inference time. Each dimension is defined here and revisited in &sect;4.1, where the corresponding subsection reports its empirical effect.</p>
+      <p>In a generative agent-based modeling (GABM) simulation, agents&rsquo; decisions are produced by an LLM rather than by hand-coded behavioral rules <span class="cite-group">ghaffarzadegan2024</span>. At every step the LLM is prompted with the agent&rsquo;s persona and the current state of the simulation. Then, the LLM&rsquo;s response is parsed into a structured action that updates that state for the next step. Ghaffarzadegan et al. formalized this loop as a methodology for combining LLM-driven decisions with classical agent-based modeling <span class="cite-group">ghaffarzadegan2024</span>.</p>
 
-      <p><strong>Provider.</strong> The company that built and offers the LLM. Different providers train models on different data, with different alignment techniques and architectural choices [<span class="tbd">CITE: provider technical reports / overview survey</span>]. The three providers used in this study are OpenAI, Anthropic, and Google.</p>
+      <p>Existing GABMs span a range of domains. Williams et al. modeled an epidemic in which agents decide each day whether to stay home or go out <span class="cite-group">williams2023</span>, a study cited as a canonical GABM example in subsequent reviews <span class="cite-group">lu_aleta_moreno2024, adornetto2025</span>. Wu et al. introduce Smart Agent-Based Modeling, a general GABM framework demonstrated across economics, finance, and engineering case studies <span class="cite-group">wu_sabm2023</span>. Vezhnevets et al. propose Concordia, a library for grounding GABM actions in physical, social, and digital spaces using a game-master that mediates state transitions <span class="cite-group">vezhnevets_concordia2023</span>. Lan et al. deploy LLM agents as players in the social-deduction game Avalon, observing emergent collaboration, confrontation, leadership, persuasion, and camouflage behaviors across multi-round gameplay <span class="cite-group">lan_avalon2024</span>. Across these systems the common pattern is the same: many agents, many timesteps, environment-coupled decisions, with collective dynamics emerging from individual LLM-driven choices.</p>
 
-      <p><strong>Model size.</strong> Within a single provider&rsquo;s family of releases, the relative scale tier of the model. Providers typically expose a small / middle / large tier (for example, Haiku, Sonnet, and Opus in Anthropic&rsquo;s nomenclature; Lite and Flash in Google&rsquo;s) [<span class="tbd">CITE: Anthropic / Google product docs</span>]. Exact parameter counts and training-compute budgets are not publicly disclosed.</p>
+      <h3>2.2 LLM social simulation</h3>
 
-      <p><strong>Model evolution.</strong> The sequence of major releases within a single provider&rsquo;s family over time (for example, GPT-3.5 Turbo, GPT-4o, GPT-4.1, GPT-5.1, and GPT-5.2 for OpenAI). Successive releases typically incorporate new training data, refined alignment, and architectural improvements [<span class="tbd">CITE: provider technical reports</span>].</p>
+      <p>A broader literature uses LLMs as social-science instruments without embedding them inside a multi-step GABM loop. Park et al.&rsquo;s generative-agents architecture introduced the memory-stream, reflection, and planning pattern in a virtual-town sandbox of 25 agents pursuing daily goals and exchanging messages <span class="cite-group">park2023</span>. Gao et al.&rsquo;s S<sup>3</sup> social-network simulator deploys LLM agents that observe content, adjust attitudes, and produce posts, reproducing empirical patterns of emotion and attitude propagation around two news events <span class="cite-group">gao_s3_2023</span>. Akata et al. have LLM agents play repeated games against one another to study cooperation <span class="cite-group">akata2023</span>. Argyle et al. introduced &ldquo;algorithmic fidelity&rdquo; as the property by which prompted LLMs reproduce demographic-conditional opinion distributions <span class="cite-group">argyle2023</span>. Horton showed that LLM agents exhibit behaviors consistent with classical economic-agent assumptions <span class="cite-group">horton2023</span>. Binz and Schulz applied cognitive-psychology paradigms to GPT-3 and found human-like response patterns alongside human-like biases <span class="cite-group">binz_schulz2023</span>. These studies provide individual-level behavioral evidence for the use of LLMs in social-science settings.</p>
 
-      <p><strong>Knowledge cutoff.</strong> The date through which the model&rsquo;s training data extends. Models with later cutoffs have been exposed to more recent text from the public internet and other training corpora [<span class="tbd">CITE: provider model cards</span>].</p>
+      <p>A separate line of recent work develops methods for raising the fidelity with which an LLM reproduces a specific human or human population. Park et al.&rsquo;s 1,000-personas study prompts agents with detailed interview transcripts from real participants to align each agent with its human counterpart <span class="cite-group">park2024_1000</span>. Kolluri et al. fine-tune LLMs directly on human-behavior traces from social-science experiments <span class="cite-group">kolluri2025</span>. Efforts such as Simile.ai go further still, training purpose-built models for population-level diversity rather than the single polished persona of a chat assistant <span class="cite-group">simile_ai</span>. The present study uses general-purpose chat models with light persona prompts; whether richer prompting, fine-tuning, or purpose-built models reduce the model-to-model variability documented here is left as future work.</p>
 
-      <p><strong>Release date.</strong> The date the model was made publicly available via API. Independent of knowledge cutoff: a model can be released months or years after the cutoff date of its training data [<span class="tbd">CITE</span>].</p>
+      <h3>2.3 LLM evaluations</h3>
 
-      <p><strong>Reasoning level.</strong> A model-side configuration parameter that controls how much hidden &ldquo;thinking&rdquo; the model performs before producing its final response. Higher reasoning levels (off &rarr; low &rarr; medium &rarr; high) typically increase response quality and latency [<span class="tbd">CITE: OpenAI o-series reasoning paper; Anthropic extended thinking docs; Google Gemini thinking docs</span>]. Among the 21 configurations used here, two (GPT-5.2 and Gemini 3 Flash Preview) support all four reasoning levels and are run at each.</p>
+      <p>LLMs are routinely evaluated on standardized benchmarks of capability &mdash; multi-domain knowledge (MMLU <span class="cite-group">mmlu_hendrycks2021</span>), program synthesis (HumanEval <span class="cite-group">humaneval_chen2021</span>), broad task suites (BIG-Bench <span class="cite-group">bigbench_srivastava2022</span>) &mdash; and on large-N head-to-head rankings via crowdsourced human preference (Chatbot Arena <span class="cite-group">chatbot_arena_chiang2024</span>). These evaluations measure what an LLM can do in isolation. They have established that frontier models differ measurably from earlier or smaller predecessors along most capability dimensions, with several capabilities emerging only above particular scale thresholds <span class="cite-group">wei_emergent2022</span>.</p>
 
-      <h3>2.3 Comparing across LLMs</h3>
-      <p><span class="tbd">[TBD &mdash; placeholder paragraph. Brief survey of LLM-evaluation literature: capability benchmarks (e.g., MMLU [CITE], HumanEval [CITE]), reasoning benchmarks [CITE], instruction-following and behavioral evaluations [CITE]. Position this paper relative to that literature: rather than benchmark capability, this paper characterizes how LLM choice affects the output of a generative agent-based simulation under matched conditions.]</span></p>
+      <p>A second strand of work uses shallow behavioral probes &mdash; short, persona-conditioned tasks &mdash; to test how the LLM affects an agent&rsquo;s behavior. Dominguez-Olmedo et al. <span class="cite-group">dominguez_olmedo2024</span> administer multiple-choice survey instruments to 43 LLMs and report that apparent cross-model differences in opinion distributions are largely artifacts of response-ordering bias; once corrected, models collapse toward near-uniform random responding regardless of size or training corpus. Einwiller et al. <span class="cite-group">einwiller2025</span> run a matched dictator-game probe across multiple LLMs with systematic prompt variations and find substantial cross-model divergence in giving rates and prompt sensitivity. Mooney et al. <span class="cite-group">mooney2025</span> generate roughly five thousand demographic agents and test behavioral coherence across nine models, finding that while surface-level survey-style responses align broadly with each agent&rsquo;s stated profile, behavior in subsequent agent-to-agent interactions departs from that profile, and both model family and model size shape how often the coherence breaks down. Parikh et al. <span class="cite-group">parikh2026</span> compare nine LLM configurations against polling data from the 2024 U.S. presidential election and report systematic, model-specific divergence in favorability predictions. These studies establish that LLM choice can move behavioral output measurably.</p>
+
+      <p>The present study is another such probe, applied specifically to the persona-conditioned decision that feeds an epidemic GABM. The same 100 personas are presented at 40 infection levels to 21 LLM configurations, holding the prompt, persona, and scenario fixed, varying only the underlying model. Where capability benchmarks ask what an LLM can do and behavioral-fidelity experiments ask whether it acts like a human, the analysis here asks how much the LLM shapes the agent&rsquo;s stay-or-go decision at the moment a GABM would query its agent. LLMs that perform similarly on capability benchmarks may still produce different mobility curves for the same population.</p>
+
     </section>
 
     <!-- ─────────── 4. Methods ─────────── -->
@@ -224,10 +267,10 @@
       <h2>3. Methods</h2>
 
       <h3>3.1 Simulation setup</h3>
-      <p>The probe is a simplified extension of the generative agent-based model of Williams et al. [1]. Two simplifications make each response cleanly attributable to the agent&rsquo;s persona and the perceived infection level. First, each query is treated as an independent, one-shot decision: where Williams et al. [1] simulated disease spread within an agent population over many days, the present probe samples each agent and infection level directly, with no inter-agent contagion. Second, agent health is held constant &mdash; each agent is told &ldquo;You feel healthy and well.&rdquo; &mdash; rather than evolving with a disease state, so behavioral variation reflects persona and the perceived community-infection rate alone. The town setting (Dewberry Hollow), occupational role, and disease (the fictional <em>Catasat</em> virus) carry over from Williams et al. [1].</p>
+      <p>The probe is a simplified extension of the generative agent-based model of Williams et al. <span class="cite-group">williams2023</span>. Two simplifications make each response cleanly attributable to the agent&rsquo;s persona and the perceived infection level. First, each query is treated as an independent, one-shot decision: where Williams et al. simulated disease spread within an agent population over many days, the present probe samples each agent and infection level directly, with no inter-agent contagion. Second, agent health is held constant &mdash; each agent is told &ldquo;You feel healthy and well.&rdquo; &mdash; rather than evolving with a disease state, so behavioral variation reflects persona and the perceived community-infection rate alone. The town setting (Dewberry Hollow), occupational role, and disease (the fictional <em>Catasat</em> virus) carry over from Williams et al.</p>
 
       <h3>3.2 Agent population</h3>
-      <p>The probe uses 100 frozen personas generated by the procedure of Williams et al. [1]. The five Big Five trait labels are each sampled independently with 50/50 probability between the dimension&rsquo;s two opposing labels: extraverted or introverted (Extraversion); agreeable or antagonistic (Agreeableness); conscientious or unconscientious (Conscientiousness); emotionally stable or neurotic (Neuroticism); and open to experience or closed to experience (Openness). Ages are drawn between 18 and 65 from a probability distribution that mirrors the 2023 U.S. working-age population [2]. Names and gender are paired by sampling without replacement from the top male and female U.S. names, balanced to produce 50 female and 50 male agents. The full procedure is run with a fixed random seed (42) for reproducibility. Sample demographics are summarized in Figure 1.</p>
+      <p>The probe uses 100 frozen personas generated by the procedure of Williams et al. <span class="cite-group">williams2023</span>. The five Big Five trait labels <span class="cite-group">john_srivastava1999</span> are each sampled independently with 50/50 probability between the dimension&rsquo;s two opposing labels: extraverted or introverted (Extraversion); agreeable or antagonistic (Agreeableness); conscientious or unconscientious (Conscientiousness); emotionally stable or neurotic (Neuroticism); and open to experience or closed to experience (Openness). Ages are drawn between 18 and 65 from a probability distribution that mirrors the 2023 U.S. working-age population <span class="cite-group">popclock</span>. Names and gender are paired by sampling without replacement from the top male and female U.S. names, balanced to produce 50 female and 50 male agents. The full procedure is run with a fixed random seed (42) for reproducibility. Sample demographics are summarized in Figure 1.</p>
 
       <figure style="margin:14px 0 6px">
         <!-- Same chart container as dashboard Figure 21; renderFig21Demographics() targets this element ID. -->
@@ -241,40 +284,43 @@
       <p>Each agent is queried at 40 infection levels with 5 repetitions for each combination of agent and infection level. Infection levels are sampled densely in the low range, with 0.1 percentage-point steps from 0% to 3.5%, then larger steps at 4%, 5%, 6%, and 7%. Each LLM configuration therefore produces 100 &times; 40 &times; 5 = 20,000 responses; across 21 configurations the full corpus is 420,000 responses.</p>
 
       <h3>3.4 LLM configurations</h3>
-      <p>The 21 configurations were chosen to span six lenses for comparison across LLMs: reasoning level, model size within a family, model evolution within a family across time, provider, knowledge cutoff, and release date. To support the reasoning-level lens, GPT-5.2 and Gemini 3 Flash Preview were each run at four reasoning levels (off, low, medium, high), with each level treated as a separate configuration; all other models were run with reasoning off (or, for OpenAI&rsquo;s o3, with reasoning required by the API). Data collection across the 21 configurations cost approximately $840 in total API charges (~$464 OpenAI, ~$263 Anthropic, ~$113 Google). Across providers, the configurations span 9 from OpenAI, 5 from Anthropic, and 7 from Google; the full list is given in Table 1.</p>
+      <p>The 21 configurations were chosen to span six lenses for comparison across the contemporary LLM landscape: provider, reasoning level, model size, model evolution, knowledge cutoff, and release date. Provider is the company that built and offers the LLM; different providers train models on different data corpora, with different alignment techniques, fine-tuning regimes, and architectural choices. Reasoning level is a model-side configuration parameter that controls how much hidden deliberation the model performs before producing its final response; higher levels (off &rarr; low &rarr; medium &rarr; high) typically increase response quality and latency at the cost of more output tokens <span class="cite-group">wei_cot2022</span>. Model size is the relative scale tier of a model within a single provider&rsquo;s family of releases &mdash; for example, Haiku, Sonnet, and Opus in Anthropic&rsquo;s nomenclature; Lite and Flash in Google&rsquo;s. Exact parameter counts and training compute are not publicly disclosed for these closed-API models. Model evolution is the sequence of major releases within a single provider&rsquo;s family over time &mdash; for example, GPT-3.5 Turbo, GPT-4o, GPT-4.1, GPT-5.1, and GPT-5.2 from OpenAI; successive releases typically incorporate new training data, refined alignment, and architectural improvements. Knowledge cutoff is the date through which the model&rsquo;s training data extends; models with later cutoffs have been exposed to more recent text from the public internet and other training corpora. Release date is the date the model became publicly available via API, independent of knowledge cutoff: a model can be released months or years after the cutoff date of its training data.</p>
+
+      <p>To support the reasoning-level lens, GPT-5.2 and Gemini 3 Flash Preview were each run at four reasoning levels (off, low, medium, high), with each level treated as a separate configuration; all other models were run with reasoning off (or, for OpenAI&rsquo;s o3, with reasoning required by the API). Data collection across the 21 configurations cost approximately $840 in total API charges (~$464 OpenAI, ~$263 Anthropic, ~$113 Google). Across providers, the configurations span 9 from OpenAI, 5 from Anthropic, and 7 from Google; the full list is given in Table 2.</p>
 
       <p>Sampling temperature is set to 0 for non-reasoning configurations where the API allows it; reasoning-capable models use a temperature of 1 (required by Anthropic; recommended by Google). The OpenAI o-series accepts no temperature parameter.</p>
 
       <figure style="margin:14px 0 6px">
         <figcaption style="margin-bottom:10px;font-size:12px;color:#333;line-height:1.55">
-          <strong>Table 1.</strong> The 21 LLM configurations used in this study. Each model with multiple reasoning levels contributes one configuration per level. Pinned model versions, pricing, and additional metadata are listed in Appendix [TBD].
+          <strong>Table 2.</strong> The 21 LLM configurations used in this study, listed across 15 rows. GPT-5.2 and Gemini 3 Flash Preview each contribute 4 configurations (one per reasoning level); all other models contribute 1 each. The Model version column shows the exact build of each model used for every query.
         </figcaption>
         <table style="border-collapse:collapse;width:100%;font-size:12px;line-height:1.5">
           <thead>
             <tr style="border-top:1.5px solid #222;border-bottom:1px solid #222;background:#f7f7f7">
-              <th style="text-align:left;padding:7px 10px;width:14%">Provider</th>
-              <th style="text-align:left;padding:7px 10px;width:32%">Model</th>
-              <th style="text-align:left;padding:7px 10px;width:24%">Reasoning levels</th>
-              <th style="text-align:left;padding:7px 10px;width:15%">Release date</th>
-              <th style="text-align:left;padding:7px 10px;width:15%">Knowledge cutoff</th>
+              <th style="text-align:left;padding:7px 10px;width:10%">Provider</th>
+              <th style="text-align:left;padding:7px 10px;width:20%">Model</th>
+              <th style="text-align:left;padding:7px 10px;width:18%">Reasoning levels</th>
+              <th style="text-align:left;padding:7px 10px;width:11%">Release date</th>
+              <th style="text-align:left;padding:7px 10px;width:11%">Knowledge cutoff</th>
+              <th style="text-align:left;padding:7px 10px;width:30%">Model version</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-3.5 Turbo</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Jan 2024</td><td style="padding:6px 10px">Sep 2021</td></tr>
-            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-4o</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2024</td><td style="padding:6px 10px">Oct 2023</td></tr>
-            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-4.1</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Apr 2025</td><td style="padding:6px 10px">Jun 2024</td></tr>
-            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-5.1</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2025</td><td style="padding:6px 10px">Sep 2024</td></tr>
-            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-5.2</td><td style="padding:6px 10px">off, low, medium, high</td><td style="padding:6px 10px">Dec 2025</td><td style="padding:6px 10px">Aug 2025</td></tr>
-            <tr style="border-bottom:1px solid #ddd"><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">o3</td><td style="padding:6px 10px">required</td><td style="padding:6px 10px">Apr 2025</td><td style="padding:6px 10px">Jun 2024</td></tr>
-            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude 3 Haiku</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Mar 2024</td><td style="padding:6px 10px">Aug 2023</td></tr>
-            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Sonnet 4.0</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">May 2025</td><td style="padding:6px 10px">Mar 2025</td></tr>
-            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Sonnet 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Sep 2025</td><td style="padding:6px 10px">Jan 2025</td></tr>
-            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Haiku 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Oct 2025</td><td style="padding:6px 10px">Feb 2025</td></tr>
-            <tr style="border-bottom:1px solid #ddd"><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Opus 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2025</td><td style="padding:6px 10px">Aug 2025</td></tr>
-            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.0 Flash</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Feb 2025</td><td style="padding:6px 10px">Jun 2024</td></tr>
-            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.5 Flash Lite</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Jun 2025</td><td style="padding:6px 10px">Jan 2025</td></tr>
-            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.5 Flash</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">May 2025</td><td style="padding:6px 10px">Jan 2025</td></tr>
-            <tr style="border-bottom:1.5px solid #222"><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 3 Flash Preview</td><td style="padding:6px 10px">off, low, medium, high</td><td style="padding:6px 10px">Dec 2025</td><td style="padding:6px 10px">Jan 2025</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-3.5 Turbo</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Jan 2024</td><td style="padding:6px 10px">Sep 2021</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gpt-3.5-turbo-0125</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-4o</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2024</td><td style="padding:6px 10px">Oct 2023</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gpt-4o-2024-11-20</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-4.1</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Apr 2025</td><td style="padding:6px 10px">Jun 2024</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gpt-4.1-2025-04-14</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-5.1</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2025</td><td style="padding:6px 10px">Sep 2024</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gpt-5.1-2025-11-13</td></tr>
+            <tr><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">GPT-5.2</td><td style="padding:6px 10px">off, low, medium, high</td><td style="padding:6px 10px">Dec 2025</td><td style="padding:6px 10px">Aug 2025</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gpt-5.2-2025-12-11</td></tr>
+            <tr style="border-bottom:1px solid #ddd"><td style="padding:6px 10px">OpenAI</td><td style="padding:6px 10px">o3</td><td style="padding:6px 10px">required</td><td style="padding:6px 10px">Apr 2025</td><td style="padding:6px 10px">Jun 2024</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">o3-2025-04-16</td></tr>
+            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude 3 Haiku</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Mar 2024</td><td style="padding:6px 10px">Aug 2023</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">claude-3-haiku-20240307</td></tr>
+            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Sonnet 4.0</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">May 2025</td><td style="padding:6px 10px">Mar 2025</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">claude-sonnet-4-20250514</td></tr>
+            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Sonnet 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Sep 2025</td><td style="padding:6px 10px">Jan 2025</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">claude-sonnet-4-5-20250929</td></tr>
+            <tr><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Haiku 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Oct 2025</td><td style="padding:6px 10px">Feb 2025</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">claude-haiku-4-5-20251001</td></tr>
+            <tr style="border-bottom:1px solid #ddd"><td style="padding:6px 10px">Anthropic</td><td style="padding:6px 10px">Claude Opus 4.5</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Nov 2025</td><td style="padding:6px 10px">Aug 2025</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">claude-opus-4-5-20251101</td></tr>
+            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.0 Flash</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Feb 2025</td><td style="padding:6px 10px">Jun 2024</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gemini-2.0-flash-001</td></tr>
+            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.5 Flash Lite</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">Jun 2025</td><td style="padding:6px 10px">Jan 2025</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gemini-2.5-flash-lite</td></tr>
+            <tr><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 2.5 Flash</td><td style="padding:6px 10px">off</td><td style="padding:6px 10px">May 2025</td><td style="padding:6px 10px">Jan 2025</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gemini-2.5-flash</td></tr>
+            <tr style="border-bottom:1.5px solid #222"><td style="padding:6px 10px">Google</td><td style="padding:6px 10px">Gemini 3 Flash Preview</td><td style="padding:6px 10px">off, low, medium, high</td><td style="padding:6px 10px">Dec 2025</td><td style="padding:6px 10px">Jan 2025</td><td style="padding:6px 10px;font-family:'SF Mono','Menlo',monospace;font-size:11px">gemini-3-flash-preview</td></tr>
           </tbody>
         </table>
       </figure>
@@ -324,28 +370,28 @@ You have to provide Response in a single word; it must be either
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">3.7.1 Mobility Curve Analysis</h4>
       <p>For each LLM configuration, the stay-home rate at a given infection level is computed by averaging 500 binary decisions &mdash; 5 repetitions for each of the 100 agents. The mobility curve plots mobility (the complement of the stay-home rate, mobility = 1 &minus; stay-home rate) on the <em>y</em>-axis against the 40 sampled infection levels (0 to 3.5% in 0.1 percentage-point steps, plus 4%, 5%, 6%, and 7%) on the <em>x</em>-axis.</p>
 
-      <p>To discern differences between mobility curves, we employ multilinear regression in the same style as Williams et al. [3]. For each set of configurations being compared (e.g., the four GPT-5.2 reasoning levels), we fit two models. Both take mobility as the dependent variable and use the infection level, the infection level squared, and one dummy variable per non-baseline configuration as predictors; the dummy is set to 1 if the data is from the configuration being tested and 0 if it is from the baseline. The first model, a <em>baseline-shift</em> model, stops there; a statistically significant dummy coefficient indicates that the configuration produces a level shift in the mobility curve relative to the baseline. The second model, a <em>baseline-plus-slope-shift</em> model, additionally includes interactions between each dummy and the infection level; a statistically significant interaction indicates that the configuration&rsquo;s slope of response to infection level differs from the baseline&rsquo;s. Per-comparison tables for both models are reported in Appendix A.</p>
+      <p>To discern differences between mobility curves, we employ multilinear regression in the same style as Williams <span class="cite-group">williams_prompt2023</span>. For each set of configurations being compared (e.g., the four GPT-5.2 reasoning levels), we fit two models. Both take mobility as the dependent variable and use the infection level, the infection level squared, and one dummy variable per non-baseline configuration as predictors; the dummy is set to 1 if the data is from the configuration being tested and 0 if it is from the baseline. The first model, a <em>baseline-shift</em> model, stops there; a statistically significant dummy coefficient indicates that the configuration produces a level shift in the mobility curve relative to the baseline. The second model, a <em>baseline-plus-slope-shift</em> model, additionally includes interactions between each dummy and the infection level; a statistically significant interaction indicates that the configuration&rsquo;s slope of response to infection level differs from the baseline&rsquo;s. Per-comparison tables for both models are reported in Appendix A.</p>
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">3.7.2 Persona Analysis</h4>
-      <p>To examine how agent traits, gender, age, and infection level systematically influence the stay-home decision, two logistic regressions are fit per LLM configuration on the 20,000 individual responses, in the same style as Williams et al. [1]. The dependent variable is a binary variable of the agent&rsquo;s decision to stay home (equal to 1 if the agent stays home and 0 otherwise). The fixed-effect logit absorbs each agent&rsquo;s average tendency to stay home through agent dummies, isolating how the decision responds to changes in infection level. It also provides a pseudo-R&sup2; for goodness-of-fit. The random-effect logit replaces the agent dummies with a single random intercept per agent, freeing up the model to estimate trait, gender, age, and infection effects. The reference categories are <em>female</em>, <em>introverted</em>, <em>antagonistic</em>, <em>unconscientious</em>, <em>neurotic</em>, and <em>closed to experience</em>; age is in raw years. Per-configuration coefficient tables for both specifications are reported in Appendix B.1; diagnostics &mdash; calibration, residual Q-Q, random-intercept normality, BLUPs versus predictors, and residual fit by infection and age &mdash; are in Appendix C.</p>
+      <p>To examine how agent traits, gender, age, and infection level systematically influence the stay-home decision, two logistic regressions are fit per LLM configuration on the 20,000 individual responses, in the same style as Williams et al. <span class="cite-group">williams2023</span>. The dependent variable is a binary variable of the agent&rsquo;s decision to stay home (equal to 1 if the agent stays home and 0 otherwise). The fixed-effect logit absorbs each agent&rsquo;s average tendency to stay home through agent dummies, isolating how the decision responds to changes in infection level. It also provides a pseudo-R&sup2; for goodness-of-fit. The random-effect logit replaces the agent dummies with a single random intercept per agent, freeing up the model to estimate trait, gender, age, and infection effects. The reference categories are <em>female</em>, <em>introverted</em>, <em>antagonistic</em>, <em>unconscientious</em>, <em>neurotic</em>, and <em>closed to experience</em>; age is a continuous predictor in years. Per-configuration coefficient tables for both specifications are reported in Appendix B.1; diagnostics &mdash; calibration, residual Q-Q, random-intercept normality, BLUPs versus predictors, and residual fit by infection and age &mdash; are in Appendix C.</p>
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">3.7.3 Response Analysis</h4>
       <p>Each query asks the agent to provide its reasoning before stating its yes/no decision, so the reasoning text likely shapes the decision rather than merely justifying it after the fact. From this text we measure four things in turn: (1) how often LLMs mention specific traits in their reasoning, via keyword counting; (2) whether those mentions amplify the corresponding behavioral effect, via the mention-flag logit; (3) how broader concept categories correlate with the decision direction, via keyword counting; and (4) how agent-specific the reasoning text is, via embedding cosine similarity.</p>
 
-      <p>For each Big Five trait label, a keyword set covers the obvious word-form variants of each pole. For example, an extraversion mention is flagged when any of {extroverted, extrovert, extraverted, extravert, extraversion, extroversion, introverted, introvert, introversion} appears in the response. Two additional flags cover infection (keywords like {infection, infected, cases, diagnosed} or a numeric percentage pattern) and age (keywords like {years old, young, age, old}). All flags are binary per response and case-insensitive.</p>
+      <p>For each Big Five trait label, a keyword set covers the obvious word-form variants of each pole. For example, an extraversion mention is flagged when any of {extroverted, extrovert, extraverted, extravert, extraversion, extroversion, introverted, introvert, introversion} appears in the response. Two additional flags cover infection (keywords like {infection, infected, cases, diagnosed} or any number followed by &ldquo;%&rdquo; or &ldquo;percent&rdquo;) and age (keywords like {years old, young, age, old}, or the agent&rsquo;s own age number). All flags are binary per response and case-insensitive.</p>
 
       <p>These mention flags then enter a third logistic regression &mdash; the <em>mention-flag logit</em> &mdash; which extends the random-effects logit from &sect;3.7.2 with one binary indicator per Big Five trait label, plus one for infection and one for age. A flag enters the model only when its overall mention rate falls within [15%, 85%]; outside this window the flag carries no usable variation. The mention-flag coefficients answer whether mentioning a concept amplifies or dampens its behavioral effect. Per-configuration coefficient tables are in Appendix B.2; diagnostics are in Appendix C.</p>
 
       <p>A separate, broader concept dictionary covers five themes: <em>Work</em>, <em>Community</em>, <em>Self Health</em>, <em>Virus Properties</em>, and <em>Virus Prevalence</em>. These categories were drawn from the prompt template (Figure 2), which mentions going to the office for work, feeling healthy and well, an airborne virus that spreads from human to human, a daily new-infection rate, and the town of Dewberry Hollow. Keywords for each concept were then selected via manual inspection of random response samples across all 21 configurations. Like the trait flags, concept-category flags are binary per response and case-insensitive.</p>
 
-      <p>Lastly, for agent individuation, every reasoning passage is embedded with OpenAI&rsquo;s text-embedding-3-large model (3,072 dimensions). Two questions follow, both restricted to agents whose 5 repetitions all returned the same decision (the &ldquo;5/5 agreement&rdquo; subset). The first: how similar are an agent&rsquo;s own 5 responses? <em>Within-agent</em> similarity is computed as the mean of the 10 pairwise cosines among an agent&rsquo;s 5 reps, then averaged across all qualifying 5/5 agreements for each LLM. The second: how similar are two different agents who reach the same decision at the same infection level? <em>Across-agent</em> similarity is computed bucket by bucket (one bucket per infection level and decision direction): every pair of qualifying agents in the bucket contributes the mean of the 25 rep-pair cosines between them, and the result is averaged across all such pairs.</p>
+      <p>Lastly, for agent individuation, every reasoning passage is embedded with OpenAI&rsquo;s text-embedding-3-large model <span class="cite-group">oai_embeddings</span> (3,072 dimensions). Two questions follow, both restricted to agents whose 5 repetitions all returned the same decision (the &ldquo;5/5 agreement&rdquo; subset). The first: how similar are an agent&rsquo;s own 5 responses? <em>Within-agent</em> similarity is computed as the mean of the 10 pairwise cosines among an agent&rsquo;s 5 reps, then averaged across all qualifying 5/5 agreements for each LLM. The second: how similar are two different agents who reach the same decision at the same infection level? <em>Across-agent</em> similarity is computed bucket by bucket (one bucket per infection level and decision direction): every pair of qualifying agents in the bucket contributes the mean of the 25 rep-pair cosines between them, and the result is averaged across all such pairs.</p>
     </section>
 
     <!-- ─────────── 5. Results ─────────── -->
     <section>
       <h2>4. Results</h2>
 
-      <p>This section presents the results of the three analyses introduced in &sect;3.7. Within each subsection, results are presented in the paper order described in Table 2.</p>
+      <p>This section presents the results of the three analyses introduced in &sect;3.7. Within each subsection, results are presented in the paper order described in Table 1.</p>
 
       <h3>4.1 Mobility Curve Results</h3>
 
@@ -378,7 +424,7 @@ You have to provide Response in a single word; it must be either
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.1.2 Reasoning level (RQ2) &mdash; Does LLM reasoning level affect mobility curves?</h4>
 
-      <p>Reasoning level is a configurable LLM parameter controlling how much hidden deliberation the model performs before producing its final response (see &sect;2.2). Two configurations span the full reasoning-level ladder (off, low, medium, high): GPT-5.2 (OpenAI) and Gemini 3 Flash Preview (Google). Figure 5 places these two reasoning ladders side by side, with each panel showing how the same model&rsquo;s mobility curve responds to changes in reasoning level.</p>
+      <p>Reasoning level is a configurable LLM parameter controlling how much hidden deliberation the model performs before producing its final response. Two configurations span the full reasoning-level ladder (off, low, medium, high): GPT-5.2 (OpenAI) and Gemini 3 Flash Preview (Google). Figure 5 places these two reasoning ladders side by side, with each panel showing how the same model&rsquo;s mobility curve responds to changes in reasoning level.</p>
 
       <figure style="margin:14px 0 6px">
         <div id="paper-fig5-section" style="display:block">
@@ -395,7 +441,7 @@ You have to provide Response in a single word; it must be either
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.1.3 Model size (RQ3) &mdash; Does LLM size affect mobility curves?</h4>
 
-      <p>Model size refers to a provider&rsquo;s relative scale tier within a single family of releases (see &sect;2.2). Two providers in the data have multiple model sizes within a single generation: Anthropic&rsquo;s Claude 4.5 family (Haiku [small], Sonnet [middle], Opus [large]) and Google&rsquo;s Gemini 2.5 family (Flash Lite [small], Flash [middle]). All five configurations are evaluated with reasoning off. Figure 6 places the two size ladders side by side.</p>
+      <p>Model size refers to a provider&rsquo;s relative scale tier within a single family of releases. Two providers in the data have multiple model sizes within a single generation: Anthropic&rsquo;s Claude 4.5 family (Haiku [small], Sonnet [middle], Opus [large]) and Google&rsquo;s Gemini 2.5 family (Flash Lite [small], Flash [middle]). All five configurations are evaluated with reasoning off. Figure 6 places the two size ladders side by side.</p>
 
       <figure style="margin:14px 0 6px">
         <div id="paper-fig6-section" style="display:block">
@@ -406,13 +452,11 @@ You have to provide Response in a single word; it must be either
         </figcaption>
       </figure>
 
-      <p>For the Anthropic Claude 4.5 family, mobility does not change monotonically with size. Going from Haiku (small) to Sonnet (middle) shifts the curve substantially downward &mdash; Sonnet sits well below Haiku across the full infection range. But going from Sonnet to Opus (large) reverses direction: Opus tracks close to Haiku rather than continuing further down. For the Google Gemini 2.5 family, Gemini 2.5 Flash sits well above Gemini 2.5 Flash Lite across most of the infection range. Flash Lite itself shows an unusual within-curve pattern &mdash; its mobility starts moderate at 0% infection, dips between roughly 0% and 1%, then recovers above 50% from 1.5% onward. The multilinear regression in Appendix A reports which configurations differ significantly.</p>
-
-      <p>Across both providers&rsquo; size ladders, the data shows substantial variation but no consistent direction of effect attributable to size.</p>
+      <p>For the Anthropic Claude 4.5 family, mobility does not change monotonically with size. Going from Haiku (small) to Sonnet (middle) shifts the curve substantially downward &mdash; Sonnet sits well below Haiku across the full infection range. But going from Sonnet to Opus (large) reverses direction: Opus tracks close to Haiku rather than continuing further down. For the Google Gemini 2.5 family, Gemini 2.5 Flash sits well above Gemini 2.5 Flash Lite across most of the infection range. Flash Lite itself shows an unusual within-curve pattern &mdash; its mobility starts moderate at 0% infection, dips sharply between 0.1% and 0.9%, jumps back at 1.0%, and stabilizes above 50% from 1.2% onwards. One possible explanation is that Flash Lite, a smaller and lower-capacity variant of Gemini 2.5 Flash, is oversensitive to sub-1% infection levels; it reacts more strongly to fractional values in the 0.1&ndash;0.9% range than to values at or above 1%. Other small models in this study (Claude 3 Haiku, Claude Haiku 4.5) do not show this dip-and-recover pattern, so size alone does not fully account for the behavior. Across both providers&rsquo; size ladders, the data shows substantial variation but no consistent direction of effect attributable to size. The multilinear regression in Appendix A reports which configurations differ significantly.</p>
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.1.4 Model evolution (RQ4) &mdash; Does LLM evolution affect mobility curves?</h4>
 
-      <p>Model evolution refers to the sequence of major releases within a single provider&rsquo;s family over time, where each successive release typically incorporates new training data, refined alignment, and architectural improvements (see &sect;2.2). All three providers contribute model evolution data: Anthropic from Claude Sonnet 4.0 to Claude Sonnet 4.5; OpenAI from GPT-3.5 Turbo through GPT-4o, GPT-4.1, GPT-5.1, and GPT-5.2; and Google from Gemini 2.0 Flash through Gemini 2.5 Flash to Gemini 3 Flash Preview. All configurations are evaluated with reasoning off. Figure 7 places the three evolution sequences side by side.</p>
+      <p>Model evolution refers to the sequence of major releases within a single provider&rsquo;s family over time, where each successive release typically incorporates new training data, refined alignment, and architectural improvements. All three providers contribute model evolution data: Anthropic from Claude Sonnet 4.0 to Claude Sonnet 4.5; OpenAI from GPT-3.5 Turbo through GPT-4o, GPT-4.1, GPT-5.1, and GPT-5.2; and Google from Gemini 2.0 Flash through Gemini 2.5 Flash to Gemini 3 Flash Preview. All configurations are evaluated with reasoning off. Figure 7 places the three evolution sequences side by side.</p>
 
       <figure style="margin:14px 0 6px">
         <div id="paper-fig7-section" style="display:block">
@@ -429,7 +473,7 @@ You have to provide Response in a single word; it must be either
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.1.5 Knowledge cutoff (RQ5) &mdash; Does LLM knowledge cutoff affect mobility curves?</h4>
 
-      <p>Knowledge cutoff is the date through which the model&rsquo;s training data extends; models with later cutoffs have been exposed to more recent text from the public internet (see &sect;2.2). The 21 configurations span knowledge cutoffs from September 2021 (GPT-3.5 Turbo) to August 2025 (Claude Opus 4.5 and GPT-5.2). Figure 8 plots each configuration on a knowledge-cutoff timeline, showing the four era groupings used in the analysis below: pre-2024, mid-2024 (Jun&ndash;Sep), early 2025 (Jan&ndash;Mar), and late 2025 (Aug). Figure 9 then shows the mobility curves within each era.</p>
+      <p>Knowledge cutoff is the date through which the model&rsquo;s training data extends; models with later cutoffs have been exposed to more recent text from the public internet. The 21 configurations span knowledge cutoffs from September 2021 (GPT-3.5 Turbo) to August 2025 (Claude Opus 4.5 and GPT-5.2). Figure 8 plots each configuration on a knowledge-cutoff timeline, showing the four era groupings used in the analysis below: pre-2024, mid-2024 (Jun&ndash;Sep), early 2025 (Jan&ndash;Mar), and late 2025 (Aug). Figure 9 then shows the mobility curves within each era.</p>
 
       <figure style="margin:14px 0 6px">
         <div id="cutoff-timeline-chart" class="chart-container" style="min-height:240px"></div>
@@ -453,7 +497,7 @@ You have to provide Response in a single word; it must be either
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.1.6 Release date (RQ6) &mdash; Does LLM release date affect mobility curves?</h4>
 
-      <p>Release date is the date the model was made publicly available via API; it is generally independent of the model&rsquo;s knowledge cutoff (see &sect;2.2). The 21 configurations span release dates from January 2024 (GPT-3.5 Turbo) to December 2025 (GPT-5.2 and Gemini 3 Flash Preview). Figure 10 plots each configuration on a release-date timeline, showing the three era groupings used in the analysis below: legacy (pre-2025), early 2025 (Feb&ndash;Jun), and late 2025 (Sep&ndash;Dec). Figure 11 then shows the mobility curves within each era.</p>
+      <p>Release date is the date the model was made publicly available via API; it is generally independent of the model&rsquo;s knowledge cutoff. The 21 configurations span release dates from January 2024 (GPT-3.5 Turbo) to December 2025 (GPT-5.2 and Gemini 3 Flash Preview). Figure 10 plots each configuration on a release-date timeline, showing the three era groupings used in the analysis below: legacy (pre-2025), early 2025 (Feb&ndash;Jun), and late 2025 (Sep&ndash;Dec). Figure 11 then shows the mobility curves within each era.</p>
 
       <figure style="margin:14px 0 6px">
         <div id="release-timeline-chart" class="chart-container" style="min-height:240px"></div>
@@ -481,7 +525,7 @@ You have to provide Response in a single word; it must be either
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.2.1 Trait effect directions (RQ7) &mdash; What is the direction of each persona predictor&rsquo;s effect on the stay-home decision?</h4>
 
-      <p>Agent traits enter the random-effects logit (&sect;3.7.2) as predictors: five Big Five trait dummies, a male dummy, and age in years. Each Big Five dummy equals 1 for the named pole (extraverted, agreeable, conscientious, emotionally stable, open to experience) and 0 for its opposite (introverted, antagonistic, unconscientious, neurotic, closed to experience). The male dummy is 1 for male and 0 for female. Age is in raw years; its coefficient is per year, and is scaled by 47 (the 18&ndash;65 span) for magnitude comparisons against the binary traits. Each predictor&rsquo;s &beta; gives the log-odds shift in stay-home probability associated with the dummy = 1 value, holding the other predictors fixed. A negative &beta; on a trait dummy means agents at that pole are more mobile, and a positive &beta; means they stay home more.</p>
+      <p>Agent traits enter the random-effects logit (&sect;3.7.2) as predictors: five Big Five trait dummies, a male dummy, and age in years. Each Big Five dummy equals 1 for the named pole (extraverted, agreeable, conscientious, emotionally stable, open to experience) and 0 for its opposite (introverted, antagonistic, unconscientious, neurotic, closed to experience). The male dummy is 1 for male and 0 for female. Age is a continuous predictor; its coefficient is per year, and is scaled by 47 (the 18&ndash;65 span) for magnitude comparisons against the binary traits. Each predictor&rsquo;s &beta; gives the log-odds shift in stay-home probability associated with the dummy = 1 value, holding the other predictors fixed. A negative &beta; on a trait dummy means agents at that pole are more mobile, and a positive &beta; means they stay home more.</p>
 
       <p>Figure 12 shows the per-predictor &beta; coefficients across all 21 LLM configurations, one panel per predictor, with significance markers and 95% confidence intervals. The right column of each panel reports a normalized |&beta;|&nbsp;/&nbsp;infection-range ratio, where infection range is the maximum log-odds shift the infection signal produces over the 0&ndash;7% range.</p>
 
@@ -569,21 +613,21 @@ You have to provide Response in a single word; it must be either
         </figcaption>
       </figure>
 
-      <p>For Extraversion, mentioning &ldquo;introverted&rdquo; produces a significant stay-home shift in 9 of 12 configurations, a significant go-out shift in 1, and 2 not significant; mentioning &ldquo;extraverted&rdquo; produces a significant go-out shift in 9 of 11, with 2 not significant. Introverted agents who mention their trait stay home even more, and extraverted agents who mention theirs go out even more.</p>
+      <p>For Extraversion, mentioning &ldquo;introverted&rdquo; shifts behavior toward stay-home in 9 of 12 configurations (1 go-out, 2 not significant); mentioning &ldquo;extraverted&rdquo; shifts toward go-out in 9 of 11 (2 not significant). Introverted agents who mention their trait stay home even more; extraverted agents who mention theirs go out even more.</p>
 
-      <p>For Agreeableness, mentioning &ldquo;antagonistic&rdquo; produces a significant go-out shift in 10 of 11 configurations, with 1 stay-home; mentioning &ldquo;agreeable&rdquo; is genuinely mixed &mdash; 5 stay-home, 4 go-out, and 2 not significant out of 11. Antagonistic agents who mention their trait go out even more. However, agreeable agents who mention theirs split roughly evenly on which direction they shift.</p>
+      <p>For Agreeableness, mentioning &ldquo;antagonistic&rdquo; shifts toward go-out in 10 of 11 configurations (1 stay-home); mentioning &ldquo;agreeable&rdquo; is mixed &mdash; 5 stay-home, 4 go-out, 2 not significant out of 11. Antagonistic agents who mention their trait go out even more; agreeable agents who mention theirs split roughly evenly on direction.</p>
 
-      <p>For Conscientiousness, mentioning &ldquo;unconscientious&rdquo; produces a significant go-out shift in 8 of 13 configurations, with 2 stay-home and 3 not significant; mentioning &ldquo;conscientious&rdquo; produces a significant go-out shift in 9 of 11, with 2 not significant. Unconscientious agents who mention their trait go out even more, following the direction of the trait coefficient. However, conscientious agents who mention &ldquo;conscientious&rdquo; also shift toward going out &mdash; the lone paradox among the Big Five, opposite to the direction of the trait coefficient.</p>
+      <p>For Conscientiousness, mentioning &ldquo;unconscientious&rdquo; shifts toward go-out in 8 of 13 configurations (2 stay-home, 3 not significant); mentioning &ldquo;conscientious&rdquo; shifts toward go-out in 9 of 11 (2 not significant). Unconscientious agents who mention their trait go out even more, following the trait coefficient. Conscientious agents who mention theirs also shift toward going out &mdash; the lone paradox among the Big Five, opposite to the trait coefficient.</p>
 
-      <p>For Neuroticism, mentioning &ldquo;neurotic&rdquo; produces a significant stay-home shift in all 12 configurations, and mentioning &ldquo;emotionally stable&rdquo; produces a significant go-out shift in all 12. Neurotic agents who mention their trait stay home even more, and emotionally stable agents who mention theirs go out even more.</p>
+      <p>For Neuroticism, mentioning &ldquo;neurotic&rdquo; shifts toward stay-home in all 12 configurations; mentioning &ldquo;emotionally stable&rdquo; shifts toward go-out in all 12. Neurotic agents who mention their trait stay home even more; emotionally stable agents who mention theirs go out even more.</p>
 
-      <p>For Openness, mentioning &ldquo;closed&rdquo; produces a significant go-out shift in all 7 configurations where the flag was estimable; mentioning &ldquo;open&rdquo; is split 3 stay-home, 3 go-out, and 4 not significant out of 10. Closed agents who mention their trait go out even more. However, open agents who mention theirs are mixed: roughly equal numbers of LLMs push them toward staying home, going out, or producing no significant shift at all.</p>
+      <p>For Openness, mentioning &ldquo;closed&rdquo; shifts toward go-out in all 7 estimable configurations; mentioning &ldquo;open&rdquo; is split 3 stay-home, 3 go-out, 4 not significant out of 10. Closed agents who mention their trait go out even more; open agents who mention theirs are mixed across LLMs.</p>
 
-      <p>The infection mention flag enters the model in only 4 of 21 configurations; the rest fall outside the 15&ndash;85% gate because nearly every response mentions infection. In all 4 estimable configurations the coefficient is significantly stay-home: when an agent&rsquo;s reasoning explicitly mentions infection, the stay-home decision is more likely beyond what the actual infection level alone would predict. The age mention flag enters in only one configuration (Gemini 2.5 Flash), where it is significantly toward going out; with a single estimable LLM the pattern is too thin to generalize.</p>
+      <p>The infection flag is estimable in only 4 of 21 configurations; the rest fall outside the 15&ndash;85% gate because nearly every response mentions infection. In all 4 it is significantly stay-home: explicit mention of infection makes the stay-home decision more likely beyond what the infection level alone predicts. The age flag is estimable in only one configuration (Gemini 2.5 Flash), where it points toward going out; with a single estimable LLM the pattern is too thin to generalize.</p>
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.3.3 Decision themes (RQ13) &mdash; Which concept categories are cited in stay-home vs. go-out reasoning?</h4>
 
-      <p>Sections 5.3.1 and 5.3.2 describe how often each concept is mentioned and whether mentioning a trait amplifies its behavioral effect. This subsection asks a complementary question: are concepts cited more often in stay-home or in go-out reasoning? Figure 18 reports this for the ten Big Five trait labels plus infection and age. Each cell is the mention rate among that subgroup&rsquo;s stay-home responses minus the mention rate among its go-out responses, in percentage points (pp). For example, Claude Opus 4.5&rsquo;s Introverted column reads +16 pp: 78% of Opus 4.5&rsquo;s introverted agents mention an extraversion keyword when staying home, versus 62% when going out.</p>
+      <p>Sections 4.3.1 and 4.3.2 describe how often each concept is mentioned and whether mentioning a trait amplifies its behavioral effect. This subsection asks a complementary question: are concepts cited more often in stay-home or in go-out reasoning? Figure 18 reports this for the ten Big Five trait labels plus infection and age. Each cell is the mention rate among that subgroup&rsquo;s stay-home responses minus the mention rate among its go-out responses, in percentage points (pp). For example, Claude Opus 4.5&rsquo;s Introverted column reads +16 pp: 78% of Opus 4.5&rsquo;s introverted agents mention an extraversion keyword when staying home, versus 62% when going out.</p>
 
       <figure style="margin:14px 0 6px">
         <div id="paper-fig18-chart" class="chart-container" style="min-height:540px"></div>
@@ -607,7 +651,7 @@ You have to provide Response in a single word; it must be either
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">4.3.4 Agent individuation (RQ14) &mdash; How agent-specific is each LLM&rsquo;s reasoning text?</h4>
 
-      <p>Sections 5.3.1&ndash;5.3.3 measure which specific concepts agents cite and how those mentions correlate with each decision. This subsection asks a higher-level question: how much does the reasoning text itself vary across agents? The agent-individuation analysis (&sect;3.7.3) embeds every reasoning passage and, restricted to the &ldquo;5/5 agreement&rdquo; subset, computes two cosine summaries per LLM: <em>within-agent</em> similarity (the mean cosine across an agent&rsquo;s 5 reps) and <em>across-agent</em> similarity (the mean cosine between agents who reached the same decision at the same infection level). The gap Δ = (within&nbsp;&minus;&nbsp;across) measures agent individuation: a large positive Δ means the LLM produces text more similar within an agent than across agents (agent-specific reasoning); a near-zero Δ means similar text across different agents (templated text).</p>
+      <p>Sections 4.3.1&ndash;4.3.3 measure which specific concepts agents cite and how those mentions correlate with each decision. This subsection asks a higher-level question: how much does the reasoning text itself vary across agents? The agent-individuation analysis (&sect;3.7.3) embeds every reasoning passage and, restricted to the &ldquo;5/5 agreement&rdquo; subset, computes two cosine summaries per LLM: <em>within-agent</em> similarity (the mean cosine across an agent&rsquo;s 5 reps) and <em>across-agent</em> similarity (the mean cosine between agents who reached the same decision at the same infection level). The gap Δ = (within&nbsp;&minus;&nbsp;across) measures agent individuation: a large positive Δ means the LLM produces text more similar within an agent than across agents (agent-specific reasoning); a near-zero Δ means similar text across different agents (templated text).</p>
 
       <p>Cosine similarity values can be hard to interpret in isolation. Figure 20 anchors the scale with three example response pairs from Claude Opus 4.5 at infection 3.5%, all at the same go-out decision: a near-paraphrase pair from one agent&rsquo;s two reps (&asymp;&nbsp;0.99), a mid-similarity pair from two different agents (&asymp;&nbsp;0.85), and a low-similarity pair from two different agents whose go-out reasoning diverges (&asymp;&nbsp;0.65).</p>
 
@@ -643,11 +687,11 @@ You have to provide Response in a single word; it must be either
 
       <p>Of the five within-family lenses, only reasoning level (RQ2) produces a measurable shift, and even that effect is small and direction-ambiguous. Reasoning level moves mobility by roughly 9 percentage points (Figure 5), with opposite signs in the two configurations sampled across the full ladder: increasing reasoning makes GPT-5.2 more mobile and Gemini 3 Flash Preview less mobile. A practitioner can expect reasoning level to nudge generative-agent behavior, but cannot predict the direction of that nudge without testing the specific model.</p>
 
-      <p>The remaining four lenses do not generate actionable insight. Model size within a family (RQ3), model evolution within a provider (RQ4), knowledge cutoff (RQ5), and release date (RQ6) all fail to predict mobility-curve placement (Figures 6&ndash;11). Configurations that share any of these properties still land at very different positions on the mobility axis. Same-family models at different sizes, successive releases within a family, models with knowledge cutoffs in the same three-month window, and models released within a four-month window each span much of the 0&ndash;100% range. A researcher cannot predict an LLM&rsquo;s mobility curve from its size, generation, training cutoff, or release date. Identifying what within an LLM&rsquo;s training pipeline produces a particular mobility tendency &mdash; alignment objectives, the RLHF system, system-prompt conventions, etc. &mdash; is left as future work.</p>
+      <p>The remaining four lenses do not generate actionable insight. Model size within a family (RQ3), model evolution within a provider (RQ4), knowledge cutoff (RQ5), and release date (RQ6) all fail to predict mobility-curve placement (Figures 6&ndash;11). Configurations that share any of these properties still land at very different positions on the mobility axis. Same-family models at different sizes, successive releases within a family, models with knowledge cutoffs in the same three-month window, and models released within a four-month window each span much of the 0&ndash;100% range. A researcher cannot predict an LLM&rsquo;s mobility curve from its size, generation, knowledge cutoff, or release date. Identifying what within an LLM&rsquo;s training pipeline produces a particular mobility tendency &mdash; alignment objectives, the RLHF system, system-prompt conventions, etc. &mdash; is left as future work.</p>
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.2 Persona Discussion (RQ7&ndash;RQ10)</h4>
 
-      <p>The persona analysis shows two complementary patterns: directions agree across LLMs, magnitudes do not. For four of the five Big Five traits, every LLM agrees on the direction of the effect (RQ7, Figure 12). 21 of 21 agree that extraverted agents are more mobile and that agreeable and conscientious agents stay home more, and 20 of 21 agree that emotionally stable agents are more mobile. Openness is the lone Big Five inconsistency, mostly positive (14 of 21 significantly positive, 1 significantly negative). Gender and age rarely reach significance. The unanimity holds within each provider as well as across providers. A plausible reading is that LLMs have inherited a shared mapping from Big Five labels to risk-related behavior, learned from broadly similar training corpora. This is reassuring for GABM realism: swapping the LLM does not change which traits make a generative agent more cautious.</p>
+      <p>The persona analysis shows two complementary patterns: directions agree across LLMs, magnitudes do not. For four of the five Big Five traits, every LLM agrees on the direction of the effect (RQ7, Figure 12). 21 of 21 agree that extraverted agents are more mobile and that agreeable and conscientious agents stay home more, and 20 of 21 agree that emotionally stable agents are more mobile. Openness is the lone Big Five inconsistency, mostly positive (14 of 21 significantly positive, 1 significantly negative). Gender and age rarely reach significance. The unanimity holds within each provider as well as across providers. A plausible reading is that LLMs have inherited a shared mapping from Big Five labels to risk-related behavior, learned from broadly similar training corpora. The direction-agreement parallels Mooney et al.&rsquo;s finding <span class="cite-group">mooney2025</span> that agents&rsquo; surface-level responses align with stated profiles across nine models from three model families. This is reassuring for GABM epidemic model realism: swapping the LLM does not typically change which traits make a generative agent more cautious.</p>
 
       <p>The importance of each predictor (RQ8, Figure 13), in contrast, splits sharply along provider lines. In OpenAI, infection level is the top predictor in all 9 configurations, and no Big Five trait coefficient anywhere exceeds the infection coefficient. In Anthropic, infection is the top predictor in 4 of 5; Claude Opus 4.5 is the exception (conscientiousness). In Gemini, a Big Five trait is the top predictor in 6 of 7 configurations (extraversion in four, emotional stability in two). In fact, four of the five Gemini Big Five median trait coefficients exceed infection (extraversion, conscientiousness, emotional stability, and openness).</p>
 
@@ -671,7 +715,7 @@ You have to provide Response in a single word; it must be either
 
       <h4 style="font-size:14px;font-weight:bold;margin:14px 0 6px">5.4 Implications for GABM design</h4>
 
-      <p>GABM was introduced to replace explicit behavioral parameterization. Agents derive their decisions from a well-trained LLM instead of from modeler-coded decision rules. The variation across LLMs documented here gives that move a sharper edge: the LLM choice itself becomes the parameterization. Four practical implications follow for researchers building generative-agent simulations.</p>
+      <p>GABM was introduced to replace explicit behavioral parameterization <span class="cite-group">ghaffarzadegan2024</span>. Agents derive their decisions from a well-trained LLM instead of from modeler-coded decision rules. The variation across LLMs documented here gives that move a sharper edge: the LLM choice itself becomes the parameterization. This empirically reinforces recent concerns about generative-ABM validation <span class="cite-group">larooij_tornberg2026, liwu2025</span> and aligns with a growing body of shallow behavioral probes showing that LLM choice measurably moves agent output <span class="cite-group">dominguez_olmedo2024, einwiller2025, mooney2025, parikh2026</span>. Four practical implications follow for researchers building generative-agent simulations.</p>
 
       <p><em>The choice of LLM is not interchangeable.</em> Aggregate mobility, the magnitude of persona effects, the relative weight of persona versus infection signal, and the agent-specificity of reasoning text all depend on the LLM.</p>
 
@@ -689,7 +733,9 @@ You have to provide Response in a single word; it must be either
 
       <p>The probe also restricts to a single binary decision (stay home or go out) on a single 100-agent population. Whether the provider-level patterns documented here generalize to other decision domains or to larger and differently-distributed agent populations is an open question.</p>
 
-      <p>Finally, the keyword dictionaries used for &sect;4.3.1&ndash;&sect;4.3.3 (defined in &sect;3.7.3) were curated by manual sample inspection rather than learned from the data. While this matches conventions in content-analysis research, an unsupervised approach (for example, topic modeling on the response embeddings) might surface decision themes the manual approach misses.</p>
+      <p>The keyword dictionaries used for &sect;4.3.1&ndash;&sect;4.3.3 (defined in &sect;3.7.3) were curated by manual sample inspection rather than learned from the data. While this matches conventions in content-analysis research, an unsupervised approach (for example, topic modeling on the response embeddings) might surface decision themes the manual approach misses.</p>
+
+      <p>Lastly, the probe evaluates general-purpose chat models with light persona prompts. Whether richer interview-style prompting <span class="cite-group">park2024_1000</span>, fine-tuning on human-behavior traces <span class="cite-group">kolluri2025</span>, or purpose-built behavioral models <span class="cite-group">simile_ai</span> would reduce the model-to-model variability documented here is left as future work.</p>
 
     </section>
 
@@ -697,18 +743,63 @@ You have to provide Response in a single word; it must be either
     <section>
       <h2>6. Conclusion</h2>
 
-      <p>This study probed 21 LLM configurations from three providers across 100 frozen personas, 40 infection levels, and 5 repetitions per cell, totaling 420,000 binary decisions, to ask how the choice of LLM shapes generative-agent behavior. Mobility-curve, persona, and response findings all varied across LLMs. The model attributes a researcher would typically use to choose an LLM (size, generation, training cutoff, release date) did not predict that variation. Across LLMs the direction of trait effects agreed; magnitude varied several-fold by provider. The reasoning text turned out to encode predictive signal beyond the decision itself, revealing an other-focused-vs-self-focused framing of the stay-home choice.</p>
+      <p>This study probed 21 LLM configurations from three providers across 100 frozen personas, 40 infection levels, and 5 repetitions per cell, totaling 420,000 binary decisions, to ask how the choice of LLM shapes generative-agent behavior. Mobility-curve, persona, and response findings all varied across LLMs. The model attributes a researcher would typically use to choose an LLM (size, generation, knowledge cutoff, release date) did not predict that variation. Across LLMs the direction of trait effects agreed; magnitude varied several-fold by provider. The reasoning text turned out to encode predictive signal beyond the decision itself, revealing an other-focused-vs-self-focused framing of the stay-home choice.</p>
 
-      <p>GABM was introduced to replace rule-based decision-making with LLM-mediated decisions. Human behavior resists clean mathematical specification: how the death of a grandparent during an epidemic alters an agent&rsquo;s mobility, for instance, is hard to derive from a rule. By connecting agents to a well-trained LLM, the modeler offloads that specification problem. The variation across LLMs observed here means that move has a hidden cost: the LLM choice itself becomes the parameterization. The implication is not that practitioners should pick an LLM that produces a desired behavioral profile; that would simply re-introduce the parameter-tuning subjectivity GABM was meant to escape. The implication is that GABM, as currently constituted with general-purpose LLMs, is most defensible for qualitative claims (which agree across LLMs) and weakest for quantitative claims (which vary several-fold by provider).</p>
+      <p>GABM was introduced to replace rule-based decision-making with LLM-mediated decisions <span class="cite-group">ghaffarzadegan2024</span>. Human behavior resists clean mathematical specification: how the death of a grandparent during an epidemic alters an agent&rsquo;s mobility, for instance, is hard to derive from a rule. By connecting agents to a well-trained LLM, the modeler offloads that specification problem. The variation across LLMs observed here means that move has a hidden cost: the LLM choice itself becomes the parameterization. The implication is not that practitioners should pick an LLM that produces a desired behavioral profile; that would simply re-introduce the parameter-tuning subjectivity GABM was meant to escape. The implication is that GABM, as currently constituted with general-purpose LLMs, is most defensible for qualitative claims (which agree across LLMs) and weakest for quantitative claims (which vary several-fold by provider).</p>
 
-      <p>Purpose-built models are emerging in response. Recent work fine-tunes general-purpose LLMs on real human-action traces to improve behavioral-simulation accuracy, and well-funded efforts like Simile.ai are building LLMs specifically to capture the population-level diversity of human decision-making rather than the single, polished persona of a chat assistant. Whether magnitude reliability emerges as general-purpose models scale, or whether it requires this kind of specialized training, is an open question this study cannot answer. Until then, GABM practitioners should treat the LLM choice as the central parameter in their model and report LLM sensitivity alongside any quantitative claim.</p>
+      <p>Purpose-built models are emerging in response. Recent work fine-tunes general-purpose LLMs on real human-action traces to improve behavioral-simulation accuracy <span class="cite-group">kolluri2025</span>, and well-funded efforts like Simile.ai <span class="cite-group">simile_ai</span> are building LLMs specifically to capture the population-level diversity of human decision-making rather than the single, polished persona of a chat assistant. Whether magnitude reliability emerges as general-purpose models scale, or whether it requires this kind of specialized training, is an open question this study cannot answer. Until then, GABM practitioners should treat the LLM choice as the central parameter in their model and report LLM sensitivity alongside any quantitative claim.</p>
 
       <p>Modelers from epidemiology, sociology, political science, economics, and complex-systems modeling could extend the probe approach to their own decision domains, and LLM-sensitivity testing could be treated as a routine part of any GABM publication&rsquo;s evidentiary base, much as classical agent-based modeling has long been expected to demonstrate sensitivity to parameter choices.</p>
     </section>
 
-    <!-- ─────────── 7. Appendices ─────────── -->
+    <div class="page-break-before-print" style="height:0"></div>
+    <!-- ─────────── 7. References ─────────── -->
+    <section id="section-references">
+      <h2>7. References</h2>
+      <ol data-refs="cites" style="font-size:12px;line-height:1.6;color:#111;padding-left:28px;margin-top:6px">
+        <li data-cite="williams2023" style="margin-bottom:8px">Williams R, Hosseinichimeh N, Majumdar A, Ghaffarzadegan N. Epidemic modeling with generative agents. arXiv:2307.04986. 2023.</li>
+        <li data-cite="popclock" style="margin-bottom:8px">U.S. Census Bureau. U.S. and World Population Clock. (Source of the per-year age weights used to sample agent ages 18&ndash;65; carried over from Williams et al. <span class="cite-group">williams2023</span>.)</li>
+        <li data-cite="williams_prompt2023" style="margin-bottom:8px">Williams R. Prompt sensitivity of generative agents: evidence from an epidemic model. Preliminary examination, Industrial and Systems Engineering, Virginia Tech; 2023.</li>
+        <li data-cite="epstein2007" style="margin-bottom:8px">Epstein JM. Generative social science: studies in agent-based computational modeling. Princeton University Press; 2007.</li>
+        <li data-cite="larooij_tornberg2026" style="margin-bottom:8px">Larooij M, T&ouml;rnberg P. Validation is the central challenge for generative social simulation: a critical review of LLMs in agent-based modeling. Artificial Intelligence Review. 2026;59:15.</li>
+        <li data-cite="liwu2025" style="margin-bottom:8px">Li Z, Wu Q. Let it go or control it all? The dilemma of prompt engineering in generative agent-based models. System Dynamics Review. 2025;41(3):e70008.</li>
+        <li data-cite="wang2023" style="margin-bottom:8px">Wang L, Ma C, Feng X, Zhang Z, Yang H, Zhang J, et al. A survey on large language model based autonomous agents. arXiv:2308.11432. 2023.</li>
+        <li data-cite="mou2024" style="margin-bottom:8px">Mou X, Ding X, He Q, Wang L, Liang J, Zhang X, et al. From individual to society: a survey on social simulation driven by large language model-based agents. arXiv:2412.03563. 2024.</li>
+        <li data-cite="wei_emergent2022" style="margin-bottom:8px">Wei J, Tay Y, Bommasani R, Raffel C, Zoph B, Borgeaud S, et al. Emergent abilities of large language models. Transactions on Machine Learning Research. 2022.</li>
+        <li data-cite="wei_cot2022" style="margin-bottom:8px">Wei J, Wang X, Schuurmans D, Bosma M, Ichter B, Xia F, et al. Chain-of-thought prompting elicits reasoning in large language models. Advances in Neural Information Processing Systems. 2022;35:24824-37.</li>
+        <li data-cite="brown2020" style="margin-bottom:8px">Brown TB, Mann B, Ryder N, Subbiah M, Kaplan J, Dhariwal P, et al. Language models are few-shot learners. Advances in Neural Information Processing Systems. 2020;33:1877-901.</li>
+        <li data-cite="gao2024hss" style="margin-bottom:8px">Gao C, Lan X, Li N, Yuan Y, Ding J, Zhou Z, et al. Large language models empowered agent-based modeling and simulation: a survey and perspectives. Humanities and Social Sciences Communications. 2024;11:1259.</li>
+        <li data-cite="ghaffarzadegan2024" style="margin-bottom:8px">Ghaffarzadegan N, Majumdar A, Williams R, Hosseinichimeh N. Generative agent-based modeling: an introduction and tutorial. System Dynamics Review. 2024;40(1):e1761.</li>
+        <li data-cite="lu_aleta_moreno2024" style="margin-bottom:8px">Lu Y, Aleta A, Du C, Shi L, Moreno Y. LLMs and generative agent-based models for complex systems research. Physics of Life Reviews. 2024;51:283-93.</li>
+        <li data-cite="adornetto2025" style="margin-bottom:8px">Adornetto C, Mora A, Hu K, Izquierdo Garcia L, Atchade-Adelomou P, Greco G, et al. Generative agents in agent-based modeling: overview, validation, and emerging challenges. IEEE Transactions on Artificial Intelligence. 2025;6(12):3165-83.</li>
+        <li data-cite="wu_sabm2023" style="margin-bottom:8px">Wu Z, Peng R, Han X, Zheng S, Zhang Y, Xiao C. Smart agent-based modeling: on the use of large language models in computer simulations. arXiv:2311.06330. 2023.</li>
+        <li data-cite="vezhnevets_concordia2023" style="margin-bottom:8px">Vezhnevets AS, Agapiou JP, Aharon A, Ziv R, Matyas J, Du&eacute;&ntilde;ez-Guzm&aacute;n EA, et al. Generative agent-based modeling with actions grounded in physical, social, or digital space using Concordia. arXiv:2312.03664. 2023.</li>
+        <li data-cite="lan_avalon2024" style="margin-bottom:8px">Lan Y, Hu Z, Wang L, Wang Y, Ye D, Zhao P, et al. LLM-based agent society investigation: collaboration and confrontation in Avalon gameplay. Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing (EMNLP). 2024;128-45.</li>
+        <li data-cite="akata2023" style="margin-bottom:8px">Akata E, Schulz L, Coda-Forno J, Oh SJ, Bethge M, Schulz E. Playing repeated games with large language models. arXiv:2305.16867. 2023.</li>
+        <li data-cite="john_srivastava1999" style="margin-bottom:8px">John OP, Srivastava S. The Big Five trait taxonomy: history, measurement, and theoretical perspectives. In: Pervin LA, John OP, editors. Handbook of personality: theory and research. 2nd ed. Guilford Press; 1999. p. 102-38.</li>
+        <li data-cite="oai_embeddings" style="margin-bottom:8px">OpenAI. text-embedding-3-large. OpenAI API documentation.</li>
+        <li data-cite="park2023" style="margin-bottom:8px">Park JS, O&rsquo;Brien JC, Cai CJ, Morris MR, Liang P, Bernstein MS. Generative agents: interactive simulacra of human behavior. Proceedings of the 36th Annual ACM Symposium on User Interface Software and Technology (UIST &rsquo;23). 2023.</li>
+        <li data-cite="gao_s3_2023" style="margin-bottom:8px">Gao C, Lan X, Lu Z, Mao J, Piao J, Wang H, et al. S<sup>3</sup>: social-network simulation system with large language model-empowered agents. arXiv:2307.14984. 2023.</li>
+        <li data-cite="horton2023" style="margin-bottom:8px">Horton JJ. Large language models as simulated economic agents: what can we learn from homo silicus? NBER Working Paper No. 31122. 2023.</li>
+        <li data-cite="argyle2023" style="margin-bottom:8px">Argyle LP, Busby EC, Fulda N, Gubler JR, Rytting C, Wingate D. Out of one, many: using language models to simulate human samples. Political Analysis. 2023;31(3):337-51.</li>
+        <li data-cite="park2024_1000" style="margin-bottom:8px">Park JS, Zou CQ, Shaw A, Hill BM, Cai C, Morris MR, et al. Generative agent simulations of 1,000 people. arXiv:2411.10109. 2024.</li>
+        <li data-cite="kolluri2025" style="margin-bottom:8px">Kolluri A, Wu S, Park JS, Bernstein MS. Finetuning LLMs for human behavior prediction in social science experiments. Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing (EMNLP). 2025;30096-111.</li>
+        <li data-cite="simile_ai" style="margin-bottom:8px">Simile.ai. Purpose-built behavioral simulation models. Company website.</li>
+        <li data-cite="binz_schulz2023" style="margin-bottom:8px">Binz M, Schulz E. Using cognitive psychology to understand GPT-3. Proceedings of the National Academy of Sciences. 2023;120(6):e2218523120.</li>
+        <li data-cite="mmlu_hendrycks2021" style="margin-bottom:8px">Hendrycks D, Burns C, Basart S, Zou A, Mazeika M, Song D, et al. Measuring massive multitask language understanding. International Conference on Learning Representations (ICLR). 2021.</li>
+        <li data-cite="humaneval_chen2021" style="margin-bottom:8px">Chen M, Tworek J, Jun H, Yuan Q, Pinto HP, Kaplan J, et al. Evaluating large language models trained on code. arXiv:2107.03374. 2021.</li>
+        <li data-cite="bigbench_srivastava2022" style="margin-bottom:8px">Srivastava A, Rastogi A, Rao A, Shoeb AAM, Abid A, Fisch A, et al. Beyond the imitation game: quantifying and extrapolating the capabilities of language models. Transactions on Machine Learning Research. 2022.</li>
+        <li data-cite="chatbot_arena_chiang2024" style="margin-bottom:8px">Chiang W-L, Zheng L, Sheng Y, Angelopoulos AN, Li T, Li D, et al. Chatbot Arena: an open platform for evaluating LLMs by human preference. International Conference on Machine Learning (ICML). 2024.</li>
+        <li data-cite="dominguez_olmedo2024" style="margin-bottom:8px">Dominguez-Olmedo R, Hardt M, Mendler-D&uuml;nner C. Questioning the survey responses of large language models. Advances in Neural Information Processing Systems (NeurIPS), Oral. 2024.</li>
+        <li data-cite="einwiller2025" style="margin-bottom:8px">Einwiller A, Ghosh Dastidar K, Romazanov A, Hautli-Janisz A, Granitzer M, Lemmerich F. Benevolent dictators? On LLM agent behavior in dictator games. arXiv:2511.08721. 2025.</li>
+        <li data-cite="mooney2025" style="margin-bottom:8px">Mooney J, Woldense J, Jia ZR, Hayati SA, Nguyen MH, Raheja V, et al. Are LLM agents behaviorally coherent? Latent profiles for social simulation. arXiv:2509.03736. 2025.</li>
+        <li data-cite="parikh2026" style="margin-bottom:8px">Parikh R, Cen SH, Podimata C. Do LLMs track public opinion? A multi-model study of favorability predictions in the 2024 U.S. presidential election. arXiv:2602.06302. 2026.</li>
+      </ol>
+    </section>
+
+    <!-- ─────────── 8. Appendices ─────────── -->
     <section id="section-appendices">
-      <h2>7. Appendices</h2>
+      <h2>8. Appendices</h2>
 
       <!-- ────────────────────────── APPENDIX A ────────────────────────── -->
       <div class="section" style="margin-bottom:24px">
@@ -912,7 +1003,7 @@ You have to provide Response in a single word; it must be either
         <div style="font-size:11px;color:#888;font-style:italic">C.1 (fixed-effects) validates only Assumptions 1, 2, 3a, 4 plus overall fit; agent dummies absorb between-agent variation so Assumptions 3b, 5, 6 don&rsquo;t apply. C.2 and C.3 cover the full set.</div>
       </div>
 
-      <div class="section" style="margin-bottom:8px"><div class="fig-num">C.1 &mdash; Fixed-Effects Logit Validation</div><div class="fig-caption">Diagnostics for the fixed-effects logit (<code>glm(stay_home ~ infection_pct + infection_pct<sup>2</sup> + factor(agent_id))</code>): per-agent dummies absorb all between-agent variation, so the only structural thing to check is whether the quadratic infection form is adequate. If this model looks clean but the random-effects model (C.2) doesn&rsquo;t, the issue lives in the trait or random-intercept specification. If both look off, the infection curve itself is the culprit.</div></div>
+      <div class="section" style="margin-bottom:8px"><div class="fig-num">C.1 &mdash; Fixed-Effects Logit Validation</div><div class="fig-caption">Diagnostics for the fixed-effects logit (glm(stay_home ~ infection_pct + infection_pct<sup>2</sup> + factor(agent_id))): per-agent dummies absorb all between-agent variation, so the only structural thing to check is whether the quadratic infection form is adequate. If this model looks clean but the random-effects model (C.2) doesn&rsquo;t, the issue lives in the trait or random-intercept specification. If both look off, the infection curve itself is the culprit.</div></div>
 
       <div class="section" style="margin-bottom:18px">
         <div class="fig-num">Figure C.1.1</div>
@@ -933,7 +1024,7 @@ You have to provide Response in a single word; it must be either
         <div class="chart-container" id="figC13-chart"></div>
       </div>
 
-      <div class="section" style="margin-bottom:8px;margin-top:24px"><div class="fig-num">C.2 &mdash; Random-Effects Logit Validation</div><div class="fig-caption">Diagnostics for the random-effects logit (<code>glmer(... + (1 | agent_id))</code>). Each figure tests a specific model assumption or fit property; under a correctly specified model all checks track their reference line (diagonal or 0). Dispersion ratio is the primary quantitative diagnostic. KS p-values are over-powered at N=20,000 and not displayed. Notable departures from dispersion = 1.0: Sonnet 4.0 (disp &asymp; 0.74) and GPT-5.2 off (disp &asymp; 0.62), both underdispersed due to near-deterministic rep-to-rep behavior.</div></div>
+      <div class="section" style="margin-bottom:8px;margin-top:24px"><div class="fig-num">C.2 &mdash; Random-Effects Logit Validation</div><div class="fig-caption">Diagnostics for the random-effects logit (glmer(... + (1 | agent_id))). Each figure tests a specific model assumption or fit property; under a correctly specified model all checks track their reference line (diagonal or 0). Dispersion ratio is the primary quantitative diagnostic. KS p-values are over-powered at N=20,000 and not displayed. Notable departures from dispersion = 1.0: Sonnet 4.0 (disp &asymp; 0.74) and GPT-5.2 off (disp &asymp; 0.62), both underdispersed due to near-deterministic rep-to-rep behavior.</div></div>
 
       <div class="section" style="margin-bottom:18px">
         <div class="fig-num">Figure C.2.1</div>
@@ -969,7 +1060,7 @@ You have to provide Response in a single word; it must be either
         <div class="chart-container" id="figC25b-chart"></div>
       </div>
 
-      <div class="section" style="margin-bottom:8px;margin-top:24px"><div class="fig-num">C.3 &mdash; Random-Effects Logit with Mention Flags Validation</div><div class="fig-caption">Diagnostics for the random-effects logit with mention flags (<code>glmer(stay_home ~ ... + mention_flags + (1 | agent_id))</code>). Same diagnostic suite as C.2; the additional mention-flag terms test whether explicitly invoking a trait label or context shifts the agent&rsquo;s decision. Identification rests on the same assumptions as C.2 plus: no confounding between mention occurrence and unmodeled predictors. A well-validated specification supports the mention-shift claims in Figure 17; a poorly-validated specification would warrant flagging those claims as exploratory rather than inferential.</div></div>
+      <div class="section" style="margin-bottom:8px;margin-top:24px"><div class="fig-num">C.3 &mdash; Random-Effects Logit with Mention Flags Validation</div><div class="fig-caption">Diagnostics for the random-effects logit with mention flags (glmer(stay_home ~ ... + mention_flags + (1 | agent_id))). Same diagnostic suite as C.2; the additional mention-flag terms test whether explicitly invoking a trait label or context shifts the agent&rsquo;s decision. Identification rests on the same assumptions as C.2 plus: no confounding between mention occurrence and unmodeled predictors. A well-validated specification supports the mention-shift claims in Figure 17; a poorly-validated specification would warrant flagging those claims as exploratory rather than inferential.</div></div>
 
       <div class="section" style="margin-bottom:18px">
         <div class="fig-num">Figure C.3.1</div>
@@ -1007,30 +1098,18 @@ You have to provide Response in a single word; it must be either
 
     </section>
 
-    <!-- ─────────── 8. References ─────────── -->
-    <section>
-      <h2>8. References</h2>
-      <p class="note">Numbered list of references cited throughout the manuscript. To grow as the draft fills in.</p>
-      <ol style="font-size:12px;line-height:1.6;color:#333;padding-left:28px;margin-top:6px">
-        <li id="ref-1" style="margin-bottom:8px">
-          Williams, R., Hosseinichimeh, N., Majumdar, A., &amp; Ghaffarzadegan, N. (2023).
-          <em>Epidemic modeling with generative agents.</em>
-          arXiv preprint arXiv:2307.04986.
-          <a href="https://arxiv.org/abs/2307.04986" target="_blank" rel="noopener">https://arxiv.org/abs/2307.04986</a>
-        </li>
-        <li id="ref-2" style="margin-bottom:8px">
-          U.S. Census Bureau. <em>U.S. and World Population Clock.</em> Retrieved from
-          <a href="https://www.census.gov/popclock/" target="_blank" rel="noopener">https://www.census.gov/popclock/</a>.
-          (Source of the per-year age weights used to sample agent ages 18&ndash;65; carried over from Williams et al. [1].)
-        </li>
-        <li id="ref-3" style="margin-bottom:8px">
-          Williams, R., &amp; Hosseinichimeh, N. <em>Prompt Sensitivity of Generative Agents: Evidence from an Epidemic Model.</em>
-          <span class="tbd">[Citation placeholder &mdash; please replace with the published / preprint reference for Paper 2.]</span>
-        </li>
-      </ol>
-    </section>
-
   </div>
+
+  <!-- Static-figure mode flag — MUST be set before the analytics-* scripts load,
+       so wireTooltips() and any other gated tooltip helpers see it on first call.
+       In paper context we want every figure to render as a frozen, static SVG
+       with no hover overlays, hit-target rects, or pointer-event handlers. -->
+  <script>
+    window.__paperStatic = true;
+    document.documentElement.classList.add('paper-static');
+    document.body && document.body.classList.add('paper-static');
+    document.addEventListener('DOMContentLoaded', () => document.body.classList.add('paper-static'));
+  </script>
 
   <!-- Shared dashboard renderers — load Figure 1 from the same code path as
        dashboard Figure 21 so any edit to the renderer or to agents.json
@@ -1042,6 +1121,120 @@ You have to provide Response in a single word; it must be either
   <script src="analytics-curves.js"></script>
   <script src="analytics-author.js"></script>
   <script src="analytics-responses.js"></script>
+
+  <!-- Static-figure freezer — runs after renders settle (and before printing).
+       Removes interactive DOM remnants from every chart container so the
+       on-screen and printed paper see only the data layer. -->
+  <script>
+    (function() {
+      'use strict';
+      // Selectors for stuff to remove or scrub from the DOM.
+      const TOOLTIP_OVERLAY_SEL = [
+        '.svg-tooltip',
+        '[id$="-tooltip"]',
+        '[id$="-tip"]',
+        '.chart-tooltip',
+      ].join(',');
+
+      // Targets things that exist ONLY for tooltip wiring. We avoid the bare
+      // 'rect[fill="transparent"]' selector — some renderers use transparent
+      // rects as legitimate spacing/anchors, not hit zones.
+      const HIT_TARGET_SEL = [
+        '.hit-target',
+        'polyline[stroke="transparent"]',
+        'rect[fill="transparent"][data-tip-id]',
+        'rect[fill="transparent"][data-ftip-id]',
+        'rect[fill="transparent"][data-li]',
+        'rect[fill="transparent"][data-label]',
+        'rect[fill="transparent"][data-key]',
+        'rect[fill="transparent"][style*="cursor"]',
+      ].join(',');
+
+      const ATTRS_TO_STRIP = [
+        'data-tip-id', 'data-ftip-id', 'data-label', 'data-color', 'data-extra',
+        'data-li', 'data-key', 'pointer-events',
+      ];
+
+      function scrubElement(el) {
+        // Strip cursor styles so highlighted text/figures look static
+        if (el.style && el.style.cursor) el.style.cursor = 'default';
+        // Strip interactive style fragments while preserving the rest
+        const style = el.getAttribute && el.getAttribute('style');
+        if (style && /cursor\s*:/i.test(style)) {
+          el.setAttribute('style', style.replace(/cursor\s*:[^;]+;?/gi, ''));
+        }
+        // Strip data-* attributes used only for tooltip wiring
+        if (el.removeAttribute) {
+          for (const a of ATTRS_TO_STRIP) el.removeAttribute(a);
+        }
+      }
+
+      function freezeFigures(root) {
+        const scope = root || document;
+
+        // 1) Remove tooltip overlay divs entirely
+        scope.querySelectorAll(TOOLTIP_OVERLAY_SEL).forEach(el => el.remove());
+
+        // 2) Remove hit-target rects/polylines and any tip-tagged elements
+        scope.querySelectorAll(HIT_TARGET_SEL).forEach(el => el.remove());
+
+        // 3) Scrub remaining elements (cursor + data-* attrs) inside chart containers
+        scope.querySelectorAll('svg, .chart-container, .facet-panel').forEach(container => {
+          container.querySelectorAll('*').forEach(scrubElement);
+          scrubElement(container);
+        });
+
+        // 4) Belt-and-suspenders: strip any "Show Regression" toggle buttons that
+        //    only make sense interactively (in print, the panel below is auto-shown).
+        scope.querySelectorAll('.reg-toggle-btn').forEach(btn => btn.remove());
+      }
+
+      // Auto-freeze on a debounced settle: every time the DOM mutates, push the
+      // freeze deadline out by 800ms. Once the DOM is quiet for that window,
+      // the figures are frozen.
+      let timer = null;
+      let frozenOnce = false;
+      const QUIET_MS = 1500;
+      const HARD_DEADLINE_MS = 12000; // freeze unconditionally after 12s
+      const startedAt = Date.now();
+
+      function scheduleFreeze() {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          freezeFigures();
+          frozenOnce = true;
+        }, QUIET_MS);
+      }
+
+      function startObserver() {
+        const obs = new MutationObserver(() => {
+          if (frozenOnce) return;
+          if (Date.now() - startedAt > HARD_DEADLINE_MS) {
+            freezeFigures();
+            frozenOnce = true;
+            obs.disconnect();
+            return;
+          }
+          scheduleFreeze();
+        });
+        obs.observe(document.body, { childList: true, subtree: true });
+        scheduleFreeze();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startObserver);
+      } else {
+        startObserver();
+      }
+
+      // Always freeze before printing — guarantees clean output even if the
+      // settle observer hasn't fired yet (e.g. the user prints early).
+      window.addEventListener('beforeprint', () => freezeFigures());
+
+      // Expose for manual debugging / explicit trigger
+      window.freezePaperFigures = freezeFigures;
+    })();
+  </script>
   <script>
     // ── Appendix A / B render helpers (extracted from analytics-init.js) ──
     // analytics-init.js itself can't be loaded in paper.html because its
@@ -1242,6 +1435,95 @@ You have to provide Response in a single word; it must be either
         }
       });
     });
+  </script>
+  <!-- ────────────────────────── CITATION RENDERER ──────────────────────────
+       Resolves <span class="cite-group">key1, key2</span> markers into [N]
+       numbers based on first-appearance order in the document, and reorders
+       any <ol data-refs="cites"> reference list to match. Lets you add new
+       cites anywhere — just author the symbolic markup and the numbers
+       always render correctly.
+       ─────────────────────────────────────────────────────────────────── -->
+  <style>
+    .cite-group { white-space: nowrap; }
+    .cite-group.cite-broken { color: #b91c1c; font-weight: bold; }
+    [data-refs="cites"] li.uncited-ref { opacity: 0.55; }
+    [data-refs="cites"] li.uncited-ref::after {
+      content: " [not cited in body]";
+      font-size: 10px;
+      color: #b45309;
+      font-style: italic;
+    }
+  </style>
+  <script>
+    (function() {
+      'use strict';
+      const keyToNum = {};
+      let nextNum = 1;
+
+      // Pass 1 — assign numbers in first-appearance order
+      const groups = document.querySelectorAll('.cite-group');
+      groups.forEach(group => {
+        const raw = (group.getAttribute('data-cite') || group.textContent || '').trim();
+        if (!raw) return;
+        const keys = raw.split(',').map(k => k.trim()).filter(Boolean);
+        if (!keys.length) return;
+        const nums = keys.map(key => {
+          if (!(key in keyToNum)) keyToNum[key] = nextNum++;
+          return keyToNum[key];
+        }).sort((a, b) => a - b);
+        // Collapse consecutive runs of 3+ into a range: (1, 2, 3, 4) -> (1-4)
+        const parts = [];
+        let i = 0;
+        while (i < nums.length) {
+          let j = i;
+          while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+          if (j - i >= 2) {
+            parts.push(nums[i] + '-' + nums[j]);
+          } else {
+            for (let k = i; k <= j; k++) parts.push(String(nums[k]));
+          }
+          i = j + 1;
+        }
+        group.innerHTML = '(' + parts.join(', ') + ')';
+        group.setAttribute('data-keys', keys.join(','));
+      });
+
+      // Pass 2 — sort each <ol data-refs="cites"> to first-appearance order
+      document.querySelectorAll('ol[data-refs="cites"]').forEach(refsList => {
+        const items = Array.from(refsList.children).filter(el => el.tagName === 'LI');
+        items.sort((a, b) => {
+          const aN = keyToNum[a.dataset.cite];
+          const bN = keyToNum[b.dataset.cite];
+          if (aN && bN) return aN - bN;
+          if (aN) return -1;
+          if (bN) return 1;
+          return 0;
+        });
+        items.forEach(item => {
+          if (!keyToNum[item.dataset.cite]) item.classList.add('uncited-ref');
+          else item.classList.remove('uncited-ref');
+          refsList.appendChild(item);
+        });
+      });
+
+      // Optional console diagnostics
+      const allRefKeys = new Set();
+      document.querySelectorAll('ol[data-refs="cites"] > li[data-cite]').forEach(el => {
+        allRefKeys.add(el.dataset.cite);
+      });
+      const cited = Object.keys(keyToNum);
+      const missingRefs = cited.filter(k => !allRefKeys.has(k));
+      if (missingRefs.length) {
+        console.warn('[cite-renderer] Cited keys with no matching <li data-cite>:', missingRefs);
+      }
+      const uncitedRefs = [...allRefKeys].filter(k => !(k in keyToNum));
+      if (uncitedRefs.length) {
+        console.info('[cite-renderer] Refs in list but not cited in body:', uncitedRefs);
+      }
+
+      // Expose for inspection
+      window.__citeMap = keyToNum;
+    })();
   </script>
 </body>
 </html>

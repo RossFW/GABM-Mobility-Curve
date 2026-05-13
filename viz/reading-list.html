@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading List — Paper 3 background</title>
+  <script src="nav.js" defer></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #ffffff;
+      color: #111111;
+      font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+      padding: 40px 0 100px;
+      line-height: 1.55;
+    }
+    #app {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+    .page-header { border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 22px; }
+    h1 { font-size: 20px; font-weight: bold; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #555; font-style: italic; }
+    .key-bar {
+      font-size: 12px;
+      padding: 12px 14px;
+      background: #f7f7f4;
+      border: 1px solid #e6e3da;
+      border-radius: 4px;
+      margin: 18px 0 28px;
+      line-height: 1.7;
+      color: #444;
+    }
+    .key-bar code { background: #e8e8e0; padding: 1px 6px; border-radius: 2px; font-family: 'SF Mono', monospace; font-size: 11px; }
+
+    h2.section-h {
+      font-size: 16px; font-weight: bold;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 6px;
+      margin: 36px 0 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    h2.section-h .pill {
+      font-size: 11px;
+      font-weight: normal;
+      color: #666;
+      background: #eee;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .read-card {
+      display: flex;
+      gap: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      background: #fafafa;
+      border-left: 3px solid #ccc;
+      border-radius: 0 4px 4px 0;
+      transition: opacity 0.18s, background 0.18s;
+    }
+    .read-card.status-top    { border-left-color: #dc2626; background: #fff1f0; }
+    .read-card.status-next   { border-left-color: #ca8a04; background: #fffaeb; }
+    .read-card.status-later  { border-left-color: #6b7280; background: #f5f5f5; }
+    .read-card.status-read   { border-left-color: #059669; background: #f0fdf4; opacity: 0.65; }
+    .read-card.status-read .read-title { text-decoration: line-through; color: #555; }
+
+    .read-rank {
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: bold;
+      color: #444;
+      min-width: 32px;
+      padding-top: 2px;
+    }
+    .read-body { flex: 1; }
+    .read-title { font-size: 14px; font-weight: bold; color: #111; margin-bottom: 3px; line-height: 1.35; }
+    .read-citation { font-size: 12px; color: #444; font-style: italic; margin-bottom: 8px; line-height: 1.5; }
+    .read-why { font-size: 12px; color: #333; line-height: 1.6; }
+    .read-why strong { color: #1e40af; font-style: normal; }
+    .read-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; font-size: 11px; }
+    .read-meta a { color: #1e40af; text-decoration: underline; }
+    .read-meta a:hover { color: #111; }
+    .read-meta .meta-sep { color: #ccc; }
+
+    .status-control {
+      display: flex; flex-direction: column; gap: 6px;
+      align-items: center;
+      min-width: 80px;
+      padding-top: 2px;
+    }
+    .status-pill {
+      font-size: 10px;
+      font-family: 'SF Mono', monospace;
+      letter-spacing: 0.6px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 1px solid currentColor;
+      background: rgba(255,255,255,0.6);
+      transition: background 0.15s;
+      user-select: none;
+      text-align: center;
+    }
+    .status-pill:hover { background: rgba(255,255,255,1); }
+    .status-pill.s-top    { color: #dc2626; }
+    .status-pill.s-next   { color: #ca8a04; }
+    .status-pill.s-later  { color: #6b7280; }
+    .status-pill.s-read   { color: #059669; }
+
+    .reset-btn {
+      font-family: inherit; font-size: 11px;
+      padding: 4px 10px;
+      background: #fff; color: #666;
+      border: 1px solid #ccc; border-radius: 3px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .reset-btn:hover { background: #f5f5f5; color: #111; }
+
+    .empty-section {
+      font-size: 12px; color: #999; font-style: italic;
+      padding: 12px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="page-header">
+      <h1>Reading List — Paper 3 §2 Background</h1>
+      <div class="subtitle">Curated reading queue for the Background &amp; Related Work section. Click any status pill to cycle:&nbsp; <strong>top → next → later → read</strong> &nbsp;(state is saved locally).</div>
+    </div>
+
+    <div class="key-bar">
+      <strong>Frame I'd recommend reading toward:</strong> Paper 3 sits at a methodological gap visible in the 2024–2026 GABM literature.
+      Two concurrent 2025 critical reviews (<em>Li &amp; Wu</em>, <em>Larooij &amp; Törnberg</em>) flag GABM credibility concerns &mdash; one centered on prompt over-control, one on validation generally. Your paper provides the first systematic empirical evidence on a specific control surface neither review investigates: <strong>LLM choice itself</strong>.
+      Reading order below is optimized for that frame.
+      <button class="reset-btn" id="reset-btn" title="Reset all status pills to defaults">Reset</button>
+    </div>
+
+    <h2 class="section-h">🔥 Read first <span class="pill">highest leverage for §2 + framing</span></h2>
+    <div id="section-top"></div>
+
+    <h2 class="section-h">📚 Up next <span class="pill">queued by user</span></h2>
+    <div id="section-next"></div>
+
+    <h2 class="section-h">📖 If you have time <span class="pill">helpful breadth, lower priority</span></h2>
+    <div id="section-later"></div>
+
+    <h2 class="section-h">✅ Already read <span class="pill">archived</span></h2>
+    <div id="section-read"></div>
+  </div>
+
+  <script>
+    'use strict';
+    // ─────────────────────────────────────────────────────────────────────
+    // READING LIST
+    // ─────────────────────────────────────────────────────────────────────
+    const STORAGE_KEY = 'paper3_reading_list_v1';
+    const STATUSES = ['top', 'next', 'later', 'read'];
+    const STATUS_LABELS = { top: '🔥 TOP', next: '📚 NEXT', later: '📖 LATER', read: '✅ READ' };
+
+    // Default status drawn from session context (May 2026):
+    //  - User has finished: Park 2023, Park 2024, Ghaffarzadegan 2024, Horton 2023, Li & Wu 2025.
+    //  - User explicitly queued: Mou 2024, Wang 2023, Argyle 2023, Naveed 2023, Binz 2023.
+    //  - Larooij & Törnberg 2025 + Gao 2024 HSS are new since the user's list — promoted to top.
+    const READING = [
+      // ── 🔥 Read first ────────────────────────────────────────────────
+      { id: 'larooij2025', status: 'top',
+        title: 'Larooij & Törnberg 2025 — Validation is the central challenge for generative social simulation: a critical review of LLMs in agent-based modeling',
+        citation: '<em>Artificial Intelligence Review</em>, 59(1), 15. https://doi.org/10.1007/s10462-025-11412-6',
+        why: '<strong>Most directly relevant peer-reviewed paper to your thesis since Li &amp; Wu.</strong> Argues LLMs <em>exacerbate</em> ABM validation rather than resolve it (black-box, cultural bias, stochastic outputs). Your Paper 3 is the empirical companion they don\'t provide. Pair with Li &amp; Wu in §2.1 — together they triangulate the field\'s 2025 credibility conversation; you supply the data.',
+        links: [
+          { label: 'Springer', url: 'https://link.springer.com/article/10.1007/s10462-025-11412-6' },
+          { label: 'PMC (free)', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC12627210/' },
+          { label: 'In citations', url: 'citations.html#paper3-refs' },
+        ] },
+
+      { id: 'mou2024', status: 'top',
+        title: 'Mou et al. 2024 — From Individual to Society: Survey of Social Simulation Driven by LLM-Based Agents',
+        citation: 'arXiv:2412.03563',
+        why: '<strong>Most recent (Dec 2024) comprehensive survey.</strong> Introduces the <em>profile / memory / planning / action</em> four-component framework that Li &amp; Wu also use. Reading this clarifies the lineage of Li &amp; Wu\'s analytical scaffold and gives you the most current snapshot of the field. Faster than Wang 2023.',
+        links: [
+          { label: 'arXiv', url: 'https://arxiv.org/abs/2412.03563' },
+          { label: 'In citations', url: 'citations.html#paper3-refs' },
+        ] },
+
+      { id: 'argyle2023', status: 'top',
+        title: 'Argyle et al. 2023 — Out of one, many: Using language models to simulate human samples',
+        citation: '<em>Political Analysis</em>, 31(3), 337–351.',
+        why: '<strong>Frequently cited foundational silicon-samples paper.</strong> Coins "algorithmic fidelity" — Li &amp; Wu lean on this concept heavily. Influential in the political-opinion / social-survey simulation strand. Strong §2.1 anchor for the "behavioral simulation" application bucket.',
+        links: [
+          { label: 'In citations', url: 'citations.html#paper2-refs' },
+        ] },
+
+      // ── 📚 Up next (user-queued) ────────────────────────────────────
+      { id: 'wang2023', status: 'next',
+        title: 'Wang et al. 2023 — A Survey on Large Language Model based Autonomous Agents',
+        citation: 'arXiv:2308.11432',
+        why: 'Older but more exhaustive than Mou 2024. Probably skim after Mou unless you want the deeper coverage. Already in your reading queue.',
+        links: [{ label: 'In citations', url: 'citations.html#paper2-refs' }] },
+
+      { id: 'binz2023', status: 'next',
+        title: 'Binz & Schulz 2023 — Using cognitive psychology to understand GPT-3',
+        citation: '<em>PNAS</em>, 120(6), e2218523120.',
+        why: 'Landmark behavioral evaluation of an LLM. Useful §2.2 reference for "non-capability LLM evaluation" before you pivot to your sensitivity-probe framing. Already in your queue.',
+        links: [{ label: 'In citations', url: 'citations.html#paper2-refs' }] },
+
+      { id: 'naveed2023', status: 'next',
+        title: 'Naveed et al. 2023 — A Comprehensive Overview of Large Language Models',
+        citation: '<em>ACM TIST</em>',
+        why: 'Foundational LLM survey for §2.2. Anchors the "LLMs as statistical sequence predictors" framing both Li &amp; Wu and Mou et al. lean on. Already in your queue.',
+        links: [{ label: 'In citations', url: 'citations.html#paper3-refs' }] },
+
+      // ── 📖 If you have time ──────────────────────────────────────────
+      { id: 'gao2024hss', status: 'later',
+        title: 'Gao et al. 2024 — Large language models empowered agent-based modeling and simulation: a survey and perspectives',
+        citation: '<em>Humanities and Social Sciences Communications</em>, 11(1).',
+        why: 'Peer-reviewed survey from Nature publishing. Good complement to Mou 2024 for breadth, but if you\'ve read Mou + Wang you have enough. Different from Gao\'s S³ paper despite same first author.',
+        links: [
+          { label: 'Nature HSS', url: 'https://www.nature.com/articles/s41599-024-03611-3' },
+          { label: 'In citations', url: 'citations.html#paper3-refs' },
+        ] },
+
+      { id: 'lore2024', status: 'later',
+        title: 'Lorè & Heydari 2024 — Strategic Behavior of LLMs and the Role of Game Structure Versus Contextual Framing',
+        citation: '<em>Scientific Reports</em>, 14(1), 18490.',
+        why: 'Peer-reviewed venue (<em>Sci Reports</em>) for the game-theoretic GABM bucket. Replaces or augments the arXiv-only Akata / Phelps / Hamilton refs. Read if §2.1 needs a peer-reviewed game-theoretic example.',
+        links: [{ label: 'In citations', url: 'citations.html#paper3-refs' }] },
+
+      { id: 'epstein2007', status: 'later',
+        title: 'Epstein 2007 — Generative Social Science',
+        citation: 'Princeton University Press.',
+        why: 'Don\'t need to read the whole book. Skim the introduction; the "ABM has long been expected to demonstrate sensitivity" claim in your §6 lands directly here. Probably already on your shelf.',
+        links: [{ label: 'In citations', url: 'citations.html#paper2-refs' }] },
+
+      // ── ✅ Already read ──────────────────────────────────────────────
+      { id: 'park2023', status: 'read',
+        title: 'Park et al. 2023 — Generative Agents: Interactive Simulacra of Human Behavior',
+        citation: 'UIST 2023.',
+        why: 'Canonical GABM founding paper.',
+        links: [{ label: 'In citations', url: 'citations.html#paper2-refs' }] },
+
+      { id: 'park2024', status: 'read',
+        title: 'Park et al. 2024 — Generative Agent Simulations of 1,000 People',
+        citation: 'arXiv:2411.10109.',
+        why: 'Fills the §6 conclusion claim about "fine-tuned on human-action traces."',
+        links: [{ label: 'In citations', url: 'citations.html#paper3-refs' }] },
+
+      { id: 'ghaff2024', status: 'read',
+        title: 'Ghaffarzadegan et al. 2024 — Generative Agent-Based Modeling: An Introduction and Tutorial',
+        citation: '<em>System Dynamics Review</em>, 40(1), e1761.',
+        why: 'Your group\'s published methodology paper. Anchors §2.1.',
+        links: [{ label: 'In citations', url: 'citations.html#paper3-refs' }] },
+
+      { id: 'horton2023', status: 'read',
+        title: 'Horton 2023 — Large language models as simulated economic agents: What can we learn from homo silicus?',
+        citation: 'NBER w31122.',
+        why: 'Influential framing of LLMs-as-economic-agents.',
+        links: [{ label: 'In citations', url: 'citations.html#paper2-refs' }] },
+
+      { id: 'liwu2025', status: 'read',
+        title: 'Li & Wu 2025 — Let It Go or Control It All? The Dilemma of Prompt Engineering in Generative Agent-Based Models',
+        citation: '<em>System Dynamics Review</em>, 41(3), e70008.',
+        why: 'Argues prompts over-control GABM. Roasts Williams 2023 (rightly). Now sets up your "they identify one control surface, we quantify another" framing.',
+        links: [
+          { label: 'DOI', url: 'https://doi.org/10.1002/sdr.70008' },
+          { label: 'In citations', url: 'citations.html#paper3-refs' },
+        ] },
+    ];
+
+    function loadStatuses() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+      catch { return {}; }
+    }
+    function saveStatus(id, status) {
+      const data = loadStatuses();
+      data[id] = status;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+    function clearStatuses() {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    function renderCard(item) {
+      const linksHTML = item.links.map(l => `<a href="${l.url}"${l.url.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${l.label}</a>`).join('<span class="meta-sep">·</span>');
+      return `<div class="read-card status-${item.status}" data-id="${item.id}">
+        <div class="status-control">
+          <span class="status-pill s-${item.status}" title="Click to cycle">${STATUS_LABELS[item.status]}</span>
+        </div>
+        <div class="read-body">
+          <div class="read-title">${item.title}</div>
+          <div class="read-citation">${item.citation}</div>
+          <div class="read-why">${item.why}</div>
+          <div class="read-meta">${linksHTML}</div>
+        </div>
+      </div>`;
+    }
+
+    function renderAll() {
+      const overrides = loadStatuses();
+      const items = READING.map(r => ({ ...r, status: overrides[r.id] || r.status }));
+
+      const buckets = { top: [], next: [], later: [], read: [] };
+      items.forEach(it => buckets[it.status].push(it));
+
+      for (const [status, list] of Object.entries(buckets)) {
+        const el = document.getElementById('section-' + status);
+        if (!el) continue;
+        el.innerHTML = list.length
+          ? list.map(renderCard).join('')
+          : '<div class="empty-section">— nothing here —</div>';
+      }
+
+      // Wire up pill clicks (re-attach after each render)
+      document.querySelectorAll('.status-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          const card = pill.closest('.read-card');
+          const id = card?.dataset.id;
+          if (!id) return;
+          const cur = items.find(it => it.id === id)?.status || 'next';
+          const next = STATUSES[(STATUSES.indexOf(cur) + 1) % STATUSES.length];
+          saveStatus(id, next);
+          renderAll();
+        });
+      });
+    }
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      if (confirm('Reset all status pills to defaults?')) {
+        clearStatuses();
+        renderAll();
+      }
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>

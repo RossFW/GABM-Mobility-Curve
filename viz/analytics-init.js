@@ -271,10 +271,42 @@ function initRegToggles() {
   });
 }
 
+// Map embed=figN query param → { tabPaneId, targetSectionId, needsCohort }
+const EMBED_FIG_MAP = {
+  fig3:  { tabPaneId: 'tab-curves', targetSectionId: 's3-section',                 needsCohort: false },
+  fig13: { tabPaneId: 'tab-agents', targetSectionId: 'cohort-trait-power-section', needsCohort: true  },
+};
+
+function applyEmbedFig() {
+  const key = window.__embedFig;
+  if (!key) return;
+  const cfg = EMBED_FIG_MAP[key];
+  if (!cfg) return;
+  // Activate just the target tab pane
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('embed-active', 'active'));
+  const pane = document.getElementById(cfg.tabPaneId);
+  if (pane) {
+    pane.classList.add('embed-active', 'active');
+  }
+  // Mark just the target section as visible
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('embed-target'));
+  const sec = document.getElementById(cfg.targetSectionId);
+  if (sec) {
+    sec.classList.add('embed-target');
+    sec.style.display = '';  // beat the inline display:none on hidden sections
+  }
+  // For fig13 (Cohort tab), force-trigger the lazy cohort render path
+  if (cfg.needsCohort && typeof renderAgentAnalysis === 'function' && !tab3Rendered) {
+    renderAgentAnalysis();
+    tab3Rendered = true;
+  }
+}
+
 function init() {
   initTabs();
   initRegToggles();
   initSectionNavs();
+  applyEmbedFig();
 
   Papa.parse(CONFIG.ALL_MACRO, {
     download: true, header: true, dynamicTyping: true, skipEmptyLines: true,

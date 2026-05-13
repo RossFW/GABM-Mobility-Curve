@@ -423,7 +423,40 @@
       letter-spacing: 0.02em;
       color: #111;
     }
+
+    /* ── Embed mode (single-figure iframe usage) ──────────────── */
+    body.embed-mode { padding: 16px 0; }
+    body.embed-mode #site-nav,
+    body.embed-mode .page-header,
+    body.embed-mode #tab-nav,
+    body.embed-mode #loading,
+    body.embed-mode #curves-section-nav,
+    body.embed-mode #agents-section-nav,
+    body.embed-mode #responses-section-nav,
+    body.embed-mode #appendix-section-nav,
+    body.embed-mode .curve-section-header { display: none !important; }
+    body.embed-mode #app { padding: 0 24px; gap: 0; max-width: 1200px; }
+    body.embed-mode .tab-pane { display: none !important; }
+    body.embed-mode .tab-pane.embed-active { display: flex !important; gap: 0; }
+    body.embed-mode .section { display: none !important; }
+    body.embed-mode .section.embed-target { display: block !important; }
+    body.embed-mode .reg-toggle-wrap { display: none !important; }
   </style>
+  <script>
+    // Apply embed mode early so layout doesn't flash before init.
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const embedFig = params.get('embed');
+      if (!embedFig) return;
+      window.__embedFig = embedFig; // 'fig3' or 'fig13'
+      const apply = () => {
+        if (!document.body) return;
+        document.body.classList.add('embed-mode');
+      };
+      apply();
+      document.addEventListener('DOMContentLoaded', apply);
+    })();
+  </script>
 </head>
 <body>
 <div id="app">
@@ -506,13 +539,13 @@
             <tr class="rq-uncovered"><td>Cut 1</td><td>Agent-Level Decision Heatmap</td><td>Exploration view, superseded by Fig 15.</td></tr>
             <tr class="rq-uncovered"><td>Cut 2</td><td>Rep-to-Rep Decision Agreement (Mobility tab)</td><td>Appendix candidate, not in paper.</td></tr>
             <tr class="rq-uncovered"><td>Cut 3</td><td>Interactive Comparison Tool (Dummy OLS)</td><td>Exploration tool, not in paper.</td></tr>
-            <tr class="rq-uncovered"><td>Cut 4</td><td>Single-Model Logit Regression (interactive)</td><td>Exploration view; cross-model Fig 12 is the paper figure.</td></tr>
+            <tr class="rq-uncovered"><td>Cut 4</td><td>Single-Model Logit Regression (interactive)</td><td>Interactive single-model viewer; the 21 per-model tables in <strong>paper Appendix B.1</strong> are static renders of this same data.</td></tr>
             <tr class="rq-uncovered"><td>Cut 5</td><td>Personality Ranking Accuracy (Spearman)</td><td>Spearman not used in paper.</td></tr>
             <tr class="rq-uncovered"><td>Cut 6</td><td>Decision Anatomy &mdash; Traits &amp; Infection Level</td><td>Per-model coefficient bars; cross-model Fig 12 is the paper figure.</td></tr>
             <tr class="rq-uncovered"><td>Cut 7</td><td>Trait Importance Ranking Across Models (Spearman)</td><td>Spearman not used in paper.</td></tr>
             <tr class="rq-uncovered"><td>Cut 8</td><td>Agent Behavioral Consistency (Spearman heatmap)</td><td>Spearman not used in paper.</td></tr>
             <tr class="rq-uncovered"><td>Cut 9</td><td>Agent Spotlight &mdash; Cross-Model Comparison</td><td>Exploration tool, not in paper.</td></tr>
-            <tr class="rq-uncovered"><td>Cut 10</td><td>RE Logit with Mention Flags &mdash; Coefficient Table</td><td>Tabular view; chart Fig 17 is the paper figure.</td></tr>
+            <tr class="rq-uncovered"><td>Cut 10</td><td>RE Logit with Mention Flags &mdash; Coefficient Table</td><td>Interactive single-model coefficient table; the 21 per-model tables in <strong>paper Appendix B.2</strong> are static renders of this same data.</td></tr>
             <tr class="rq-uncovered"><td>Cut 11</td><td>Mention Amplification Table</td><td>Detailed table view, not in paper.</td></tr>
             <tr class="rq-uncovered"><td>Cut 12</td><td>Mention Amplification Summary (per pole)</td><td>Per-pole rollup, not in paper.</td></tr>
             <tr class="rq-uncovered"><td>Cut 13</td><td>Response Verbosity by Model</td><td>Tangential to the paper&rsquo;s claims.</td></tr>

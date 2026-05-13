@@ -507,7 +507,7 @@ function initViz() {
   const scrubber = document.getElementById('scrubber');
   scrubber.max = maxStep;
   scrubber.addEventListener('input', () => {
-    pausePlay();
+    if (!document.body.classList.contains('embed-mode')) pausePlay();
     goToStep(parseInt(scrubber.value, 10), 0, 'home');
   });
 
@@ -537,9 +537,11 @@ function initViz() {
   const modelSelect = document.getElementById('model-select');
   if (modelSelect) {
     modelSelect.addEventListener('change', () => {
-      pausePlay();
+      const wasEmbed = document.body.classList.contains('embed-mode');
+      const wasPlaying = isPlaying;
+      if (!wasEmbed) pausePlay();
       const idx = parseInt(modelSelect.value);
-      switchModel(idx);
+      switchModel(idx, { resumePlay: wasEmbed && wasPlaying });
     });
   }
 
@@ -560,7 +562,8 @@ function initViz() {
 // MODEL SWITCHING
 // ===============================================================
 
-function switchModel(modelIdx) {
+function switchModel(modelIdx, opts) {
+  opts = opts || {};
   // Fully stop playback and reset UI state
   isPlaying = false;
   if (playTimer) { clearTimeout(playTimer); playTimer = null; }
@@ -593,6 +596,9 @@ function switchModel(modelIdx) {
     // Clear bio panel
     const bioPanel = document.getElementById('bio-panel');
     if (bioPanel) bioPanel.innerHTML = '<div style="color:#4a6580;font-size:5px;font-family:\'Press Start 2P\',monospace;text-align:center;padding:40px 10px;line-height:2.4">CLICK OR HOVER<br>AN AGENT<br>TO VIEW BIO<br>&amp; REASONING</div>';
+
+    // In embed mode, keep playing across model switches
+    if (opts.resumePlay && typeof startPlay === 'function') startPlay();
   });
 }
 

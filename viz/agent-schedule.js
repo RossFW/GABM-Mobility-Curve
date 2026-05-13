@@ -182,7 +182,8 @@ function buildBioHtml(id, agentInfo, decision, reasoningText) {
     reasoningHtml += `<div class="bio-reasoning" style="color:${firstColor};margin-bottom:2px">${firstIcon} Rep 1:</div>`;
     reasoningHtml += `<div class="bio-reasoning">${firstTxt}</div>`;
 
-    if (total > 1) {
+    const isEmbed = document.body.classList.contains('embed-mode');
+    if (total > 1 && !isEmbed) {
       const toggleId = `reasoning-toggle-${id}-${levelIdx}`;
       const isExpanded = expandedToggles.has(toggleId);
       const initDisplay = isExpanded ? 'block' : 'none';
