@@ -16,6 +16,12 @@ viz/data/mock/
 # Screenshots — local only
 viz/screenshots/
 
+# Office documents — the paper PDF is the tracked deliverable; slide decks,
+# Word exports, and Office lock files stay local
+~$*
+*.pptx
+LLM Sensitivity of Generative Agents_ Evidence from an Epidemic Model.docx
+
 # macOS
 .DS_Store
 

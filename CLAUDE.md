@@ -78,7 +78,9 @@ agents/generate_agents.py           Population-clock-weighted age + 50/50 Big Fi
 probe_mobility.py                   Main probe loop (one-shot prompt per agent×level×rep)
 combine_data.py                     Per-config CSVs → viz/data/real/all_macro.csv
 data/metadata/models.csv            21 configs metadata
-analysis/compute_regressions.R      Fixed-effects + random-effects logit + mention-flag logit
+analysis/compute_regressions.R      Fixed-effects + random-effects logit (M1, M2)
+analysis/refit_model3_pole_main.R   Mention-flag logit (M3, pole-level main effects) + its diagnostics
+analysis/generate_pole_flags.py     Pole-level mention flags (mention_flags_pole.csv) for M3
 analysis/compute_trait_mentions.py  Trait/context mention counts
 analysis/compute_persona_similarity.py  5/5-unanimity within-vs-across cosine
 analysis/compute_decision_drivers.py    Concept-category mentions
@@ -103,11 +105,11 @@ docs/STATUS.md                      Phase tracker
 
 ## Three Regression Specifications
 
-All fit per LLM configuration on the 20,000-row `probe_results_micro.csv`. Pre-computed in R (`analysis/compute_regressions.R`).
+All fit per LLM configuration on the 20,000-row `probe_results_micro.csv`. Pre-computed in R.
 
-- **Fixed-effects logit** (Appendix B.1): `glm(stay_home ~ infection_pct + I(infection_pct^2) + factor(agent_id))`. 99 agent dummies absorb between-agent variation.
-- **Random-effects logit** (Appendix B.1): `glmer(stay_home ~ infection_pct + I(infection_pct^2) + Big Five + male + age + (1 | agent_id))`. Random intercepts per agent allow trait estimation.
-- **Random-effects logit with mention flags** (Appendix B.2): the random-effects spec extended with one binary flag per Big Five trait label and per context category (infection, age). A flag enters only when its overall mention rate is in [15%, 85%].
+- **Fixed-effects logit** (Appendix B.1): `glm(stay_home ~ infection_pct + I(infection_pct^2) + factor(agent_id))`. 99 agent dummies absorb between-agent variation. From `analysis/compute_regressions.R`; diagnostics from `analysis/compute_dharma.R`.
+- **Random-effects logit** (Appendix B.1): `glmer(stay_home ~ infection_pct + I(infection_pct^2) + Big Five + male + age + (1 | agent_id))`. Random intercepts per agent allow trait estimation. From `analysis/compute_regressions.R`; diagnostics from `analysis/compute_dharma.R`; calibration bins from `analysis/add_calibration_by_age.R` / `add_calibration_by_infection.R`.
+- **Random-effects logit with mention flags** (Appendix B.2): the random-effects spec extended with **pole-level** mention flags (e.g. `mentioned_introverted`, `mentioned_antagonistic`) as **main effects only** — no trait×mention interactions. A pole's flag enters only when its within-trait-group mention rate is in [15%, 85%]. Produced by `analysis/refit_model3_pole_main.R` (which also generates all of model3's C.3 diagnostics in the same fit), reading `mention_flags_pole.csv` from `analysis/generate_pole_flags.py`. This pole-level spec **supersedes** the dimension-level model3 in `compute_regressions.R`; intermediate specs (strict-threshold, pole-with-interactions) were removed in the final cleanup and live in git history.
 
 Diagnostics in Appendix C.
 
