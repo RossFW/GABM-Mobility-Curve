@@ -980,6 +980,7 @@ function computeCalibrationData(allRegs) {
       m1Dharma: reg.model1 && reg.model1.dharma ? reg.model1.dharma : null,
       m1ResidsByInf: reg.model1 && reg.model1.resids_by_infection ? reg.model1.resids_by_infection : null,
       m1Calib: reg.model1 && reg.model1.calibration_bins ? reg.model1.calibration_bins : null,
+      m2Calib: reg.model2 && reg.model2.calibration_bins ? reg.model2.calibration_bins : null,
       blupsPred: reg.model2.blups_vs_predictors || null,
       m3Dharma: reg.model3 && reg.model3.dharma ? reg.model3.dharma : null,
       m3Blups: reg.model3 && reg.model3.blups ? reg.model3.blups : null,
@@ -1709,6 +1710,45 @@ function _m3View(data) {
   }));
 }
 
+// C.2.1 — Random-Effects Logit calibration.
+// Uses cfg.m2Calib (server-computed CONDITIONAL predictions from
+// predict(m2, type="response"), incl. each agent's random intercept),
+// matching renderM1Calibration / renderM3Calibration so all three C.X.1
+// panels are apples-to-apples. (Replaces the old JS marginal reconstruction
+// in renderCalibMultiples, which forced random intercepts to 0.)
+function renderM2Calibration(data, el) {
+  _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
+    const { ox, oy, pad, plotW, plotH, cellH } = g;
+    const cb = cfg.m2Calib;
+    if (!cb || !cb.inf) {
+      return `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH / 2}" font-size="10" fill="#ccc" font-family="${SERIF}" text-anchor="middle">pending</text>`;
+    }
+    const xS = v => ox + pad.l + v * plotW;
+    const yS = v => oy + pad.t + (1 - v) * plotH;
+    let s = '';
+    for (const v of [0, 0.5, 1]) {
+      const gx = xS(v), gy = yS(v);
+      s += `<line x1="${gx}" y1="${oy + pad.t}" x2="${gx}" y2="${oy + pad.t + plotH}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<line x1="${ox + pad.l}" y1="${gy}" x2="${ox + pad.l + plotW}" y2="${gy}" stroke="#eee" stroke-width="0.5"/>`;
+      s += `<text x="${gx}" y="${oy + pad.t + plotH + 12}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="middle">${v}</text>`;
+      s += `<text x="${ox + pad.l - 5}" y="${gy + 3}" font-size="7.5" fill="#888" font-family="${SERIF}" text-anchor="end">${v}</text>`;
+    }
+    s += `<line x1="${xS(0)}" y1="${yS(0)}" x2="${xS(1)}" y2="${yS(1)}" stroke="#bbb" stroke-width="0.9" stroke-dasharray="3,2"/>`;
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + pad.t + plotH + 24}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle">Predicted P(stay)</text>`;
+    s += `<text x="${ox + 12}" y="${oy + pad.t + plotH / 2}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle" transform="rotate(-90 ${ox + 12} ${oy + pad.t + plotH / 2})">Observed P(stay)</text>`;
+    let sumAbs = 0, nP = 0;
+    for (let i = 0; i < cb.inf.length; i++) {
+      const p = cb.predicted[i]; const o = cb.observed[i];
+      if (!isFinite(p) || !isFinite(o)) continue;
+      sumAbs += Math.abs(p - o); nP++;
+      s += `<circle cx="${xS(p).toFixed(1)}" cy="${yS(o).toFixed(1)}" r="1.8" fill="${cfg.color}" opacity="0.85"/>`;
+    }
+    const mad = nP > 0 ? sumAbs / nP : 0;
+    s += `<text x="${ox + pad.l + plotW / 2}" y="${oy + cellH - 6}" font-size="8" fill="#555" font-family="${SERIF}" text-anchor="middle">MAD = ${(mad * 100).toFixed(1)}%</text>`;
+    return s;
+  }, '');
+}
+
 function renderM3Calibration(data, el) {
   // Uses cfg.m3Calib (server-computed) just like renderM1Calibration
   _smallMultiplesGrid(data, el, 3, 7, (cfg, g) => {
@@ -1817,7 +1857,7 @@ function renderAppendixC(allRegs) {
   into('figC13-chart', renderM1RateDiffByInfection);
 
   // C.2 — Random-Effects Logit
-  into('figC21-chart', renderCalibMultiples);
+  into('figC21-chart', renderM2Calibration);
   into('figC22-chart', renderCalibQQ);
   into('figC23-chart', renderM2RENormalQQ);
   into('figC24-chart', renderM2BLUPsVsPredictors);
