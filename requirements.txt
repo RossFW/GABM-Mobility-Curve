@@ -1,8 +1,9 @@
-# Install into the GABM-Epidemic venv, or a fresh venv:
+# Install into a fresh venv:
+#   python3 -m venv venv && source venv/bin/activate
 #   pip install -r requirements.txt
 #
-# Note: probe scripts import providers/ from sibling GABM-Epidemic repo.
-# Both repos must be cloned at the same directory level (see docs/SETUP.md).
+# The LLM provider layer is vendored in providers/ — this repo is
+# self-contained (see docs/SETUP.md). API keys go in a root .env file.
 
 anthropic>=0.49.0
 openai>=1.68.0

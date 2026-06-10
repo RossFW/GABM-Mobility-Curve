@@ -1,0 +1,32 @@
+provider,model,knowledge_cutoff,price_input_per_1M,price_output_per_1M,reasoning_support,notes
+openai,gpt-5.2,August 2025,1.75,14.00,optional,
+openai,gpt-5.4,~March 2026,2.50,15.00,optional,Confirmed pricing Mar 2026
+openai,gpt-5.3-chat-latest,~February 2026,1.75,14.00,optional,Confirmed pricing Mar 2026
+openai,gpt-5.1,October 2024,1.25,10.00,optional,
+openai,gpt-5,~September 2025,1.25,10.00,optional,Same price as gpt-5.1
+openai,gpt-5-mini,~September 2025,0.25,2.00,optional,Confirmed pricing Mar 2026
+openai,gpt-5-mini-2025-08-07,August 2025,0.25,2.00,none,Dated version of gpt-5-mini; used in probe
+openai,gpt-5-nano,~September 2025,0.05,0.40,none,Confirmed pricing Mar 2026
+openai,gpt-4.1,June 2024,2.00,8.00,none,
+openai,gpt-4o,October 2023,2.50,10.00,none,
+openai,gpt-4,September 2021,30.00,60.00,none,Legacy model
+openai,gpt-3.5-turbo,September 2021,0.50,1.50,none,Legacy model
+openai,gpt-3.5-turbo-0301,September 2021,0.50,1.50,none,Paper 1 legacy baseline (March 2023 snapshot)
+openai,o3,November 2023,2.00,8.00,required,
+openai,o1,October 2023,15.00,60.00,required,
+anthropic,claude-opus-4-6,~March 2026,5.00,25.00,optional,Same price as claude-opus-4-5
+anthropic,claude-sonnet-4-6,~March 2026,3.00,15.00,optional,Same price as claude-sonnet-4-5
+anthropic,claude-opus-4-5,Early 2025,5.00,25.00,optional,
+anthropic,claude-sonnet-4-5,April 2024,3.00,15.00,optional,
+anthropic,claude-haiku-4-5,April 2024,1.00,5.00,optional,
+anthropic,claude-opus-4-1,April 2024,15.00,75.00,optional,
+anthropic,claude-sonnet-4-0,April 2024,3.00,15.00,optional,
+anthropic,claude-opus-4-0,April 2024,15.00,75.00,optional,
+anthropic,claude-3-7-sonnet-20250219,April 2024,3.00,15.00,optional,Extended thinking support
+anthropic,claude-3-haiku-20240307,2021,0.25,1.25,none,Legacy model
+gemini,gemini-3-pro-preview,January 2024,2.00,12.00,optional,Output price includes thinking tokens
+gemini,gemini-3-flash-preview,January 2024,0.50,3.00,optional,Output price includes thinking tokens
+gemini,gemini-2.5-pro,Early 2023,1.25,10.00,optional,Output price includes thinking tokens
+gemini,gemini-2.5-flash,Continuous,0.30,2.50,optional,Has Google Search access; output includes thinking
+gemini,gemini-2.5-flash-lite,June 2024,0.10,0.40,optional,Output price includes thinking tokens
+gemini,gemini-2.0-flash,September 2021,0.10,0.40,none,

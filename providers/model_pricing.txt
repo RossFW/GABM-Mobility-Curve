@@ -1,0 +1,27 @@
+# OPENAI PRICING (USD per 1M tokens)
+# format: model,input_per_1m,output_per_1m,notes
+gpt-5.2,1.75,14.00,cached_input_per_1m=0.175
+gpt-5.1,1.25,10.00,cached_input_per_1m=0.125
+gpt-4.1,2.00,8.00,cached_input_per_1m=0.50
+gpt-4o,2.50,10.00,cached_input_per_1m=1.25
+gpt-4,30.00,60.00,legacy
+gpt-3.5-turbo,0.50,1.50,legacy
+o3,2.00,8.00,reasoning_model
+o1,15.00,60.00,reasoning_model
+# ANTHROPIC PRICING (USD per 1M tokens)
+# format: model,input_per_1m,output_per_1m,notes
+claude-opus-4-5,5.00,25.00,prompt_caching_has_separate_rates
+claude-opus-4-1,15.00,75.00,
+claude-opus-4-0,15.00,75.00,
+claude-sonnet-4-5,3.00,15.00,
+claude-sonnet-4-0,3.00,15.00,
+claude-haiku-4-5,1.00,5.00,
+claude-3-haiku-20240307,0.25,1.25,haiku_3_pricing
+# GEMINI PRICING (USD per 1M tokens)
+# format: model,input_per_1m,output_per_1m,notes
+gemini-3-pro-preview,1.00,4.00,preview_pricing
+gemini-3-flash-preview,0.20,0.80,preview_pricing
+gemini-2.5-pro,1.25,10.00,
+gemini-2.5-flash,0.30,2.50,
+gemini-2.5-flash-lite,0.10,0.40,
+gemini-2.0-flash,0.10,0.40,

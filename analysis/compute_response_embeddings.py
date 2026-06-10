@@ -48,7 +48,7 @@ MAX_TPM = 10_000_000  # OpenAI limit shown in user's account
 
 BASE = Path(__file__).resolve().parent.parent
 DATA = BASE / "viz" / "data" / "real"
-ENV_FILE = BASE.parent / "GABM-Epidemic" / ".env"
+ENV_FILE = BASE / ".env"
 META_FILE = DATA / "embedding_meta.json"
 
 load_dotenv(ENV_FILE)

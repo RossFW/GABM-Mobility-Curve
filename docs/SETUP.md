@@ -1,39 +1,30 @@
 # Setup Guide — GABM Mobility Curve Probe
 
-## Required directory layout
-
-Both repos must sit at the **same directory level**. The probe scripts import
-`providers/` from the sibling GABM-Epidemic repo via a relative `sys.path` insert.
-
-```
-<parent>/
-├── GABM mobility curve/     ← this repo
-└── GABM-Epidemic/           ← sibling repo (Paper 3 provider layer)
-```
+This repo is **self-contained**: the LLM provider abstraction layer is vendored
+in `providers/` (Anthropic, OpenAI, Gemini behind a common interface, plus
+pricing/cost helpers). No sibling repos required.
 
 ## First-time setup on a new machine
 
 ```bash
-# 1. Clone both repos into the same parent directory
+# 1. Clone the repo
 git clone https://github.com/RossFW/GABM-Mobility-Curve.git "GABM mobility curve"
-git clone https://github.com/RossFW/GABM-Epidemic-Paper-3.git "GABM-Epidemic"
+cd "GABM mobility curve"
 
-# 2. Create and activate a venv (or reuse GABM-Epidemic's venv)
-cd "GABM-Epidemic"
+# 2. Create and activate a venv
 python3 -m venv venv
 source venv/bin/activate
 
 # 3. Install dependencies
-pip install -r "../GABM mobility curve/requirements.txt"
+pip install -r requirements.txt
 
-# 4. Copy your .env file into GABM-Epidemic/ (never committed — copy manually)
+# 4. Create a .env file at the repo root (never committed — copy manually)
 #    Must contain at least the key(s) for the provider you're running:
 #      ANTHROPIC_API_KEY=sk-ant-...
 #      OPENAI_API_KEY=sk-...
 #      GOOGLE_API_KEY=...
 
 # 5. Verify connectivity (no API calls)
-cd "../GABM mobility curve"
 python probe_mobility.py --dry-run
 ```
 

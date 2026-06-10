@@ -23,7 +23,7 @@ In the meantime, the **dissertation draft** is the active workspace — see `../
 
 The paper claims: **LLM choice is itself a parameterization of GABM agent behavior.** Title: *LLM Sensitivity of Generative Agents: Evidence from an Epidemic Model.*
 
-**Sibling repo:** `../GABM-Epidemic/` — provider abstraction layer (`providers/`).
+**Provider layer:** vendored in `providers/` (was previously imported from the sibling GABM-Epidemic repo; this repo is now self-contained).
 
 ## V1 Paper Structure (the document that was submitted)
 
@@ -125,7 +125,7 @@ Diagnostics in Appendix C.
 2. **Confirm before any API calls** — they cost real money.
 3. **`data/` is committed to GitHub** — do NOT delete data files.
 4. **Never modify `cost_estimates.xlsx`** — read-only master workbook.
-5. **The .env file** lives in `../GABM-Epidemic/.env` — never commit it.
+5. **The .env file** lives at the repo root — gitignored, never commit it.
 6. **Paper figure numbering**: paper.html uses paper-order figure numbers 1–21. Internal cross-refs in §4/§5 are consistent.
 7. **Don't make substantive Paper 3 prose changes until advisor feedback arrives.** Cosmetic/format fixes are fine.
 

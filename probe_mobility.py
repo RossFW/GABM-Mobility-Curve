@@ -40,10 +40,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
-# ── Provider import (from sibling GABM-Epidemic repo) ─────────────────────────
-sys.path.insert(0, str(Path(__file__).parent.parent / "GABM-Epidemic"))
+# ── Provider import (vendored in this repo) ───────────────────────────────────
 from dotenv import load_dotenv
-load_dotenv(Path(__file__).parent.parent / "GABM-Epidemic" / ".env")
+load_dotenv(Path(__file__).parent / ".env")
 from providers import create_provider, calculate_cost
 
 # ── Constants ─────────────────────────────────────────────────────────────────
