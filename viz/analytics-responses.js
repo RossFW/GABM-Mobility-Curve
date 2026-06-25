@@ -79,7 +79,7 @@ function initResponseAnalysisFigures() {
   });
 }
 
-/* ── Figure 32: Mention Rate Heatmap (10 Big Five poles + Infection + Age) ──
+/* ── Figure 32 (dashboard) / Figure 16 (paper): Mention Rate Heatmap (10 Big Five poles + Infection + Age) ──
    Modes: 'overall' | 'yes' (stay-home only) | 'no' (go-out only) |
    'diff' (yes − no, diverging color). */
 // `staticMode` (optional): when set to 'overall' | 'yes' | 'no' | 'diff', the
@@ -966,7 +966,7 @@ function renderModel3Coef(allRegs, traitData, m, targetEl) {
 
     // Section: Mention flags — pole-level (10 poles) + 2 context.
     // "Rate" shown is the Fig-32 within-group rate that gated inclusion.
-    html += '<tr><td colspan="7" style="padding:10px 6px 2px;font-size:10px;color:#666;font-style:italic;border-bottom:1px solid #ddd">Mention Flags (rate from Figure 32; only included when between 15% and 85%)</td></tr>';
+    html += '<tr><td colspan="7" style="padding:10px 6px 2px;font-size:10px;color:#666;font-style:italic;border-bottom:1px solid #ddd">Mention Flags (rate from Figure ' + (document.querySelector('#section-appendices')?16:32) + '; only included when between 15% and 85%)</td></tr>';
     rowIdx = 0;
     MENTION.forEach(p => {
       let rate = '';
@@ -1009,8 +1009,8 @@ function renderModel3Coef(allRegs, traitData, m, targetEl) {
 
     // Contrast flag summary — pole-level
     html += '<div style="margin-top:8px;padding:8px 12px;background:#fff8f0;border:1px solid #f0d0a0;border-radius:4px;font-size:11px">';
-    html += '<strong>Inclusion gate (Figure 32 mention rates).</strong> ';
-    html += 'A mention flag enters only when its Figure 32 rate is between 15% and 85%. ';
+    html += '<strong>Inclusion gate (Figure ' + (document.querySelector('#section-appendices')?16:32) + ' mention rates).</strong> ';
+    html += 'A mention flag enters only when its Figure ' + (document.querySelector('#section-appendices')?16:32) + ' rate is between 15% and 85%. ';
     html += 'Below 15% almost no responses mention it; above 85% nearly all of them do — either way there is no usable variation.';
     html += '<div style="margin-top:4px;display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:4px 12px">';
     MENTION.forEach(p => {
