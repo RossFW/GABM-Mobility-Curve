@@ -115,8 +115,7 @@
       /* Start the Appendices section on a fresh page */
       #section-appendices { page-break-before: always; break-before: page; }
       /* Start the References section on a fresh page too */
-      #section-references,
-      #section-references > h2 { page-break-before: always; break-before: page; }
+      #section-references { page-break-before: always; break-before: page; }
       /* Empty break div as a backup (some Chrome versions ignore section-level breaks) */
       .page-break-before-print { page-break-before: always !important; break-before: page !important; display: block; height: 0; }
       /* Keep individual reference entries together (no awkward mid-entry breaks) */
@@ -173,9 +172,9 @@
       <h3 class="abstract-heading">Abstract</h3>
       <p>Generative agent-based modeling (GABM) replaces the rule-based decision-making of classical agent-based models with LLM-mediated decisions, enabling researchers to simulate human behavior that resists mathematical specification. The original epidemic GABM and its follow-on prompt-sensitivity study both used GPT-3.5, leaving the generalizability of GABM findings to other LLMs untested. We address this with a frozen-task probe study: 100 personas, 40 community-infection levels, and 5 repetitions across 21 LLM configurations from OpenAI, Anthropic, and Google, totaling 420,000 binary stay-home decisions during a simulated epidemic. Most LLMs agree on the direction of persona effects, but magnitudes vary several-fold by provider: largest in Gemini agents, intermediate in Claude, smallest in GPT. The model attributes a researcher would typically use to choose an LLM (size, generation, knowledge cutoff, release date) give no insight into where any given configuration&rsquo;s behavior lands. The reasoning text accompanying each decision encodes substantive predictive signal beyond the decision itself, and reveals an other-focused-vs-self-focused framing of the stay-home choice. We argue that LLM choice is itself a parameterization of agent behavior: GABM with general-purpose LLMs is most defensible for qualitative claims about agent behavior and weakest for the quantitative claims modelers most often want to make. LLM sensitivity should become a routine evidentiary expectation in GABM publications.</p>
 
-      <p style="margin-top:20px"><strong>One-Sentence Summary:</strong> Across 21 LLM configurations from three providers, generative agents agree on the direction of persona effects but diverge on magnitude, making the LLM itself a parameter of any GABM result.</p>
+      <p style="margin-top:20px"><strong>One-Sentence Summary:</strong> In a generative-agent epidemic model, the choice of LLM is itself a parameter of agent behavior: the direction of persona effects is largely shared across LLMs, but their magnitude varies several-fold by provider.</p>
 
-      <p style="margin-top:20px"><strong>Keywords:</strong> Generative Artificial Intelligence, Large Language Models, Agent Based Model, Generative Agent Based Model, Computational Social Science, Sensitivity Analysis, LLM-based Agents, Epidemic Modeling</p>
+      <p style="margin-top:20px"><strong>Keywords:</strong> LLM Sensitivity, Generative Artificial Intelligence, Large Language Models, Agent Based Model, Generative Agent Based Model, Computational Social Science, Sensitivity Analysis, LLM-based Agents, Epidemic Modeling</p>
     </section>
 
     <!-- ─────────── 2. Introduction ─────────── -->
@@ -391,7 +390,7 @@ You have to provide Response in a single word; it must be either
     <section>
       <h2>4. Results</h2>
 
-      <p>This section presents the results of the three analyses introduced in &sect;3.7. Within each subsection, results are presented in the paper order described in Table 1.</p>
+      <p>This section presents the results of the three analyses introduced in &sect;3.7. Within each subsection, results are presented in the order described in Table 1.</p>
 
       <h3>4.1 Mobility Curve Results</h3>
 
@@ -752,7 +751,11 @@ You have to provide Response in a single word; it must be either
       <p>Modelers from epidemiology, sociology, political science, economics, and complex-systems modeling could extend the probe approach to their own decision domains, and LLM-sensitivity testing could be treated as a routine part of any GABM publication&rsquo;s evidentiary base, much as classical agent-based modeling has long been expected to demonstrate sensitivity to parameter choices.</p>
     </section>
 
-    <div class="page-break-before-print" style="height:0"></div>
+    <section>
+      <h2>Acknowledgments</h2>
+      <p>The author used Anthropic&rsquo;s Claude to assist with editing, figure preparation, and manuscript formatting; all content was reviewed and verified by the author.</p>
+    </section>
+
     <!-- ─────────── 7. References ─────────── -->
     <section id="section-references">
       <h2>7. References</h2>
